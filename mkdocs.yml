@@ -1,0 +1,12 @@
+# This file was added for Techdocs with Unity Backstage https://docs.unityops.net/unity-backstage/users/techdocs/
+# For more information on the configuration below see https://www.mkdocs.org/user-guide/configuration/
+site_name: UnityDataTools
+repo_url: https://github.com/Unity-Technologies/UnityDataTools
+repo_name: GitHub
+docs_dir: docs
+edit_uri: "edit/main/docs/"
+strict: true
+plugins:
+  - techdocs-core
+nav:
+  - Home: "index.md"
