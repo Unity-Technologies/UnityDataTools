@@ -1,6 +1,8 @@
 # UnityDataTool
 
-The UnityDataTool provides a set of commands related to Unity data files.
+The UnityDataTool provides a set of commands related to Unity data files. The tool is invoked from the comman line like this:
+
+`UnityDataTool [command] [command options]`
 
 # Commands
 
