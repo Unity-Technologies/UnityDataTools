@@ -15,6 +15,8 @@ The command takes the path of the folder containing the files to analyze as argu
 * -r, --extract-references: extract all references (PPtrs), the default is off as it significantly increases the processing time and the size of the database.
 * -p, --search-pattern \<pattern\>: search pattern used to determine which files are asset bundles, the default is \*.
 
+Example: `UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p *.ab`
+
 Refer to this [documentation](../Analyzer/README.md#How-to-use-the-database) for more information about the output database structure.
 
 ## find-refs
@@ -29,6 +31,8 @@ The command takes the path of the database as argument. It also provides the fol
 * -a, --find-all: this will force a search for all reference chains originating from the same root object instead of stopping at the first one. It may take a lot more time.
 Note that either --object-id or --object-name must be provided.
 
+Example: `UnityDataTool find-refs my_database.db -n "MyObjectName" -t "Texture2D" -o references.txt`
+
 Refer to this [documentation](../ReferenceFinder/README.md#How-to-interpret-the-output-file) for more information about the content of the output file.
 
 ## dump
@@ -38,6 +42,8 @@ This command dumps the content of a SerializedFile into a file of the selected f
 The command takes the path of the file to dump as argument. It also provides the following options:
 * -f, --output-format \<format\>: output format, default is 'text'.
 * -s, --skip-large-arrays: the content of basic data type arrays with a large number of elements won't be dumped.
+
+Example: `UnityDataTool dump /path/to/file`
 
 Refer to this [documentation](../TextDumper/README.md#How-to-interpret-the-output-files) for more information about the content of the output file.
 
