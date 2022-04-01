@@ -1,6 +1,14 @@
 # UnityDataTool
 
-The UnityDataTool provides a set of commands related to Unity data files. The tool is invoked from the comman line like this:
+The UnityDataTool is a command line tool providing a set of commands related to Unity data files. It is the main project of the solution and produces an executable file that can be found in UnityDataTool/bin/[target specific folders] after a build.
+
+> Note that on Mac, you need to publish the UnityDataTool projec to get an executable file. You can do it from your IDE or execute this command in the UnityDataTool folder (not from the root folder):
+>
+> `dotnet publish -c Release -r osx-x64 -p:PublishSingleFile=true -p:UseAppHost=true`
+>
+> Also on Mac, if you get a warning because "UnityFileSystemApi.dylib" cannot be opened because the developer cannot be verified, click "Cancel" and then open the System Preferences -> Security & Privacy window. You should be able to allow the file from there. Alternatively, you can copy the file from the Tools folder of a Unity 2022 installation.
+
+The tool is invoked from the command line like this:
 
 `UnityDataTool [command] [command options]`
 
