@@ -49,15 +49,6 @@ It is also possible to build the projects from the CLI using this command:
 
 `dotnet build -c Release`
 
-Note that on Mac, you need to publish the UnityDataTool project if you want to get an executable file. You can do it from your IDE or execute this command
-in the UnityDataTool folder (not from the root folder):
-
-`dotnet publish -c Release -r osx-x64 -p:PublishSingleFile=true -p:UseAppHost=true`
-
-Also on Mac, if you get a warning because "UnityFileSystemApi.dylib" cannot be opened because the developer cannot be verified, click "Cancel" and
-then open the System Preferences -> Security & Privacy window. You should be able to allow the file from there. Alternatively, you can copy the file from the
-Tools folder of a Unity 2022 installation.
-
 ## Disclaimer
 
 This project is provided on an "as-is" basis and is not officially supported by Unity. It is an experimental tool provided as an example of what can be done using the UnityFileSystemApi. You can report bugs and submit pull requests, but there is no guarantee that they will be addressed.
