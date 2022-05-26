@@ -101,7 +101,7 @@ namespace UnityDataTools.Analyzer
             timer.Start();
 
             var files = Directory.GetFiles(path, searchPattern, SearchOption.AllDirectories);
-            int i = 0;
+            int i = 1;
             int lastLength = 0;
             foreach (var file in files)
             {
