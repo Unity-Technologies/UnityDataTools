@@ -163,7 +163,7 @@ namespace UnityDataTools.Analyzer
                             addSerializedFileCommand.Parameters["@name"].Value = file;
                             addSerializedFileCommand.ExecuteNonQuery();
 
-                            ProcessSerializedFile("/" + file, serializedFileId, db);
+                            ProcessSerializedFile(file, serializedFileId, db);
                             transaction.Commit();
                         }
                         catch
