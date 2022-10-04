@@ -13,8 +13,7 @@ namespace UnityDataTools.Analyzer.Processors
         SQLiteCommand m_InsertCommand;
         SQLiteCommand m_InsertSubProgramCommand;
 
-        Dictionary<int, string> m_NameIndices = new Dictionary<int, string>();
-        List<ushort> m_KeywordIndices = new List<ushort>();
+        Dictionary<int, string> m_KeywordNames = new Dictionary<int, string>();
         StringBuilder m_Keywords = new StringBuilder();
         HashSet<string> m_UniqueKeywords = new HashSet<string>();
         HashSet<uint> m_UniquePrograms = new HashSet<uint>();
@@ -31,7 +30,6 @@ namespace UnityDataTools.Analyzer.Processors
             m_InsertCommand.Parameters.Add("@id", DbType.Int64);
             m_InsertCommand.Parameters.Add("@decompressed_size", DbType.Int32);
             m_InsertCommand.Parameters.Add("@sub_shaders", DbType.Int32);
-            m_InsertCommand.Parameters.Add("@sub_programs", DbType.Int32);
             m_InsertCommand.Parameters.Add("@unique_programs", DbType.Int32);
             m_InsertCommand.Parameters.Add("@keywords", DbType.String);
 
@@ -59,30 +57,58 @@ namespace UnityDataTools.Analyzer.Processors
             m_InsertCommand.Parameters["@id"].Value = objectId;
             m_InsertCommand.Parameters["@sub_shaders"].Value = parsedForm["m_SubShaders"].GetArraySize();
 
+            bool keywordsUnity2021 = false;
+
+            if (parsedForm.HasChild("m_KeywordNames"))
+            {
+                keywordsUnity2021 = true;
+
+                m_KeywordNames.Clear();
+
+                int i = 0;
+                foreach (var keyword in parsedForm["m_KeywordNames"])
+                {
+                    m_KeywordNames[i++] = keyword.GetValue<string>();
+                }
+            }
+
             foreach (var subShader in parsedForm["m_SubShaders"])
             {
                 foreach (var pass in subShader["m_Passes"])
                 {
                     int passNum = 0;
+                    ushort[] passKeywordIndices = { };
 
-                    m_NameIndices.Clear();
-
-                    var nameIndices = pass["m_NameIndices"];
-
-                    foreach (var nameIndex in nameIndices)
+                    if (!keywordsUnity2021)
                     {
-                        m_NameIndices[nameIndex["second"].GetValue<int>()] = nameIndex["first"].GetValue<string>();
+                        m_KeywordNames.Clear();
+
+                        var nameIndices = pass["m_NameIndices"];
+
+                        foreach (var nameIndex in nameIndices)
+                        {
+                            m_KeywordNames[nameIndex["second"].GetValue<int>()] = nameIndex["first"].GetValue<string>();
+                        }
+                    }
+                    else
+                    {
+                        passKeywordIndices = pass["m_SerializedKeywordStateMask"].GetValue<ushort[]>();
+
+                        foreach (var index in passKeywordIndices)
+                        {
+                            m_UniqueKeywords.Add(m_KeywordNames[index]);
+                        }
                     }
 
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progVertex"]["m_SubPrograms"], "vertex");
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progFragment"]["m_SubPrograms"], "fragment");
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progGeometry"]["m_SubPrograms"], "geometry");
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progHull"]["m_SubPrograms"], "hull");
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progDomain"]["m_SubPrograms"], "domain");
+                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progVertex"]["m_SubPrograms"], "vertex", passKeywordIndices);
+                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progFragment"]["m_SubPrograms"], "fragment", passKeywordIndices);
+                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progGeometry"]["m_SubPrograms"], "geometry", passKeywordIndices);
+                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progHull"]["m_SubPrograms"], "hull", passKeywordIndices);
+                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progDomain"]["m_SubPrograms"], "domain", passKeywordIndices);
 
                     if (pass.HasChild("progRayTracing"))
                     {
-                        ProcessProgram(objectId, passNum, ref currentProgram, pass["progRayTracing"]["m_SubPrograms"], "ray tracing");
+                        ProcessProgram(objectId, passNum, ref currentProgram, pass["progRayTracing"]["m_SubPrograms"], "ray tracing", passKeywordIndices);
                     }
 
                     ++passNum;
@@ -126,11 +152,11 @@ namespace UnityDataTools.Analyzer.Processors
             name = parsedForm["m_Name"].GetValue<string>();
         }
 
-        void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType)
+        void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType, ushort[] passKeywordIndices)
         {
             foreach (var subProgram in subPrograms)
             {
-                m_KeywordIndices.Clear();
+                m_Keywords.Clear();
 
                 m_UniquePrograms.Add(subProgram["m_BlobIndex"].GetValue<uint>());
 
@@ -140,9 +166,10 @@ namespace UnityDataTools.Analyzer.Processors
 
                     foreach (var index in indices)
                     {
-                        if (m_NameIndices.TryGetValue(index, out var name))
+                        if (m_KeywordNames.TryGetValue(index, out var name))
                         {
-                            m_KeywordIndices.Add(index);
+                            m_Keywords.Append(name);
+                            m_Keywords.Append(' ');
                             m_UniqueKeywords.Add(name);
                         }
                     }
@@ -151,25 +178,24 @@ namespace UnityDataTools.Analyzer.Processors
                 {
                     foreach (var index in subProgram["m_GlobalKeywordIndices"].GetValue<ushort[]>())
                     {
-                        if (m_NameIndices.TryGetValue(index, out var name))
+                        if (m_KeywordNames.TryGetValue(index, out var name))
                         {
-                            m_KeywordIndices.Add(index);
+                            m_Keywords.Append(name);
+                            m_Keywords.Append(' ');
                             m_UniqueKeywords.Add(name);
                         }
                     }
 
                     foreach (var index in subProgram["m_LocalKeywordIndices"].GetValue<ushort[]>())
                     {
-                        if (m_NameIndices.TryGetValue(index, out var name))
+                        if (m_KeywordNames.TryGetValue(index, out var name))
                         {
-                            m_KeywordIndices.Add(index);
+                            m_Keywords.Append(name);
+                            m_Keywords.Append(' ');
                             m_UniqueKeywords.Add(name);
                         }
                     }
                 }
-
-                m_Keywords.Clear();
-                m_Keywords.AppendJoin(' ', m_KeywordIndices.Select(x => m_NameIndices[x]));
 
                 m_InsertSubProgramCommand.Parameters["@shader"].Value = objectId;
                 m_InsertSubProgramCommand.Parameters["@pass"].Value = passNum;
