@@ -28,13 +28,11 @@ SELECT
     o.*,
     s.decompressed_size,
     s.sub_shaders,
-    COUNT(*) AS sub_programs,
+    (SELECT COUNT(*) FROM shader_subprograms sp WHERE s.id = sp.shader) AS sub_programs,
     s.unique_programs,
     s.keywords
 FROM object_view o
-INNER JOIN shaders s ON o.id = s.id
-LEFT JOIN shader_subprograms sp ON s.id = sp.shader
-GROUP BY s.id;
+INNER JOIN shaders s ON o.id = s.id;
 
 CREATE VIEW view_breakdown_shaders AS
 SELECT name, count(*) AS instances,
