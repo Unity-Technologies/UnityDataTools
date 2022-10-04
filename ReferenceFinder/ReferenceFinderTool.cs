@@ -42,6 +42,15 @@ namespace UnityDataTools.ReferenceFinder
                 return 1;
             }
 
+            var checkRefsTableCmd = db.CreateCommand();
+            checkRefsTableCmd.CommandText = "SELECT EXISTS (SELECT 1 FROM refs)";
+            var hasRefs = checkRefsTableCmd.ExecuteScalar();
+            if ((long)hasRefs == 0)
+            {
+                Console.WriteLine("Database 'refs' table empty! Did you use the 'analyze' command with the -r option to generate the database?");
+                return 1;
+            }
+
             SQLiteCommand getObjectIds;
 
             if (objectType != null && objectType != "")

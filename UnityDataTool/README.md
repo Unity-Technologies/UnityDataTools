@@ -32,7 +32,7 @@ Refer to this [documentation](../Analyzer/README.md#How-to-use-the-database) for
 This command finds reference chains leading to specific objects. It requires a database that was created by the 'analyze' command with the --extract-references option. It takes an object id or name as input and will find reference chains originating from a root asset to the specified object(s). A root asset is an asset that was explicitely added to an AssetBundle at build time. It can be particularly useful to determine why an asset was included (and potentially more than once) in a build.
 
 The command takes the path of the database as argument. It also provides the following options:
-* -i, --object_id \<id\>: id of the object to analyze
+* -i, --object-id \<id\>: id of the object to analyze
 * -n, --object-name \<name\>: name of the objects to analyze (it can be useful to find the origin of duplicates as they will have different ids but the same name)
 * -t, --object-type \<type\>: type of the objects to analyze, used to filter objects when using the -n option
 * -o, --output-file \<filename\>: name of the output file
