@@ -90,6 +90,8 @@ namespace UnityDataTools.TextDumper
             {
                 // First child contains array size.
                 var sizeNode = node.Children[0];
+                // Second child contains array type information.
+                var dataNode = node.Children[1];
 
                 if (sizeNode.Size != 4 || !sizeNode.IsLeaf)
                     throw new Exception("Invalid array size");
@@ -98,21 +100,20 @@ namespace UnityDataTools.TextDumper
                 offset += 4;
 
                 m_StringBuilder.Append(' ', level * 2);
-                m_StringBuilder.Append(sizeNode.Name);
-                m_StringBuilder.Append(": ");
+                m_StringBuilder.Append("Array [Size=");
                 m_StringBuilder.Append(arraySize);
+                m_StringBuilder.Append(" Type=");
+                m_StringBuilder.Append(dataNode.Type);
+                m_StringBuilder.Append(']');
 
                 writer.WriteLine(m_StringBuilder);
                 m_StringBuilder.Clear();
-
-                // Second child contains array type information.
-                var dataNode = node.Children[1];
 
                 if (arraySize > 0)
                 {
                     if (dataNode.IsBasicType)
                     {
-                        m_StringBuilder.Append(' ', level * 2);
+                        m_StringBuilder.Append(' ', (level + 1) * 2);
 
                         if (arraySize > 256 && m_SkipLargeArrays)
                         {
@@ -139,7 +140,7 @@ namespace UnityDataTools.TextDumper
                     {
                         for (int i = 0; i < arraySize; ++i)
                         {
-                            RecursiveDump(dataNode, reader, writer, ref offset, level);
+                            RecursiveDump(dataNode, reader, writer, ref offset, level + 1);
                         }
                     }
                 }
