@@ -18,6 +18,16 @@ namespace UnityDataTools.Analyzer.Processors
         HashSet<string> m_UniqueKeywords = new HashSet<string>();
         HashSet<uint> m_UniquePrograms = new HashSet<uint>();
 
+        static readonly List<(string fieldName, string typeName)> s_progTypes = new()
+        {
+            ("progVertex", "vertex"),
+            ("progFragment", "fragment"),
+            ("progGeometry", "geometry"),
+            ("progHull", "hull"),
+            ("progDomain", "domain"),
+            ("progRayTracing", "ray tracing"),
+        };
+
         public void Init(SQLiteConnection db)
         {
             using var command = new SQLiteCommand(db);
@@ -57,6 +67,7 @@ namespace UnityDataTools.Analyzer.Processors
             m_InsertCommand.Parameters["@id"].Value = objectId;
             m_InsertCommand.Parameters["@sub_shaders"].Value = parsedForm["m_SubShaders"].GetArraySize();
 
+            // Starting in some Unity 2021 version, keyword names are stored in m_KeywordNames.
             bool keywordsUnity2021 = false;
 
             if (parsedForm.HasChild("m_KeywordNames"))
@@ -100,15 +111,30 @@ namespace UnityDataTools.Analyzer.Processors
                         }
                     }
 
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progVertex"]["m_SubPrograms"], "vertex", passKeywordIndices);
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progFragment"]["m_SubPrograms"], "fragment", passKeywordIndices);
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progGeometry"]["m_SubPrograms"], "geometry", passKeywordIndices);
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progHull"]["m_SubPrograms"], "hull", passKeywordIndices);
-                    ProcessProgram(objectId, passNum, ref currentProgram, pass["progDomain"]["m_SubPrograms"], "domain", passKeywordIndices);
-
-                    if (pass.HasChild("progRayTracing"))
+                    foreach (var progType in s_progTypes)
                     {
-                        ProcessProgram(objectId, passNum, ref currentProgram, pass["progRayTracing"]["m_SubPrograms"], "ray tracing", passKeywordIndices);
+                        if (!pass.HasChild(progType.fieldName))
+                        {
+                            continue;
+                        }
+
+                        var program = pass[progType.fieldName];
+
+                        // Sarting in some Unity 2021.3 version, programs are stored in m_PlayerSubPrograms instead of m_SubPrograms.
+                        if (program.HasChild("m_PlayerSubPrograms"))
+                        {
+                            int hwTier = 0;
+
+                            // And they are stored per hardware tiers.
+                            foreach (var tierProgram in program["m_PlayerSubPrograms"])
+                            {
+                                ProcessProgram(objectId, passNum, ref currentProgram, tierProgram, progType.typeName, passKeywordIndices, hwTier++);
+                            }
+                        }
+                        else
+                        {
+                            ProcessProgram(objectId, passNum, ref currentProgram, program["m_SubPrograms"], progType.typeName, passKeywordIndices);
+                        }
                     }
 
                     ++passNum;
@@ -152,7 +178,7 @@ namespace UnityDataTools.Analyzer.Processors
             name = parsedForm["m_Name"].GetValue<string>();
         }
 
-        void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType, ushort[] passKeywordIndices)
+        void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType, ushort[] passKeywordIndices, int hwTier = -1)
         {
             foreach (var subProgram in subPrograms)
             {
@@ -199,7 +225,7 @@ namespace UnityDataTools.Analyzer.Processors
 
                 m_InsertSubProgramCommand.Parameters["@shader"].Value = objectId;
                 m_InsertSubProgramCommand.Parameters["@pass"].Value = passNum;
-                m_InsertSubProgramCommand.Parameters["@hw_tier"].Value = subProgram["m_ShaderHardwareTier"].GetValue<sbyte>();
+                m_InsertSubProgramCommand.Parameters["@hw_tier"].Value = hwTier != -1 ? hwTier : subProgram["m_ShaderHardwareTier"].GetValue<sbyte>();
                 m_InsertSubProgramCommand.Parameters["@shader_type"].Value = shaderType;
                 m_InsertSubProgramCommand.Parameters["@api"].Value = subProgram["m_GpuProgramType"].GetValue<sbyte>();
                 m_InsertSubProgramCommand.Parameters["@keywords"].Value = m_Keywords.ToString();
