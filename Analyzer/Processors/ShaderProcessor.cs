@@ -88,7 +88,6 @@ namespace UnityDataTools.Analyzer.Processors
                 foreach (var pass in subShader["m_Passes"])
                 {
                     int passNum = 0;
-                    ushort[] passKeywordIndices = { };
 
                     if (!keywordsUnity2021)
                     {
@@ -99,15 +98,6 @@ namespace UnityDataTools.Analyzer.Processors
                         foreach (var nameIndex in nameIndices)
                         {
                             m_KeywordNames[nameIndex["second"].GetValue<int>()] = nameIndex["first"].GetValue<string>();
-                        }
-                    }
-                    else
-                    {
-                        passKeywordIndices = pass["m_SerializedKeywordStateMask"].GetValue<ushort[]>();
-
-                        foreach (var index in passKeywordIndices)
-                        {
-                            m_UniqueKeywords.Add(m_KeywordNames[index]);
                         }
                     }
 
@@ -128,12 +118,12 @@ namespace UnityDataTools.Analyzer.Processors
                             // And they are stored per hardware tiers.
                             foreach (var tierProgram in program["m_PlayerSubPrograms"])
                             {
-                                ProcessProgram(objectId, passNum, ref currentProgram, tierProgram, progType.typeName, passKeywordIndices, hwTier++);
+                                ProcessProgram(objectId, passNum, ref currentProgram, tierProgram, progType.typeName, hwTier++);
                             }
                         }
                         else
                         {
-                            ProcessProgram(objectId, passNum, ref currentProgram, program["m_SubPrograms"], progType.typeName, passKeywordIndices);
+                            ProcessProgram(objectId, passNum, ref currentProgram, program["m_SubPrograms"], progType.typeName);
                         }
                     }
 
@@ -178,7 +168,7 @@ namespace UnityDataTools.Analyzer.Processors
             name = parsedForm["m_Name"].GetValue<string>();
         }
 
-        void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType, ushort[] passKeywordIndices, int hwTier = -1)
+        void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType, int hwTier = -1)
         {
             foreach (var subProgram in subPrograms)
             {
