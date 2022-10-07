@@ -44,9 +44,10 @@ namespace UnityDataTools.Analyzer.Processors
             m_InsertCommand.Parameters.Add("@keywords", DbType.String);
 
             m_InsertSubProgramCommand = new SQLiteCommand(db);
-            m_InsertSubProgramCommand.CommandText = "INSERT INTO shader_subprograms(shader, pass, hw_tier, shader_type, api, keywords) VALUES(@shader, @pass, @hw_tier, @shader_type, @api, @keywords)";
+            m_InsertSubProgramCommand.CommandText = "INSERT INTO shader_subprograms(shader, pass, sub_program, hw_tier, shader_type, api, keywords) VALUES(@shader, @pass, @sub_program, @hw_tier, @shader_type, @api, @keywords)";
             m_InsertSubProgramCommand.Parameters.Add("@shader", DbType.Int64);
             m_InsertSubProgramCommand.Parameters.Add("@pass", DbType.Int32);
+            m_InsertSubProgramCommand.Parameters.Add("@sub_program", DbType.Int32);
             m_InsertSubProgramCommand.Parameters.Add("@hw_tier", DbType.Int32);
             m_InsertSubProgramCommand.Parameters.Add("@shader_type", DbType.String);
             m_InsertSubProgramCommand.Parameters.Add("@api", DbType.Int32);
@@ -85,10 +86,10 @@ namespace UnityDataTools.Analyzer.Processors
 
             foreach (var subShader in parsedForm["m_SubShaders"])
             {
+                int passNum = 0;
+
                 foreach (var pass in subShader["m_Passes"])
                 {
-                    int passNum = 0;
-
                     if (!keywordsUnity2021)
                     {
                         m_KeywordNames.Clear();
@@ -170,6 +171,8 @@ namespace UnityDataTools.Analyzer.Processors
 
         void ProcessProgram(long objectId, int passNum, ref int currentProgram, RandomAccessReader subPrograms, string shaderType, int hwTier = -1)
         {
+            int progNum = 0;
+
             foreach (var subProgram in subPrograms)
             {
                 m_Keywords.Clear();
@@ -215,6 +218,7 @@ namespace UnityDataTools.Analyzer.Processors
 
                 m_InsertSubProgramCommand.Parameters["@shader"].Value = objectId;
                 m_InsertSubProgramCommand.Parameters["@pass"].Value = passNum;
+                m_InsertSubProgramCommand.Parameters["@sub_program"].Value = progNum++;
                 m_InsertSubProgramCommand.Parameters["@hw_tier"].Value = hwTier != -1 ? hwTier : subProgram["m_ShaderHardwareTier"].GetValue<sbyte>();
                 m_InsertSubProgramCommand.Parameters["@shader_type"].Value = shaderType;
                 m_InsertSubProgramCommand.Parameters["@api"].Value = subProgram["m_GpuProgramType"].GetValue<sbyte>();
