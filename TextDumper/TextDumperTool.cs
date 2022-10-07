@@ -241,7 +241,7 @@ namespace UnityDataTools.TextDumper
                 var tmpArray = new byte[arraySize];
                 var boolArray = new bool[arraySize];
 
-                reader.ReadArray(offset + 4, arraySize * node.Size, tmpArray);
+                reader.ReadArray(offset, arraySize * node.Size, tmpArray);
 
                 for (int i = 0; i < arraySize; ++i)
                 {
@@ -254,7 +254,7 @@ namespace UnityDataTools.TextDumper
             {
                 var array = Array.CreateInstance(node.CSharpType, arraySize);
 
-                reader.ReadArray(offset + 4, arraySize * node.Size, array);
+                reader.ReadArray(offset, arraySize * node.Size, array);
 
                 return array;
             }

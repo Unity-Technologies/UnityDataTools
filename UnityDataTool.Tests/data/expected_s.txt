@@ -967,13 +967,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 68
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    10
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=10 Type=UInt16]
-                    6, 7, 8, 9, 10, 11, 12, 13, 14, 0
+                    4, 5, 6, 7, 8, 9, 10, 11, 12, 13
                 m_GlobalKeywordMask vector 
                   Array [Size=14 Type=UInt16]
-                    15, 16, 17, 18, 19, 20, 21, 1, 2, 22, 3, 23, 24, 0
+                    0, 14, 15, 16, 17, 18, 19, 20, 21, 1, 2, 22, 3, 23
                 m_NameIndices map 
                   Array [Size=24 Type=pair]
                     data pair 
@@ -1409,7 +1409,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1452,7 +1452,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1495,7 +1495,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            2, 0, 0
+                            0, 1, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1538,7 +1538,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1581,7 +1581,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            3, 0, 0
+                            0, 1, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1624,7 +1624,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            3, 0, 0
+                            0, 2, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1667,7 +1667,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=4 Type=UInt16]
-                            2, 3, 0, 0
+                            0, 1, 2, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1749,7 +1749,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1780,7 +1780,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1811,7 +1811,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            2, 0, 0
+                            0, 1, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -1961,13 +1961,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 192
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    9
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=9 Type=UInt16]
-                    11, 12, 13, 14, 15, 16, 17, 0, 14
+                    9, 10, 11, 12, 13, 14, 15, 16, 17
                 m_GlobalKeywordMask vector 
                   Array [Size=14 Type=UInt16]
-                    18, 19, 20, 21, 0, 3, 8, 5, 7, 22, 6, 2, 23, 0
+                    1, 4, 18, 19, 20, 21, 0, 3, 8, 5, 7, 22, 6, 2
                 m_NameIndices map 
                   Array [Size=23 Type=pair]
                     data pair 
@@ -2400,7 +2400,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2443,7 +2443,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2486,7 +2486,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2529,7 +2529,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            4
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2572,7 +2572,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            5, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2615,7 +2615,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            2, 0, 0
+                            5, 6, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2658,7 +2658,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            1, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2701,7 +2701,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            4, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2744,7 +2744,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 8
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2787,7 +2787,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            6, 0, 0
+                            0, 8, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2830,7 +2830,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            3, 8
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2873,7 +2873,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            6, 0, 0
+                            3, 8, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2955,7 +2955,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -2986,7 +2986,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3017,7 +3017,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3048,7 +3048,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            4
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3079,7 +3079,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            5, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3110,7 +3110,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            2, 0, 0
+                            5, 6, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3141,7 +3141,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            1, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3172,7 +3172,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            4, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3203,7 +3203,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 8
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3234,7 +3234,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            6, 0, 0
+                            0, 8, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3265,7 +3265,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            3, 8
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3296,7 +3296,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            6, 0, 0
+                            3, 8, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3446,13 +3446,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 75
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    6
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=6 Type=UInt16]
-                    4, 5, 6, 7, 3, 0
+                    2, 3, 4, 5, 6, 7
                 m_GlobalKeywordMask vector 
                   Array [Size=3 Type=UInt16]
-                    0, 0, 9
+                    8, 1, 0
                 m_NameIndices map 
                   Array [Size=9 Type=pair]
                     data pair 
@@ -3831,7 +3831,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 19
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -3913,7 +3913,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -4063,13 +4063,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 39
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    9
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=9 Type=UInt16]
-                    4, 5, 6, 7, 8, 9, 10, 0, 8
+                    2, 3, 4, 5, 6, 7, 8, 9, 10
                 m_GlobalKeywordMask vector 
                   Array [Size=8 Type=UInt16]
-                    13, 14, 0, 15, 1, 16, 17, 0
+                    11, 12, 13, 14, 0, 15, 1, 16
                 m_NameIndices map 
                   Array [Size=17 Type=pair]
                     data pair 
@@ -4523,7 +4523,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -4566,7 +4566,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -4678,7 +4678,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -4709,7 +4709,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -4872,13 +4872,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 50
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    8
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=8 Type=UInt16]
-                    6, 7, 8, 9, 10, 11, 12, 0
+                    4, 5, 6, 7, 8, 9, 10, 11
                 m_GlobalKeywordMask vector 
                   Array [Size=12 Type=UInt16]
-                    13, 14, 15, 16, 17, 1, 2, 18, 3, 19, 20, 0
+                    0, 12, 13, 14, 15, 16, 17, 1, 2, 18, 3, 19
                 m_NameIndices map 
                   Array [Size=20 Type=pair]
                     data pair 
@@ -5302,7 +5302,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5345,7 +5345,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5388,7 +5388,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            2, 0, 0
+                            0, 1, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5431,7 +5431,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5474,7 +5474,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            3, 0, 0
+                            0, 1, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5517,7 +5517,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            3, 0, 0
+                            0, 2, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5560,7 +5560,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=4 Type=UInt16]
-                            2, 3, 0, 0
+                            0, 1, 2, 3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5642,7 +5642,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5673,7 +5673,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5704,7 +5704,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=3 Type=UInt16]
-                            2, 0, 0
+                            0, 1, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -5854,13 +5854,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 233
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    8
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=8 Type=UInt16]
-                    10, 11, 12, 13, 14, 15, 13, 0
+                    8, 9, 10, 11, 12, 13, 14, 15
                 m_GlobalKeywordMask vector 
                   Array [Size=13 Type=UInt16]
-                    16, 17, 18, 19, 0, 3, 7, 5, 6, 20, 2, 0, 21
+                    1, 4, 16, 17, 18, 19, 0, 3, 7, 5, 6, 20, 2
                 m_NameIndices map 
                   Array [Size=21 Type=pair]
                     data pair 
@@ -6287,7 +6287,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6330,7 +6330,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6373,7 +6373,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6416,7 +6416,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            4
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6459,7 +6459,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            5, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6502,7 +6502,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            1, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6545,7 +6545,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            4, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6588,7 +6588,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6631,7 +6631,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 51
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            3, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6713,7 +6713,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6744,7 +6744,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6775,7 +6775,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            3
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6806,7 +6806,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            4
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6837,7 +6837,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            5, 2
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6868,7 +6868,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            1, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6899,7 +6899,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            4, 6
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6930,7 +6930,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            0, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -6961,7 +6961,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=2 Type=UInt16]
-                            0, 0
+                            3, 7
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -7111,13 +7111,13 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                       bytes[15] UInt8 233
                 m_Platforms vector 
                   Array [Size=1 Type=UInt8]
-                    5
+                    4
                 m_LocalKeywordMask vector 
                   Array [Size=5 Type=UInt16]
-                    4, 5, 6, 0, 2
+                    2, 3, 4, 5, 6
                 m_GlobalKeywordMask vector 
                   Array [Size=2 Type=UInt16]
-                    7, 0
+                    1, 0
                 m_NameIndices map 
                   Array [Size=7 Type=pair]
                     data pair 
@@ -7490,7 +7490,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 19
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -7572,7 +7572,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
                           m_SourceMap int 0
                         m_GlobalKeywordIndices vector 
                           Array [Size=1 Type=UInt16]
-                            0
+                            1
                         m_LocalKeywordIndices vector 
                           Array [Size=0 Type=UInt16]
                         m_ShaderHardwareTier SInt8 3
@@ -7718,22 +7718,22 @@ ID: -4850512016903265157 (ClassID: 48) Shader
     m_DisableNoSubshadersMessage bool False
   platforms vector 
     Array [Size=1 Type=unsigned int]
-      1
+      4
   offsets vector 
     Array [Size=1 Type=vector]
       data vector 
         Array [Size=1 Type=unsigned int]
-          1
+          0
   compressedLengths vector 
     Array [Size=1 Type=vector]
       data vector 
         Array [Size=1 Type=unsigned int]
-          1
+          21137
   decompressedLengths vector 
     Array [Size=1 Type=vector]
       data vector 
         Array [Size=1 Type=unsigned int]
-          21137
+          258148
   compressedBlob vector 
     Array [Size=21137 Type=UInt8]
       <Skipped>
@@ -8978,7 +8978,7 @@ ID: 3275523228701995130 (ClassID: 74) AnimationClip
         m_Grab float 0
       m_DoFArray staticvector 
         Array [Size=55 Type=float]
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3E-44
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
       m_TDoFArray staticvector 
         Array [Size=21 Type=float3]
           data float3 
@@ -9149,7 +9149,7 @@ ID: 3275523228701995130 (ClassID: 74) AnimationClip
     m_AverageAngularSpeed float 0
     m_IndexArray staticvector 
       Array [Size=200 Type=int]
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     m_ValueArrayDelta vector 
       Array [Size=0 Type=ValueDelta]
     m_ValueArrayReferencePose vector 
