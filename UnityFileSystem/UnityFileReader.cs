@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 
 namespace UnityDataTools.FileSystem
@@ -29,12 +30,12 @@ namespace UnityDataTools.FileSystem
             if (fileOffset < m_BufferStartInFile || fileOffset + count > m_BufferEndInFile)
             {
                 if (count > m_Buffer.Length)
-                    throw new Exception("Can't read more than cache size!");
+                    throw new IOException("Requested size is larger than cache size");
 
                 m_BufferStartInFile = m_File.Seek(fileOffset);
 
                 if (m_BufferStartInFile != fileOffset)
-                    throw new Exception("Invalid file offset!");
+                    throw new IOException("Invalid file offset");
 
                 m_BufferEndInFile = m_File.Read(m_Buffer.Length, m_Buffer);
                 m_BufferEndInFile += m_BufferStartInFile;

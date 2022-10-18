@@ -173,10 +173,13 @@ namespace UnityDataTools.Analyzer
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Console.Error.WriteLine();
-                    Console.Error.WriteLine($"Error processing file {file}.");
+                    Console.Error.WriteLine($"Error processing file {file}!");
+                    Console.Write($"{e.GetType()}: ");
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
                 }
 
                 ++i;
@@ -243,7 +246,7 @@ namespace UnityDataTools.Analyzer
                     m_TypeSet.Add(obj.TypeId);
                 }
 
-                var randomAccessReader = new RandomAccessReader(root, reader, offset);
+                var randomAccessReader = new RandomAccessReader(sf, root, reader, offset);
 
                 string name = null;
                 long streamedDataSize = 0;
@@ -278,7 +281,7 @@ namespace UnityDataTools.Analyzer
 
                 if (m_extractReferences)
                 {
-                    var pptrReader = new PPtrReader(root, reader, offset, (fileId, pathId, propertyPath) => AddReference(currentObjectId, GetObjectId(localToDbFileId[fileId], pathId), propertyPath));
+                    var pptrReader = new PPtrReader(sf, root, reader, offset, (fileId, pathId, propertyPath) => AddReference(currentObjectId, GetObjectId(localToDbFileId[fileId], pathId), propertyPath));
                 }
             }
         }

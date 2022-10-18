@@ -77,6 +77,7 @@ namespace UnityDataTools.FileSystem
         FileError,
         ErrorCreatingArchiveFile,
         ErrorAddingFileToArchive,
+        TypeNotFound,
     }
 
     [Flags]
@@ -235,6 +236,12 @@ namespace UnityDataTools.FileSystem
             CallingConvention = CallingConvention.Cdecl,
             EntryPoint = "UFS_GetTypeTree")]
         public static extern ReturnCode GetTypeTree(SerializedFileHandle handle, long objectId, out TypeTreeHandle typeTree);
+
+        [DllImport("UnityFileSystemApi",
+            CallingConvention = CallingConvention.Cdecl,
+            EntryPoint = "UFS_GetRefTypeTypeTree")]
+        public static extern ReturnCode GetRefTypeTypeTree(SerializedFileHandle handle, [MarshalAs(UnmanagedType.LPStr)] string className,
+            [MarshalAs(UnmanagedType.LPStr)] string namespaceName, [MarshalAs(UnmanagedType.LPStr)] string assemblyName, out TypeTreeHandle typeTree);
 
         [DllImport("UnityFileSystemApi",
             CallingConvention = CallingConvention.Cdecl,

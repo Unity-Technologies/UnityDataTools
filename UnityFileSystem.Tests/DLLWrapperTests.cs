@@ -204,14 +204,14 @@ namespace UnityDataTools.FileSystem.Native.Tests
             Assert.AreEqual(ReturnCode.Success, r);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994", path.ToString());
-            Assert.AreEqual(199368, size);
+            Assert.AreEqual(212536, size);
             Assert.AreEqual(ArchiveNodeFlags.SerializedFile, flags);
 
             r = DllWrapper.GetArchiveNode(archive, 1, path, 256, out size, out flags);
             Assert.AreEqual(ReturnCode.Success, r);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS", path.ToString());
-            Assert.AreEqual(2833848, size);
+            Assert.AreEqual(2833872, size);
             Assert.AreEqual(ArchiveNodeFlags.None, flags);
 
             r = DllWrapper.GetArchiveNode(archive, 2, path, 256, out size, out flags);
@@ -397,12 +397,12 @@ namespace UnityDataTools.FileSystem.Native.Tests
             DllWrapper.OpenFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994", out var file);
 
             var buffer = new Byte[100];
-            Byte[] expectedBuffer = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 231, 141, 0, 0, 0, 0, 0, 3, 10, 200, 0, 0, 0, 0, 0, 1, 231, 192, 0, 0, 0, 0, 0, 0, 0, 0, 50, 48, 50, 48, 46, 51, 46, 49, 55, 102, 49, 0, 19, 0, 0, 0, 1, 13, 0, 0, 0, 23, 0, 0, 0, 0, 255, 255, 241, 159, 126, 32, 195, 37, 88, 156, 52, 101, 84, 239, 125, 28, 173, 201, 54, 0, 0, 0, 42, 2, 0, 0 };
+            Byte[] expectedBuffer = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10, 21, 0, 0, 0, 0, 0, 3, 62, 56, 0, 0, 0, 0, 0, 2, 10, 80, 0, 0, 0, 0, 0, 0, 0, 0, 50, 48, 50, 51, 46, 49, 46, 48, 97, 49, 51, 0, 19, 0, 0, 0, 1, 15, 0, 0, 0, 115, 0, 0, 0, 0, 255, 255, 30, 241, 26, 202, 72, 87, 64, 245, 137, 112, 34, 44, 233, 40, 215, 233, 35, 0, 0, 0, 223, 0, 0, 0};
 
             var r = DllWrapper.ReadFile(file, 100, buffer, out var actualSize);
 
-            //Console.WriteLine("{{{0}}}", string.Join(", ", buffer));
-
+            //var expected = string.Format("{{{0}}}", string.Join(", ", buffer));
+            
             Assert.AreEqual(ReturnCode.Success, r);
             Assert.AreEqual(100, actualSize);
             Assert.AreEqual(expectedBuffer, buffer);
@@ -546,7 +546,7 @@ namespace UnityDataTools.FileSystem.Native.Tests
 
             var r = DllWrapper.GetObjectCount(file, out var count);
             Assert.AreEqual(ReturnCode.Success, r);
-            Assert.AreEqual(41, count);
+            Assert.AreEqual(43, count);
 
             file.Dispose();
         }
@@ -571,14 +571,14 @@ namespace UnityDataTools.FileSystem.Native.Tests
             // Just make sure that first and last ObjectInfo struct are filled.
 
             Assert.AreEqual(-8720048570983375440, objectInfo[0].Id);
-            Assert.AreEqual(124864, objectInfo[0].Offset);
+            Assert.AreEqual(133848, objectInfo[0].Offset);
             Assert.AreEqual(156, objectInfo[0].Size);
             Assert.AreEqual(23, objectInfo[0].TypeId);
 
-            Assert.AreEqual(9001362461581137807, objectInfo[40].Id);
-            Assert.AreEqual(199320, objectInfo[39].Offset);
-            Assert.AreEqual(24, objectInfo[39].Size);
-            Assert.AreEqual(33, objectInfo[39].TypeId);
+            Assert.AreEqual(8122810628805875483, objectInfo[40].Id);
+            Assert.AreEqual(210000, objectInfo[39].Offset);
+            Assert.AreEqual(2416, objectInfo[39].Size);
+            Assert.AreEqual(43, objectInfo[39].TypeId);
 
             file.Dispose();
         }
@@ -715,6 +715,58 @@ namespace UnityDataTools.FileSystem.Native.Tests
 
                 ProcessNode(typeTree, firstChildNode);
             }
+        }
+
+        [Test]
+        public void GetRefTypeTypeTree_InvalidHandle_ReturnError()
+        {
+            var r = DllWrapper.GetRefTypeTypeTree(new SerializedFileHandle(), "", "", "", out _);
+            Assert.AreEqual(ReturnCode.InvalidArgument, r);
+        }
+
+        [Test]
+        public void GetRefTypeTypeTree_InvalidFQN_ReturnError()
+        {
+            var r = DllWrapper.GetRefTypeTypeTree(serializedFile, "this", "is", "wrong", out _);
+            Assert.AreEqual(ReturnCode.TypeNotFound, r);
+        }
+
+        [Test]
+        public void GetRefTypeTree_ValidSerializedFile_ReturnSuccess()
+        {
+            var r = DllWrapper.GetRefTypeTypeTree(serializedFile, "SerializeReferencePolymorphismExample/Apple", "", "Assembly-CSharp", out var typeTree);
+
+            Assert.AreEqual(ReturnCode.Success, r);
+        }
+
+        [Test]
+        public void GetTypeTreeNodeInfo_RefTypeTypeTree_ReturnExpectedValues()
+        {
+            var r = DllWrapper.GetRefTypeTypeTree(serializedFile, "SerializeReferencePolymorphismExample/Apple", "", "Assembly-CSharp", out var typeTree);
+
+            Assert.AreEqual(ReturnCode.Success, r);
+
+            var type = new StringBuilder(256);
+            var name = new StringBuilder(256);
+            r = DllWrapper.GetTypeTreeNodeInfo(typeTree, 0, type, type.Capacity, name, name.Capacity, out var offset, out var size, out var flags, out var metaFlags, out var firstChildNode, out var nextNode);
+
+            Assert.AreEqual(ReturnCode.Success, r);
+            Assert.AreEqual(1, firstChildNode);
+            Assert.AreEqual("Apple", type.ToString());
+            Assert.AreEqual("Base", name.ToString());
+
+            r = DllWrapper.GetTypeTreeNodeInfo(typeTree, firstChildNode, type, type.Capacity, name, name.Capacity, out offset, out size, out flags, out metaFlags, out firstChildNode, out nextNode);
+
+            Assert.AreEqual(ReturnCode.Success, r);
+            Assert.AreEqual("int", type.ToString());
+            Assert.AreEqual("m_Data", name.ToString());
+            Assert.AreEqual(4, size);
+
+            r = DllWrapper.GetTypeTreeNodeInfo(typeTree, nextNode, type, type.Capacity, name, name.Capacity, out offset, out size, out flags, out metaFlags, out firstChildNode, out nextNode);
+
+            Assert.AreEqual(ReturnCode.Success, r);
+            Assert.AreEqual("string", type.ToString());
+            Assert.AreEqual("m_Description", name.ToString());
         }
     }
 }

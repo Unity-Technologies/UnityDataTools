@@ -45,6 +45,22 @@ namespace UnityDataTools.FileSystem
             return node;
         }
 
+        public TypeTreeNode GetRefTypeTypeTreeRoot(string className, string namespaceName, string assemblyName)
+        {
+            var r = DllWrapper.GetRefTypeTypeTree(m_Handle, className, namespaceName, assemblyName, out var typeTreeHandle);
+            UnityFileSystem.HandleErrors(r);
+
+            if (m_TypeTreeCache.TryGetValue(typeTreeHandle.Handle, out var node))
+            {
+                return node;
+            }
+
+            node = new TypeTreeNode(typeTreeHandle, 0);
+            m_TypeTreeCache.Add(typeTreeHandle.Handle, node);
+
+            return node;
+        }
+
         private List<ExternalReference> GetExternalReferences()
         {
             var r = DllWrapper.GetExternalReferenceCount(m_Handle, out var count);

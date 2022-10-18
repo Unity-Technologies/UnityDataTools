@@ -72,6 +72,9 @@ namespace UnityDataTools.FileSystem
 
                 case ReturnCode.FileError:
                     throw new IOException("File operation error.");
+                
+                case ReturnCode.TypeNotFound:
+                    throw new ArgumentException("Type not found.");
             }
         }
     }

@@ -70,11 +70,11 @@ namespace UnityDataTools.FileSystem.Tests
             Assert.AreEqual(3, nodes.Count);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994", nodes[0].Path);
-            Assert.AreEqual(199368, nodes[0].Size);
+            Assert.AreEqual(212536, nodes[0].Size);
             Assert.AreEqual(ArchiveNodeFlags.SerializedFile, nodes[0].Flags);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS", nodes[1].Path);
-            Assert.AreEqual(2833848, nodes[1].Size);
+            Assert.AreEqual(2833872, nodes[1].Size);
             Assert.AreEqual(ArchiveNodeFlags.None, nodes[1].Flags);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource", nodes[2].Path);
@@ -228,7 +228,7 @@ namespace UnityDataTools.FileSystem.Tests
         {
             var file = UnityFileSystem.OpenFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
             var buffer = new Byte[100];
-            Byte[] expectedBuffer = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 231, 141, 0, 0, 0, 0, 0, 3, 10, 200, 0, 0, 0, 0, 0, 1, 231, 192, 0, 0, 0, 0, 0, 0, 0, 0, 50, 48, 50, 48, 46, 51, 46, 49, 55, 102, 49, 0, 19, 0, 0, 0, 1, 13, 0, 0, 0, 23, 0, 0, 0, 0, 255, 255, 241, 159, 126, 32, 195, 37, 88, 156, 52, 101, 84, 239, 125, 28, 173, 201, 54, 0, 0, 0, 42, 2, 0, 0 };
+            Byte[] expectedBuffer = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10, 21, 0, 0, 0, 0, 0, 3, 62, 56, 0, 0, 0, 0, 0, 2, 10, 80, 0, 0, 0, 0, 0, 0, 0, 0, 50, 48, 50, 51, 46, 49, 46, 48, 97, 49, 51, 0, 19, 0, 0, 0, 1, 15, 0, 0, 0, 115, 0, 0, 0, 0, 255, 255, 30, 241, 26, 202, 72, 87, 64, 245, 137, 112, 34, 44, 233, 40, 215, 233, 35, 0, 0, 0, 223, 0, 0, 0 };
             var actualSize = 0L;
 
             Assert.DoesNotThrow(() => actualSize = file.Read(100, buffer));
@@ -347,7 +347,7 @@ namespace UnityDataTools.FileSystem.Tests
         {
             var file = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
 
-            Assert.AreEqual(41, file.Objects.Count);
+            Assert.AreEqual(43, file.Objects.Count);
 
             file.Dispose();
         }
@@ -360,14 +360,14 @@ namespace UnityDataTools.FileSystem.Tests
             // Just make sure that first and last ObjectInfo struct are filled.
 
             Assert.AreEqual(-8720048570983375440, file.Objects[0].Id);
-            Assert.AreEqual(124864, file.Objects[0].Offset);
+            Assert.AreEqual(133848, file.Objects[0].Offset);
             Assert.AreEqual(156, file.Objects[0].Size);
             Assert.AreEqual(23, file.Objects[0].TypeId);
 
-            Assert.AreEqual(9001362461581137807, file.Objects[40].Id);
-            Assert.AreEqual(199320, file.Objects[39].Offset);
-            Assert.AreEqual(24, file.Objects[39].Size);
-            Assert.AreEqual(33, file.Objects[39].TypeId);
+            Assert.AreEqual(8122810628805875483, file.Objects[40].Id);
+            Assert.AreEqual(210000, file.Objects[39].Offset);
+            Assert.AreEqual(2416, file.Objects[39].Size);
+            Assert.AreEqual(43, file.Objects[39].TypeId);
 
             file.Dispose();
         }

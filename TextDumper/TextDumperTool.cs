@@ -9,6 +9,9 @@ namespace UnityDataTools.TextDumper
     {
         StringBuilder m_StringBuilder = new StringBuilder(1024);
         bool m_SkipLargeArrays;
+        UnityFileReader m_Reader;
+        SerializedFile m_SerializedFile;
+        StreamWriter m_Writer;
 
         public int Dump(string path, string outputPath, bool skipLargeArrays)
         {
@@ -25,31 +28,38 @@ namespace UnityDataTools.TextDumper
 
                         if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                         {
-                            using var writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false);
-                            OutputSerializedFile("/" + node.Path, writer);
+                            using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false))
+                            {
+                                OutputSerializedFile("/" + node.Path);
+                            }
                         }
                     }
                 }
                 catch (NotSupportedException)
                 {
                     // Try as SerializedFile
-                    using var writer = new StreamWriter(Path.GetFileName(path) + ".txt", false);
-                    OutputSerializedFile("/" + path, writer);
+                    using (m_Writer = new StreamWriter(Path.GetFileName(path) + ".txt", false))
+                    {
+                        OutputSerializedFile("/" + path);
+                    }
                 }
             }
-            catch
+            catch (Exception e)
             {
-                Console.WriteLine("Error opening file. Is it a SerializedFile or AssetBundle?");
+                Console.WriteLine("Error!");
+                Console.Write($"{e.GetType()}: ");
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
                 return 1;
             }
 
             return 0;
         }
 
-        void RecursiveDump(TypeTreeNode node, UnityFileReader reader, StreamWriter writer, ref long offset, int level)
+        void RecursiveDump(TypeTreeNode node, ref long offset, int level)
         {
             bool skipChildren = false;
-
+            
             if (!node.IsArray)
             {
                 m_StringBuilder.Append(' ', level * 2);
@@ -67,15 +77,15 @@ namespace UnityDataTools.TextDumper
                 // Basic data type.
                 if (node.IsBasicType)
                 {
-                    m_StringBuilder.Append(ReadValue(node, reader, offset));
+                    m_StringBuilder.Append(ReadValue(node, offset));
 
                     offset += node.Size;
                 }
                 else if (node.Type == "string")
                 {
-                    var stringSize = reader.ReadInt32(offset);
+                    var stringSize = m_Reader.ReadInt32(offset);
 
-                    m_StringBuilder.Append(reader.ReadString(offset + 4, stringSize));
+                    m_StringBuilder.Append(m_Reader.ReadString(offset + 4, stringSize));
 
                     offset += stringSize + 4;
 
@@ -83,67 +93,20 @@ namespace UnityDataTools.TextDumper
                     skipChildren = true;
                 }
 
-                writer.WriteLine(m_StringBuilder);
+                m_Writer.WriteLine(m_StringBuilder);
                 m_StringBuilder.Clear();
+                
+                if (node.IsManagedReferenceRegistry)
+                {
+                    DumpManagedReferenceRegistry(node, ref offset, level + 1);
+
+                    // Skip child nodes as they were already processed here.
+                    skipChildren = true;
+                }
             }
             else
             {
-                // First child contains array size.
-                var sizeNode = node.Children[0];
-                // Second child contains array type information.
-                var dataNode = node.Children[1];
-
-                if (sizeNode.Size != 4 || !sizeNode.IsLeaf)
-                    throw new Exception("Invalid array size");
-
-                var arraySize = reader.ReadInt32(offset);
-                offset += 4;
-
-                m_StringBuilder.Append(' ', level * 2);
-                m_StringBuilder.Append("Array [Size=");
-                m_StringBuilder.Append(arraySize);
-                m_StringBuilder.Append(" Type=");
-                m_StringBuilder.Append(dataNode.Type);
-                m_StringBuilder.Append(']');
-
-                writer.WriteLine(m_StringBuilder);
-                m_StringBuilder.Clear();
-
-                if (arraySize > 0)
-                {
-                    if (dataNode.IsBasicType)
-                    {
-                        m_StringBuilder.Append(' ', (level + 1) * 2);
-
-                        if (arraySize > 256 && m_SkipLargeArrays)
-                        {
-                            m_StringBuilder.Append("<Skipped>");
-                            offset += dataNode.Size * arraySize;
-                        }
-                        else
-                        {
-                            var array = ReadBasicTypeArray(dataNode, reader, offset, arraySize);
-                            offset += dataNode.Size * arraySize;
-
-                            m_StringBuilder.Append(array.GetValue(0));
-                            for (int i = 1; i < arraySize; ++i)
-                            {
-                                m_StringBuilder.Append(", ");
-                                m_StringBuilder.Append(array.GetValue(i));
-                            }
-                        }
-
-                        writer.WriteLine(m_StringBuilder);
-                        m_StringBuilder.Clear();
-                    }
-                    else
-                    {
-                        for (int i = 0; i < arraySize; ++i)
-                        {
-                            RecursiveDump(dataNode, reader, writer, ref offset, level + 1);
-                        }
-                    }
-                }
+                DumpArray(node, ref offset, level);
 
                 // Skip child nodes as they were already processed here.
                 skipChildren = true;
@@ -158,82 +121,243 @@ namespace UnityDataTools.TextDumper
             {
                 foreach (var child in node.Children)
                 {
-                    RecursiveDump(child, reader, writer, ref offset, level + 1);
+                    RecursiveDump(child, ref offset, level + 1);
                 }
             }
         }
 
-        void OutputSerializedFile(string path, StreamWriter writer)
+        void DumpArray(TypeTreeNode node, ref long offset, int level, bool isManagedReferenceRegistry = false)
         {
-            using (var reader = new UnityFileReader(path, 64 * 1024 * 1024))
-            using (var sf = UnityFileSystem.OpenSerializedFile(path))
+            // First child contains array size.
+            var sizeNode = node.Children[0];
+            // Second child contains array type information.
+            var dataNode = node.Children[1];
+
+            if (sizeNode.Size != 4 || !sizeNode.IsLeaf)
+                throw new Exception("Invalid array size");
+
+            var arraySize = m_Reader.ReadInt32(offset);
+            offset += 4;
+
+            m_StringBuilder.Append(' ', level * 2);
+            m_StringBuilder.Append("Array [Size=");
+            m_StringBuilder.Append(arraySize);
+            m_StringBuilder.Append(" Type=");
+            m_StringBuilder.Append(dataNode.Type);
+            m_StringBuilder.Append(']');
+
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            if (arraySize > 0)
+            {
+                if (dataNode.IsBasicType)
+                {
+                    m_StringBuilder.Append(' ', (level + 1) * 2);
+
+                    if (arraySize > 256 && m_SkipLargeArrays)
+                    {
+                        m_StringBuilder.Append("<Skipped>");
+                        offset += dataNode.Size * arraySize;
+                    }
+                    else
+                    {
+                        var array = ReadBasicTypeArray(dataNode, offset, arraySize);
+                        offset += dataNode.Size * arraySize;
+
+                        m_StringBuilder.Append(array.GetValue(0));
+                        for (int i = 1; i < arraySize; ++i)
+                        {
+                            m_StringBuilder.Append(", ");
+                            m_StringBuilder.Append(array.GetValue(i));
+                        }
+                    }
+
+                    m_Writer.WriteLine(m_StringBuilder);
+                    m_StringBuilder.Clear();
+                }
+                else
+                {
+                    for (int i = 0; i < arraySize; ++i)
+                    {
+                        if (!isManagedReferenceRegistry)
+                        {
+                            RecursiveDump(dataNode, ref offset, level + 1);
+                        }
+                        else
+                        {
+                            DumpManagedReferenceData(dataNode, ref offset, level + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        void DumpManagedReferenceRegistry(TypeTreeNode node, ref long offset, int level)
+        {
+            if (node.Children.Count < 2)
+                throw new Exception("Invalid ManagedReferenceRegistry");
+                
+            // First child is version number.
+            RecursiveDump(node.Children[0], ref offset, level);
+            
+            var refIdsVectorNode = node.Children[1];
+
+            if (refIdsVectorNode.Children.Count < 1 || refIdsVectorNode.Name != "RefIds")
+                throw new Exception("Invalid ManagedReferenceRegistry RefIds vector");
+            
+            m_StringBuilder.Append(' ', level * 2);
+            m_StringBuilder.Append(refIdsVectorNode.Name);
+            m_StringBuilder.Append(' ');
+            m_StringBuilder.Append(refIdsVectorNode.Type);
+            m_StringBuilder.Append(' ');
+            
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+                
+            var refIdsArrayNode = refIdsVectorNode.Children[0];
+            
+            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
+                throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
+            
+            DumpArray(refIdsArrayNode, ref offset, level + 1, true);
+        }
+
+        void DumpManagedReferenceData(TypeTreeNode node, ref long offset, int level)
+        {
+            m_StringBuilder.Append(' ', level * 2);
+            m_StringBuilder.Append(node.Name);
+            m_StringBuilder.Append(' ');
+            m_StringBuilder.Append(node.Type);
+            m_StringBuilder.Append(' ');
+            
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            if (node.Children.Count < 3)
+                throw new Exception("Invalid ReferencedObject");
+            
+            // First child is rid.
+            RecursiveDump(node.Children[0], ref offset, level + 1);
+
+            // Second child is ReferencedManagedType
+            var refTypeNode = node.Children[1];
+            
+            if (refTypeNode.Children.Count < 3)
+                throw new Exception("Invalid ReferencedManagedType");
+
+            var refTypeOffset = offset;
+            var stringSize = m_Reader.ReadInt32(offset);
+            var clasName = m_Reader.ReadString(offset + 4, stringSize);
+            offset += stringSize + 4;
+            offset = (offset + 3) & ~(3);
+            
+            stringSize = m_Reader.ReadInt32(offset);
+            var namespaceName = m_Reader.ReadString(offset + 4, stringSize);
+            offset += stringSize + 4;
+            offset = (offset + 3) & ~(3);
+            
+            stringSize = m_Reader.ReadInt32(offset);
+            var assemblyName = m_Reader.ReadString(offset + 4, stringSize);
+            offset += stringSize + 4;
+            offset = (offset + 3) & ~(3);
+
+            // Not the most efficient way, but it simplifies the code.
+            RecursiveDump(refTypeNode, ref refTypeOffset, level + 1);
+
+            // Third child is the referenced type data.
+            var referencedTypeDataNode = node.Children[2];
+            level += 1;
+            
+            m_StringBuilder.Append(' ', level * 2);
+            m_StringBuilder.Append(referencedTypeDataNode.Name);
+            m_StringBuilder.Append(' ');
+            m_StringBuilder.Append(referencedTypeDataNode.Type);
+            m_StringBuilder.Append(' ');
+            
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(clasName, namespaceName, assemblyName);
+            
+            // Dump the ReferencedObject using its own TypeTree, but skip the root.
+            foreach (var child in refTypeRoot.Children)
+            {
+                RecursiveDump(child, ref offset, level + 1);
+            }
+        }
+
+        void OutputSerializedFile(string path)
+        {
+            using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
+            using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
             {
                 var i = 1;
 
-                writer.WriteLine("External References");
-                foreach (var extRef in sf.ExternalReferences)
+                m_Writer.WriteLine("External References");
+                foreach (var extRef in m_SerializedFile.ExternalReferences)
                 {
-                    writer.WriteLine($"path({i}): \"{extRef.Path}\" GUID: {extRef.Guid} Type: {(int)extRef.Type}");
+                    m_Writer.WriteLine($"path({i}): \"{extRef.Path}\" GUID: {extRef.Guid} Type: {(int)extRef.Type}");
                     ++i;
                 }
-                writer.WriteLine();
+                m_Writer.WriteLine();
 
-                foreach (var obj in sf.Objects)
+                foreach (var obj in m_SerializedFile.Objects)
                 {
-                    var root = sf.GetTypeTreeRoot(obj.Id);
+                    var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
                     var offset = obj.Offset;
 
-                    writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
-                    RecursiveDump(root, reader, writer, ref offset, 0);
-                    writer.WriteLine();
+                    m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
+                    RecursiveDump(root, ref offset, 0);
+                    m_Writer.WriteLine();
                 }
             }
         }
 
-        string ReadValue(TypeTreeNode node, UnityFileReader reader, long offset)
+        string ReadValue(TypeTreeNode node, long offset)
         {
             switch (Type.GetTypeCode(node.CSharpType))
             {
                 case TypeCode.Int32:
-                    return reader.ReadInt32(offset).ToString();
+                    return m_Reader.ReadInt32(offset).ToString();
 
                 case TypeCode.UInt32:
-                    return reader.ReadUInt32(offset).ToString();
+                    return m_Reader.ReadUInt32(offset).ToString();
 
                 case TypeCode.Single:
-                    return reader.ReadFloat(offset).ToString();
+                    return m_Reader.ReadFloat(offset).ToString();
 
                 case TypeCode.Double:
-                    return reader.ReadDouble(offset).ToString();
+                    return m_Reader.ReadDouble(offset).ToString();
 
                 case TypeCode.Int16:
-                    return reader.ReadInt16(offset).ToString();
+                    return m_Reader.ReadInt16(offset).ToString();
 
                 case TypeCode.UInt16:
-                    return reader.ReadUInt16(offset).ToString();
+                    return m_Reader.ReadUInt16(offset).ToString();
 
                 case TypeCode.Int64:
-                    return reader.ReadInt64(offset).ToString();
+                    return m_Reader.ReadInt64(offset).ToString();
 
                 case TypeCode.UInt64:
-                    return reader.ReadUInt64(offset).ToString();
+                    return m_Reader.ReadUInt64(offset).ToString();
 
                 case TypeCode.SByte:
-                    return reader.ReadUInt8(offset).ToString();
+                    return m_Reader.ReadUInt8(offset).ToString();
 
                 case TypeCode.Byte:
                 case TypeCode.Char:
-                    return reader.ReadUInt8(offset).ToString();
+                    return m_Reader.ReadUInt8(offset).ToString();
 
                 case TypeCode.Boolean:
-                    return (reader.ReadUInt8(offset) != 0).ToString();
+                    return (m_Reader.ReadUInt8(offset) != 0).ToString();
 
                 default:
                     throw new Exception($"Can't get value of {node.Type} type");
             }
         }
 
-        Array ReadBasicTypeArray(TypeTreeNode node, UnityFileReader reader, long offset, int arraySize)
+        Array ReadBasicTypeArray(TypeTreeNode node, long offset, int arraySize)
         {
             // Special case for boolean arrays.
             if (node.CSharpType == typeof(bool))
@@ -241,7 +365,7 @@ namespace UnityDataTools.TextDumper
                 var tmpArray = new byte[arraySize];
                 var boolArray = new bool[arraySize];
 
-                reader.ReadArray(offset, arraySize * node.Size, tmpArray);
+                m_Reader.ReadArray(offset, arraySize * node.Size, tmpArray);
 
                 for (int i = 0; i < arraySize; ++i)
                 {
@@ -254,7 +378,7 @@ namespace UnityDataTools.TextDumper
             {
                 var array = Array.CreateInstance(node.CSharpType, arraySize);
 
-                reader.ReadArray(offset, arraySize * node.Size, array);
+                m_Reader.ReadArray(offset, arraySize * node.Size, array);
 
                 return array;
             }

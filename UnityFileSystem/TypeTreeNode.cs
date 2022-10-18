@@ -38,6 +38,9 @@ namespace UnityDataTools.FileSystem
 
         // True if the field is an array.
         public bool IsArray => Flags.HasFlag(TypeTreeFlags.IsArray);
+        
+        // True if the field is a ManagedReferenceRegistry
+        public bool IsManagedReferenceRegistry => Flags.HasFlag(TypeTreeFlags.IsManagedReferenceRegistry);
 
         // C# type corresponding to the node type
         public Type CSharpType => m_CSharpType.Value;

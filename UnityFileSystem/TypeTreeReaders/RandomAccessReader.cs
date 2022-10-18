@@ -18,9 +18,8 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
     // determined by calculating the size of the data that was serialized before it.
     public class RandomAccessReader : IEnumerable<RandomAccessReader>
     {
-        TypeTreeNode m_Node;
+        SerializedFile m_SerializedFile;
         UnityFileReader m_Reader;
-        long m_Offset;
         RandomAccessReader m_LastCachedChild = null;
         Lazy<int> m_Size;
         object m_Value = null;
@@ -28,31 +27,47 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
         List<RandomAccessReader> m_childrenCacheArray;
 
         public int Size => m_Size.Value;
-        public long Offset => m_Offset;
+        public long Offset { get; }
 
-        public bool IsObject => !m_Node.IsLeaf && !m_Node.IsBasicType && !m_Node.IsArray;
-        public bool IsArrayOfObjects => m_Node.IsArray && !m_Node.Children[1].IsBasicType;
+        public bool IsObject => !TypeTreeNode.IsLeaf && !TypeTreeNode.IsBasicType && !TypeTreeNode.IsArray;
+        public bool IsArrayOfObjects => TypeTreeNode.IsArray && !TypeTreeNode.Children[1].IsBasicType;
+        public bool IsInManagedReferenceRegistry { get; }
+        public TypeTreeNode TypeTreeNode { get; }
 
-        public TypeTreeNode TypeTreeNode => m_Node;
-
-        public RandomAccessReader(TypeTreeNode node, UnityFileReader reader, long offset)
+        public RandomAccessReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset, bool isInManagedReferenceRegistry = false)
         {
+            m_SerializedFile = serializedFile;
+            IsInManagedReferenceRegistry = isInManagedReferenceRegistry;
+            
             // Special case for vector and map objects, they always have a single Array child so we skip it.
             if (node.Type == "vector" || node.Type == "map")
             {
-                m_Node = node.Children[0];
+                TypeTreeNode = node.Children[0];
             }
             else
             {
-                m_Node = node;
+                TypeTreeNode = node;
             }
 
             m_Reader = reader;
-            m_Offset = offset;
+            Offset = offset;
 
             if (IsObject)
             {
                 m_childrenCacheObject = new Dictionary<string, RandomAccessReader>();
+
+                if (IsInManagedReferenceRegistry && TypeTreeNode.Type == "ReferencedObject")
+                {
+                    var referencedManagedType = GetChild("type");
+                    var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(
+                        referencedManagedType["class"].GetValue<string>(),
+                        referencedManagedType["ns"].GetValue<string>(),
+                        referencedManagedType["asm"].GetValue<string>());
+
+                    // Manually create and cache a reader for the referenced type data, using its own TypeTree.
+                    var refTypeDataReader = new RandomAccessReader(m_SerializedFile, refTypeRoot, reader, referencedManagedType.Offset + referencedManagedType.Size);
+                    m_childrenCacheObject["data"] = refTypeDataReader;
+                }
             }
 
             m_Size = new Lazy<int>(GetSize);
@@ -61,24 +76,24 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
         public bool HasChild(string name)
         {
             // This was faster than using a Dictionary.
-            return m_Node.Children.Find(n => n.Name == name) != null;
+            return TypeTreeNode.Children.Find(n => n.Name == name) != null;
         }
 
         int GetSize()
         {
             int size;
 
-            if (m_Node.IsBasicType)
+            if (TypeTreeNode.IsBasicType)
             {
-                size = m_Node.Size;
+                size = TypeTreeNode.Size;
             }
-            else if (m_Node.IsArray)
+            else if (TypeTreeNode.IsArray)
             {
-                var dataNode = m_Node.Children[1];
+                var dataNode = TypeTreeNode.Children[1];
 
                 if (dataNode.IsBasicType)
                 {
-                    var arraySize = m_Reader.ReadInt32(m_Offset);
+                    var arraySize = m_Reader.ReadInt32(Offset);
                     size = dataNode.Size * arraySize;
                     size += 4;
                 }
@@ -95,7 +110,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                         else
                         {
                             var lastArrayElement = GetArrayElement(arraySize - 1);
-                            size = (int)(lastArrayElement.Offset + lastArrayElement.Size - m_Offset);
+                            size = (int)(lastArrayElement.Offset + lastArrayElement.Size - Offset);
                         }
                     }
                     else
@@ -104,21 +119,21 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                     }
                 }
             }
-            else if (m_Node.CSharpType == typeof(string))
+            else if (TypeTreeNode.CSharpType == typeof(string))
             {
-                size = m_Reader.ReadInt32(m_Offset) + 4;
+                size = m_Reader.ReadInt32(Offset) + 4;
             }
             else
             {
-                var lastChild = GetChild(m_Node.Children.Last().Name);
-                size = (int)(lastChild.Offset + lastChild.Size - m_Offset);
+                var lastChild = GetChild(TypeTreeNode.Children.Last().Name);
+                size = (int)(lastChild.Offset + lastChild.Size - Offset);
             }
 
-            if (m_Node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || m_Node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes))
+            if (TypeTreeNode.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || TypeTreeNode.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes))
             {
-                var endOffset = (m_Offset + size + 3) & ~(3);
+                var endOffset = (Offset + size + 3) & ~(3);
 
-                size = (int)(endOffset - m_Offset);
+                size = (int)(endOffset - Offset);
             }
 
             return size;
@@ -137,18 +152,18 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             long offset;
             if (m_LastCachedChild == null)
             {
-                offset = m_Offset;
+                offset = Offset;
             }
             else
             {
                 offset = m_LastCachedChild.Offset + m_LastCachedChild.Size;
             }
 
-            for (int i = m_childrenCacheObject.Count; i < m_Node.Children.Count; ++i)
+            for (int i = m_childrenCacheObject.Count; i < TypeTreeNode.Children.Count; ++i)
             {
-                var child = m_Node.Children[i];
+                var child = TypeTreeNode.Children[i];
 
-                nodeReader = new RandomAccessReader(child, m_Reader, offset);
+                nodeReader = new RandomAccessReader(m_SerializedFile, child, m_Reader, offset, child.IsManagedReferenceRegistry || IsInManagedReferenceRegistry);
                 m_childrenCacheObject.Add(child.Name, nodeReader);
                 m_LastCachedChild = nodeReader;
 
@@ -167,15 +182,15 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             {
                 if (!IsArrayOfObjects)
                 {
-                    if (m_Node.IsArray)
+                    if (TypeTreeNode.IsArray)
                     {
-                        return m_Reader.ReadInt32(m_Offset);
+                        return m_Reader.ReadInt32(Offset);
                     }
 
                     throw new InvalidOperationException("Node is not an array");
                 }
 
-                var arraySize = m_Reader.ReadInt32(m_Offset);
+                var arraySize = m_Reader.ReadInt32(Offset);
                 m_childrenCacheArray = new List<RandomAccessReader>(arraySize);
             }
 
@@ -193,18 +208,18 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             long offset;
             if (m_LastCachedChild == null)
             {
-                offset = m_Offset + 4; // 4 is the array size.
+                offset = Offset + 4; // 4 is the array size.
             }
             else
             {
                 offset = m_LastCachedChild.Offset + m_LastCachedChild.Size;
             }
 
-            var dataNode = m_Node.Children[1];
+            var dataNode = TypeTreeNode.Children[1];
 
             for (int i = m_childrenCacheArray.Count; i < arraySize; ++i)
             {
-                nodeReader = new RandomAccessReader(dataNode, m_Reader, offset);
+                nodeReader = new RandomAccessReader(m_SerializedFile, dataNode, m_Reader, offset, IsInManagedReferenceRegistry);
                 m_childrenCacheArray.Add(nodeReader);
                 m_LastCachedChild = nodeReader;
 
@@ -217,7 +232,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             throw new IndexOutOfRangeException();
         }
 
-        public int Count => IsArrayOfObjects ? GetArraySize() : (IsObject ? m_Node.Children.Count : 0);
+        public int Count => IsArrayOfObjects ? GetArraySize() : (IsObject ? TypeTreeNode.Children.Count : 0);
 
         public RandomAccessReader this[string name] => GetChild(name);
 
@@ -227,56 +242,56 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
         {
             if (m_Value == null)
             {
-                switch (Type.GetTypeCode(m_Node.CSharpType))
+                switch (Type.GetTypeCode(TypeTreeNode.CSharpType))
                 {
                     case TypeCode.Int32:
-                        m_Value = m_Reader.ReadInt32(m_Offset);
+                        m_Value = m_Reader.ReadInt32(Offset);
                         break;
 
                     case TypeCode.UInt32:
-                        m_Value = m_Reader.ReadUInt32(m_Offset);
+                        m_Value = m_Reader.ReadUInt32(Offset);
                         break;
 
                     case TypeCode.Single:
-                        m_Value = m_Reader.ReadFloat(m_Offset);
+                        m_Value = m_Reader.ReadFloat(Offset);
                         break;
 
                     case TypeCode.Double:
-                        m_Value = m_Reader.ReadDouble(m_Offset);
+                        m_Value = m_Reader.ReadDouble(Offset);
                         break;
 
                     case TypeCode.Int16:
-                        m_Value = m_Reader.ReadInt16(m_Offset);
+                        m_Value = m_Reader.ReadInt16(Offset);
                         break;
 
                     case TypeCode.UInt16:
-                        m_Value = m_Reader.ReadUInt16(m_Offset);
+                        m_Value = m_Reader.ReadUInt16(Offset);
                         break;
 
                     case TypeCode.Int64:
-                        m_Value = m_Reader.ReadInt64(m_Offset);
+                        m_Value = m_Reader.ReadInt64(Offset);
                         break;
 
                     case TypeCode.UInt64:
-                        m_Value = m_Reader.ReadUInt64(m_Offset);
+                        m_Value = m_Reader.ReadUInt64(Offset);
                         break;
 
                     case TypeCode.SByte:
-                        m_Value = m_Reader.ReadUInt8(m_Offset);
+                        m_Value = m_Reader.ReadUInt8(Offset);
                         break;
 
                     case TypeCode.Byte:
                     case TypeCode.Char:
-                        m_Value = m_Reader.ReadUInt8(m_Offset);
+                        m_Value = m_Reader.ReadUInt8(Offset);
                         break;
 
                     case TypeCode.Boolean:
-                        m_Value = (m_Reader.ReadUInt8(m_Offset) != 0);
+                        m_Value = (m_Reader.ReadUInt8(Offset) != 0);
                         break;
 
                     case TypeCode.String:
-                        var stringSize = m_Reader.ReadInt32(m_Offset);
-                        m_Value = m_Reader.ReadString(m_Offset + 4, stringSize);
+                        var stringSize = m_Reader.ReadInt32(Offset);
+                        m_Value = m_Reader.ReadString(Offset + 4, stringSize);
                         break;
 
                     default:
@@ -286,7 +301,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                             return (T)m_Value;
                         }
 
-                        throw new Exception($"Can't get value of {m_Node.Type} type");
+                        throw new Exception($"Can't get value of {TypeTreeNode.Type} type");
                 }
             }
 
@@ -295,8 +310,8 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
 
         Array ReadBasicTypeArray()
         {
-            var arraySize = m_Reader.ReadInt32(m_Offset);
-            var elementNode = m_Node.Children[1];
+            var arraySize = m_Reader.ReadInt32(Offset);
+            var elementNode = TypeTreeNode.Children[1];
 
             // Special case for boolean arrays.
             if (elementNode.CSharpType == typeof(bool))
@@ -304,7 +319,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                 var tmpArray = new byte[arraySize];
                 var boolArray = new bool[arraySize];
 
-                m_Reader.ReadArray(m_Offset + 4, arraySize * elementNode.Size, tmpArray);
+                m_Reader.ReadArray(Offset + 4, arraySize * elementNode.Size, tmpArray);
 
                 for (int i = 0; i < arraySize; ++i)
                 {
@@ -317,7 +332,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             {
                 var array = Array.CreateInstance(elementNode.CSharpType, arraySize);
 
-                m_Reader.ReadArray(m_Offset + 4, arraySize * elementNode.Size, array);
+                m_Reader.ReadArray(Offset + 4, arraySize * elementNode.Size, array);
 
                 return array;
             }
@@ -339,7 +354,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                 {
                     if (m_NodeReader.IsObject)
                     {
-                        return m_NodeReader.GetChild(m_NodeReader.m_Node.Children[m_Index].Name);
+                        return m_NodeReader.GetChild(m_NodeReader.TypeTreeNode.Children[m_Index].Name);
                     }
                     else if (m_NodeReader.IsArrayOfObjects)
                     {
