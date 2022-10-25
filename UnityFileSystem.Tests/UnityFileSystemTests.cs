@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
@@ -456,6 +457,39 @@ namespace UnityDataTools.FileSystem.Tests
 
                 Assert.Greater(count, 1);
             }
+        }
+
+        [Test]
+        public void GetRefTypeTypeTree_InvalidFQN_ThrowsException()
+        {
+            Assert.Throws<ArgumentException>(() => serializedFile.GetRefTypeTypeTreeRoot("this", "is", "wrong"));
+        }
+
+        [Test]
+        public void GetRefTypeTree_ValidSerializedFile_ReturnNode()
+        {
+            TypeTreeNode node = null;
+            
+            Assert.DoesNotThrow(() => node = serializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "", "Assembly-CSharp"));
+            Assert.NotNull(node);
+        }
+
+        [Test]
+        public void GetTypeTreeNodeInfo_RefTypeTypeTree_ReturnExpectedValues()
+        {
+            var node = serializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "",
+                "Assembly-CSharp");
+
+            Assert.AreEqual(2, node.Children.Count);
+            Assert.AreEqual("Apple", node.Type);
+            Assert.AreEqual("Base", node.Name);
+            
+            Assert.AreEqual("int", node.Children[0].Type);
+            Assert.AreEqual("m_Data", node.Children[0].Name);
+            Assert.AreEqual(4, node.Children[0].Size);
+            
+            Assert.AreEqual("string", node.Children[1].Type);
+            Assert.AreEqual("m_Description", node.Children[1].Name);
         }
     }
 }
