@@ -21,6 +21,7 @@
 **/*.gen.csproj
 **/*.gen.sln
 **/.vscode
+**/.DS_Store
 **/bin/
 **/obj/
 **/.idea/

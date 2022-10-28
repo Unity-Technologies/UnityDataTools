@@ -17,7 +17,7 @@ namespace UnityDataTools.Analyzer.Processors
 
         List<int> m_Keywords = new();
         Dictionary<int, string> m_KeywordNames = new();
-        HashSet<uint> m_UniquePrograms = new();
+        HashSet<(sbyte, uint)> m_UniquePrograms = new();
 
         static Dictionary<string, int> s_Keywords = new();
         static long s_SubProgramId = 0;
@@ -34,6 +34,9 @@ namespace UnityDataTools.Analyzer.Processors
 
         public void Init(SQLiteConnection db)
         {
+            s_Keywords.Clear();
+            s_SubProgramId = 0;
+            
             using var command = new SQLiteCommand(db);
 
             command.CommandText = Properties.Resources.Shader;
@@ -159,7 +162,7 @@ namespace UnityDataTools.Analyzer.Processors
 
             int decompressedSize = 0;
 
-            if (!reader["decompressedLengths"].TypeTreeNode.Children[1].IsLeaf)
+            if (reader["decompressedLengths"][0].IsArray)
             {
                 // The decompressed lengths are stored per graphics API.
                 foreach (var apiLengths in reader["decompressedLengths"])
@@ -195,9 +198,11 @@ namespace UnityDataTools.Analyzer.Processors
 
             foreach (var subProgram in subPrograms)
             {
+                var api = subProgram["m_GpuProgramType"].GetValue<sbyte>();
+                
                 m_Keywords.Clear();
-
-                m_UniquePrograms.Add(subProgram["m_BlobIndex"].GetValue<uint>());
+                
+                m_UniquePrograms.Add((api, subProgram["m_BlobIndex"].GetValue<uint>()));
 
                 if (subProgram.HasChild("m_KeywordIndices"))
                 {
@@ -233,7 +238,7 @@ namespace UnityDataTools.Analyzer.Processors
                 m_InsertSubProgramCommand.Parameters["@id"].Value = s_SubProgramId;
                 m_InsertSubProgramCommand.Parameters["@sub_program"].Value = progNum++;
                 m_InsertSubProgramCommand.Parameters["@hw_tier"].Value = hwTier != -1 ? hwTier : subProgram["m_ShaderHardwareTier"].GetValue<sbyte>();
-                m_InsertSubProgramCommand.Parameters["@api"].Value = subProgram["m_GpuProgramType"].GetValue<sbyte>();
+                m_InsertSubProgramCommand.Parameters["@api"].Value = api;
                 m_InsertSubProgramCommand.ExecuteNonQuery();
 
                 m_InsertSubProgramKeywordsCommand.Parameters["@subprogram_id"].Value = s_SubProgramId;

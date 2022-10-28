@@ -126,7 +126,7 @@ namespace UnityDataTools.TextDumper
             }
         }
 
-        void DumpArray(TypeTreeNode node, ref long offset, int level, bool isManagedReferenceRegistry = false)
+        void DumpArray(TypeTreeNode node, ref long offset, int level)
         {
             // First child contains array size.
             var sizeNode = node.Children[0];
@@ -178,16 +178,11 @@ namespace UnityDataTools.TextDumper
                 }
                 else
                 {
+                    ++level;
+                    
                     for (int i = 0; i < arraySize; ++i)
                     {
-                        if (!isManagedReferenceRegistry)
-                        {
-                            RecursiveDump(dataNode, ref offset, level + 1);
-                        }
-                        else
-                        {
-                            DumpManagedReferenceData(dataNode, ref offset, level + 1);
-                        }
+                        RecursiveDump(dataNode, ref offset, level);
                     }
                 }
             }
@@ -199,56 +194,78 @@ namespace UnityDataTools.TextDumper
                 throw new Exception("Invalid ManagedReferenceRegistry");
                 
             // First child is version number.
+            var version = m_Reader.ReadInt32(offset);
             RecursiveDump(node.Children[0], ref offset, level);
-            
-            var refIdsVectorNode = node.Children[1];
 
-            if (refIdsVectorNode.Children.Count < 1 || refIdsVectorNode.Name != "RefIds")
-                throw new Exception("Invalid ManagedReferenceRegistry RefIds vector");
-            
-            m_StringBuilder.Append(' ', level * 2);
-            m_StringBuilder.Append(refIdsVectorNode.Name);
-            m_StringBuilder.Append(' ');
-            m_StringBuilder.Append(refIdsVectorNode.Type);
-            m_StringBuilder.Append(' ');
-            
-            m_Writer.WriteLine(m_StringBuilder);
-            m_StringBuilder.Clear();
+            TypeTreeNode refTypeNode;
+            TypeTreeNode refObjData;
                 
-            var refIdsArrayNode = refIdsVectorNode.Children[0];
-            
-            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
-                throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
-            
-            DumpArray(refIdsArrayNode, ref offset, level + 1, true);
+            if (version == 1)
+            {
+                // Second child is the ReferencedObject.
+                var refObjNode = node.Children[1];
+                // And its children are the referenced type and data nodes.
+                refTypeNode = refObjNode.Children[0];
+                refObjData = refObjNode.Children[1];
+                
+                int i = 0;
+
+                while (DumpManagedReferenceData(refTypeNode, refObjData, ref offset, level, i++))
+                {}
+            }
+            else if (version == 2)
+            {
+                // Second child is the RefIds vector.
+                var refIdsVectorNode = node.Children[1];
+
+                if (refIdsVectorNode.Children.Count < 1 || refIdsVectorNode.Name != "RefIds")
+                    throw new Exception("Invalid ManagedReferenceRegistry RefIds vector");
+
+                var refIdsArrayNode = refIdsVectorNode.Children[0];
+
+                if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
+                    throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
+
+                // First child is the array size.
+                int arraySize = m_Reader.ReadInt32(offset);
+                offset += 4;
+                
+                // Second child is the ReferencedObject.
+                var refObjNode = refIdsArrayNode.Children[1];
+
+                for (int i = 0; i < arraySize; ++i)
+                {
+                    // First child is the rid.
+                    long rid = m_Reader.ReadInt64(offset);
+                    offset += 8;
+                    
+                    // And the next children are the referenced type and data nodes.
+                    refTypeNode = refObjNode.Children[1];
+                    refObjData = refObjNode.Children[2];
+                    DumpManagedReferenceData(refTypeNode, refObjData, ref offset, level, rid);
+                }
+            }
+            else
+            {
+                throw new Exception("Unsupported ManagedReferenceRegistry version");
+            }
         }
 
-        void DumpManagedReferenceData(TypeTreeNode node, ref long offset, int level)
+        bool DumpManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, ref long offset, int level, long id)
         {
-            m_StringBuilder.Append(' ', level * 2);
-            m_StringBuilder.Append(node.Name);
-            m_StringBuilder.Append(' ');
-            m_StringBuilder.Append(node.Type);
-            m_StringBuilder.Append(' ');
-            
-            m_Writer.WriteLine(m_StringBuilder);
-            m_StringBuilder.Clear();
-
-            if (node.Children.Count < 3)
-                throw new Exception("Invalid ReferencedObject");
-            
-            // First child is rid.
-            RecursiveDump(node.Children[0], ref offset, level + 1);
-
-            // Second child is ReferencedManagedType
-            var refTypeNode = node.Children[1];
-            
             if (refTypeNode.Children.Count < 3)
                 throw new Exception("Invalid ReferencedManagedType");
+            
+            m_StringBuilder.Append(' ', level * 2);
+            m_StringBuilder.Append($"rid_");
+            m_StringBuilder.Append(id);
+            m_StringBuilder.Append(" ReferencedObject");
+            m_StringBuilder.AppendLine();
+            ++level;
 
             var refTypeOffset = offset;
             var stringSize = m_Reader.ReadInt32(offset);
-            var clasName = m_Reader.ReadString(offset + 4, stringSize);
+            var className = m_Reader.ReadString(offset + 4, stringSize);
             offset += stringSize + 4;
             offset = (offset + 3) & ~(3);
             
@@ -262,13 +279,12 @@ namespace UnityDataTools.TextDumper
             offset += stringSize + 4;
             offset = (offset + 3) & ~(3);
 
-            // Not the most efficient way, but it simplifies the code.
-            RecursiveDump(refTypeNode, ref refTypeOffset, level + 1);
+            if (className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM")
+                return false;
 
-            // Third child is the referenced type data.
-            var referencedTypeDataNode = node.Children[2];
-            level += 1;
-            
+            // Not the most efficient way, but it simplifies the code.
+            RecursiveDump(refTypeNode, ref refTypeOffset, level);
+
             m_StringBuilder.Append(' ', level * 2);
             m_StringBuilder.Append(referencedTypeDataNode.Name);
             m_StringBuilder.Append(' ');
@@ -278,13 +294,15 @@ namespace UnityDataTools.TextDumper
             m_Writer.WriteLine(m_StringBuilder);
             m_StringBuilder.Clear();
 
-            var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(clasName, namespaceName, assemblyName);
-            
+            var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
+                
             // Dump the ReferencedObject using its own TypeTree, but skip the root.
             foreach (var child in refTypeRoot.Children)
             {
                 RecursiveDump(child, ref offset, level + 1);
             }
+
+            return true;
         }
 
         void OutputSerializedFile(string path)

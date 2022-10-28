@@ -96,7 +96,14 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                     }
                     else
                     {
-                        ProcessManagedReferenceData(dataNode, propertyPath);
+                        if (dataNode.Children.Count < 3)
+                            throw new Exception("Invalid ReferencedObject");
+                            
+                        // First child is rid.
+                        long rid = m_Reader.ReadInt64(m_Offset);
+                        m_Offset += 8;
+                        
+                        ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], propertyPath);
                     }
                     propertyPath.Remove(size, propertyPath.Length - size);
                 }
@@ -109,41 +116,51 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
                 throw new Exception("Invalid ManagedReferenceRegistry");
 
             // First child is version number.
+            var version = m_Reader.ReadInt32(m_Offset);
             m_Offset += node.Children[0].Size;
 
-            var refIdsVectorNode = node.Children[1];
+            if (version == 1)
+            {
+                // Second child is the ReferencedObject.
+                var refObjNode = node.Children[1];
+                // And its children are the referenced type and data nodes.
+                var refTypeNode = refObjNode.Children[0];
+                var refObjData = refObjNode.Children[1];
 
-            if (refIdsVectorNode.Children.Count < 1 || refIdsVectorNode.Name != "RefIds")
-                throw new Exception("Invalid ManagedReferenceRegistry RefIds vector");
+                while (ProcessManagedReferenceData(refTypeNode, refObjData, propertyPath))
+                {}
+            }
+            else if (version == 2)
+            {
+                var refIdsVectorNode = node.Children[1];
 
-            var refIdsArrayNode = refIdsVectorNode.Children[0];
-            
-            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
-                throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
-            
-            var size = propertyPath.Length;
-            propertyPath.Append('.');
-            propertyPath.Append("RefIds");
-            ProcessArray(refIdsArrayNode, propertyPath, true);
-            propertyPath.Remove(size, propertyPath.Length - size);
+                if (refIdsVectorNode.Children.Count < 1 || refIdsVectorNode.Name != "RefIds")
+                    throw new Exception("Invalid ManagedReferenceRegistry RefIds vector");
+
+                var refIdsArrayNode = refIdsVectorNode.Children[0];
+
+                if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
+                    throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
+
+                var size = propertyPath.Length;
+                propertyPath.Append('.');
+                propertyPath.Append("RefIds");
+                ProcessArray(refIdsArrayNode, propertyPath, true);
+                propertyPath.Remove(size, propertyPath.Length - size);
+            }
+            else
+            {
+                throw new Exception("Unsupported ManagedReferenceRegistry version");
+            }
         }
         
-        void ProcessManagedReferenceData(TypeTreeNode node, StringBuilder propertyPath)
+        bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, StringBuilder propertyPath)
         {
-            if (node.Children.Count < 3)
-                throw new Exception("Invalid ReferencedObject");
-            
-            // First child is rid.
-            m_Offset += node.Children[0].Size;
-
-            // Second child is ReferencedManagedType
-            var refTypeNode = node.Children[1];
-            
             if (refTypeNode.Children.Count < 3)
                 throw new Exception("Invalid ReferencedManagedType");
-            
+
             var stringSize = m_Reader.ReadInt32(m_Offset);
-            var clasName = m_Reader.ReadString(m_Offset + 4, stringSize);
+            var className = m_Reader.ReadString(m_Offset + 4, stringSize);
             m_Offset += stringSize + 4;
             m_Offset = (m_Offset + 3) & ~(3);
             
@@ -156,8 +173,11 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             var assemblyName = m_Reader.ReadString(m_Offset + 4, stringSize);
             m_Offset += stringSize + 4;
             m_Offset = (m_Offset + 3) & ~(3);
+            
+            if (className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM")
+                return false;
 
-            var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(clasName, namespaceName, assemblyName);
+            var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
 
             // Process the ReferencedObject using its own TypeTree.
             var size = propertyPath.Length;
@@ -165,6 +185,8 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders
             propertyPath.Append("data");
             ProcessNode(refTypeTypeTree, propertyPath);
             propertyPath.Remove(size, propertyPath.Length - size);
+
+            return true;
         }
 
         private void ExtractPPtr(string propertyPath)

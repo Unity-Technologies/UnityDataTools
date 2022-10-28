@@ -6,13 +6,26 @@ namespace UnityDataTools.FileSystem
     // This is the main entry point. Provides methods to mount archives and open files.
     public static class UnityFileSystem
     {
-        static UnityFileSystem()
+        public static void Init()
         {
             // Initialize the native library.
             var r = DllWrapper.Init();
-            HandleErrors(r);
-            
-            // TODO: should Cleanup be called by the AppDomain.Unload event or something else?
+
+            if (r != ReturnCode.Success && r != ReturnCode.AlreadyInitialized)
+            {
+                HandleErrors(r);
+            }
+        }
+        
+        public static void Cleanup()
+        {
+            // Uninitialize the native library.
+            var r = DllWrapper.Cleanup();
+
+            if (r != ReturnCode.Success && r != ReturnCode.NotInitialized)
+            {
+                HandleErrors(r);
+            }
         }
 
         public static UnityArchive MountArchive(string path, string mountPoint)

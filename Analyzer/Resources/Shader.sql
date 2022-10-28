@@ -73,8 +73,8 @@ SELECT sp.shader AS shader_id, o.name, sp.sub_shader, sp.hw_tier, api.name api, 
 FROM shader_subprograms sp
 CROSS JOIN objects o ON o.id = sp.shader
 CROSS JOIN shader_apis api ON api.id = sp.api
-CROSS JOIN shader_subprogram_keywords sk ON sk.subprogram_id = sp.id
-CROSS JOIN shader_keywords k ON sk.keyword_id = k.id
+LEFT JOIN shader_subprogram_keywords sk ON sk.subprogram_id = sp.id
+LEFT JOIN shader_keywords k ON sk.keyword_id = k.id
 GROUP BY sp.id;
 
 CREATE VIEW shader_keyword_ratios AS

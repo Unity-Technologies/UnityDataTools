@@ -1,13 +1,29 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 namespace UnityDataTools.FileSystem.Tests
 {
     public class ArchiveTests
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            TestData.LoadTestData();
+            
+            UnityFileSystem.Init();
+        }
+        
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            UnityFileSystem.Cleanup();
+        }
+
         [Test]
         public void MountArchive_InvalidPath_ThrowsException()
         {
@@ -23,11 +39,11 @@ namespace UnityDataTools.FileSystem.Tests
             var ex = Assert.Throws<NotSupportedException>(() => UnityFileSystem.MountArchive(path, "archive:/"));
             Assert.AreEqual($"Invalid file format reading {path}.", ex.Message);
         }
-
-        [Test]
-        public void MountArchive_ValidArchive_ReturnsArchive()
+        
+        [TestCaseSource(typeof(TestData), nameof(TestData.GetTestFolders))]
+        public void MountArchive_ValidArchive_ReturnsArchive(string testFolder)
         {
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
+            var path = Path.Combine(testFolder, "AssetBundles", "assetbundle");
 
             UnityArchive archive = null;
             Assert.DoesNotThrow(() => archive = UnityFileSystem.MountArchive(path, "archive:/"));
@@ -36,11 +52,11 @@ namespace UnityDataTools.FileSystem.Tests
             archive.Dispose();
         }
 
-        [Test]
+        [TestCaseSource(typeof(TestData), nameof(TestData.GetTestFolders))]
         [Ignore("This test doesn't return the expected error, this condition is probably not handled correctly in Unity")]
-        public void DisposeArchive_ValidArchive_UnmountsArchive()
+        public void DisposeArchive_ValidArchive_UnmountsArchive(string testFolder)
         {
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
+            var path = Path.Combine(testFolder, "AssetBundles", "assetbundle");
             var archive = UnityFileSystem.MountArchive(path, "archive:/");
             var node = archive.Nodes[0];
 
@@ -49,58 +65,71 @@ namespace UnityDataTools.FileSystem.Tests
 
             archive.Dispose();
         }
-
-        [Test]
-        public void Nodes_Disposed_ThrowsException()
+        
+        [TestCaseSource(typeof(TestData), nameof(TestData.GetTestFolders))]
+        public void Nodes_Disposed_ThrowsException(string testFolder)
         {
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
+            var path = Path.Combine(testFolder, "AssetBundles", "assetbundle");
             var archive = UnityFileSystem.MountArchive(path, "archive:/");
             archive.Dispose();
             
             Assert.Throws<ObjectDisposedException>(() => { var _ = archive.Nodes; });
         }
-
-        [Test]
-        public void Nodes_ValidArchive_ExpectedContent()
+        
+        [TestCaseSource(typeof(TestData), nameof(TestData.GetTestFolders))]
+        public void Nodes_ValidArchive_ExpectedContent(string testFolder)
         {
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
+            var path = Path.Combine(testFolder, "AssetBundles", "assetbundle");
             var archive = UnityFileSystem.MountArchive(path, "archive:/");
 
             var nodes = archive.Nodes;
 
-            Assert.AreEqual(3, nodes.Count);
+            Assert.AreEqual(TestData.ExpectedValues[testFolder]["NodeCount"], nodes.Count);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994", nodes[0].Path);
-            Assert.AreEqual(212536, nodes[0].Size);
-            Assert.AreEqual(ArchiveNodeFlags.SerializedFile, nodes[0].Flags);
+            Assert.AreEqual(TestData.ExpectedValues[testFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-Size"], nodes[0].Size);
+            Assert.AreEqual((ArchiveNodeFlags)TestData.ExpectedValues[testFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-Flags"], nodes[0].Flags);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS", nodes[1].Path);
-            Assert.AreEqual(2833872, nodes[1].Size);
-            Assert.AreEqual(ArchiveNodeFlags.None, nodes[1].Flags);
+            Assert.AreEqual(TestData.ExpectedValues[testFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Size"], nodes[1].Size);
+            Assert.AreEqual((ArchiveNodeFlags)TestData.ExpectedValues[testFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Flags"], nodes[1].Flags);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource", nodes[2].Path);
-            Assert.AreEqual(5248, nodes[2].Size);
-            Assert.AreEqual(ArchiveNodeFlags.None, nodes[2].Flags);
+            Assert.AreEqual(TestData.ExpectedValues[testFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Size"], nodes[2].Size);
+            Assert.AreEqual((ArchiveNodeFlags)TestData.ExpectedValues[testFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Flags"], nodes[2].Flags);
 
             archive.Dispose();
         }
     }
 
+    [TestFixtureSource(typeof(TestData), nameof(TestData.GetTestFolders))]
     public class UnityFileTests
     {
-        private UnityArchive archive;
+        private UnityArchive m_Archive;
+        private string m_TestFolder;
+
+        public UnityFileTests(string testFolder)
+        {
+            m_TestFolder = testFolder;
+        }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
-            archive = UnityFileSystem.MountArchive(path, "archive:/");
+            TestData.LoadTestData();
+            
+            UnityFileSystem.Init();
+            
+            var path = Path.Combine(m_TestFolder, "AssetBundles", "assetbundle");
+            m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            archive.Dispose();
+            m_Archive.Dispose();
+            
+            UnityFileSystem.Cleanup();
         }
 
         [Test]
@@ -229,35 +258,44 @@ namespace UnityDataTools.FileSystem.Tests
         {
             var file = UnityFileSystem.OpenFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
             var buffer = new Byte[100];
-            Byte[] expectedBuffer = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10, 21, 0, 0, 0, 0, 0, 3, 62, 56, 0, 0, 0, 0, 0, 2, 10, 80, 0, 0, 0, 0, 0, 0, 0, 0, 50, 48, 50, 51, 46, 49, 46, 48, 97, 49, 51, 0, 19, 0, 0, 0, 1, 15, 0, 0, 0, 115, 0, 0, 0, 0, 255, 255, 30, 241, 26, 202, 72, 87, 64, 245, 137, 112, 34, 44, 233, 40, 215, 233, 35, 0, 0, 0, 223, 0, 0, 0 };
             var actualSize = 0L;
 
             Assert.DoesNotThrow(() => actualSize = file.Read(100, buffer));
-            //Console.WriteLine("{{{0}}}", string.Join(", ", buffer));
             Assert.AreEqual(100, actualSize);
-            Assert.AreEqual(expectedBuffer, buffer);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-Data"], buffer);
 
             file.Dispose();
         }
     }
 
+    [TestFixtureSource(typeof(TestData), nameof(TestData.GetTestFolders))]
     public class SerializedFileTests
     {
-        private UnityArchive archive;
+        private UnityArchive m_Archive;
+        private string m_TestFolder;
+
+        public SerializedFileTests(string testFolder)
+        {
+            m_TestFolder = testFolder;
+        }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            Console.WriteLine("Setup!");
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
-            archive = UnityFileSystem.MountArchive(path, "archive:/");
+            TestData.LoadTestData();
+            
+            UnityFileSystem.Init();
+            
+            var path = Path.Combine(m_TestFolder, "AssetBundles", "assetbundle");
+            m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            Console.WriteLine("TearDown!");
-            archive.Dispose();
+            m_Archive.Dispose();
+            
+            UnityFileSystem.Cleanup();
         }
 
         [Test]
@@ -318,7 +356,7 @@ namespace UnityDataTools.FileSystem.Tests
         {
             var file = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
 
-            Assert.AreEqual(3, file.ExternalReferences.Count);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-ExtRefCount"], file.ExternalReferences.Count);
 
             file.Dispose();
         }
@@ -328,17 +366,14 @@ namespace UnityDataTools.FileSystem.Tests
         {
             var file = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
 
-            Assert.AreEqual("Library/unity default resources", file.ExternalReferences[0].Path);
-            Assert.AreEqual("0000000000000000e000000000000000", file.ExternalReferences[0].Guid);
-            Assert.AreEqual(ExternalReferenceType.NonAssetType, file.ExternalReferences[0].Type);
-
-            Assert.AreEqual("Resources/unity_builtin_extra", file.ExternalReferences[1].Path);
-            Assert.AreEqual("0000000000000000f000000000000000", file.ExternalReferences[1].Guid);
-            Assert.AreEqual(ExternalReferenceType.NonAssetType, file.ExternalReferences[1].Type);
-
-            Assert.AreEqual("archive:/CAB-35fce856128a6714740898681ea54bbe/CAB-35fce856128a6714740898681ea54bbe", file.ExternalReferences[2].Path);
-            Assert.AreEqual("00000000000000000000000000000000", file.ExternalReferences[2].Guid);
-            Assert.AreEqual(ExternalReferenceType.NonAssetType, file.ExternalReferences[2].Type);
+            int i = 0;
+            foreach (var extRef in file.ExternalReferences)
+            {
+                Assert.AreEqual(TestData.ExpectedValues[m_TestFolder][$"CAB-5d40f7cad7c871cf2ad2af19ac542994-ExtRef{i}-Guid"], extRef.Guid);
+                Assert.AreEqual(TestData.ExpectedValues[m_TestFolder][$"CAB-5d40f7cad7c871cf2ad2af19ac542994-ExtRef{i}-Path"], extRef.Path);
+                Assert.AreEqual((ExternalReferenceType)TestData.ExpectedValues[m_TestFolder][$"CAB-5d40f7cad7c871cf2ad2af19ac542994-ExtRef{i}-Type"], extRef.Type);
+                ++i;
+            }
 
             file.Dispose();
         }
@@ -348,7 +383,7 @@ namespace UnityDataTools.FileSystem.Tests
         {
             var file = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
 
-            Assert.AreEqual(43, file.Objects.Count);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-ObjCount"], file.Objects.Count);
 
             file.Dispose();
         }
@@ -360,45 +395,58 @@ namespace UnityDataTools.FileSystem.Tests
 
             // Just make sure that first and last ObjectInfo struct are filled.
 
-            Assert.AreEqual(-8720048570983375440, file.Objects[0].Id);
-            Assert.AreEqual(133848, file.Objects[0].Offset);
-            Assert.AreEqual(156, file.Objects[0].Size);
-            Assert.AreEqual(23, file.Objects[0].TypeId);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-FirstObj-Id"], file.Objects.First().Id);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-FirstObj-Offset"], file.Objects.First().Offset);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-FirstObj-Size"], file.Objects.First().Size);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-FirstObj-TypeId"], file.Objects.First().TypeId);
 
-            Assert.AreEqual(8122810628805875483, file.Objects[40].Id);
-            Assert.AreEqual(210000, file.Objects[39].Offset);
-            Assert.AreEqual(2416, file.Objects[39].Size);
-            Assert.AreEqual(43, file.Objects[39].TypeId);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Id"], file.Objects.Last().Id);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Offset"], file.Objects.Last().Offset);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Size"], file.Objects.Last().Size);
+            Assert.AreEqual(TestData.ExpectedValues[m_TestFolder]["CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-TypeId"], file.Objects.Last().TypeId);
 
             file.Dispose();
         }
     }
 
+    [TestFixtureSource(typeof(TestData), nameof(TestData.GetTestFolders))]
     public class TypeTreeTests
     {
-        private UnityArchive archive;
-        private SerializedFile serializedFile;
+        private UnityArchive m_Archive;
+        private SerializedFile m_SerializedFile;
+        private string m_TestFolder;
+
+        public TypeTreeTests(string testFolder)
+        {
+            m_TestFolder = testFolder;
+        }
 
         [OneTimeSetUp]
         public void Setup()
         {
-            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "data", "assetbundle");
-            archive = UnityFileSystem.MountArchive(path, "archive:/");
+            TestData.LoadTestData();
+            
+            UnityFileSystem.Init();
+            
+            var path = Path.Combine(m_TestFolder, "AssetBundles", "assetbundle");
+            m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
 
-            serializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
+            m_SerializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            serializedFile.Dispose();
-            archive.Dispose();
+            m_SerializedFile.Dispose();
+            m_Archive.Dispose();
+            
+            UnityFileSystem.Cleanup();
         }
 
         [Test]
         public void GetTypeTreeRoot_InvalidObjectId_ThrowsException()
         {
-            Assert.Throws<ArgumentException>(() => serializedFile.GetTypeTreeRoot(0));
+            Assert.Throws<ArgumentException>(() => m_SerializedFile.GetTypeTreeRoot(0));
         }
 
         [Test]
@@ -406,18 +454,18 @@ namespace UnityDataTools.FileSystem.Tests
         {
             TypeTreeNode node = null;
 
-            Assert.DoesNotThrow(() => node = serializedFile.GetTypeTreeRoot(serializedFile.Objects[0].Id));
+            Assert.DoesNotThrow(() => node = m_SerializedFile.GetTypeTreeRoot(m_SerializedFile.Objects[0].Id));
             Assert.IsNotNull(node);
         }
 
         [Test]
         public void GetTypeTreeRoot_ValidSerializedFile_ReturnsValidData()
         {
-            foreach (var obj in serializedFile.Objects)
+            foreach (var obj in m_SerializedFile.Objects)
             {
                 TypeTreeNode root = null;
 
-                Assert.DoesNotThrow(() => root = serializedFile.GetTypeTreeRoot(obj.Id));
+                Assert.DoesNotThrow(() => root = m_SerializedFile.GetTypeTreeRoot(obj.Id));
                 Assert.IsNotNull(root);
                 Assert.AreNotEqual("", root.Type);
                 Assert.AreEqual("Base", root.Name);
@@ -449,9 +497,9 @@ namespace UnityDataTools.FileSystem.Tests
                 return count;
             }
 
-            foreach (var obj in serializedFile.Objects)
+            foreach (var obj in m_SerializedFile.Objects)
             {
-                var root = serializedFile.GetTypeTreeRoot(obj.Id);
+                var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
 
                 var count = ProcessNode(root);
 
@@ -462,7 +510,7 @@ namespace UnityDataTools.FileSystem.Tests
         [Test]
         public void GetRefTypeTypeTree_InvalidFQN_ThrowsException()
         {
-            Assert.Throws<ArgumentException>(() => serializedFile.GetRefTypeTypeTreeRoot("this", "is", "wrong"));
+            Assert.Throws<ArgumentException>(() => m_SerializedFile.GetRefTypeTypeTreeRoot("this", "is", "wrong"));
         }
 
         [Test]
@@ -470,14 +518,14 @@ namespace UnityDataTools.FileSystem.Tests
         {
             TypeTreeNode node = null;
             
-            Assert.DoesNotThrow(() => node = serializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "", "Assembly-CSharp"));
+            Assert.DoesNotThrow(() => node = m_SerializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "", "Assembly-CSharp"));
             Assert.NotNull(node);
         }
 
         [Test]
         public void GetTypeTreeNodeInfo_RefTypeTypeTree_ReturnExpectedValues()
         {
-            var node = serializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "",
+            var node = m_SerializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "",
                 "Assembly-CSharp");
 
             Assert.AreEqual(2, node.Children.Count);
@@ -490,6 +538,119 @@ namespace UnityDataTools.FileSystem.Tests
             
             Assert.AreEqual("string", node.Children[1].Type);
             Assert.AreEqual("m_Description", node.Children[1].Name);
+        }
+    }
+
+    [TestFixtureSource(typeof(TestData), nameof(TestData.GetTestFolders))]
+    public class RandomAccessReaderTests
+    {
+        private UnityArchive m_Archive;
+        private SerializedFile m_SerializedFile;
+        private UnityFileReader m_Reader;
+        private string m_TestFolder;
+
+        public RandomAccessReaderTests(string testFolder)
+        {
+            m_TestFolder = testFolder;
+        }
+
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            UnityFileSystem.Init();
+
+            var path = Path.Combine(m_TestFolder, "AssetBundles", "assetbundle");
+            m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
+
+            m_SerializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
+            m_Reader = new UnityFileReader("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994", 1024*1024);
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            m_Reader.Dispose();
+            m_SerializedFile.Dispose();
+            m_Archive.Dispose();
+
+            UnityFileSystem.Cleanup();
+        }
+
+        ObjectInfo GetObjectInfo(long id)
+        {
+            ObjectInfo obj = new ObjectInfo();
+            int i;
+
+            for (i = 0; i < m_SerializedFile.Objects.Count; ++i)
+            {
+                obj = m_SerializedFile.Objects[i];
+                
+                if (obj.Id == id)
+                {
+                    break;
+                }
+            }
+            
+            Assert.Less(i, m_SerializedFile.Objects.Count);
+
+            return obj;
+        }
+
+        [Test]
+        public void AccessProperty_ValidProperty_ReturnExpectedValues()
+        {
+            var obj = GetObjectInfo(-7865028809519950684);
+            
+            var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+            var reader = new TypeTreeReaders.RandomAccessReader(m_SerializedFile, root, m_Reader, obj.Offset);
+            
+            Assert.AreEqual("Lame", reader["m_Name"].GetValue<string>());
+            Assert.AreEqual(228, reader["m_SubMeshes"][0]["vertexCount"].GetValue<UInt32>());
+            Assert.AreEqual(false, reader["m_IsReadable"].GetValue<bool>());
+        }
+        
+        [Test]
+        public void AccessProperty_InvalidProperty_ThrowException()
+        {
+            var obj = GetObjectInfo(-7865028809519950684);
+            
+            var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+            var reader = new TypeTreeReaders.RandomAccessReader(m_SerializedFile, root, m_Reader, obj.Offset);
+            
+            Assert.Throws<KeyNotFoundException>(() => reader["ThisIsAnUnexistingPropertyName"].GetValue<string>());
+        }
+        
+        [Test]
+        public void AccessReferencedObject_ValidProperty_ReturnExpectedValues()
+        {
+            var obj = GetObjectInfo(-4606375687431940004);
+            
+            var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+            var reader = new TypeTreeReaders.RandomAccessReader(m_SerializedFile, root, m_Reader, obj.Offset);
+
+            long id0;
+            long id1;
+
+            // ManagedReferencesRegistry Version 1
+            if (reader["m_Item"].HasChild("id"))
+            {
+                id0 = reader["m_Item"]["id"].GetValue<int>();
+                id1 = reader["m_Item2"]["id"].GetValue<int>();
+            }
+            // ManagedReferencesRegistry Version 2
+            else
+            {
+                id0 = reader["m_Item"]["rid"].GetValue<long>();
+                id1 = reader["m_Item2"]["rid"].GetValue<long>();
+            }
+            
+            Assert.IsTrue(reader["references"].HasChild($"rid_{id0}"));
+            Assert.IsTrue(reader["references"].HasChild($"rid_{id1}"));
+            
+            Assert.AreEqual(1, reader["references"][$"rid_{id0}"]["data"]["m_Data"].GetValue<int>());
+            Assert.AreEqual("Ripe", reader["references"][$"rid_{id0}"]["data"]["m_Description"].GetValue<string>());
+            Assert.AreEqual(1, reader["references"][$"rid_{id1}"]["data"]["m_Data"].GetValue<int>());
+            Assert.AreEqual(1, reader["references"][$"rid_{id1}"]["data"]["m_IsRound"].GetValue<byte>());
         }
     }
 }

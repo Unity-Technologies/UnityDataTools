@@ -14,6 +14,8 @@ namespace UnityDataTools.UnityDataTool
     {
         public static int Main(string[] args)
         {
+            UnityFileSystem.Init();
+            
             var rootCommand = new RootCommand();
 
             {
@@ -67,16 +69,18 @@ namespace UnityDataTools.UnityDataTool
                 var pathArg = new Argument<FileInfo>("filename", "The path of the file to dump").ExistingOnly();
                 var fOpt = new Option<DumpFormat>(aliases: new[] { "--output-format", "-f" }, description: "Output format", getDefaultValue: () => DumpFormat.Text);
                 var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
+                var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o"}, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
 
                 var dumpCommand = new Command("dump", "Dump the content of an AssetBundle or SerializedFile.")
                 {
                     pathArg,
                     fOpt,
                     sOpt,
+                    oOpt,
                 };
                 dumpCommand.SetHandler(
-                    (FileInfo fi, DumpFormat f, bool s) => HandleDump(fi, f, s),
-                    pathArg, fOpt, sOpt);
+                    (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o) => HandleDump(fi, f, s, o),
+                    pathArg, fOpt, sOpt, oOpt);
 
                 rootCommand.AddCommand(dumpCommand);
             }
@@ -111,7 +115,11 @@ namespace UnityDataTools.UnityDataTool
                 rootCommand.AddCommand(archiveCommand);
             }
 
-            return rootCommand.Invoke(args);
+            var r = rootCommand.Invoke(args);
+            
+            UnityFileSystem.Cleanup();
+
+            return r;
         }
 
         enum DumpFormat
@@ -164,14 +172,14 @@ namespace UnityDataTools.UnityDataTool
             }
         }
 
-        static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays)
+        static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder)
         {
             switch (format)
             {
                 case DumpFormat.Text:
                 {
                     var textDumper = new TextDumperTool();
-                    return textDumper.Dump(filename.FullName, Environment.CurrentDirectory, skipLargeArrays);
+                    return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays);
                 }
             }
 
