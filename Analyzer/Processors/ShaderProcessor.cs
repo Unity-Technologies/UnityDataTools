@@ -162,7 +162,7 @@ namespace UnityDataTools.Analyzer.Processors
 
             int decompressedSize = 0;
 
-            if (reader["decompressedLengths"][0].IsArray)
+            if (reader["decompressedLengths"].IsArrayOfObjects)
             {
                 // The decompressed lengths are stored per graphics API.
                 foreach (var apiLengths in reader["decompressedLengths"])
