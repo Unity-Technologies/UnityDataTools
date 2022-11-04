@@ -23,6 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Analyzer", "Analyzer\Analyz
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnityDataTool.Tests", "UnityDataTool.Tests\UnityDataTool.Tests.csproj", "{67B7A7B3-96D7-497F-98E3-E9CB28F3CE74}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analyzer.Tests", "Analyzer.Tests\Analyzer.Tests.csproj", "{1F272DC7-59DB-4633-A10B-BA80269058C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCommon", "TestCommon\TestCommon.csproj", "{D7D1A570-A003-4E69-8F36-7FF94D0BB224}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +61,14 @@ Global
 		{67B7A7B3-96D7-497F-98E3-E9CB28F3CE74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67B7A7B3-96D7-497F-98E3-E9CB28F3CE74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67B7A7B3-96D7-497F-98E3-E9CB28F3CE74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F272DC7-59DB-4633-A10B-BA80269058C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F272DC7-59DB-4633-A10B-BA80269058C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F272DC7-59DB-4633-A10B-BA80269058C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F272DC7-59DB-4633-A10B-BA80269058C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7D1A570-A003-4E69-8F36-7FF94D0BB224}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7D1A570-A003-4E69-8F36-7FF94D0BB224}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7D1A570-A003-4E69-8F36-7FF94D0BB224}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7D1A570-A003-4E69-8F36-7FF94D0BB224}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
