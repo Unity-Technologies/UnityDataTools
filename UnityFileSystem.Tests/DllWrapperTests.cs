@@ -6,6 +6,8 @@ using UnityDataTools.TestCommon;
 
 namespace UnityDataTools.FileSystem.Tests;
 
+#pragma warning disable NUnit2005, NUnit2006
+
 public class DllInitCleanupTests
 {
     [TearDown]

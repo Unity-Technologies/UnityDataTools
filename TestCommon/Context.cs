@@ -10,6 +10,8 @@ public class Context
     public string ExpectedDataFolder { get; }
     public ExpectedData ExpectedData { get; } = new();
 
+    private static Dictionary<string, List<Context>> m_Cache = new();
+
     private Context(string folder)
     {
         var di = new DirectoryInfo(folder);
@@ -18,8 +20,6 @@ public class Context
         UnityDataVersion = di.Name;
         TestDataFolder = di.Parent.FullName;
         ExpectedDataFolder = Path.Combine(di.Parent.Parent.FullName, "ExpectedData", UnityDataVersion);
-        
-        ExpectedData.Load(ExpectedDataFolder);
     }
 
     public static IEnumerable<Context> GetAll()
@@ -39,5 +39,9 @@ public class Context
         return cases;
     }
 
-    private static Dictionary<string, List<Context>> m_Cache = new();
+    public override string ToString()
+    {
+        // To show up nicely in the test report.
+        return UnityDataVersion;
+    }
 }

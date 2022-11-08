@@ -17,7 +17,7 @@ public static class ExpectedDataGenerator
     
     public static void Generate(Context context)
     {
-        ExpectedData expectedData = new();
+        var expectedData = context.ExpectedData;
                 
         UnityFileSystem.Init();
         using (var archive = UnityFileSystem.MountArchive(Path.Combine(context.UnityDataFolder, "AssetBundles", "assetbundle"), "/"))
@@ -76,16 +76,19 @@ public static class ExpectedDataGenerator
             expectedData.Add("types_count", reader.GetInt32(13));
         }
         
-        Directory.CreateDirectory(context.ExpectedDataFolder);
+        var di = new DirectoryInfo(context.TestDataFolder);
+        var outputFolder = Path.Combine(di.Parent.Parent.Parent.Parent.FullName, "ExpectedData", context.UnityDataVersion);
 
-        var dumpPath = Path.Combine(context.ExpectedDataFolder, "dump");
+        Directory.CreateDirectory(outputFolder);
+
+        var dumpPath = Path.Combine(outputFolder, "dump");
         Directory.CreateDirectory(dumpPath);
         Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "AssetBundles", "assetbundle"), "-o", dumpPath });
             
-        dumpPath = Path.Combine(context.ExpectedDataFolder, "dump-s");
+        dumpPath = Path.Combine(outputFolder, "dump-s");
         Directory.CreateDirectory(dumpPath);
         Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "AssetBundles", "assetbundle"), "-o", dumpPath, "-s" });
             
-        expectedData.Save(context.ExpectedDataFolder);
+        expectedData.Save(outputFolder);
     }
 }

@@ -2,7 +2,7 @@
 using System.CommandLine;
 using System.IO;
 using UnityDataTools.Analyzer;
-using UnityDataTools.Analyzer.SQLiteProcessors;
+using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.ReferenceFinder;
 using UnityDataTools.TextDumper;
 using UnityDataTools.FileSystem;
@@ -129,25 +129,7 @@ public static class Program
     static int HandleAnalyze(DirectoryInfo path, string outputFile, bool extractReferences, string searchPattern)
     {
         var analyzer = new AnalyzerTool();
-
-        using var texture2DProcessor = new Texture2DProcessor();
-        analyzer.AddProcessor("Texture2D", texture2DProcessor);
-
-        using var meshProcessor = new MeshProcessor();
-        analyzer.AddProcessor("Mesh", meshProcessor);
-
-        using var shaderProcessor = new ShaderProcessor();
-        analyzer.AddProcessor("Shader", shaderProcessor);
-
-        using var audioProcessor = new AudioClipProcessor();
-        analyzer.AddProcessor("AudioClip", audioProcessor);
-
-        using var animationClipProcessor = new AnimationClipProcessor();
-        analyzer.AddProcessor("AnimationClip", animationClipProcessor);
-
-        using var assetBundleProcessor = new AssetBundleProcessor();
-        analyzer.AddProcessor("AssetBundle", assetBundleProcessor);
-
+        
         return analyzer.Analyze(path.FullName, outputFile, searchPattern, extractReferences);
     }
 

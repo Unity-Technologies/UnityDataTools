@@ -1,0 +1,2363 @@
+{
+  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Object, System.Private.CoreLib]], System.Private.CoreLib",
+  "Shader": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader, Analyzer",
+    "Name": "Standard",
+    "DecompressedSize": 465392,
+    "SubShaders": {
+      "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader, Analyzer]], System.Private.CoreLib",
+      "$values": [
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader, Analyzer",
+          "Passes": {
+            "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer]], System.Private.CoreLib",
+            "$values": [
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "FORWARD",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 0,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 0,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 1,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 1,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 2,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 2,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 3,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 3,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 4,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 4,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 5,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 5,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 6,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 6,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 7,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 7,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2,
+                            3
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 8,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 8,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 9,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 9,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 10,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 10,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 11,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 11,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "FORWARD_DELTA",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 12,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 12,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 13,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 13,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 14,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 14,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 15,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 15,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 16,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 16,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 17,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 17,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 18,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            9,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 18,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            9,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 19,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 19,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 20,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 20,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 21,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 21,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 22,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10,
+                            9
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 22,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10,
+                            9
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 23,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 23,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 24,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10,
+                            9
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 24,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10,
+                            9
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 25,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 25,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 26,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 8,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 27,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 26,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 28,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 27,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 29,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 28,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 30,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 29,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 31,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            9,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 30,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            9,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 32,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 10,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 33,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 31,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 34,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 32,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 35,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10,
+                            9
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 33,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10,
+                            9
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 36,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 34,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 37,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10,
+                            9
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 35,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10,
+                            9
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "ShadowCaster",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 38,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 36,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 39,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 37,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 40,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 38,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 41,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 39,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "DEFERRED",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 42,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": []
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 40,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": []
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 43,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 41,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 44,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            11
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 42,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            11
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 45,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1,
+                            11
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 43,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1,
+                            11
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 46,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": []
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 44,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": []
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 47,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 45,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 48,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            11
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 46,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            11
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 49,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1,
+                            11
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 47,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            1,
+                            11
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader, Analyzer",
+          "Passes": {
+            "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer]], System.Private.CoreLib",
+            "$values": [
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "FORWARD",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 50,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 48,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 51,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 49,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 2,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 2,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 3,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 3,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 52,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 50,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 53,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 51,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 6,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 6,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 7,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2,
+                            3
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 7,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2,
+                            3
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 54,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 8,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 55,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 9,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 10,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 10,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 11,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 11,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            1,
+                            2
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "FORWARD_DELTA",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 56,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 52,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 57,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 53,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 58,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 54,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 59,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 55,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 60,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 56,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 61,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 57,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 19,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 19,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 20,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 20,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 62,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 58,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 63,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 59,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 64,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 25,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 65,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 8,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 66,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 26,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 67,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 27,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 68,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 28,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 69,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 29,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8,
+                            5
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 32,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 10,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            0,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 33,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 31,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            7,
+                            2
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 70,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 32,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            4,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 71,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 34,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            6,
+                            10
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass, Analyzer",
+                "Name": "ShadowCaster",
+                "Programs": {
+                  "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Collections.Generic.IReadOnlyList`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib]], System.Private.CoreLib",
+                  "vertex": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 38,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 36,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 23,
+                        "BlobIndex": 39,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 37,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "fragment": {
+                    "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer]], System.Private.CoreLib",
+                    "$values": [
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 40,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 38,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            8
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 24,
+                        "BlobIndex": 41,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
+                        "HwTier": 3,
+                        "Api": 6,
+                        "BlobIndex": 39,
+                        "Keywords": {
+                          "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
+                          "$values": [
+                            10
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "Keywords": {
+      "$type": "System.Collections.Generic.List`1[[System.String, System.Private.CoreLib]], System.Private.CoreLib",
+      "$values": [
+        "DIRECTIONAL",
+        "LIGHTPROBE_SH",
+        "SHADOWS_SCREEN",
+        "VERTEXLIGHT_ON",
+        "POINT",
+        "SPOT",
+        "POINT_COOKIE",
+        "DIRECTIONAL_COOKIE",
+        "SHADOWS_DEPTH",
+        "SHADOWS_SOFT",
+        "SHADOWS_CUBE",
+        "UNITY_HDR_ON"
+      ]
+    }
+  },
+  "Texture2D": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.Texture2D, Analyzer",
+    "Name": "Square_Soft_A_Cookie",
+    "StreamDataSize": 0,
+    "Width": 256,
+    "Height": 256,
+    "Format": 10,
+    "MipCount": 1,
+    "RwEnabled": true
+  }
+}

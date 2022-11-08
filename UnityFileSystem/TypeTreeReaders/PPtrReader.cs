@@ -16,7 +16,8 @@ public class PPtrReader
 
     Action<int, long, string> m_Callback;
 
-    public PPtrReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset, Action<int, long, string> callback)
+    public PPtrReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset,
+        Action<int, long, string> callback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
@@ -64,7 +65,8 @@ public class PPtrReader
             }
         }
 
-        if (node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes))
+        if (node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) ||
+            node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes))
         {
             m_Offset = (m_Offset + 3) & ~(3);
         }
@@ -84,12 +86,9 @@ public class PPtrReader
             var arraySize = m_Reader.ReadInt32(m_Offset);
             m_Offset += 4;
 
-            for (int i = 0;i < arraySize; ++i)
+            for (int i = 0; i < arraySize; ++i)
             {
-                var size = propertyPath.Length;
-                propertyPath.Append('[');
-                propertyPath.Append(i);
-                propertyPath.Append(']');
+                
                 if (!isManagedReferenceRegistry)
                 {
                     ProcessNode(dataNode, propertyPath);
@@ -98,14 +97,13 @@ public class PPtrReader
                 {
                     if (dataNode.Children.Count < 3)
                         throw new Exception("Invalid ReferencedObject");
-                            
+
                     // First child is rid.
                     long rid = m_Reader.ReadInt64(m_Offset);
                     m_Offset += 8;
-                        
-                    ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], propertyPath);
+
+                    ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], propertyPath, rid);
                 }
-                propertyPath.Remove(size, propertyPath.Length - size);
             }
         }
     }
@@ -127,8 +125,10 @@ public class PPtrReader
             var refTypeNode = refObjNode.Children[0];
             var refObjData = refObjNode.Children[1];
 
-            while (ProcessManagedReferenceData(refTypeNode, refObjData, propertyPath))
-            {}
+            int i = 0;
+            while (ProcessManagedReferenceData(refTypeNode, refObjData, propertyPath, i++))
+            {
+            }
         }
         else if (version == 2)
         {
@@ -153,8 +153,9 @@ public class PPtrReader
             throw new Exception("Unsupported ManagedReferenceRegistry version");
         }
     }
-        
-    bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, StringBuilder propertyPath)
+
+    bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode,
+        StringBuilder propertyPath, long rid)
     {
         if (refTypeNode.Children.Count < 3)
             throw new Exception("Invalid ReferencedManagedType");
@@ -163,29 +164,33 @@ public class PPtrReader
         var className = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
-            
+
         stringSize = m_Reader.ReadInt32(m_Offset);
         var namespaceName = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
-            
+
         stringSize = m_Reader.ReadInt32(m_Offset);
         var assemblyName = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
-            
-        if (className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM")
+
+        if ((className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM") ||
+            rid == -1 || rid == -2)
+        {
             return false;
+        }
 
         var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
 
         // Process the ReferencedObject using its own TypeTree.
         var size = propertyPath.Length;
-        propertyPath.Append('.');
-        propertyPath.Append("data");
+        propertyPath.Append("rid(");
+        propertyPath.Append(rid);
+        propertyPath.Append(").data");
         ProcessNode(refTypeTypeTree, propertyPath);
         propertyPath.Remove(size, propertyPath.Length - size);
-
+        
         return true;
     }
 

@@ -87,7 +87,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                         }
 
                         // Add the reader to cache.
-                        m_ChildrenCacheObject[$"rid_{i++}"] = refObjReader;
+                        m_ChildrenCacheObject[$"rid({i++})"] = refObjReader;
                         curOffset += refObjReader.Size;
                     } while (true);
                 }
@@ -111,7 +111,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                     {
                         // Create and cache the referenced object.
                         var refObjReader = new RandomAccessReader(m_SerializedFile, refObjNode, reader, curOffset, true);
-                        m_ChildrenCacheObject[$"rid_{refObjReader["rid"].GetValue<long>()}"] = refObjReader;
+                        m_ChildrenCacheObject[$"rid({refObjReader["rid"].GetValue<long>()})"] = refObjReader;
                         curOffset += refObjReader.Size;
                     }
                 }
@@ -122,6 +122,18 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
             }
             else if (isReferencedObject)
             {
+                if (HasChild("rid"))
+                {
+                    var rid = GetChild("rid").GetValue<long>();
+
+                    // -1 is unknown and -2 is null.
+                    if (rid == -1 || rid == -2)
+                    {
+                        m_ChildrenCacheObject["data"] = null;
+                        return;
+                    }
+                }
+
                 var referencedManagedType = GetChild("type");
 
                 string className = referencedManagedType["class"].GetValue<string>();

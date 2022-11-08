@@ -8,6 +8,8 @@ using UnityDataTools.TestCommon;
 
 namespace UnityDataTools.FileSystem.Tests;
 
+#pragma warning disable NUnit2005, NUnit2006
+
 public class ArchiveTests : TestForAllVersions
 {
     public ArchiveTests(Context context) : base(context)
@@ -624,12 +626,12 @@ public class RandomAccessReaderTests : TestForAllVersions
             id1 = reader["m_Item2"]["rid"].GetValue<long>();
         }
             
-        Assert.IsTrue(reader["references"].HasChild($"rid_{id0}"));
-        Assert.IsTrue(reader["references"].HasChild($"rid_{id1}"));
+        Assert.IsTrue(reader["references"].HasChild($"rid({id0})"));
+        Assert.IsTrue(reader["references"].HasChild($"rid({id1})"));
             
-        Assert.AreEqual(1, reader["references"][$"rid_{id0}"]["data"]["m_Data"].GetValue<int>());
-        Assert.AreEqual("Ripe", reader["references"][$"rid_{id0}"]["data"]["m_Description"].GetValue<string>());
-        Assert.AreEqual(1, reader["references"][$"rid_{id1}"]["data"]["m_Data"].GetValue<int>());
-        Assert.AreEqual(1, reader["references"][$"rid_{id1}"]["data"]["m_IsRound"].GetValue<byte>());
+        Assert.AreEqual(1, reader["references"][$"rid({id0})"]["data"]["m_Data"].GetValue<int>());
+        Assert.AreEqual("Ripe", reader["references"][$"rid({id0})"]["data"]["m_Description"].GetValue<string>());
+        Assert.AreEqual(1, reader["references"][$"rid({id1})"]["data"]["m_Data"].GetValue<int>());
+        Assert.AreEqual(1, reader["references"][$"rid({id1})"]["data"]["m_IsRound"].GetValue<byte>());
     }
 }

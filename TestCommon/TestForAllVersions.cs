@@ -11,4 +11,10 @@ public class TestForAllVersions
     {
         Context = context;
     }
+
+    [OneTimeSetUp]
+    public void LoadExpectedData()
+    {
+        Context.ExpectedData.Load(Context.ExpectedDataFolder);
+    }
 }

@@ -112,17 +112,17 @@ public class TextDumperTool
             skipChildren = true;
         }
 
-        if ((node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes)))
-        {
-            offset = (offset + 3) & ~(3);
-        }
-
         if (!skipChildren)
         {
             foreach (var child in node.Children)
             {
                 RecursiveDump(child, ref offset, level + 1);
             }
+        }
+
+        if ((node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes)))
+        {
+            offset = (offset + 3) & ~(3);
         }
     }
 
@@ -257,10 +257,13 @@ public class TextDumperTool
             throw new Exception("Invalid ReferencedManagedType");
             
         m_StringBuilder.Append(' ', level * 2);
-        m_StringBuilder.Append($"rid_");
+        m_StringBuilder.Append($"rid(");
         m_StringBuilder.Append(id);
-        m_StringBuilder.Append(" ReferencedObject");
-        m_StringBuilder.AppendLine();
+        m_StringBuilder.Append(") ReferencedObject");
+        
+        m_Writer.WriteLine(m_StringBuilder);
+        m_StringBuilder.Clear();
+        
         ++level;
 
         var refTypeOffset = offset;
@@ -290,12 +293,23 @@ public class TextDumperTool
         m_StringBuilder.Append(' ');
         m_StringBuilder.Append(referencedTypeDataNode.Type);
         m_StringBuilder.Append(' ');
-            
+        
         m_Writer.WriteLine(m_StringBuilder);
         m_StringBuilder.Clear();
 
+        if (id == -1 || id == -2)
+        {
+            m_StringBuilder.Append(' ', level * 2);
+            m_StringBuilder.Append(id == -1 ? "  unknown" : "  null");
+        
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            return true;
+        }
+
         var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
-                
+        
         // Dump the ReferencedObject using its own TypeTree, but skip the root.
         foreach (var child in refTypeRoot.Children)
         {

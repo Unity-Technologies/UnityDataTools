@@ -9,12 +9,19 @@ using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.UnityDataTool.Tests;
 
+#pragma warning disable NUnit2005, NUnit2006
+
 public class UnityDataToolTests : TestForAllVersions
 {
     private string m_TestOutputFolder;
 
     public UnityDataToolTests(Context context) : base(context)
     {
+    }
+
+    static UnityDataToolTests()
+    {
+        //ExpectedDataGenerator.GenerateAll();
     }
 
     [OneTimeSetUp]
@@ -85,7 +92,7 @@ public class UnityDataToolTests : TestForAllVersions
         Assert.IsTrue(File.Exists(outputFile));
 
         var content = File.ReadAllText(outputFile);
-        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "ExpectedData", "dump", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
+        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
 
         // Normalize  line endings.
         content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");
@@ -105,7 +112,7 @@ public class UnityDataToolTests : TestForAllVersions
         Assert.IsTrue(File.Exists(outputFile));
 
         var content = File.ReadAllText(outputFile);
-        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "ExpectedData", "dump-s", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
+        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump-s", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
 
         // Normalize  line endings.
         content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");

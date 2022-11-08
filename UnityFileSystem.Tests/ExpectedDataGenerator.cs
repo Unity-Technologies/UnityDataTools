@@ -17,11 +17,10 @@ public static class ExpectedDataGenerator
     
     public static void Generate(Context context)
     {
-        ExpectedData expectedData = new();
+        var expectedData = context.ExpectedData;
 
         UnityFileSystem.Init();
-        using (var archive =
-               UnityFileSystem.MountArchive(Path.Combine(context.UnityDataFolder, "AssetBundles", "assetbundle"), "/"))
+        using (var archive = UnityFileSystem.MountArchive(Path.Combine(context.UnityDataFolder, "AssetBundles", "assetbundle"), "/"))
         {
             expectedData.Add("NodeCount", archive.Nodes.Count);
 
@@ -70,7 +69,12 @@ public static class ExpectedDataGenerator
 
             UnityFileSystem.Cleanup();
             
-            expectedData.Save(context.ExpectedDataFolder);
+            var di = new DirectoryInfo(context.TestDataFolder);
+            var outputFolder = Path.Combine(di.Parent.Parent.Parent.Parent.FullName, "ExpectedData", context.UnityDataVersion);
+
+            Directory.CreateDirectory(outputFolder);
+            
+            expectedData.Save(outputFolder);
         }
     }
 }
