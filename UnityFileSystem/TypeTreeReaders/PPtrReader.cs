@@ -11,27 +11,35 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders;
 public class PPtrReader
 {
     private SerializedFile m_SerializedFile;
-    UnityFileReader m_Reader;
-    long m_Offset;
+    private UnityFileReader m_Reader;
+    private long m_Offset;
+    private long m_ObjectId;
+    private StringBuilder m_StringBuilder = new();
 
-    Action<int, long, string> m_Callback;
+    Action<long, int, long, string> m_Callback;
 
-    public PPtrReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset,
-        Action<int, long, string> callback)
+    public PPtrReader(SerializedFile serializedFile, UnityFileReader reader,
+        Action<long, int, long, string> callback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
-        m_Offset = offset;
         m_Callback = callback;
+    }
+
+    public void Process(long objectId, long offset, TypeTreeNode node)
+    {
+        m_Offset = offset;
+        m_ObjectId = objectId;
 
         foreach (var child in node.Children)
         {
-            var sb = new StringBuilder(child.Name);
-            ProcessNode(child, sb);
+            m_StringBuilder.Clear();
+            m_StringBuilder.Append(child.Name);
+            ProcessNode(child);
         }
     }
 
-    private void ProcessNode(TypeTreeNode node, StringBuilder propertyPath)
+    private void ProcessNode(TypeTreeNode node)
     {
         if (node.IsBasicType)
         {
@@ -39,11 +47,11 @@ public class PPtrReader
         }
         else if (node.IsArray)
         {
-            ProcessArray(node, propertyPath);
+            ProcessArray(node);
         }
         else if (node.Type.StartsWith("PPtr<"))
         {
-            ExtractPPtr(propertyPath.ToString());
+            ExtractPPtr();
         }
         else if (node.CSharpType == typeof(string))
         {
@@ -51,28 +59,30 @@ public class PPtrReader
         }
         else if (node.IsManagedReferenceRegistry)
         {
-            ProcessManagedReferenceRegistry(node, propertyPath);
+            ProcessManagedReferenceRegistry(node);
         }
         else
         {
             foreach (var child in node.Children)
             {
-                var size = propertyPath.Length;
-                propertyPath.Append('.');
-                propertyPath.Append(child.Name);
-                ProcessNode(child, propertyPath);
-                propertyPath.Remove(size, propertyPath.Length - size);
+                var size = m_StringBuilder.Length;
+                m_StringBuilder.Append('.');
+                m_StringBuilder.Append(child.Name);
+                ProcessNode(child);
+                m_StringBuilder.Remove(size, m_StringBuilder.Length - size);
             }
         }
-
-        if (node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) ||
-            node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes))
+        
+        if (
+                ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AlignBytes) != 0 ||
+                ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AnyChildUsesAlignBytes) != 0
+            )
         {
             m_Offset = (m_Offset + 3) & ~(3);
         }
     }
 
-    private void ProcessArray(TypeTreeNode node, StringBuilder propertyPath, bool isManagedReferenceRegistry = false)
+    private void ProcessArray(TypeTreeNode node, bool isManagedReferenceRegistry = false)
     {
         var dataNode = node.Children[1];
 
@@ -91,7 +101,7 @@ public class PPtrReader
                 
                 if (!isManagedReferenceRegistry)
                 {
-                    ProcessNode(dataNode, propertyPath);
+                    ProcessNode(dataNode);
                 }
                 else
                 {
@@ -102,13 +112,13 @@ public class PPtrReader
                     long rid = m_Reader.ReadInt64(m_Offset);
                     m_Offset += 8;
 
-                    ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], propertyPath, rid);
+                    ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], rid);
                 }
             }
         }
     }
 
-    private void ProcessManagedReferenceRegistry(TypeTreeNode node, StringBuilder propertyPath)
+    private void ProcessManagedReferenceRegistry(TypeTreeNode node)
     {
         if (node.Children.Count < 2)
             throw new Exception("Invalid ManagedReferenceRegistry");
@@ -126,7 +136,7 @@ public class PPtrReader
             var refObjData = refObjNode.Children[1];
 
             int i = 0;
-            while (ProcessManagedReferenceData(refTypeNode, refObjData, propertyPath, i++))
+            while (ProcessManagedReferenceData(refTypeNode, refObjData, i++))
             {
             }
         }
@@ -139,14 +149,14 @@ public class PPtrReader
 
             var refIdsArrayNode = refIdsVectorNode.Children[0];
 
-            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
+            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.IsArray)
                 throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
 
-            var size = propertyPath.Length;
-            propertyPath.Append('.');
-            propertyPath.Append("RefIds");
-            ProcessArray(refIdsArrayNode, propertyPath, true);
-            propertyPath.Remove(size, propertyPath.Length - size);
+            var size = m_StringBuilder.Length;
+            m_StringBuilder.Append('.');
+            m_StringBuilder.Append("RefIds");
+            ProcessArray(refIdsArrayNode, true);
+            m_StringBuilder.Remove(size, m_StringBuilder.Length - size);
         }
         else
         {
@@ -154,8 +164,7 @@ public class PPtrReader
         }
     }
 
-    bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode,
-        StringBuilder propertyPath, long rid)
+    bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, long rid)
     {
         if (refTypeNode.Children.Count < 3)
             throw new Exception("Invalid ReferencedManagedType");
@@ -184,17 +193,17 @@ public class PPtrReader
         var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
 
         // Process the ReferencedObject using its own TypeTree.
-        var size = propertyPath.Length;
-        propertyPath.Append("rid(");
-        propertyPath.Append(rid);
-        propertyPath.Append(").data");
-        ProcessNode(refTypeTypeTree, propertyPath);
-        propertyPath.Remove(size, propertyPath.Length - size);
+        var size = m_StringBuilder.Length;
+        m_StringBuilder.Append("rid(");
+        m_StringBuilder.Append(rid);
+        m_StringBuilder.Append(").data");
+        ProcessNode(refTypeTypeTree);
+        m_StringBuilder.Remove(size, m_StringBuilder.Length - size);
         
         return true;
     }
 
-    private void ExtractPPtr(string propertyPath)
+    private void ExtractPPtr()
     {
         var fileId = m_Reader.ReadInt32(m_Offset);
         m_Offset += 4;
@@ -203,7 +212,7 @@ public class PPtrReader
 
         if (fileId != 0 || pathId != 0)
         {
-            m_Callback(fileId, pathId, propertyPath);
+            m_Callback(m_ObjectId, fileId, pathId, m_StringBuilder.ToString());
         }
     }
 }

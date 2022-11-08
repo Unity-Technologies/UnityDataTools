@@ -37,10 +37,10 @@ public class TypeTreeNode
     public bool IsBasicType => IsLeaf && Size > 0;
 
     // True if the field is an array.
-    public bool IsArray => Flags.HasFlag(TypeTreeFlags.IsArray);
+    public bool IsArray => ((int)Flags & (int)TypeTreeFlags.IsArray) != 0;
         
     // True if the field is a ManagedReferenceRegistry
-    public bool IsManagedReferenceRegistry => Flags.HasFlag(TypeTreeFlags.IsManagedReferenceRegistry);
+    public bool IsManagedReferenceRegistry => ((int)Flags & (int)TypeTreeFlags.IsManagedReferenceRegistry) != 0;
 
     // C# type corresponding to the node type
     public Type CSharpType => m_CSharpType.Value;

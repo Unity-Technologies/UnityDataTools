@@ -216,7 +216,10 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
             size = (int)(lastChild.Offset + lastChild.Size - Offset);
         }
 
-        if (m_TypeTreeNode.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || m_TypeTreeNode.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes))
+        if (
+            ((int)m_TypeTreeNode.MetaFlags & (int)TypeTreeMetaFlags.AlignBytes) != 0 ||
+            ((int)m_TypeTreeNode.MetaFlags & (int)TypeTreeMetaFlags.AnyChildUsesAlignBytes) != 0
+        )
         {
             var endOffset = (Offset + size + 3) & ~(3);
 

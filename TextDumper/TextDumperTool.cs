@@ -120,7 +120,10 @@ public class TextDumperTool
             }
         }
 
-        if ((node.MetaFlags.HasFlag(TypeTreeMetaFlags.AlignBytes) || node.MetaFlags.HasFlag(TypeTreeMetaFlags.AnyChildUsesAlignBytes)))
+        if (
+            ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AlignBytes) != 0 ||
+            ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AnyChildUsesAlignBytes) != 0
+        )
         {
             offset = (offset + 3) & ~(3);
         }
@@ -223,7 +226,7 @@ public class TextDumperTool
 
             var refIdsArrayNode = refIdsVectorNode.Children[0];
 
-            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.Flags.HasFlag(TypeTreeFlags.IsArray))
+            if (refIdsArrayNode.Children.Count != 2 || !refIdsArrayNode.IsArray)
                 throw new Exception("Invalid ManagedReferenceRegistry RefIds array");
 
             // First child is the array size.
