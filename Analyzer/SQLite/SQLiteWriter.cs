@@ -22,13 +22,13 @@ public class SQLiteWriter : IWriter
     private IdProvider<string> m_SerializedFileIdProvider = new ();
     private ObjectIdProvider m_ObjectIdProvider = new ();
     
-    private Dictionary<string, ISQLiteHandler> m_Processors = new ()
+    private Dictionary<string, ISQLiteHandler> m_Handlers = new ()
     {
         { "Mesh", new MeshHandler() },
         { "Texture2D", new Texture2DHandler() },
         { "Shader", new ShaderHandler() },
         { "AudioClip", new AudioClipHandler() },
-        { "AnimationClip", new AnimationClipProcessor() },
+        { "AnimationClip", new AnimationClipHandler() },
         { "AssetBundle", new AssetBundleHandler() },
     };
 
@@ -61,7 +61,7 @@ public class SQLiteWriter : IWriter
         command.CommandText = Properties.Resources.Init;
         command.ExecuteNonQuery();
 
-        foreach (var processor in m_Processors.Values)
+        foreach (var processor in m_Handlers.Values)
         {
             processor.Init(m_Database);
         }
@@ -76,7 +76,7 @@ public class SQLiteWriter : IWriter
             throw new InvalidOperationException("SQLiteWriter.End called before SQLiteWriter.Begin");
         }
         
-        foreach (var processor in m_Processors.Values)
+        foreach (var processor in m_Handlers.Values)
         {
             processor.Finalize(m_Database);
         }
@@ -201,7 +201,7 @@ public class SQLiteWriter : IWriter
             string name = null;
             long streamDataSize = 0;
 
-            if (m_Processors.TryGetValue(root.Type, out var processor))
+            if (m_Handlers.TryGetValue(root.Type, out var processor))
             {
                 processor.Process(m_ObjectIdProvider, currentObjectId, localToDbFileId, randomAccessReader, out name, out streamDataSize);
             }
@@ -248,11 +248,17 @@ public class SQLiteWriter : IWriter
 
     public void Dispose()
     {
+        foreach (var handler in m_Handlers.Values)
+        {
+            handler.Dispose();
+        }
+
         m_AddAssetBundleCommand.Dispose();
         m_AddSerializedFileCommand.Dispose();
         m_AddReferenceCommand.Dispose();
         m_AddObjectCommand.Dispose();
         m_AddTypeCommand.Dispose();
+
         m_Database.Dispose();
     }
 }

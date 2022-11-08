@@ -6,7 +6,7 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class ShaderHandler : ISQLiteHandler, IDisposable
+public class ShaderHandler : ISQLiteHandler
 {
     SQLiteCommand m_InsertCommand;
     SQLiteCommand m_InsertSubProgramCommand;
@@ -158,6 +158,7 @@ public class ShaderHandler : ISQLiteHandler, IDisposable
     {
         m_InsertCommand.Dispose();
         m_InsertSubProgramCommand.Dispose();
+        m_InsertKeywordCommand.Dispose();
         m_InsertSubProgramKeywordsCommand.Dispose();
     }
 }

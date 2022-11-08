@@ -7,7 +7,7 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class AudioClipHandler : ISQLiteHandler, IDisposable
+public class AudioClipHandler : ISQLiteHandler
 {
     SQLiteCommand m_InsertCommand;
 

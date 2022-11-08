@@ -7,7 +7,7 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class AssetBundleHandler : ISQLiteHandler, IDisposable
+public class AssetBundleHandler : ISQLiteHandler
 {
     SQLiteCommand m_InsertCommand;
 

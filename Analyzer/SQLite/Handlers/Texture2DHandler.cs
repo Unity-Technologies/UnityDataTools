@@ -7,7 +7,7 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class Texture2DHandler : ISQLiteHandler, IDisposable
+public class Texture2DHandler : ISQLiteHandler
 {
     SQLiteCommand m_InsertCommand;
 
