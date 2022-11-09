@@ -61,7 +61,7 @@ public class AnalyzerTool
                     Console.Write(new string(' ', Console.BufferWidth));
                     Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
                     
-                    writer.WriteSerializedFile(serializedFileName, path);
+                    writer.WriteSerializedFile(serializedFileName, file);
                 }
             }
             catch (Exception e)

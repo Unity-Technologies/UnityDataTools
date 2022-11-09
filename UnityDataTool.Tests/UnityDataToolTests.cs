@@ -11,7 +11,7 @@ namespace UnityDataTools.UnityDataTool.Tests;
 
 #pragma warning disable NUnit2005, NUnit2006
 
-public class UnityDataToolTests : TestForAllVersions
+public class UnityDataToolTests : AssetBundleTestFixture
 {
     private string m_TestOutputFolder;
 
@@ -19,10 +19,10 @@ public class UnityDataToolTests : TestForAllVersions
     {
     }
     
-    protected override void OnCreate()
+    protected override void OnLoadExpectedData(Context context)
     {
         // Uncomment to regenerate expected data.
-        //ExpectedDataGenerator.GenerateAll();
+        //ExpectedDataGenerator.Generate(context);
     }
 
     [OneTimeSetUp]
@@ -45,7 +45,7 @@ public class UnityDataToolTests : TestForAllVersions
     [Test]
     public void ArchiveExtract_FilesExtractedSuccessfully()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
 
         Assert.AreEqual(0, Program.Main(new string[] { "archive", "extract", path }));
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994")));
@@ -56,7 +56,7 @@ public class UnityDataToolTests : TestForAllVersions
     [Test]
     public void ArchiveList_ListFilesCorrectly()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
 
         using var sw = new StringWriter();
 
@@ -86,7 +86,7 @@ public class UnityDataToolTests : TestForAllVersions
     public void DumpText_DefaultArgs_TextFileCreatedCorrectly(
         [Values("", "-f text", "--output-format text")] string options)
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
 
         Assert.AreEqual(0, Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
@@ -106,7 +106,7 @@ public class UnityDataToolTests : TestForAllVersions
     public void DumpText_SkipLargeArrays_TextFileCreatedCorrectly(
         [Values("-s", "--skip-large-arrays")] string options)
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
 
         Assert.AreEqual(0, Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
@@ -126,7 +126,7 @@ public class UnityDataToolTests : TestForAllVersions
     public void Analyze_DefaultArgs_DatabaseCorrect()
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
-        var analyzePath = Path.Combine(Context.UnityDataFolder, "AssetBundles");
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }));
 
@@ -138,7 +138,7 @@ public class UnityDataToolTests : TestForAllVersions
         [Values("-r", "--extract-references")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
-        var analyzePath = Path.Combine(Context.UnityDataFolder, "AssetBundles");
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
@@ -150,7 +150,7 @@ public class UnityDataToolTests : TestForAllVersions
         [Values("-p *.", "--search-pattern *.")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
-        var analyzePath = Path.Combine(Context.UnityDataFolder, "AssetBundles");
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
@@ -162,7 +162,7 @@ public class UnityDataToolTests : TestForAllVersions
         [Values("-p *.x", "--search-pattern *.x")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
-        var analyzePath = Path.Combine(Context.UnityDataFolder, "AssetBundles");
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
@@ -182,7 +182,7 @@ public class UnityDataToolTests : TestForAllVersions
         [Values("-o my_database", "--output-file my_database")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "my_database");
-        var analyzePath = Path.Combine(Context.UnityDataFolder, "AssetBundles");
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
@@ -232,5 +232,62 @@ public class UnityDataToolTests : TestForAllVersions
             Assert.AreEqual(Context.ExpectedData.Get("textures_count"), reader.GetInt32(12));
             Assert.AreEqual(Context.ExpectedData.Get("types_count"), reader.GetInt32(13));
         }
+    }
+}
+
+public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
+{
+    private string m_TestOutputFolder;
+
+    public UnityDataToolPlayerDataTests(Context context) : base(context)
+    {
+    }
+
+    [OneTimeSetUp]
+    public void OneTimeSetup()
+    {
+        m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "test_folder");
+        Directory.CreateDirectory(m_TestOutputFolder);
+        Directory.SetCurrentDirectory(m_TestOutputFolder);
+    }
+
+    [TearDown]
+    public void Teardown()
+    {
+        foreach (var file in new DirectoryInfo(m_TestOutputFolder).EnumerateFiles())
+        {
+            file.Delete();
+        }
+    }
+    
+    [Test]
+    public void Analyze_PlayerData_DatabaseCorrect()
+    {
+        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
+
+        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath, "-r" }));
+        
+        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        db.Open();
+        using var cmd = db.CreateCommand();
+
+        cmd.CommandText =
+            @"SELECT 
+                (SELECT COUNT(*) FROM asset_bundles),
+                (SELECT COUNT(*) FROM assets),
+                (SELECT COUNT(*) FROM objects),
+                (SELECT COUNT(*) FROM refs),
+                (SELECT COUNT(*) FROM serialized_files)";
+
+        using var reader = cmd.ExecuteReader();
+
+        reader.Read();
+
+        Assert.AreEqual(0, reader.GetInt32(0));
+        Assert.AreEqual(0, reader.GetInt32(1));
+        Assert.Greater(reader.GetInt32(2), 0);
+        Assert.Greater(reader.GetInt32(3), 0);
+        Assert.AreEqual(1, reader.GetInt32(4));
     }
 }

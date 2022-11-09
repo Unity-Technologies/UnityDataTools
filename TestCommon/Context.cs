@@ -4,39 +4,30 @@ namespace UnityDataTools.TestCommon;
 
 public class Context
 {
+    // e.g. <CurrentProjectFolder>/bin/Debug/net6.0/Data/AssetBundles/2021.1.0f1
     public string UnityDataFolder { get; }
+    
+    // e.g. 2021.1.0f1
     public string UnityDataVersion { get; }
+    
+    // e.g. <CurrentProjectFolder>/bin/Debug/net6.0/Data
     public string TestDataFolder { get; }
+    
+    // e.g. <CurrentProjectFolder>/bin/Debug/net6.0/ExpectedData/2021.1.0f1
     public string ExpectedDataFolder { get; }
+    
     public ExpectedData ExpectedData { get; } = new();
 
-    private static Dictionary<string, List<Context>> m_Cache = new();
-
-    private Context(string folder)
+    public Context(string folder)
     {
         var di = new DirectoryInfo(folder);
         
         UnityDataFolder = folder;
         UnityDataVersion = di.Name;
-        TestDataFolder = di.Parent.FullName;
-        ExpectedDataFolder = Path.Combine(di.Parent.Parent.FullName, "ExpectedData", UnityDataVersion);
-    }
-
-    public static IEnumerable<Context> GetAll()
-    {
-        if (m_Cache.TryGetValue(TestContext.CurrentContext.TestDirectory, out var cases))
-        {
-            return cases;
-        }
-
-        cases = new List<Context>();
-        m_Cache[TestContext.CurrentContext.TestDirectory] = cases;
-        foreach (var folder in Directory.EnumerateDirectories(Path.Combine(TestContext.CurrentContext.TestDirectory, "Data")))
-        {
-            cases.Add(new Context(folder));
-        }
-
-        return cases;
+        TestDataFolder = di.Parent.Parent.FullName;
+        ExpectedDataFolder = Path.Combine(di.Parent.Parent.Parent.FullName, "ExpectedData", UnityDataVersion);
+        
+        ExpectedData.Load(ExpectedDataFolder);
     }
 
     public override string ToString()

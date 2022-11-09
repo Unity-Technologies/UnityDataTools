@@ -7,20 +7,12 @@ namespace UnityDataTools.FileSystem.Tests;
 
 public static class ExpectedDataGenerator
 {
-    public static void GenerateAll()
-    {
-        foreach (var context in Context.GetAll())
-        {
-            Generate(context);
-        }
-    }
-    
     public static void Generate(Context context)
     {
         var expectedData = context.ExpectedData;
 
         UnityFileSystem.Init();
-        using (var archive = UnityFileSystem.MountArchive(Path.Combine(context.UnityDataFolder, "AssetBundles", "assetbundle"), "/"))
+        using (var archive = UnityFileSystem.MountArchive(Path.Combine(context.UnityDataFolder, "assetbundle"), "/"))
         {
             expectedData.Add("NodeCount", archive.Nodes.Count);
 
@@ -69,8 +61,8 @@ public static class ExpectedDataGenerator
 
             UnityFileSystem.Cleanup();
             
-            var di = new DirectoryInfo(context.TestDataFolder);
-            var outputFolder = Path.Combine(di.Parent.Parent.Parent.Parent.FullName, "ExpectedData", context.UnityDataVersion);
+            var csprojFolder = Directory.GetParent(context.TestDataFolder).Parent.Parent.Parent.FullName;
+            var outputFolder = Path.Combine(csprojFolder, "ExpectedData", context.UnityDataVersion);
 
             Directory.CreateDirectory(outputFolder);
             

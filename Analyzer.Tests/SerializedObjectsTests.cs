@@ -9,7 +9,7 @@ namespace UnityDataTools.Analyzer.Tests;
 
 #pragma warning disable NUnit2005, NUnit2006
 
-public class SerializedObjectsTests : TestForAllVersions
+public class SerializedObjectsTests : AssetBundleTestFixture
 {
     private UnityArchive m_Archive;
     private SerializedFile m_SerializedFile;
@@ -19,10 +19,10 @@ public class SerializedObjectsTests : TestForAllVersions
     {
     }
     
-    protected override void OnCreate()
+    protected override void OnLoadExpectedData(Context context)
     {
         // Uncomment to regenerate expected data.
-        //ExpectedDataGenerator.GenerateAll();
+        //ExpectedDataGenerator.Generate(context);
     }
 
     [OneTimeSetUp]
@@ -30,7 +30,7 @@ public class SerializedObjectsTests : TestForAllVersions
     {
         UnityFileSystem.Init();
 
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
         m_SerializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
         m_FileReader = new UnityFileReader("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994", 1024*1024);

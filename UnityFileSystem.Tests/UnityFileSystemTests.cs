@@ -11,16 +11,16 @@ namespace UnityDataTools.FileSystem.Tests;
 
 #pragma warning disable NUnit2005, NUnit2006
 
-public class ArchiveTests : TestForAllVersions
+public class ArchiveTests : AssetBundleTestFixture
 {
     public ArchiveTests(Context context) : base(context)
     {
     }
     
-    protected override void OnCreate()
+    protected override void OnLoadExpectedData(Context context)
     {
         // Uncomment to regenerate expected data.
-        //ExpectedDataGenerator.GenerateAll();
+        //ExpectedDataGenerator.Generate(context);
     }
     
     [OneTimeSetUp]
@@ -28,7 +28,7 @@ public class ArchiveTests : TestForAllVersions
     {
         UnityFileSystem.Init();
     }
-        
+    
     [OneTimeTearDown]
     public void TearDown()
     {
@@ -53,7 +53,7 @@ public class ArchiveTests : TestForAllVersions
         
     public void MountArchive_ValidArchive_ReturnsArchive()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
 
         UnityArchive archive = null;
         Assert.DoesNotThrow(() => archive = UnityFileSystem.MountArchive(path, "archive:/"));
@@ -65,7 +65,7 @@ public class ArchiveTests : TestForAllVersions
     [Ignore("This test doesn't return the expected error, this condition is probably not handled correctly in Unity")]
     public void DisposeArchive_ValidArchive_UnmountsArchive()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var archive = UnityFileSystem.MountArchive(path, "archive:/");
         var node = archive.Nodes[0];
 
@@ -77,7 +77,7 @@ public class ArchiveTests : TestForAllVersions
     
     public void Nodes_Disposed_ThrowsException()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var archive = UnityFileSystem.MountArchive(path, "archive:/");
         archive.Dispose();
             
@@ -109,7 +109,7 @@ public class ArchiveTests : TestForAllVersions
     }
 }
 
-public class UnityFileTests : TestForAllVersions
+public class UnityFileTests : AssetBundleTestFixture
 {
     private UnityArchive m_Archive;
 
@@ -122,7 +122,7 @@ public class UnityFileTests : TestForAllVersions
     {
         UnityFileSystem.Init();
             
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
     }
 
@@ -270,7 +270,7 @@ public class UnityFileTests : TestForAllVersions
     }
 }
 
-public class SerializedFileTests : TestForAllVersions
+public class SerializedFileTests : AssetBundleTestFixture
 {
     private UnityArchive m_Archive;
 
@@ -283,7 +283,7 @@ public class SerializedFileTests : TestForAllVersions
     {
         UnityFileSystem.Init();
             
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
     }
 
@@ -406,7 +406,7 @@ public class SerializedFileTests : TestForAllVersions
     }
 }
 
-public class TypeTreeTests : TestForAllVersions
+public class TypeTreeTests : AssetBundleTestFixture
 {
     private UnityArchive m_Archive;
     private SerializedFile m_SerializedFile;
@@ -420,7 +420,7 @@ public class TypeTreeTests : TestForAllVersions
     {
         UnityFileSystem.Init();
             
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
 
         m_SerializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
@@ -533,7 +533,7 @@ public class TypeTreeTests : TestForAllVersions
     }
 }
 
-public class RandomAccessReaderTests : TestForAllVersions
+public class RandomAccessReaderTests : AssetBundleTestFixture
 {
     private UnityArchive m_Archive;
     private SerializedFile m_SerializedFile;
@@ -548,7 +548,7 @@ public class RandomAccessReaderTests : TestForAllVersions
     {
         UnityFileSystem.Init();
 
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
 
         m_SerializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");

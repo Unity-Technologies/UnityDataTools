@@ -106,7 +106,7 @@ public class DllInitCleanupTests
     }
 }
 
-public class DllMountUnmountTests : TestForAllVersions
+public class DllMountUnmountTests : AssetBundleTestFixture
 {
     public DllMountUnmountTests(Context context) : base(context)
     {
@@ -151,7 +151,7 @@ public class DllMountUnmountTests : TestForAllVersions
     [Test]
     public void MountArchive_ActualArchive_ReturnSuccess()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var r = DllWrapper.MountArchive(path, "archive:/", out var handle);
         Assert.AreEqual(ReturnCode.Success, r);
         Assert.IsFalse(handle.IsInvalid);
@@ -162,14 +162,14 @@ public class DllMountUnmountTests : TestForAllVersions
     [Test]
     public void UnmountArchive_ActualArchive_ReturnSuccess()
     {
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         DllWrapper.MountArchive(path, "archive:/", out var handle);
 
         Assert.DoesNotThrow(() => handle.Dispose());
     }
 }
 
-public class DllArchiveTests : TestForAllVersions
+public class DllArchiveTests : AssetBundleTestFixture
 {
     private UnityArchiveHandle m_Archive;
 
@@ -181,7 +181,7 @@ public class DllArchiveTests : TestForAllVersions
     public void Setup()
     {
         DllWrapper.Init();
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         DllWrapper.MountArchive(path, "archive:/", out m_Archive);
     }
 
@@ -249,7 +249,7 @@ public class DllArchiveTests : TestForAllVersions
     }
 }
 
-public class DllLFileTests : TestForAllVersions
+public class DllLFileTests : AssetBundleTestFixture
 {
     private UnityArchiveHandle m_Archive;
 
@@ -261,7 +261,7 @@ public class DllLFileTests : TestForAllVersions
     public void Setup()
     {
         DllWrapper.Init();
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         DllWrapper.MountArchive(path, "archive:/", out m_Archive);
     }
 
@@ -422,7 +422,7 @@ public class DllLFileTests : TestForAllVersions
     }
 }
 
-public class DllSerializedFileTests : TestForAllVersions
+public class DllSerializedFileTests : AssetBundleTestFixture
 {
     private UnityArchiveHandle m_Archive;
 
@@ -434,7 +434,7 @@ public class DllSerializedFileTests : TestForAllVersions
     public void Setup()
     {
         DllWrapper.Init();
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         DllWrapper.MountArchive(path, "archive:/", out m_Archive);
     }
 
@@ -600,7 +600,7 @@ public class DllSerializedFileTests : TestForAllVersions
     }
 }
 
-public class DllTypeTreeTests : TestForAllVersions
+public class DllTypeTreeTests : AssetBundleTestFixture
 {
     private UnityArchiveHandle      m_Archive;
     private SerializedFileHandle    m_SerializedFile;
@@ -614,7 +614,7 @@ public class DllTypeTreeTests : TestForAllVersions
     public void Setup()
     {
         DllWrapper.Init();
-        var path = Path.Combine(Context.UnityDataFolder, "AssetBundles", "assetbundle");
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         DllWrapper.MountArchive(path, "archive:/", out m_Archive);
 
         DllWrapper.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994", out m_SerializedFile);
