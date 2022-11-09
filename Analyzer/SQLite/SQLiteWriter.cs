@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics.CodeAnalysis;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.FileSystem;
@@ -22,6 +23,9 @@ public class SQLiteWriter : IWriter
     private IdProvider<string> m_SerializedFileIdProvider = new ();
     private ObjectIdProvider m_ObjectIdProvider = new ();
     
+    // Used to map PPtr fileId to its corresponding serialized file id in the database.
+    Dictionary<int, int> m_LocalToDbFileId = new ();
+
     private Dictionary<string, ISQLiteHandler> m_Handlers = new ()
     {
         { "Mesh", new MeshHandler() },
@@ -61,9 +65,9 @@ public class SQLiteWriter : IWriter
         command.CommandText = Properties.Resources.Init;
         command.ExecuteNonQuery();
 
-        foreach (var processor in m_Handlers.Values)
+        foreach (var handler in m_Handlers.Values)
         {
-            processor.Init(m_Database);
+            handler.Init(m_Database);
         }
         
         CreateSQLiteCommands();
@@ -76,9 +80,9 @@ public class SQLiteWriter : IWriter
             throw new InvalidOperationException("SQLiteWriter.End called before SQLiteWriter.Begin");
         }
         
-        foreach (var processor in m_Handlers.Values)
+        foreach (var handler in m_Handlers.Values)
         {
-            processor.Finalize(m_Database);
+            handler.Finalize(m_Database);
         }
 
         using var finalizeCommand = m_Database.CreateCommand();
@@ -146,100 +150,102 @@ public class SQLiteWriter : IWriter
         m_CurrentAssetBundleId = -1;
     }
 
+    [SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")]
     public void WriteSerializedFile(string filename, string fullPath)
     {
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
+        var pptrReader = new PPtrReader(sf, reader, AddReference);
         
-        // Used to map PPtr fileId to its corresponding serialized file id in the database.
-        Dictionary<int, int> localToDbFileId = new ();
         int serializedFileId = m_SerializedFileIdProvider.GetId(filename.ToLower());
+        
+        m_LocalToDbFileId.Clear();
 
         using var transaction = m_Database.BeginTransaction();
         
         try
         {
             m_AddSerializedFileCommand.Parameters["@id"].Value = serializedFileId;
-            m_AddSerializedFileCommand.Parameters["@asset_bundle"].Value =
-                m_CurrentAssetBundleId == -1 ? null : m_CurrentAssetBundleId;
+            m_AddSerializedFileCommand.Parameters["@asset_bundle"].Value = m_CurrentAssetBundleId == -1 ? null : m_CurrentAssetBundleId;
             m_AddSerializedFileCommand.Parameters["@name"].Value = filename;
             m_AddSerializedFileCommand.ExecuteNonQuery();
 
             int localId = 0;
-            localToDbFileId.Add(localId++, serializedFileId);
+            m_LocalToDbFileId.Add(localId++, serializedFileId);
             foreach (var extRef in sf.ExternalReferences)
             {
-                localToDbFileId.Add(localId++,
+                m_LocalToDbFileId.Add(localId++,
                     m_SerializedFileIdProvider.GetId(extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLower()));
             }
-            
+
+            foreach (var obj in sf.Objects)
+            {
+                var currentObjectId = m_ObjectIdProvider.GetId((serializedFileId, obj.Id));
+
+                var root = sf.GetTypeTreeRoot(obj.Id);
+                var offset = obj.Offset;
+
+                if (!m_TypeSet.Contains(obj.TypeId))
+                {
+                    m_AddTypeCommand.Parameters["@id"].Value = obj.TypeId;
+                    m_AddTypeCommand.Parameters["@name"].Value = root.Type;
+                    m_AddTypeCommand.ExecuteNonQuery();
+
+                    m_TypeSet.Add(obj.TypeId);
+                }
+
+                var randomAccessReader = new RandomAccessReader(sf, root, reader, offset);
+
+                string name = null;
+                long streamDataSize = 0;
+
+                if (m_Handlers.TryGetValue(root.Type, out var handler))
+                {
+                    handler.Process(m_ObjectIdProvider, currentObjectId, m_LocalToDbFileId, randomAccessReader,
+                        out name, out streamDataSize);
+                }
+                else if (randomAccessReader.HasChild("m_Name"))
+                {
+                    name = randomAccessReader["m_Name"].GetValue<string>();
+                }
+
+                if (randomAccessReader.HasChild("m_GameObject"))
+                {
+                    var pptr = randomAccessReader["m_GameObject"];
+                    var fileId = m_LocalToDbFileId[pptr["m_FileID"].GetValue<int>()];
+                    m_AddObjectCommand.Parameters["@game_object"].Value =
+                        m_ObjectIdProvider.GetId((fileId, pptr["m_PathID"].GetValue<long>()));
+                }
+                else
+                {
+                    m_AddObjectCommand.Parameters["@game_object"].Value = null;
+                }
+
+                m_AddObjectCommand.Parameters["@id"].Value = currentObjectId;
+                m_AddObjectCommand.Parameters["@object_id"].Value = obj.Id;
+                m_AddObjectCommand.Parameters["@serialized_file"].Value = serializedFileId;
+                m_AddObjectCommand.Parameters["@type"].Value = obj.TypeId;
+                m_AddObjectCommand.Parameters["@name"].Value = name;
+                m_AddObjectCommand.Parameters["@size"].Value = obj.Size + streamDataSize;
+                m_AddObjectCommand.ExecuteNonQuery();
+
+                if (m_ExtractReferences)
+                {
+                    pptrReader.Process(currentObjectId, offset, root);
+                }
+            }
+
             transaction.Commit();
         }
         catch (Exception)
         {
             transaction.Rollback();
         }
-        
-        foreach (var obj in sf.Objects)
-        {
-            var currentObjectId = m_ObjectIdProvider.GetId((serializedFileId, obj.Id));
-
-            var root = sf.GetTypeTreeRoot(obj.Id);
-            var offset = obj.Offset;
-
-            if (!m_TypeSet.Contains(obj.TypeId))
-            {
-                m_AddTypeCommand.Parameters["@id"].Value = obj.TypeId;
-                m_AddTypeCommand.Parameters["@name"].Value = root.Type;
-                m_AddTypeCommand.ExecuteNonQuery();
-
-                m_TypeSet.Add(obj.TypeId);
-            }
-
-            var randomAccessReader = new RandomAccessReader(sf, root, reader, offset);
-
-            string name = null;
-            long streamDataSize = 0;
-
-            if (m_Handlers.TryGetValue(root.Type, out var processor))
-            {
-                processor.Process(m_ObjectIdProvider, currentObjectId, localToDbFileId, randomAccessReader, out name, out streamDataSize);
-            }
-            else if (randomAccessReader.HasChild("m_Name"))
-            {
-                name = randomAccessReader["m_Name"].GetValue<string>();
-            }
-
-            if (randomAccessReader.HasChild("m_GameObject"))
-            {
-                var pptr = randomAccessReader["m_GameObject"];
-                var fileId = localToDbFileId[pptr["m_FileID"].GetValue<int>()];
-                m_AddObjectCommand.Parameters["@game_object"].Value = m_ObjectIdProvider.GetId((fileId, pptr["m_PathID"].GetValue<long>()));
-            }
-            else
-            {
-                m_AddObjectCommand.Parameters["@game_object"].Value = null;
-            }
-
-            m_AddObjectCommand.Parameters["@id"].Value = currentObjectId;
-            m_AddObjectCommand.Parameters["@object_id"].Value = obj.Id;
-            m_AddObjectCommand.Parameters["@serialized_file"].Value = serializedFileId;
-            m_AddObjectCommand.Parameters["@type"].Value = obj.TypeId;
-            m_AddObjectCommand.Parameters["@name"].Value = name;
-            m_AddObjectCommand.Parameters["@size"].Value = obj.Size + streamDataSize;
-            m_AddObjectCommand.ExecuteNonQuery();
-
-            if (m_ExtractReferences)
-            {
-                var pptrReader = new PPtrReader(sf, root, reader, offset, 
-                    (fileId, pathId, propertyPath) =>
-                        AddReference(currentObjectId, m_ObjectIdProvider.GetId((localToDbFileId[fileId], pathId)), propertyPath));
-            }
-        }
     }
 
-    public void AddReference(long objectId, long referencedObjectId, string propertyPath)
+    public void AddReference(long objectId, int fileId, long pathId, string propertyPath)
     {
+        var referencedObjectId = m_ObjectIdProvider.GetId((m_LocalToDbFileId[fileId], pathId));
         m_AddReferenceCommand.Parameters["@object"].Value = objectId;
         m_AddReferenceCommand.Parameters["@referenced_object"].Value = referencedObjectId;
         m_AddReferenceCommand.Parameters["@property_path"].Value = propertyPath;
