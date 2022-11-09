@@ -12,6 +12,10 @@ public class TestForAllVersions
         Context = context;
     }
 
+    protected virtual void OnCreate()
+    {
+    }
+
     [OneTimeSetUp]
     public void LoadExpectedData()
     {

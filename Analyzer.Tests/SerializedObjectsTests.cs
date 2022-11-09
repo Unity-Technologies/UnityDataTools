@@ -15,13 +15,14 @@ public class SerializedObjectsTests : TestForAllVersions
     private SerializedFile m_SerializedFile;
     private UnityFileReader m_FileReader;
 
-    static SerializedObjectsTests()
-    {
-        //ExpectedDataGenerator.GenerateAll();
-    }
-
     public SerializedObjectsTests(Context context) : base(context)
     {
+    }
+    
+    protected override void OnCreate()
+    {
+        // Uncomment to regenerate expected data.
+        //ExpectedDataGenerator.GenerateAll();
     }
 
     [OneTimeSetUp]

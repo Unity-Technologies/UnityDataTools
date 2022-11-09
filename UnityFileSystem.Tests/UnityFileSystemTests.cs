@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
@@ -14,6 +15,12 @@ public class ArchiveTests : TestForAllVersions
 {
     public ArchiveTests(Context context) : base(context)
     {
+    }
+    
+    protected override void OnCreate()
+    {
+        // Uncomment to regenerate expected data.
+        //ExpectedDataGenerator.GenerateAll();
     }
     
     [OneTimeSetUp]

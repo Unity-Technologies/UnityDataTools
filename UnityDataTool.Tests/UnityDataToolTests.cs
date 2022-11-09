@@ -18,9 +18,10 @@ public class UnityDataToolTests : TestForAllVersions
     public UnityDataToolTests(Context context) : base(context)
     {
     }
-
-    static UnityDataToolTests()
+    
+    protected override void OnCreate()
     {
+        // Uncomment to regenerate expected data.
         //ExpectedDataGenerator.GenerateAll();
     }
 

@@ -11,7 +11,7 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders;
 // used instead (see the TextDumper library).
 //
 // Typical usage: randomAccessReader["prop"]["subProp"].GetValue<int>()
-// See the Processors in the Analyzer library for more examples.
+// See the SerializedObjects in the Analyzer library for more examples.
 //
 // This class is optimized to read the least amount of data from the file when accessing properties of a serialized
 // object. It is required because the TypeTree doesn't provide the size of the serialized data when it is

@@ -3,7 +3,7 @@
   "Shader": {
     "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader, Analyzer",
     "Name": "Standard",
-    "DecompressedSize": 477216,
+    "DecompressedSize": 434196,
     "SubShaders": {
       "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader, Analyzer]], System.Private.CoreLib",
       "$values": [
@@ -24,7 +24,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 0,
+                        "BlobIndex": 6,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -36,7 +36,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 1,
+                        "BlobIndex": 7,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -49,7 +49,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 2,
+                        "BlobIndex": 8,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -62,7 +62,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 3,
+                        "BlobIndex": 9,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -76,7 +76,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 4,
+                        "BlobIndex": 10,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -89,7 +89,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 5,
+                        "BlobIndex": 11,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -103,7 +103,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 6,
+                        "BlobIndex": 12,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -117,7 +117,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 7,
+                        "BlobIndex": 13,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -137,7 +137,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 8,
+                        "BlobIndex": 18,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -149,7 +149,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 9,
+                        "BlobIndex": 19,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -162,7 +162,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 10,
+                        "BlobIndex": 20,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -175,7 +175,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 11,
+                        "BlobIndex": 21,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -201,7 +201,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 12,
+                        "BlobIndex": 26,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -213,7 +213,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 13,
+                        "BlobIndex": 27,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -225,7 +225,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 14,
+                        "BlobIndex": 28,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -237,7 +237,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 15,
+                        "BlobIndex": 29,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -249,7 +249,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 16,
+                        "BlobIndex": 30,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -261,7 +261,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 17,
+                        "BlobIndex": 31,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -274,7 +274,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 18,
+                        "BlobIndex": 32,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -288,7 +288,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 19,
+                        "BlobIndex": 33,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -301,7 +301,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 20,
+                        "BlobIndex": 34,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -314,7 +314,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 21,
+                        "BlobIndex": 35,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -327,7 +327,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 22,
+                        "BlobIndex": 36,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -341,7 +341,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 23,
+                        "BlobIndex": 37,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -354,7 +354,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 24,
+                        "BlobIndex": 38,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -373,7 +373,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 25,
+                        "BlobIndex": 49,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -385,7 +385,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 26,
+                        "BlobIndex": 50,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -397,7 +397,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 27,
+                        "BlobIndex": 51,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -409,7 +409,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 28,
+                        "BlobIndex": 52,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -421,7 +421,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 29,
+                        "BlobIndex": 53,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -433,7 +433,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 30,
+                        "BlobIndex": 54,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -446,7 +446,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 31,
+                        "BlobIndex": 55,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -460,7 +460,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 32,
+                        "BlobIndex": 56,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -473,7 +473,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 33,
+                        "BlobIndex": 57,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -486,7 +486,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 34,
+                        "BlobIndex": 58,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -499,7 +499,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 35,
+                        "BlobIndex": 59,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -513,7 +513,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 36,
+                        "BlobIndex": 60,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -526,7 +526,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 37,
+                        "BlobIndex": 61,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -552,7 +552,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 38,
+                        "BlobIndex": 63,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -564,7 +564,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 39,
+                        "BlobIndex": 64,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -581,7 +581,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 40,
+                        "BlobIndex": 66,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -593,7 +593,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 41,
+                        "BlobIndex": 67,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -617,7 +617,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 42,
+                        "BlobIndex": 68,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": []
@@ -627,7 +627,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 43,
+                        "BlobIndex": 69,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -639,7 +639,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 44,
+                        "BlobIndex": 70,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -651,7 +651,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 45,
+                        "BlobIndex": 71,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -669,7 +669,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 46,
+                        "BlobIndex": 74,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": []
@@ -679,7 +679,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 47,
+                        "BlobIndex": 75,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -691,7 +691,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 48,
+                        "BlobIndex": 76,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -703,7 +703,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 49,
+                        "BlobIndex": 77,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -736,7 +736,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 50,
+                        "BlobIndex": 80,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -748,7 +748,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 51,
+                        "BlobIndex": 81,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -761,7 +761,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 2,
+                        "BlobIndex": 8,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -774,7 +774,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 3,
+                        "BlobIndex": 9,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -788,7 +788,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 52,
+                        "BlobIndex": 82,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -801,7 +801,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 53,
+                        "BlobIndex": 83,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -815,7 +815,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 6,
+                        "BlobIndex": 12,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -829,7 +829,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 7,
+                        "BlobIndex": 13,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -849,7 +849,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 54,
+                        "BlobIndex": 87,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -861,7 +861,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 55,
+                        "BlobIndex": 88,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -874,7 +874,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 56,
+                        "BlobIndex": 20,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -887,7 +887,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 57,
+                        "BlobIndex": 21,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -913,7 +913,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 58,
+                        "BlobIndex": 89,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -925,7 +925,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 59,
+                        "BlobIndex": 90,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -937,7 +937,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 60,
+                        "BlobIndex": 91,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -949,7 +949,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 61,
+                        "BlobIndex": 92,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -961,7 +961,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 62,
+                        "BlobIndex": 93,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -973,7 +973,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 63,
+                        "BlobIndex": 94,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -986,7 +986,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 19,
+                        "BlobIndex": 33,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -999,7 +999,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 20,
+                        "BlobIndex": 34,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1012,7 +1012,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 64,
+                        "BlobIndex": 95,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1025,7 +1025,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 65,
+                        "BlobIndex": 96,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1043,7 +1043,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 66,
+                        "BlobIndex": 104,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1055,7 +1055,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 67,
+                        "BlobIndex": 105,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1067,7 +1067,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 68,
+                        "BlobIndex": 106,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1079,7 +1079,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 69,
+                        "BlobIndex": 107,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1091,7 +1091,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 70,
+                        "BlobIndex": 108,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1103,7 +1103,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 71,
+                        "BlobIndex": 109,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1116,7 +1116,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 32,
+                        "BlobIndex": 56,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1129,7 +1129,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 33,
+                        "BlobIndex": 57,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1142,7 +1142,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 72,
+                        "BlobIndex": 110,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1155,7 +1155,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 73,
+                        "BlobIndex": 111,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1180,7 +1180,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 38,
+                        "BlobIndex": 63,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1192,7 +1192,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 23,
-                        "BlobIndex": 39,
+                        "BlobIndex": 64,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1209,7 +1209,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 40,
+                        "BlobIndex": 66,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1221,7 +1221,7 @@
                         "$type": "UnityDataTools.Analyzer.SerializedObjects.Shader+SubShader+Pass+SubProgram, Analyzer",
                         "HwTier": 3,
                         "Api": 24,
-                        "BlobIndex": 41,
+                        "BlobIndex": 67,
                         "Keywords": {
                           "$type": "System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib]], System.Private.CoreLib",
                           "$values": [
@@ -1285,7 +1285,7 @@
   "Mesh": {
     "$type": "UnityDataTools.Analyzer.SerializedObjects.Mesh, Analyzer",
     "Name": "Garde",
-    "StreamDataSize": 19128,
+    "StreamDataSize": 25504,
     "SubMeshes": 1,
     "BlendShapes": 0,
     "Bones": 0,
