@@ -31,3 +31,6 @@
 UnityFileSystemTestData/AssetBundles/
 UnityFileSystemTestData/**/*.csproj
 UnityFileSystemTestData/**/*.sln
+UnityFileSystemTestData/ProjectSettings/
+UnityFileSystemTestData/UserSettings/
+UnityFileSystemTestData/Packages/

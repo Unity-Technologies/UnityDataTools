@@ -2350,7 +2350,7 @@
       ]
     }
   },
-  "Texture2D": {
+  "Texture1": {
     "$type": "UnityDataTools.Analyzer.SerializedObjects.Texture2D, Analyzer",
     "Name": "Square_Soft_A_Cookie",
     "StreamDataSize": 0,
@@ -2359,5 +2359,259 @@
     "Format": 10,
     "MipCount": 1,
     "RwEnabled": true
+  },
+  "Texture2": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.Texture2D, Analyzer",
+    "Name": "wood",
+    "StreamDataSize": 2796216,
+    "Width": 2048,
+    "Height": 2048,
+    "Format": 10,
+    "MipCount": 12,
+    "RwEnabled": false
+  },
+  "AnimationClip": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.AnimationClip, Analyzer",
+    "Name": "LegacyAnimation",
+    "Legacy": true,
+    "Events": 0
+  },
+  "Mesh": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.Mesh, Analyzer",
+    "Name": "Garde",
+    "StreamDataSize": 19128,
+    "SubMeshes": 1,
+    "BlendShapes": 0,
+    "Bones": 0,
+    "Indices": 3840,
+    "Vertices": 797,
+    "Compression": 0,
+    "RwEnabled": false
+  },
+  "AudioClip": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.AudioClip, Analyzer",
+    "Name": "blip",
+    "StreamDataSize": 5248,
+    "BitsPerSample": 16,
+    "Frequency": 22050,
+    "Channels": 1,
+    "LoadType": 0,
+    "Format": 1
+  },
+  "AssetBundle": {
+    "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle, Analyzer",
+    "Name": "assetbundle",
+    "Assets": {
+      "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer]], System.Private.CoreLib",
+      "$values": [
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/animation.anim",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 3275523228701995130
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/animatorcontrolle.controller",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -1399971041133135777
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/blip.wav",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -8074603400156879931
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/legacyanimation.anim",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 2152370074763270995
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/material.mat",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -3765523188966905173
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/prefab.prefab",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -3455002188919363219
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 6630921689196554910
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -1097962762356269075
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -4781523354816791511
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 1394534131998158228
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -6645798260792728778
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 1904034051185057375
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -4486286564524162325
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 845677610170300691
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/robot_basic.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -4683109761381211069
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/square_soft_a_cookie.tif",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -9023202112035587373
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/sting-sword lowpoly.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 7697398594081939140
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/sting-sword lowpoly.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -8015640747378788975
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/sting-sword lowpoly.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 4693305862354978555
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/sting-sword lowpoly.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": -7865028809519950684
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/sting-sword lowpoly.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 7889763420337511466
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/sting-sword lowpoly.fbx",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 5388662321799902894
+          }
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
+          "Name": "assets/assetbundledata/wood.jpg",
+          "PPtr": {
+            "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+            "FileId": 0,
+            "PathId": 404836592933730457
+          }
+        }
+      ]
+    }
   }
 }

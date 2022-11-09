@@ -3,6 +3,7 @@ using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.TestCommon;
+using UnityDataTools.UnityDataTool.Tests;
 
 namespace UnityDataTools.Analyzer.Tests;
 
@@ -43,15 +44,21 @@ public class SerializedObjectsTests : TestForAllVersions
 
         UnityFileSystem.Cleanup();
     }
-
-    [Test]
-    public void TestTexture2d()
+    
+    T ReadObject<T>(long id, Func<RandomAccessReader, T> creator)
     {
-        var objectInfo = m_SerializedFile.Objects.First(x => x.Id == -9023202112035587373);
+        var objectInfo = m_SerializedFile.Objects.First(x => x.Id == id);
         var node = m_SerializedFile.GetTypeTreeRoot(objectInfo.Id);
         var reader = new RandomAccessReader(m_SerializedFile, node, m_FileReader, objectInfo.Offset);
-        var texture = Texture2D.Read(reader);
-        var expectedTexture = (Texture2D)Context.ExpectedData.Get("Texture2D");
+        return creator(reader);
+    }
+
+    [TestCase("Texture1", -9023202112035587373)]
+    [TestCase("Texture2", 404836592933730457)]
+    public void TestTexture2d(string name, long id)
+    {
+        var texture = ReadObject(id, Texture2D.Read);
+        var expectedTexture = (Texture2D)Context.ExpectedData.Get(name);
         
         Assert.AreEqual(expectedTexture.Name, texture.Name);
         Assert.AreEqual(expectedTexture.StreamDataSize, texture.StreamDataSize);
@@ -62,31 +69,72 @@ public class SerializedObjectsTests : TestForAllVersions
         Assert.AreEqual(expectedTexture.RwEnabled, texture.RwEnabled);
     }
     
-    /*[Test]
-    public void AnimationClip()
+    [Test]
+    public void TestAnimationClip()
     {
-        var objectInfo = m_SerializedFile.Objects.First(x => x.Id == -9023202112035587373);
-        var node = m_SerializedFile.GetTypeTreeRoot(objectInfo.Id);
-        var reader = new RandomAccessReader(m_SerializedFile, node, m_FileReader, objectInfo.Offset);
-        var texture = Texture2D.Read(reader);
-        var expectedTexture = (Texture2D)Context.ExpectedData.Get("Texture2D");
+        var clip = ReadObject(2152370074763270995, AnimationClip.Read);
+        var expectedClip = (AnimationClip)Context.ExpectedData.Get("AnimationClip");
         
-        Assert.AreEqual(expectedTexture.Name, texture.Name);
-        Assert.AreEqual(expectedTexture.StreamDataSize, texture.StreamDataSize);
-        Assert.AreEqual(expectedTexture.Width, texture.Width);
-        Assert.AreEqual(expectedTexture.Height, texture.Height);
-        Assert.AreEqual(expectedTexture.Format, texture.Format);
-        Assert.AreEqual(expectedTexture.MipCount, texture.MipCount);
-        Assert.AreEqual(expectedTexture.RwEnabled, texture.RwEnabled);
-    }*/
+        Assert.AreEqual(expectedClip.Name, clip.Name);
+        Assert.AreEqual(expectedClip.Events, clip.Events);
+        Assert.AreEqual(expectedClip.Legacy, clip.Legacy);
+    }
+    
+    [Test]
+    public void TestAudioClip()
+    {
+        var clip = ReadObject(-8074603400156879931, AudioClip.Read);
+        var expectedClip = (AudioClip)Context.ExpectedData.Get("AudioClip");
+        
+        Assert.AreEqual(expectedClip.Name, clip.Name);
+        Assert.AreEqual(expectedClip.Channels, clip.Channels);
+        Assert.AreEqual(expectedClip.Format, clip.Format);
+        Assert.AreEqual(expectedClip.Frequency, clip.Frequency);
+        Assert.AreEqual(expectedClip.LoadType, clip.LoadType);
+        Assert.AreEqual(expectedClip.BitsPerSample, clip.BitsPerSample);
+        Assert.AreEqual(expectedClip.StreamDataSize, clip.StreamDataSize);
+    }
+    
+    [Test]
+    public void TestAssetBundle()
+    {
+        var bundle = ReadObject(1, AssetBundle.Read);
+        var expectedBundle = (AssetBundle)Context.ExpectedData.Get("AssetBundle");
+        
+        Assert.AreEqual(expectedBundle.Name, bundle.Name);
+        Assert.AreEqual(expectedBundle.Assets.Count, bundle.Assets.Count);
+
+        for (int i = 0; i < bundle.Assets.Count; ++i)
+        {
+            var asset = bundle.Assets[i];
+            var expectedAsset = expectedBundle.Assets[i];
+            
+            Assert.AreEqual(expectedAsset.Name, asset.Name);
+            Assert.AreEqual(expectedAsset.PPtr.FileId, asset.PPtr.FileId);
+            Assert.AreEqual(expectedAsset.PPtr.PathId, asset.PPtr.PathId);
+        }
+    }
+    
+    [Test]
+    public void TestMesh()
+    {
+        var mesh = ReadObject(4693305862354978555, Mesh.Read);
+        var expectedMesh = (Mesh)Context.ExpectedData.Get("Mesh");
+        
+        Assert.AreEqual(expectedMesh.Name, mesh.Name);
+        Assert.AreEqual(expectedMesh.Bones, mesh.Bones);
+        Assert.AreEqual(expectedMesh.Compression, mesh.Compression);
+        Assert.AreEqual(expectedMesh.Indices, mesh.Indices);
+        Assert.AreEqual(expectedMesh.Vertices, mesh.Vertices);
+        Assert.AreEqual(expectedMesh.BlendShapes, mesh.BlendShapes);
+        Assert.AreEqual(expectedMesh.RwEnabled, mesh.RwEnabled);
+        Assert.AreEqual(expectedMesh.StreamDataSize, mesh.StreamDataSize);
+    }
 
     [Test]
     public void TestShaderReader()
     {
-        var objectInfo = m_SerializedFile.Objects.First(x => x.Id == -4850512016903265157);
-        var node = m_SerializedFile.GetTypeTreeRoot(objectInfo.Id);
-        var reader = new RandomAccessReader(m_SerializedFile, node, m_FileReader, objectInfo.Offset);
-        var shader = Shader.Read(reader);
+        var shader = ReadObject(-4850512016903265157, Shader.Read);
         var expectedShader = (Shader)Context.ExpectedData.Get("Shader");
         
         Assert.AreEqual(expectedShader.Name, shader.Name);
