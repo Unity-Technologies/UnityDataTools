@@ -57,8 +57,6 @@ public class AnalyzerTool
                 {
                     var serializedFileName = Path.GetRelativePath(path, file);
                     
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write(new string(' ', Console.BufferWidth));
                     Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
                     
                     writer.WriteSerializedFile(serializedFileName, file);
