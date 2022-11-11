@@ -32,6 +32,10 @@ this document. AssetBundles are archive files (similar to zip files) that can be
 runtime. They contain SerializedFiles, but contrary to those of the Player Data, they include what
 is called a TypeTree<sup>[1](#footnote1)</sup>.
 
+> Note: it is possible to generate TypeTrees for the Player data starting in Unity 2021.2.
+> To do so, the *ForceAlwaysWriteTypeTrees* Diagnostic Switch must be enabled in the Editor
+> Preferences (Diagnostic/Editor section).
+
 The TypeTree is a data structure exposing how objects have been serialized, i.e. the name, type and
 size of their properties. It is used by Unity when loading an AssetBundle that was built by a
 previous Unity version (so you don't necessarily have to update all AssetBundles after upgrading a
