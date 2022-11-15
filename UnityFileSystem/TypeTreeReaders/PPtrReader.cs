@@ -10,16 +10,18 @@ namespace UnityDataTools.FileSystem.TypeTreeReaders;
 // It provides a string representing the property path of the property (e.g. "m_MyObject.m_MyArray[2].m_PPtrProperty").
 public class PPtrReader
 {
+    public delegate void CallbackDelegate(long objectId, int fileId, long pathId, string propertyPath, string propertyType);
+    
     private SerializedFile m_SerializedFile;
     private UnityFileReader m_Reader;
     private long m_Offset;
     private long m_ObjectId;
     private StringBuilder m_StringBuilder = new();
-
-    Action<long, int, long, string> m_Callback;
+    
+    private CallbackDelegate m_Callback;
 
     public PPtrReader(SerializedFile serializedFile, UnityFileReader reader,
-        Action<long, int, long, string> callback)
+        CallbackDelegate callback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
@@ -49,9 +51,17 @@ public class PPtrReader
         {
             ProcessArray(node);
         }
+        else if (node.Type == "vector" || node.Type == "map" || node.Type == "staticvector")
+        {
+            ProcessArray(node.Children[0]);
+        }
         else if (node.Type.StartsWith("PPtr<"))
         {
-            ExtractPPtr();
+            var startIndex = node.Type.IndexOf('<') + 1;
+            var endIndex = node.Type.Length - 1;
+            var referencedType = node.Type.Substring(startIndex, endIndex - startIndex);
+            
+            ExtractPPtr(referencedType);
         }
         else if (node.CSharpType == typeof(string))
         {
@@ -98,10 +108,17 @@ public class PPtrReader
 
             for (int i = 0; i < arraySize; ++i)
             {
-                
                 if (!isManagedReferenceRegistry)
                 {
+                    
+                    var size = m_StringBuilder.Length;
+                    m_StringBuilder.Append('[');
+                    m_StringBuilder.Append(i);
+                    m_StringBuilder.Append(']');
+                    
                     ProcessNode(dataNode);
+                    
+                    m_StringBuilder.Remove(size, m_StringBuilder.Length - size);
                 }
                 else
                 {
@@ -203,7 +220,7 @@ public class PPtrReader
         return true;
     }
 
-    private void ExtractPPtr()
+    private void ExtractPPtr(string referencedType)
     {
         var fileId = m_Reader.ReadInt32(m_Offset);
         m_Offset += 4;
@@ -212,7 +229,7 @@ public class PPtrReader
 
         if (fileId != 0 || pathId != 0)
         {
-            m_Callback(m_ObjectId, fileId, pathId, m_StringBuilder.ToString());
+            m_Callback(m_ObjectId, fileId, pathId, m_StringBuilder.ToString(), referencedType);
         }
     }
 }

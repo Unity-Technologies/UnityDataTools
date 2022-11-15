@@ -41,7 +41,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
         m_SerializedFile = serializedFile;
 
         // Special case for vector and map objects, they always have a single Array child so we skip it.
-        if (node.Type == "vector" || node.Type == "map")
+        if (node.Type == "vector" || node.Type == "map" || node.Type == "staticvector")
         {
             m_TypeTreeNode = node.Children[0];
         }

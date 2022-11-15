@@ -59,24 +59,30 @@ public class TextDumperTool
     void RecursiveDump(TypeTreeNode node, ref long offset, int level)
     {
         bool skipChildren = false;
-            
+
         if (!node.IsArray)
         {
             m_StringBuilder.Append(' ', level * 2);
 
-            // Name is useless for the root.
             if (level != 0)
             {
                 m_StringBuilder.Append(node.Name);
                 m_StringBuilder.Append(' ');
+                m_StringBuilder.Append('(');
+                m_StringBuilder.Append(node.Type);
+                m_StringBuilder.Append(')');
             }
-
-            m_StringBuilder.Append(node.Type);
-            m_StringBuilder.Append(' ');
+            else
+            {
+                // Name is useless for the root.
+                m_StringBuilder.Append(' ');
+                m_StringBuilder.Append(node.Type);
+            }
 
             // Basic data type.
             if (node.IsBasicType)
             {
+                m_StringBuilder.Append(' ');
                 m_StringBuilder.Append(ReadValue(node, offset));
 
                 offset += node.Size;
@@ -85,6 +91,7 @@ public class TextDumperTool
             {
                 var stringSize = m_Reader.ReadInt32(offset);
 
+                m_StringBuilder.Append(' ');
                 m_StringBuilder.Append(m_Reader.ReadString(offset + 4, stringSize));
 
                 offset += stringSize + 4;
@@ -95,7 +102,7 @@ public class TextDumperTool
 
             m_Writer.WriteLine(m_StringBuilder);
             m_StringBuilder.Clear();
-                
+            
             if (node.IsManagedReferenceRegistry)
             {
                 DumpManagedReferenceRegistry(node, ref offset, level + 1);
@@ -143,10 +150,11 @@ public class TextDumperTool
         offset += 4;
 
         m_StringBuilder.Append(' ', level * 2);
-        m_StringBuilder.Append("Array [Size=");
-        m_StringBuilder.Append(arraySize);
-        m_StringBuilder.Append(" Type=");
+        m_StringBuilder.Append("Array");
+        m_StringBuilder.Append('<');
         m_StringBuilder.Append(dataNode.Type);
+        m_StringBuilder.Append(">[");
+        m_StringBuilder.Append(arraySize);
         m_StringBuilder.Append(']');
 
         m_Writer.WriteLine(m_StringBuilder);

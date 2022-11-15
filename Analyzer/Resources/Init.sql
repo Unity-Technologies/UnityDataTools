@@ -37,7 +37,8 @@ CREATE TABLE refs
 (
     object INTEGER,
     referenced_object INTEGER,
-    property_path TEXT
+    property_path TEXT,
+    property_type TEXT
 );
 
 CREATE VIEW object_view AS
@@ -83,6 +84,21 @@ FROM object_view
 GROUP BY name, type, size
 HAVING instances > 1
 ORDER BY size DESC, instances DESC;
+
+CREATE VIEW view_material_shader_refs AS
+SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, s.id shader_id, s.name shader_name, s.asset_bundle shader_asset_bundle
+FROM object_view m
+INNER JOIN refs r ON m.id = r.object AND r.property_path = 'm_Shader'
+INNER JOIN object_view s ON r.referenced_object = s.id
+LEFT JOIN assets a ON m.id = a.object;
+
+CREATE VIEW view_material_texture_refs AS
+SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, t.id texture_id, t.name texture_name, t.asset_bundle texture_asset_bundle
+FROM object_view m
+INNER JOIN refs r ON r.object = m.id AND property_type = "Texture"
+INNER JOIN object_view t ON r.referenced_object = t.id
+LEFT JOIN assets a ON m.id = a.object
+WHERE m.type = "Material";
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

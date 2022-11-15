@@ -105,10 +105,11 @@ public class SQLiteWriter : IWriter
         m_AddSerializedFileCommand.Parameters.Add("@name", DbType.String);
 
         m_AddReferenceCommand = m_Database.CreateCommand();
-        m_AddReferenceCommand.CommandText = "INSERT INTO refs (object, referenced_object, property_path) VALUES (@object, @referenced_object, @property_path)";
+        m_AddReferenceCommand.CommandText = "INSERT INTO refs (object, referenced_object, property_path, property_type) VALUES (@object, @referenced_object, @property_path, @property_type)";
         m_AddReferenceCommand.Parameters.Add("@object", DbType.Int64);
         m_AddReferenceCommand.Parameters.Add("@referenced_object", DbType.Int64);
         m_AddReferenceCommand.Parameters.Add("@property_path", DbType.String);
+        m_AddReferenceCommand.Parameters.Add("@property_type", DbType.String);
         
         m_AddObjectCommand = m_Database.CreateCommand();
         m_AddObjectCommand.CommandText = "INSERT INTO objects (id, object_id, serialized_file, type, name, game_object, size) VALUES (@id, @object_id, @serialized_file, @type, @name, @game_object, @size)";
@@ -243,12 +244,13 @@ public class SQLiteWriter : IWriter
         }
     }
 
-    public void AddReference(long objectId, int fileId, long pathId, string propertyPath)
+    public void AddReference(long objectId, int fileId, long pathId, string propertyPath, string propertyType)
     {
         var referencedObjectId = m_ObjectIdProvider.GetId((m_LocalToDbFileId[fileId], pathId));
         m_AddReferenceCommand.Parameters["@object"].Value = objectId;
         m_AddReferenceCommand.Parameters["@referenced_object"].Value = referencedObjectId;
         m_AddReferenceCommand.Parameters["@property_path"].Value = propertyPath;
+        m_AddReferenceCommand.Parameters["@property_type"].Value = propertyType;
         m_AddReferenceCommand.ExecuteNonQuery();
     }
 
