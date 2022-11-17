@@ -11,7 +11,7 @@
     <None Update="UnityFileSystemApi.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="UnityFileSystemApi.pdb">
+    <None Update="UnityFileSystemApi.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 	<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
