@@ -1317,7 +1317,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 3275523228701995130
-          }
+          },
+          "PreloadIndex": 0,
+          "PreloadSize": 1
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1326,7 +1328,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -1399971041133135777
-          }
+          },
+          "PreloadIndex": 22,
+          "PreloadSize": 2
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1335,7 +1339,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -8074603400156879931
-          }
+          },
+          "PreloadIndex": 21,
+          "PreloadSize": 1
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1344,7 +1350,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 2152370074763270995
-          }
+          },
+          "PreloadIndex": 1,
+          "PreloadSize": 1
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1353,7 +1361,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -3765523188966905173
-          }
+          },
+          "PreloadIndex": 144,
+          "PreloadSize": 2
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1362,7 +1372,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -3455002188919363219
-          }
+          },
+          "PreloadIndex": 2,
+          "PreloadSize": 19
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1371,7 +1383,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 6630921689196554910
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1380,7 +1394,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -1097962762356269075
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1389,7 +1405,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -4781523354816791511
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1398,7 +1416,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 1394534131998158228
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1407,7 +1427,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -6645798260792728778
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1416,7 +1438,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 1904034051185057375
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1425,7 +1449,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -4486286564524162325
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1434,7 +1460,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 845677610170300691
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1443,7 +1471,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -4683109761381211069
-          }
+          },
+          "PreloadIndex": 25,
+          "PreloadSize": 93
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1452,7 +1482,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -9023202112035587373
-          }
+          },
+          "PreloadIndex": 143,
+          "PreloadSize": 1
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1461,7 +1493,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 7697398594081939140
-          }
+          },
+          "PreloadIndex": 118,
+          "PreloadSize": 25
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1470,7 +1504,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -8015640747378788975
-          }
+          },
+          "PreloadIndex": 118,
+          "PreloadSize": 25
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1479,7 +1515,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 4693305862354978555
-          }
+          },
+          "PreloadIndex": 118,
+          "PreloadSize": 25
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1488,7 +1526,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": -7865028809519950684
-          }
+          },
+          "PreloadIndex": 118,
+          "PreloadSize": 25
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1497,7 +1537,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 7889763420337511466
-          }
+          },
+          "PreloadIndex": 118,
+          "PreloadSize": 25
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1506,7 +1548,9 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 5388662321799902894
-          }
+          },
+          "PreloadIndex": 118,
+          "PreloadSize": 25
         },
         {
           "$type": "UnityDataTools.Analyzer.SerializedObjects.AssetBundle+Asset, Analyzer",
@@ -1515,9 +1559,747 @@
             "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
             "FileId": 0,
             "PathId": 404836592933730457
-          }
+          },
+          "PreloadIndex": 24,
+          "PreloadSize": 1
         }
       ]
-    }
+    },
+    "PreloadTable": {
+      "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer]], System.Private.CoreLib",
+      "$values": [
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3275523228701995130
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2152370074763270995
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 2,
+          "PathId": 6
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 1,
+          "PathId": 10207
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8196865264539994992
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8138362113332287275
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -5484623090796618462
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -5349918692753542437
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4850512016903265157
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4716141648208258207
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4606375687431940004
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4365321507395843767
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4339217461983190205
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3455002188919363219
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1682175822698124268
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1473921323670530447
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1399971041133135777
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2478588251799287949
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3275523228701995130
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4639608604875661751
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4741613065353255831
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8074603400156879931
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1399971041133135777
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3275523228701995130
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 404836592933730457
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 2,
+          "PathId": 6
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -9180874206900030759
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -9005721010300469989
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8564259123370125535
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8450148522576704768
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8060921138513181406
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -7713320730566348882
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -7551979316049711457
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -7288055074905947232
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -7160786685895287674
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -6645798260792728778
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -6624713234786119786
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -6567687475032214782
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -6377179495188482494
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -5637639007827256240
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -5407907257826439233
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -5302649265423523261
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4781523354816791511
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4683109761381211069
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4618720353511229894
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4586346807259219102
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4486286564524162325
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4455971255125069403
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4230626793227549177
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4103666597927606247
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4067819952531011990
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4001888856119707736
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3925355920536267312
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3917318982995725274
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3741478623564010941
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3546981787522247415
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3419807111315239616
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -2719486287008657248
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -2651950813123678399
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -2575221265998162083
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -2097374110106508527
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -2063846300476783081
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1965129053336905088
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1683476749774118025
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1573359609012889280
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1516607606341619246
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1375021647149554035
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1225411016692436067
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -1097962762356269075
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -976500203463613133
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -810463049167678962
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -774432708067289669
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -691307443314598252
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -388885062936238621
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -359141012355986318
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -315011293411196986
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -243109597807668206
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 436585070317582516
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 713871192698476304
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 799824111034895784
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 845677610170300691
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 1361202129747409588
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 1394534131998158228
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 1904034051185057375
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2063352849405097463
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2068090740047174591
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2133448013464128067
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2282533744080708273
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2624902653669308750
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2877074482193022206
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 2993273037121721810
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3495385793845643680
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3508550919051034069
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4157438980232581984
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4167780011977833166
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4378008893471891431
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4466464664368177382
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4490184466655157513
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4537052516454787942
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4727024490401056873
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4797169861542192750
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 5063507808539723452
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 5619092051967831218
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 5948458159599234658
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 5969721916821219193
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 6025527554528651585
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 6377779632213801107
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 6630921689196554910
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 7143788370189130219
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 7277207269367644798
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8024166250884847368
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8284113439058897869
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8313553778062039578
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8334015855700187396
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8876972170645022554
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8957929285671401881
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 9007676397710837142
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 9073582682380749191
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 2,
+          "PathId": 6
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8720048570983375440
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -8015640747378788975
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -7865028809519950684
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -7205171933712184032
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -5486111779503571325
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -4850512016903265157
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3167029911029054299
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -237985942625632294
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 794051113611672443
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 886648916348198777
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 1680437759712570818
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 1756921877818560095
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3201720534944863714
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 3426710905874718078
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 4693305862354978555
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 5298347465497383448
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 5388662321799902894
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 6095031023675920522
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 7697398594081939140
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 7768382245541279042
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 7889763420337511466
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8122810628805875483
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 8555810540818505213
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": 9001362461581137807
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -9023202112035587373
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 3,
+          "PathId": -2455889347189472490
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.PPtr, Analyzer",
+          "FileId": 0,
+          "PathId": -3765523188966905173
+        }
+      ]
+    },
+    "IsSceneAssetBundle": false
   }
 }

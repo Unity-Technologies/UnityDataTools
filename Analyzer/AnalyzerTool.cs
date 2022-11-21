@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.Analyzer.SQLite;
 using UnityDataTools.FileSystem;
+using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer;
 
@@ -32,34 +36,48 @@ public class AnalyzerTool
         {
             try
             {
+                UnityArchive archive = null;
+
                 try
                 {
-                    using var archive = UnityFileSystem.MountArchive(file, "/");
-                    var assetBundleName = Path.GetRelativePath(path, file);
-                    
-                    writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
-
-                    var message = $"Processing { i * 100 / files.Length}% ({ i}/{ files.Length}) { assetBundleName}";
-                    Console.Write($"\r{message}{new string(' ', Math.Max(0, lastLength - message.Length))}");
-                    lastLength = message.Length;
-
-                    foreach (var node in archive.Nodes)
-                    {
-                        if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                        {
-                            writer.WriteSerializedFile(node.Path, "/" + node.Path);
-                        }
-                    }
-                    
-                    writer.EndAssetBundle();
+                    archive = UnityFileSystem.MountArchive(file, "/");
                 }
                 catch (NotSupportedException)
                 {
+                    // It wasn't an AssetBundle, try to open the file as a SerializedFile.
+                    
                     var serializedFileName = Path.GetRelativePath(path, file);
-                    
+
                     Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
-                    
+
                     writer.WriteSerializedFile(serializedFileName, file);
+                }
+
+                if (archive != null)
+                {
+                    try
+                    {
+                        var assetBundleName = Path.GetRelativePath(path, file);
+                        
+                        writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
+                        
+                        var message = $"Processing {i * 100 / files.Length}% ({i}/{files.Length}) {assetBundleName}";
+                        Console.Write($"\r{message}{new string(' ', Math.Max(0, lastLength - message.Length))}");
+                        lastLength = message.Length;
+
+                        foreach (var node in archive.Nodes)
+                        {
+                            if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
+                            {
+                                writer.WriteSerializedFile(node.Path, "/" + node.Path);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        writer.EndAssetBundle();
+                        archive.Dispose();
+                    }
                 }
             }
             catch (Exception e)

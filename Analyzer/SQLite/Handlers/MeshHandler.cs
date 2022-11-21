@@ -30,7 +30,7 @@ public class MeshHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@rw_enabled", DbType.Int32);
     }
 
-    public void Process(ObjectIdProvider idProvider, long objectId, Dictionary<int, int> localToDbFileId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var mesh = Mesh.Read(reader);
         

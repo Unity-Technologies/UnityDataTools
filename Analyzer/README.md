@@ -74,6 +74,12 @@ that were automatically added by Unity at build time won't appear in this view. 
 same as those in the *object_view* with the addition of the *asset_name* that contains the filename
 of the asset.
 
+## asset_dependencies_view  (AssetBundleProcessor)
+
+This view lists the dependencies of all the assets. You can filter by id or asset_name to get all
+the dependencies of an asset. Conversely, filtering by dep_id will return all the assets that
+depend on this object. This can be useful to figure out why an asset was included in a build. 
+
 ## animation_view (AnimationClipProcessor)
 
 This provides additional information about AnimationClips. The columns are the same as those in

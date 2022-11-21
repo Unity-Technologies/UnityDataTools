@@ -12,7 +12,7 @@
   "assets_count": 25,
   "audio_clips_count": 1,
   "meshes_count": 7,
-  "objects_count": 178,
+  "objects_count": 180,
   "refs_count": 507,
   "serialized_files_count": 5,
   "shader_subprograms_count": 386,
@@ -20,5 +20,5 @@
   "shader_keywords_count": 19,
   "shader_subprogram_keywords_count": 984,
   "textures_count": 2,
-  "types_count": 28
+  "types_count": 29
 }

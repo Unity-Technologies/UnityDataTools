@@ -25,7 +25,7 @@ public class AnimationClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@events", DbType.Int32);
     }
 
-    public void Process(ObjectIdProvider idProvider, long objectId, Dictionary<int, int> localToDbFileId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var animationClip = AnimationClip.Read(reader);
 

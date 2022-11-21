@@ -56,7 +56,7 @@ public class TextDumperTool
         return 0;
     }
 
-    void RecursiveDump(TypeTreeNode node, ref long offset, int level)
+    void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1)
     {
         bool skipChildren = false;
 
@@ -67,6 +67,12 @@ public class TextDumperTool
             if (level != 0)
             {
                 m_StringBuilder.Append(node.Name);
+                if (arrayIndex >= 0)
+                {
+                    m_StringBuilder.Append('[');
+                    m_StringBuilder.Append(arrayIndex);
+                    m_StringBuilder.Append(']');
+                }
                 m_StringBuilder.Append(' ');
                 m_StringBuilder.Append('(');
                 m_StringBuilder.Append(node.Type);
@@ -74,8 +80,6 @@ public class TextDumperTool
             }
             else
             {
-                // Name is useless for the root.
-                m_StringBuilder.Append(' ');
                 m_StringBuilder.Append(node.Type);
             }
 
@@ -193,7 +197,7 @@ public class TextDumperTool
                     
                 for (int i = 0; i < arraySize; ++i)
                 {
-                    RecursiveDump(dataNode, ref offset, level);
+                    RecursiveDump(dataNode, ref offset, level, i);
                 }
             }
         }

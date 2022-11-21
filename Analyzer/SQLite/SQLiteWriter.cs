@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.FileSystem;
@@ -20,8 +21,10 @@ public class SQLiteWriter : IWriter
     private string m_DatabaseName;
     private bool m_ExtractReferences;
 
-    private IdProvider<string> m_SerializedFileIdProvider = new ();
-    private ObjectIdProvider m_ObjectIdProvider = new ();
+    private Util.IdProvider<string> m_SerializedFileIdProvider = new ();
+    private Util.ObjectIdProvider m_ObjectIdProvider = new ();
+
+    private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
     
     // Used to map PPtr fileId to its corresponding serialized file id in the database.
     Dictionary<int, int> m_LocalToDbFileId = new ();
@@ -34,6 +37,7 @@ public class SQLiteWriter : IWriter
         { "AudioClip", new AudioClipHandler() },
         { "AnimationClip", new AnimationClipHandler() },
         { "AssetBundle", new AssetBundleHandler() },
+        { "PreloadData", new PreloadDataHandler() },
     };
 
     private SQLiteConnection m_Database;
@@ -42,6 +46,7 @@ public class SQLiteWriter : IWriter
     private SQLiteCommand m_AddSerializedFileCommand;
     private SQLiteCommand m_AddObjectCommand;
     private SQLiteCommand m_AddTypeCommand;
+    private SQLiteCommand m_InsertDepCommand;
 
     public SQLiteWriter(string databaseName, bool extractReferences)
     {
@@ -125,6 +130,11 @@ public class SQLiteWriter : IWriter
         m_AddTypeCommand.CommandText = "INSERT INTO types (id, name) VALUES (@id, @name)";
         m_AddTypeCommand.Parameters.Add("@id", DbType.Int32);
         m_AddTypeCommand.Parameters.Add("@name", DbType.String);
+
+        m_InsertDepCommand = m_Database.CreateCommand();
+        m_InsertDepCommand.CommandText = "INSERT INTO asset_dependencies(object, dependency) VALUES(@object, @dependency)";
+        m_InsertDepCommand.Parameters.Add("@object", DbType.Int64);
+        m_InsertDepCommand.Parameters.Add("@dependency", DbType.Int64);
     }
 
     public void BeginAssetBundle(string name, long size)
@@ -157,10 +167,47 @@ public class SQLiteWriter : IWriter
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
         var pptrReader = new PPtrReader(sf, reader, AddReference);
-        
         int serializedFileId = m_SerializedFileIdProvider.GetId(filename.ToLower());
+        int sceneId = -1;
+
+        var match = m_RegexSceneFile.Match(filename);
+
+        if (match.Success)
+        {
+            var sceneName = match.Groups[1].Value;
+            
+            // There is no Scene object in Unity (a Scene is the full content of a 
+            // SerializedFile). We generate an object id using the name of the Scene
+            // as SerializedFile name, and the object id 0.
+            sceneId = m_ObjectIdProvider.GetId((m_SerializedFileIdProvider.GetId(sceneName), 0));
+
+            // There are 2 SerializedFiles per Scene, one ends with .sharedAssets. This is a
+            // dirty trick to avoid inserting the scene object a second time.
+            if (filename.EndsWith(".sharedAssets"))
+            {
+                m_AddObjectCommand.Parameters["@id"].Value = sceneId;
+                m_AddObjectCommand.Parameters["@object_id"].Value = 0;
+                m_AddObjectCommand.Parameters["@serialized_file"].Value = serializedFileId;
+                // The type is set to -1 which doesn't exist in Unity, but is associated to
+                // "Scene" in the database.
+                m_AddObjectCommand.Parameters["@type"].Value = -1;
+                m_AddObjectCommand.Parameters["@name"].Value = sceneName;
+                m_AddObjectCommand.Parameters["@size"].Value = 0;
+                m_AddObjectCommand.ExecuteNonQuery();
+            }
+        }
         
         m_LocalToDbFileId.Clear();
+
+        Context ctx = new()
+        {
+            AssetBundleId = m_CurrentAssetBundleId,
+            SerializedFileId = serializedFileId,
+            SceneId = sceneId,
+            ObjectIdProvider = m_ObjectIdProvider,
+            SerializedFileIdProvider = m_SerializedFileIdProvider,
+            LocalToDbFileId = m_LocalToDbFileId,
+        };
 
         using var transaction = m_Database.BeginTransaction();
         
@@ -202,7 +249,7 @@ public class SQLiteWriter : IWriter
 
                 if (m_Handlers.TryGetValue(root.Type, out var handler))
                 {
-                    handler.Process(m_ObjectIdProvider, currentObjectId, m_LocalToDbFileId, randomAccessReader,
+                    handler.Process(ctx, currentObjectId, randomAccessReader,
                         out name, out streamDataSize);
                 }
                 else if (randomAccessReader.HasChild("m_Name"))
@@ -230,6 +277,15 @@ public class SQLiteWriter : IWriter
                 m_AddObjectCommand.Parameters["@size"].Value = obj.Size + streamDataSize;
                 m_AddObjectCommand.ExecuteNonQuery();
 
+                // If this is a Scene AssetBundle, add the object as a depencency of the
+                // current scene.
+                if (ctx.SceneId != -1)
+                {
+                    m_InsertDepCommand.Parameters["@object"].Value = ctx.SceneId;
+                    m_InsertDepCommand.Parameters["@dependency"].Value = currentObjectId;
+                    m_InsertDepCommand.ExecuteNonQuery();
+                }
+
                 if (m_ExtractReferences)
                 {
                     pptrReader.Process(currentObjectId, offset, root);
@@ -241,6 +297,7 @@ public class SQLiteWriter : IWriter
         catch (Exception)
         {
             transaction.Rollback();
+            throw;
         }
     }
 
@@ -266,29 +323,8 @@ public class SQLiteWriter : IWriter
         m_AddReferenceCommand.Dispose();
         m_AddObjectCommand.Dispose();
         m_AddTypeCommand.Dispose();
+        m_InsertDepCommand.Dispose();
 
         m_Database.Dispose();
     }
 }
-
-public class IdProvider<Key>
-{
-    private Dictionary<Key, int> m_Ids = new ();
-
-    public int GetId(Key key)
-    {
-        int id;
-        
-        if (m_Ids.TryGetValue(key, out id))
-        {
-            return id;
-        }
-
-        id = m_Ids.Count;
-        m_Ids.Add(key, id);
-
-        return id;
-    }
-}
-
-public class ObjectIdProvider : IdProvider<(int, long)> {}

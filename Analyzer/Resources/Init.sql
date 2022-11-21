@@ -100,5 +100,7 @@ INNER JOIN object_view t ON r.referenced_object = t.id
 LEFT JOIN assets a ON m.id = a.object
 WHERE m.type = "Material";
 
+INSERT INTO types (id, name) VALUES (-1, 'Scene');
+
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;
