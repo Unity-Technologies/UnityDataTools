@@ -168,9 +168,26 @@ public class TypeTreeNode
                 return typeof(string);
 
             default:
-                //if (!IsLeaf)
+            {
+                if (Size == 8)
+                {
+                    return typeof(long);
+                }
+                else if (Size == 4)
+                {
+                    return typeof(int);
+                }
+                else if (Size == 2)
+                {
+                    return typeof(short);
+                }
+                else if (Size == 1)
+                {
+                    return typeof(sbyte);
+                }
+
                 return typeof(object);
-            //break;
+            }
         }
 
         throw new Exception($"Unknown type {Type}");
