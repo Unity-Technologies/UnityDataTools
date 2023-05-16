@@ -253,7 +253,7 @@ public class TextDumperTool
                 // First child is the rid.
                 long rid = m_Reader.ReadInt64(offset);
                 offset += 8;
-                    
+                
                 // And the next children are the referenced type and data nodes.
                 refTypeNode = refObjNode.Children[1];
                 refObjData = refObjNode.Children[2];

@@ -7,6 +7,8 @@
     vertices INTEGER,
     compression INTEGER,
     rw_enabled INTEGER,
+    vertex_size INTEGER,
+    channels TEXT,
     PRIMARY KEY (id)
 );
 
@@ -19,6 +21,8 @@ SELECT
     m.indices,
     m.vertices,
     m.compression,
-    m.rw_enabled
+    m.rw_enabled,
+    m.vertex_size,
+    m.channels
 FROM meshes m
 INNER JOIN object_view o ON o.id = m.id;

@@ -108,6 +108,8 @@ the *object_view*, with the addition of:
 * vertices: the number of vertices
 * compression: 1 if compressed, 0 otherwise
 * rw_enabled: 1 if the mesh has the *R/W Enabled* option, 0 otherwise
+* vertex_size: number of bytes used by each vertex
+* channels: name and type of the vertex channels
 
 ## texture_view (Texture2DProcessor)
 

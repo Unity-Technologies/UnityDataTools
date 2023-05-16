@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Text;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -19,7 +20,7 @@ public class MeshHandler : ISQLiteHandler
         command.ExecuteNonQuery();
 
         m_InsertCommand = new SQLiteCommand(db);
-        m_InsertCommand.CommandText = "INSERT INTO meshes(id, sub_meshes, blend_shapes, bones, indices, vertices, compression, rw_enabled) VALUES(@id, @sub_meshes, @blend_shapes, @bones, @indices, @vertices, @compression, @rw_enabled)";
+        m_InsertCommand.CommandText = "INSERT INTO meshes(id, sub_meshes, blend_shapes, bones, indices, vertices, compression, rw_enabled, vertex_size, channels) VALUES(@id, @sub_meshes, @blend_shapes, @bones, @indices, @vertices, @compression, @rw_enabled, @vertex_size, @channels)";
         m_InsertCommand.Parameters.Add("@id", DbType.Int64);
         m_InsertCommand.Parameters.Add("@sub_meshes", DbType.Int32);
         m_InsertCommand.Parameters.Add("@blend_shapes", DbType.Int32);
@@ -28,6 +29,8 @@ public class MeshHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@vertices", DbType.Int32);
         m_InsertCommand.Parameters.Add("@compression", DbType.Int32);
         m_InsertCommand.Parameters.Add("@rw_enabled", DbType.Int32);
+        m_InsertCommand.Parameters.Add("@vertex_size", DbType.Int32);
+        m_InsertCommand.Parameters.Add("@channels", DbType.String);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
@@ -42,6 +45,20 @@ public class MeshHandler : ISQLiteHandler
         m_InsertCommand.Parameters["@bones"].Value = mesh.Bones;
         m_InsertCommand.Parameters["@compression"].Value = mesh.Compression;
         m_InsertCommand.Parameters["@rw_enabled"].Value = mesh.RwEnabled;
+        m_InsertCommand.Parameters["@vertex_size"].Value = mesh.VertexSize;
+
+        StringBuilder channels = new StringBuilder();
+        foreach (var channel in mesh.Channels)
+        {
+            channels.Append(channel.Usage.ToString());
+            channels.Append(' ');
+            channels.Append(channel.Type.ToString());
+            channels.Append('[');
+            channels.Append(channel.Dimension);
+            channels.AppendLine("]");
+        }
+        
+        m_InsertCommand.Parameters["@channels"].Value = channels;
 
         m_InsertCommand.ExecuteNonQuery();
 

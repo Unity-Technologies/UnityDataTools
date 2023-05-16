@@ -130,6 +130,18 @@ public class SerializedObjectsTests : AssetBundleTestFixture
         Assert.AreEqual(expectedMesh.BlendShapes, mesh.BlendShapes);
         Assert.AreEqual(expectedMesh.RwEnabled, mesh.RwEnabled);
         Assert.AreEqual(expectedMesh.StreamDataSize, mesh.StreamDataSize);
+        
+        Assert.AreEqual(expectedMesh.Channels.Count, mesh.Channels.Count);
+
+        for (int i = 0; i < mesh.Channels.Count; ++i)
+        {
+            var channel = mesh.Channels[i];
+            var expectedChannel = expectedMesh.Channels[i];
+            
+            Assert.AreEqual(expectedChannel.Dimension, channel.Dimension);
+            Assert.AreEqual(expectedChannel.Type, channel.Type);
+            Assert.AreEqual(expectedChannel.Usage, channel.Usage);
+        }
     }
 
     [Test]

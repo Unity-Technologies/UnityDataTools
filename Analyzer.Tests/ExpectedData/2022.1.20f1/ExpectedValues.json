@@ -1292,7 +1292,36 @@
     "Indices": 3840,
     "Vertices": 797,
     "Compression": 0,
-    "RwEnabled": false
+    "RwEnabled": false,
+    "Channels": {
+      "$type": "System.Collections.Generic.List`1[[UnityDataTools.Analyzer.SerializedObjects.Mesh+Channel, Analyzer]], System.Private.CoreLib",
+      "$values": [
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.Mesh+Channel, Analyzer",
+          "Usage": 0,
+          "Type": 0,
+          "Dimension": 3
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.Mesh+Channel, Analyzer",
+          "Usage": 1,
+          "Type": 1,
+          "Dimension": 3
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.Mesh+Channel, Analyzer",
+          "Usage": 2,
+          "Type": 1,
+          "Dimension": 4
+        },
+        {
+          "$type": "UnityDataTools.Analyzer.SerializedObjects.Mesh+Channel, Analyzer",
+          "Usage": 4,
+          "Type": 1,
+          "Dimension": 2
+        }
+      ]
+    }
   },
   "AudioClip": {
     "$type": "UnityDataTools.Analyzer.SerializedObjects.AudioClip, Analyzer",
