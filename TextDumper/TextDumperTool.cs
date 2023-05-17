@@ -40,7 +40,7 @@ public class TextDumperTool
                 // Try as SerializedFile
                 using (m_Writer = new StreamWriter(Path.GetFileName(path) + ".txt", false))
                 {
-                    OutputSerializedFile("/" + path);
+                    OutputSerializedFile(path);
                 }
             }
         }

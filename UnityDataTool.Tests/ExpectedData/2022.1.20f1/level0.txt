@@ -1,0 +1,653 @@
+External References
+path(1): "sharedassets0.assets" GUID: 00000000000000000000000000000000 Type: 0
+path(2): "Library/unity default resources" GUID: 0000000000000000e000000000000000 Type: 0
+
+ID: 1 (ClassID: 89) Cubemap
+  m_Name (string) 
+  m_ForcedFallbackFormat (int) 4
+  m_DownscaleFallback (bool) False
+  m_IsAlphaChannelOptional (bool) False
+  m_Width (int) 128
+  m_Height (int) 128
+  m_CompleteImageSize (unsigned int) 21872
+  m_MipsStripped (int) 0
+  m_TextureFormat (int) 24
+  m_MipCount (int) 8
+  m_IsReadable (bool) False
+  m_IsPreProcessed (bool) False
+  m_IgnoreMasterTextureLimit (bool) False
+  m_StreamingMipmaps (bool) False
+  m_StreamingMipmapsPriority (int) 0
+  m_ImageCount (int) 6
+  m_TextureDimension (int) 2
+  m_TextureSettings (GLTextureSettings)
+    m_FilterMode (int) 2
+    m_Aniso (int) 0
+    m_MipBias (float) 0
+    m_WrapU (int) 1
+    m_WrapV (int) 1
+    m_WrapW (int) 1
+  m_LightmapFormat (int) 0
+  m_ColorSpace (int) 0
+  m_PlatformBlob (vector)
+    Array<UInt8>[0]
+  Array<UInt8>[0]
+  m_StreamData (StreamingInfo)
+    offset (UInt64) 0
+    size (unsigned int) 131232
+    path (string) level0.resS
+  m_SourceTextures (vector)
+    Array<PPtr<Texture2D>>[6]
+      data[0] (PPtr<Texture2D>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 0
+      data[1] (PPtr<Texture2D>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 0
+      data[2] (PPtr<Texture2D>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 0
+      data[3] (PPtr<Texture2D>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 0
+      data[4] (PPtr<Texture2D>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 0
+      data[5] (PPtr<Texture2D>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 0
+
+ID: 2 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[4]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 6
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 13
+      data[2] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 11
+      data[3] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 15
+  m_Layer (unsigned int) 0
+  m_Name (string) Cube
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 3 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[3]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 7
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 10
+      data[2] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 16
+  m_Layer (unsigned int) 0
+  m_Name (string) Main Camera
+  m_Tag (UInt16) 5
+  m_IsActive (bool) True
+
+ID: 4 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[2]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 8
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 18
+  m_Layer (unsigned int) 0
+  m_Name (string) Directional Light
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 5 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[4]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 9
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 14
+      data[2] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 12
+      data[3] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 19
+  m_Layer (unsigned int) 0
+  m_Name (string) Capsule
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 6 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 2
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) 2.43
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 7 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 3
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) 0
+    y (float) 1
+    z (float) -10
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 8 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 4
+  m_LocalRotation (Quaternionf)
+    x (float) 0.40821788
+    y (float) -0.23456968
+    z (float) 0.10938163
+    w (float) 0.8754261
+  m_LocalPosition (Vector3f)
+    x (float) 0
+    y (float) 3
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 9 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 5
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 10 (ClassID: 20) Camera
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 3
+  m_Enabled (UInt8) 1
+  m_ClearFlags (unsigned int) 1
+  m_BackGroundColor (ColorRGBA)
+    r (float) 0.19215687
+    g (float) 0.3019608
+    b (float) 0.4745098
+    a (float) 0
+  m_projectionMatrixMode (int) 1
+  m_GateFitMode (int) 2
+  m_SensorSize (Vector2f)
+    x (float) 36
+    y (float) 24
+  m_LensShift (Vector2f)
+    x (float) 0
+    y (float) 0
+  m_FocalLength (float) 50
+  m_NormalizedViewPortRect (Rectf)
+    x (float) 0
+    y (float) 0
+    width (float) 1
+    height (float) 1
+  near clip plane (float) 0.3
+  far clip plane (float) 1000
+  field of view (float) 60
+  orthographic (bool) False
+  orthographic size (float) 5
+  m_Depth (float) -1
+  m_CullingMask (BitField)
+    m_Bits (unsigned int) 4294967295
+  m_RenderingPath (int) -1
+  m_TargetTexture (PPtr<RenderTexture>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_TargetDisplay (int) 0
+  m_TargetEye (int) 3
+  m_HDR (bool) True
+  m_AllowMSAA (bool) True
+  m_AllowDynamicResolution (bool) False
+  m_ForceIntoRT (bool) False
+  m_OcclusionCulling (bool) True
+  m_StereoConvergence (float) 10
+  m_StereoSeparation (float) 0.022
+
+ID: 11 (ClassID: 23) MeshRenderer
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 2
+  m_Enabled (bool) True
+  m_CastShadows (UInt8) 1
+  m_ReceiveShadows (UInt8) 1
+  m_DynamicOccludee (UInt8) 1
+  m_StaticShadowCaster (UInt8) 0
+  m_MotionVectors (UInt8) 1
+  m_LightProbeUsage (UInt8) 1
+  m_ReflectionProbeUsage (UInt8) 1
+  m_RayTracingMode (UInt8) 2
+  m_RayTraceProcedural (UInt8) 0
+  m_RenderingLayerMask (unsigned int) 1
+  m_RendererPriority (int) 0
+  m_LightmapIndex (UInt16) 65535
+  m_LightmapIndexDynamic (UInt16) 65535
+  m_LightmapTilingOffset (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_LightmapTilingOffsetDynamic (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_Materials (vector)
+    Array<PPtr<Material>>[1]
+      data[0] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 2
+  m_StaticBatchInfo (StaticBatchInfo)
+    firstSubMesh (UInt16) 0
+    subMeshCount (UInt16) 0
+  m_StaticBatchRoot (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_ProbeAnchor (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_LightProbeVolumeOverride (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_SortingLayerID (int) 0
+  m_SortingLayer (SInt16) 0
+  m_SortingOrder (SInt16) 0
+  m_AdditionalVertexStreams (PPtr<Mesh>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_EnlightenVertexStream (PPtr<Mesh>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 12 (ClassID: 23) MeshRenderer
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 5
+  m_Enabled (bool) True
+  m_CastShadows (UInt8) 1
+  m_ReceiveShadows (UInt8) 1
+  m_DynamicOccludee (UInt8) 1
+  m_StaticShadowCaster (UInt8) 0
+  m_MotionVectors (UInt8) 1
+  m_LightProbeUsage (UInt8) 1
+  m_ReflectionProbeUsage (UInt8) 1
+  m_RayTracingMode (UInt8) 2
+  m_RayTraceProcedural (UInt8) 0
+  m_RenderingLayerMask (unsigned int) 1
+  m_RendererPriority (int) 0
+  m_LightmapIndex (UInt16) 65535
+  m_LightmapIndexDynamic (UInt16) 65535
+  m_LightmapTilingOffset (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_LightmapTilingOffsetDynamic (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_Materials (vector)
+    Array<PPtr<Material>>[1]
+      data[0] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 2
+  m_StaticBatchInfo (StaticBatchInfo)
+    firstSubMesh (UInt16) 0
+    subMeshCount (UInt16) 0
+  m_StaticBatchRoot (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_ProbeAnchor (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_LightProbeVolumeOverride (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_SortingLayerID (int) 0
+  m_SortingLayer (SInt16) 0
+  m_SortingOrder (SInt16) 0
+  m_AdditionalVertexStreams (PPtr<Mesh>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_EnlightenVertexStream (PPtr<Mesh>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 13 (ClassID: 33) MeshFilter
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 2
+  m_Mesh (PPtr<Mesh>)
+    m_FileID (int) 2
+    m_PathID (SInt64) 10202
+
+ID: 14 (ClassID: 33) MeshFilter
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 5
+  m_Mesh (PPtr<Mesh>)
+    m_FileID (int) 2
+    m_PathID (SInt64) 10208
+
+ID: 15 (ClassID: 65) BoxCollider
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 2
+  m_Material (PPtr<PhysicMaterial>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_IsTrigger (bool) False
+  m_Enabled (bool) True
+  m_Size (Vector3f)
+    x (float) 2
+    y (float) 2
+    z (float) 2
+  m_Center (Vector3f)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+
+ID: 16 (ClassID: 81) AudioListener
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 3
+  m_Enabled (UInt8) 1
+
+ID: 17 (ClassID: 104) RenderSettings
+  m_Fog (bool) False
+  m_FogColor (ColorRGBA)
+    r (float) 0.5
+    g (float) 0.5
+    b (float) 0.5
+    a (float) 1
+  m_FogMode (int) 3
+  m_FogDensity (float) 0.01
+  m_LinearFogStart (float) 0
+  m_LinearFogEnd (float) 300
+  m_AmbientSkyColor (ColorRGBA)
+    r (float) 0.212
+    g (float) 0.227
+    b (float) 0.259
+    a (float) 1
+  m_AmbientEquatorColor (ColorRGBA)
+    r (float) 0.114
+    g (float) 0.125
+    b (float) 0.133
+    a (float) 1
+  m_AmbientGroundColor (ColorRGBA)
+    r (float) 0.047
+    g (float) 0.043
+    b (float) 0.035
+    a (float) 1
+  m_AmbientIntensity (float) 1
+  m_AmbientMode (int) 0
+  m_SubtractiveShadowColor (ColorRGBA)
+    r (float) 0.42
+    g (float) 0.478
+    b (float) 0.627
+    a (float) 1
+  m_SkyboxMaterial (PPtr<Material>)
+    m_FileID (int) 1
+    m_PathID (SInt64) 3
+  m_HaloStrength (float) 0.5
+  m_FlareStrength (float) 1
+  m_FlareFadeSpeed (float) 3
+  m_HaloTexture (PPtr<Texture2D>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_SpotCookie (PPtr<Texture2D>)
+    m_FileID (int) 2
+    m_PathID (SInt64) 10001
+  m_DefaultReflectionMode (int) 0
+  m_DefaultReflectionResolution (int) 128
+  m_ReflectionBounces (int) 1
+  m_ReflectionIntensity (float) 1
+  m_CustomReflection (PPtr<Texture>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_AmbientProbe (SphericalHarmonicsL2)
+    sh[ 0] (float) 0.16788305
+    sh[ 1] (float) -0.016592009
+    sh[ 2] (float) -0.011380039
+    sh[ 3] (float) 0.0065697785
+    sh[ 4] (float) 0.0049851285
+    sh[ 5] (float) -0.008635042
+    sh[ 6] (float) 0.0097348215
+    sh[ 7] (float) -0.010300587
+    sh[ 8] (float) 0.02333595
+    sh[ 9] (float) 0.21073514
+    sh[10] (float) 0.027016073
+    sh[11] (float) -0.018886209
+    sh[12] (float) 0.010904019
+    sh[13] (float) 0.008416953
+    sh[14] (float) -0.014578835
+    sh[15] (float) 0.014163287
+    sh[16] (float) -0.015723316
+    sh[17] (float) 0.033511803
+    sh[18] (float) 0.28993943
+    sh[19] (float) 0.109965265
+    sh[20] (float) -0.034808964
+    sh[21] (float) 0.020094063
+    sh[22] (float) 0.016304638
+    sh[23] (float) -0.02824388
+    sh[24] (float) 0.018142514
+    sh[25] (float) -0.023746444
+    sh[26] (float) 0.040800057
+  m_GeneratedSkyboxReflection (PPtr<Cubemap>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 1
+  m_Sun (PPtr<Light>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_IndirectSpecularColor (ColorRGBA)
+    r (float) 0.44657815
+    g (float) 0.49641192
+    b (float) 0.57481617
+    a (float) 1
+  m_UseRadianceAmbientProbe (bool) False
+
+ID: 18 (ClassID: 108) Light
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 4
+  m_Enabled (UInt8) 1
+  m_Type (int) 1
+  m_Shape (int) 0
+  m_Color (ColorRGBA)
+    r (float) 1
+    g (float) 0.95686275
+    b (float) 0.8392157
+    a (float) 1
+  m_Intensity (float) 1
+  m_Range (float) 10
+  m_SpotAngle (float) 30
+  m_InnerSpotAngle (float) 21.80208
+  m_CookieSize (float) 10
+  m_Shadows (ShadowSettings)
+    m_Type (int) 2
+    m_Resolution (int) -1
+    m_CustomResolution (int) -1
+    m_Strength (float) 1
+    m_Bias (float) 0.05
+    m_NormalBias (float) 0.4
+    m_NearPlane (float) 0.2
+    m_CullingMatrixOverride (Matrix4x4f)
+      e00 (float) 1
+      e01 (float) 0
+      e02 (float) 0
+      e03 (float) 0
+      e10 (float) 0
+      e11 (float) 1
+      e12 (float) 0
+      e13 (float) 0
+      e20 (float) 0
+      e21 (float) 0
+      e22 (float) 1
+      e23 (float) 0
+      e30 (float) 0
+      e31 (float) 0
+      e32 (float) 0
+      e33 (float) 1
+    m_UseCullingMatrixOverride (bool) False
+  m_Cookie (PPtr<Texture>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_DrawHalo (bool) False
+  m_BakingOutput (LightBakingOutput)
+    probeOcclusionLightIndex (int) -1
+    occlusionMaskChannel (int) -1
+    lightmapBakeMode (LightmapBakeMode)
+      lightmapBakeType (int) 4
+      mixedLightingMode (int) 2
+    isBaked (bool) False
+  m_Flare (PPtr<Flare>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_RenderMode (int) 0
+  m_CullingMask (BitField)
+    m_Bits (unsigned int) 4294967295
+  m_RenderingLayerMask (unsigned int) 1
+  m_Lightmapping (int) 4
+  m_LightShadowCasterMode (int) 0
+  m_AreaSize (Vector2f)
+    x (float) 1
+    y (float) 1
+  m_BounceIntensity (float) 1
+  m_ColorTemperature (float) 6570
+  m_UseColorTemperature (bool) False
+  m_BoundingSphereOverride (Vector4f)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+    w (float) 0
+  m_UseBoundingSphereOverride (bool) False
+  m_UseViewFrustumForShadowCasterCull (bool) True
+
+ID: 19 (ClassID: 136) CapsuleCollider
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 5
+  m_Material (PPtr<PhysicMaterial>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_IsTrigger (bool) False
+  m_Enabled (bool) True
+  m_Radius (float) 0.5
+  m_Height (float) 2
+  m_Direction (int) 1
+  m_Center (Vector3f)
+    x (float) 0
+    y (float) 0
+    z (float) 0
+
+ID: 20 (ClassID: 157) LightmapSettings
+  m_EnlightenSceneMapping (EnlightenSceneMapping)
+    m_Renderers (vector)
+      Array<EnlightenRendererInformation>[0]
+    m_Systems (vector)
+      Array<EnlightenSystemInformation>[0]
+    m_Probesets (vector)
+      Array<Hash128>[0]
+    m_SystemAtlases (vector)
+      Array<EnlightenSystemAtlasInformation>[0]
+    m_TerrainChunks (vector)
+      Array<EnlightenTerrainChunksInformation>[0]
+  m_LightProbes (PPtr<LightProbes>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_Lightmaps (vector)
+    Array<LightmapData>[0]
+  m_LightmapsMode (int) 1
+  m_GISettings (GISettings)
+    m_BounceScale (float) 1
+    m_IndirectOutputScale (float) 1
+    m_AlbedoBoost (float) 1
+    m_EnvironmentLightingMode (unsigned int) 0
+    m_EnableBakedLightmaps (bool) True
+    m_EnableRealtimeLightmaps (bool) False
+  m_LightingSettings (PPtr<LightingSettings>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 21 (ClassID: 196) NavMeshSettings
+  m_NavMeshData (PPtr<NavMeshData>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+

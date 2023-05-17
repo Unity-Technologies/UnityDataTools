@@ -290,4 +290,23 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         Assert.Greater(reader.GetInt32(3), 0);
         Assert.AreEqual(1, reader.GetInt32(4));
     }
+    
+    [Test]
+    public void DumpText_PlayerData_TextFileCreatedCorrectly()
+    {
+        var path = Path.Combine(Context.UnityDataFolder, "level0");
+        var outputFile = Path.Combine(m_TestOutputFolder, "level0.txt");
+
+        Assert.AreEqual(0, Program.Main(new string[] { "dump", path }));
+        Assert.IsTrue(File.Exists(outputFile));
+
+        var content = File.ReadAllText(outputFile);
+        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "level0.txt"));
+
+        // Normalize  line endings.
+        content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");
+        expected = Regex.Replace(expected, @"\r\n|\n\r|\r", "\n");
+
+        Assert.AreEqual(expected, content);
+    }
 }
