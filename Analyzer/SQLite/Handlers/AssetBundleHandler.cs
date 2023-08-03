@@ -91,5 +91,6 @@ public class AssetBundleHandler : ISQLiteHandler
     void IDisposable.Dispose()
     {
         m_InsertCommand.Dispose();
+        m_InsertDepCommand.Dispose();
     }
 }
