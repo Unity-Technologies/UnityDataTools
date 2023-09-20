@@ -18,7 +18,7 @@ public class UnityDataToolTests : AssetBundleTestFixture
     public UnityDataToolTests(Context context) : base(context)
     {
     }
-    
+
     protected override void OnLoadExpectedData(Context context)
     {
         // Uncomment to regenerate expected data.
@@ -41,7 +41,7 @@ public class UnityDataToolTests : AssetBundleTestFixture
             file.Delete();
         }
     }
-        
+
     [Test]
     public void ArchiveExtract_FilesExtractedSuccessfully()
     {
@@ -197,7 +197,7 @@ public class UnityDataToolTests : AssetBundleTestFixture
         using (var cmd = db.CreateCommand())
         {
             cmd.CommandText =
-                @"SELECT 
+                @"SELECT
                     (SELECT COUNT(*) FROM animation_clips),
                     (SELECT COUNT(*) FROM asset_bundles),
                     (SELECT COUNT(*) FROM assets),
@@ -259,7 +259,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             file.Delete();
         }
     }
-    
+
     [Test]
     public void Analyze_PlayerData_DatabaseCorrect()
     {
@@ -267,13 +267,13 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath, "-r" }));
-        
+
         using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();
         using var cmd = db.CreateCommand();
 
         cmd.CommandText =
-            @"SELECT 
+            @"SELECT
                 (SELECT COUNT(*) FROM asset_bundles),
                 (SELECT COUNT(*) FROM assets),
                 (SELECT COUNT(*) FROM objects),
@@ -290,7 +290,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         Assert.Greater(reader.GetInt32(3), 0);
         Assert.AreEqual(1, reader.GetInt32(4));
     }
-    
+
     [Test]
     public void DumpText_PlayerData_TextFileCreatedCorrectly()
     {

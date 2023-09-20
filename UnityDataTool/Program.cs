@@ -14,7 +14,7 @@ public static class Program
     public static int Main(string[] args)
     {
         UnityFileSystem.Init();
-            
+
         var rootCommand = new RootCommand();
 
         {
@@ -115,7 +115,7 @@ public static class Program
         }
 
         var r = rootCommand.Invoke(args);
-            
+
         UnityFileSystem.Cleanup();
 
         return r;
@@ -129,7 +129,7 @@ public static class Program
     static int HandleAnalyze(DirectoryInfo path, string outputFile, bool extractReferences, string searchPattern)
     {
         var analyzer = new AnalyzerTool();
-        
+
         return analyzer.Analyze(path.FullName, outputFile, searchPattern, extractReferences);
     }
 
