@@ -43,14 +43,15 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public void ArchiveExtract_FilesExtractedSuccessfully()
+    public void ArchiveExtract_FilesExtractedSuccessfully(
+        [Values("", "-o archive", "--output-path archive")] string options)
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
 
-        Assert.AreEqual(0, Program.Main(new string[] { "archive", "extract", path }));
-        Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994")));
-        Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS")));
-        Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource")));
+        Assert.AreEqual(0, Program.Main(new string[] { "archive", "extract", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+        Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994")));
+        Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS")));
+        Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource")));
     }
 
     [Test]
