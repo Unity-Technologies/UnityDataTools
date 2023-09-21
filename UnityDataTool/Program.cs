@@ -177,7 +177,7 @@ public static class Program
             foreach (var node in archive.Nodes)
             {
                 Console.WriteLine($"Extracting {node.Path}...");
-                CopyFile("/" + node.Path, $"{outputFolder}/{node.Path}");
+                CopyFile("/" + node.Path, Path.Combine(outputFolder.FullName, node.Path));
             }
         }
         catch (NotSupportedException)
