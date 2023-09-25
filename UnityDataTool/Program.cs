@@ -14,7 +14,7 @@ public static class Program
     public static int Main(string[] args)
     {
         UnityFileSystem.Init();
-            
+
         var rootCommand = new RootCommand();
 
         {
@@ -86,15 +86,17 @@ public static class Program
 
         {
             var pathArg = new Argument<FileInfo>("filename", "The path of the archive file").ExistingOnly();
+            var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output directory of the extracted archive", getDefaultValue: () => new DirectoryInfo("archive"));
 
             var extractArchiveCommand = new Command("extract", "Extract the archive.")
             {
                 pathArg,
+                oOpt,
             };
 
             extractArchiveCommand.SetHandler(
-                (FileInfo fi) => HandleExtractArchive(fi),
-                pathArg);
+                (FileInfo fi, DirectoryInfo o) => HandleExtractArchive(fi, o),
+                pathArg, oOpt);
 
             var listArchiveCommand = new Command("list", "List the content of an archive.")
             {
@@ -115,7 +117,7 @@ public static class Program
         }
 
         var r = rootCommand.Invoke(args);
-            
+
         UnityFileSystem.Cleanup();
 
         return r;
@@ -129,7 +131,7 @@ public static class Program
     static int HandleAnalyze(DirectoryInfo path, string outputFile, bool extractReferences, string searchPattern)
     {
         var analyzer = new AnalyzerTool();
-        
+
         return analyzer.Analyze(path.FullName, outputFile, searchPattern, extractReferences);
     }
 
@@ -167,7 +169,7 @@ public static class Program
         return 1;
     }
 
-    static int HandleExtractArchive(FileInfo filename)
+    static int HandleExtractArchive(FileInfo filename, DirectoryInfo outputFolder)
     {
         try
         {
@@ -175,7 +177,7 @@ public static class Program
             foreach (var node in archive.Nodes)
             {
                 Console.WriteLine($"Extracting {node.Path}...");
-                CopyFile("/" + node.Path, Path.GetFileName(node.Path));
+                CopyFile("/" + node.Path, Path.Combine(outputFolder.FullName, node.Path));
             }
         }
         catch (NotSupportedException)
@@ -212,6 +214,8 @@ public static class Program
     static void CopyFile(string source, string dest)
     {
         using var sourceFile = UnityFileSystem.OpenFile(source);
+        // Create the containing directory if it doesn't exist.
+        Directory.CreateDirectory(Path.GetDirectoryName(dest));
         using var destFile = new FileStream(dest, FileMode.Create);
 
         const int blockSize = 256 * 1024;

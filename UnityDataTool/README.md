@@ -88,6 +88,7 @@ information about the content of the output file.**
 The archive command offers a set of archive-related sub-commands.
 
 **extract** This sub-command extracts the content of an archive. It takes the archive path as
-argument.
+argument and also provides the following option:
+* -o, --output-path \<path\>: Output directory of the extracted archive (default: archive)
 
 **list** This sub-command lists the content of an archive. It takes the archive path as argument.
