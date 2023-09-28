@@ -36,10 +36,11 @@ public class UnityDataToolTests : AssetBundleTestFixture
     [TearDown]
     public void Teardown()
     {
-        foreach (var file in new DirectoryInfo(m_TestOutputFolder).EnumerateFiles())
-        {
-            file.Delete();
-        }
+        var testDir = new DirectoryInfo(m_TestOutputFolder);
+        testDir.EnumerateFiles()
+            .ToList().ForEach(f => f.Delete());
+        testDir.EnumerateDirectories()
+            .ToList().ForEach(d => d.Delete(true));
     }
 
     [Test]
