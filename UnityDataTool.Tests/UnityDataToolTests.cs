@@ -44,6 +44,19 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
+    public async Task InvalidFile(
+        [Values(
+            new string[] {"archive", "extract"},
+            new string[] {"archive", "list"},
+            new string[] {"dump"}
+        )] string[] args)
+    {
+        var path = Path.Combine(Context.TestDataFolder, "invalidfile");
+        var command = args.Append(path);
+        Assert.AreNotEqual(0, await Program.Main(command.ToArray()));
+    }
+
+    [Test]
     public async Task ArchiveExtract_FilesExtractedSuccessfully(
         [Values("", "-o archive", "--output-path archive")] string options)
     {
