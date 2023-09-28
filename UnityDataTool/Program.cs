@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CommandLine;
 using System.IO;
+using System.Threading.Tasks;
 using UnityDataTools.Analyzer;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.ReferenceFinder;
@@ -11,7 +12,7 @@ namespace UnityDataTools.UnityDataTool;
 
 public static class Program
 {
-    public static int Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         UnityFileSystem.Init();
 
@@ -33,7 +34,7 @@ public static class Program
 
             analyzeCommand.AddAlias("analyse");
             analyzeCommand.SetHandler(
-                (DirectoryInfo di, string o, bool r, string p) => HandleAnalyze(di, o, r, p),
+                (DirectoryInfo di, string o, bool r, string p) => Task.FromResult(HandleAnalyze(di, o, r, p)),
                 pathArg, oOpt, rOpt, pOpt);
 
             rootCommand.AddCommand(analyzeCommand);
@@ -58,7 +59,7 @@ public static class Program
             };
 
             findRefsCommand.SetHandler(
-                (FileInfo fi, string o, long? i, string n, string t, bool a) => HandleFindReferences(fi, o, i, n, t, a),
+                (FileInfo fi, string o, long? i, string n, string t, bool a) => Task.FromResult(HandleFindReferences(fi, o, i, n, t, a)),
                 pathArg, oOpt, iOpt, nOpt, tOpt, aOpt);
 
             rootCommand.Add(findRefsCommand);
@@ -78,7 +79,7 @@ public static class Program
                 oOpt,
             };
             dumpCommand.SetHandler(
-                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o) => HandleDump(fi, f, s, o),
+                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o) => Task.FromResult(HandleDump(fi, f, s, o)),
                 pathArg, fOpt, sOpt, oOpt);
 
             rootCommand.AddCommand(dumpCommand);
@@ -95,7 +96,7 @@ public static class Program
             };
 
             extractArchiveCommand.SetHandler(
-                (FileInfo fi, DirectoryInfo o) => HandleExtractArchive(fi, o),
+                (FileInfo fi, DirectoryInfo o) => Task.FromResult(HandleExtractArchive(fi, o)),
                 pathArg, oOpt);
 
             var listArchiveCommand = new Command("list", "List the content of an archive.")
@@ -104,7 +105,7 @@ public static class Program
             };
 
             listArchiveCommand.SetHandler(
-                (FileInfo fi) => HandleListArchive(fi),
+                (FileInfo fi) => Task.FromResult(HandleListArchive(fi)),
                 pathArg);
 
             var archiveCommand = new Command("archive", "Unity Archive (AssetBundle) functions.")
@@ -116,7 +117,7 @@ public static class Program
             rootCommand.AddCommand(archiveCommand);
         }
 
-        var r = rootCommand.Invoke(args);
+        var r = await rootCommand.InvokeAsync(args);
 
         UnityFileSystem.Cleanup();
 
