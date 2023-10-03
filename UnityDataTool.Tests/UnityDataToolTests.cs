@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityDataTools.TestCommon;
 using UnityDataTools.FileSystem;
@@ -44,19 +45,32 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public void ArchiveExtract_FilesExtractedSuccessfully(
+    public async Task InvalidFile(
+        [Values(
+            new string[] {"archive", "extract"},
+            new string[] {"archive", "list"},
+            new string[] {"dump"}
+        )] string[] args)
+    {
+        var path = Path.Combine(Context.TestDataFolder, "invalidfile");
+        var command = args.Append(path);
+        Assert.AreNotEqual(0, await Program.Main(command.ToArray()));
+    }
+
+    [Test]
+    public async Task ArchiveExtract_FilesExtractedSuccessfully(
         [Values("", "-o archive", "--output-path archive")] string options)
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
 
-        Assert.AreEqual(0, Program.Main(new string[] { "archive", "extract", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994")));
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS")));
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource")));
     }
 
     [Test]
-    public void ArchiveList_ListFilesCorrectly()
+    public async Task ArchiveList_ListFilesCorrectly()
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
 
@@ -65,7 +79,7 @@ public class UnityDataToolTests : AssetBundleTestFixture
         var currentOut = Console.Out;
         Console.SetOut(sw);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "archive", "list", path }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path }));
 
         var lines = sw.ToString().Split(sw.NewLine);
 
@@ -85,13 +99,13 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public void DumpText_DefaultArgs_TextFileCreatedCorrectly(
+    public async Task DumpText_DefaultArgs_TextFileCreatedCorrectly(
         [Values("", "-f text", "--output-format text")] string options)
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
 
-        Assert.AreEqual(0, Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
         Assert.IsTrue(File.Exists(outputFile));
 
         var content = File.ReadAllText(outputFile);
@@ -105,13 +119,13 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public void DumpText_SkipLargeArrays_TextFileCreatedCorrectly(
+    public async Task DumpText_SkipLargeArrays_TextFileCreatedCorrectly(
         [Values("-s", "--skip-large-arrays")] string options)
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
 
-        Assert.AreEqual(0, Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
         Assert.IsTrue(File.Exists(outputFile));
 
         var content = File.ReadAllText(outputFile);
@@ -125,48 +139,48 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public void Analyze_DefaultArgs_DatabaseCorrect()
+    public async Task Analyze_DefaultArgs_DatabaseCorrect()
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }));
 
         ValidateDatabase(databasePath, false);
     }
 
     [Test]
-    public void Analyze_WithRefs_DatabaseCorrect(
+    public async Task Analyze_WithRefs_DatabaseCorrect(
         [Values("-r", "--extract-references")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
         ValidateDatabase(databasePath, true);
     }
 
     [Test]
-    public void Analyze_WithPattern_DatabaseCorrect(
+    public async Task Analyze_WithPattern_DatabaseCorrect(
         [Values("-p *.", "--search-pattern *.")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
         ValidateDatabase(databasePath, false);
     }
 
     [Test]
-    public void Analyze_WithPatternNoMatch_DatabaseEmpty(
+    public async Task Analyze_WithPatternNoMatch_DatabaseEmpty(
         [Values("-p *.x", "--search-pattern *.x")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
         using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();
@@ -180,13 +194,13 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public void Analyze_WithOutputFile_DatabaseCorrect(
+    public async Task Analyze_WithOutputFile_DatabaseCorrect(
         [Values("-o my_database", "--output-file my_database")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "my_database");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
         ValidateDatabase(databasePath, false);
     }
@@ -263,12 +277,12 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     }
 
     [Test]
-    public void Analyze_PlayerData_DatabaseCorrect()
+    public async Task Analyze_PlayerData_DatabaseCorrect()
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, Program.Main(new string[] { "analyze", analyzePath, "-r" }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-r" }));
 
         using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();
@@ -294,12 +308,12 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     }
 
     [Test]
-    public void DumpText_PlayerData_TextFileCreatedCorrectly()
+    public async Task DumpText_PlayerData_TextFileCreatedCorrectly()
     {
         var path = Path.Combine(Context.UnityDataFolder, "level0");
         var outputFile = Path.Combine(m_TestOutputFolder, "level0.txt");
 
-        Assert.AreEqual(0, Program.Main(new string[] { "dump", path }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path }));
         Assert.IsTrue(File.Exists(outputFile));
 
         var content = File.ReadAllText(outputFile);
