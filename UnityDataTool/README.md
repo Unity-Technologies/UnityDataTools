@@ -66,29 +66,29 @@ Example: `UnityDataTool find-refs my_database.db -n "MyObjectName" -t "Texture2D
 references.txt`
 
 **Refer to this [documentation](../ReferenceFinder/README.md#How-to-interpret-the-output-file) for
-more information about the content of the output file.**
+more information about the contents of the output file.**
 
 ## dump
 
-This command dumps the content of a SerializedFile into a file of the selected format. It currently
+This command dumps the contents of a SerializedFile into a file of the selected format. It currently
 only supports the 'text' format, which is similar to the binary2text output format.
 
 The command takes the path of the file to dump as argument. It also provides the following options:
 * -f, --output-format \<format\>: output format, default is 'text'.
-* -s, --skip-large-arrays: the content of basic data type arrays with a large number of elements
+* -s, --skip-large-arrays: the contents of basic data type arrays with a large number of elements
   won't be dumped.
 
 Example: `UnityDataTool dump /path/to/file`
 
 **Refer to this [documentation](../TextDumper/README.md#How-to-interpret-the-output-files) for more
-information about the content of the output file.**
+information about the contents of the output file.**
 
 ## archive
 
-The archive command offers a set of archive-related sub-commands.
+The archive command offers a set of sub-commands related to Unity archives (AssetBundles and web platform .data files).
 
-**extract** This sub-command extracts the content of an archive. It takes the archive path as
+**extract** This sub-command extracts the contents of an archive. It takes the archive path as
 argument and also provides the following option:
 * -o, --output-path \<path\>: Output directory of the extracted archive (default: archive)
 
-**list** This sub-command lists the content of an archive. It takes the archive path as argument.
+**list** This sub-command lists the contents of an archive. It takes the archive path as argument.

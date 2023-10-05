@@ -1,0 +1,12 @@
+* text=auto
+
+assetbundle binary
+scenes binary
+level* binary
+*.dll binary
+*.dylib binary
+*.so binary
+*.wav binary
+*.fbx binary
+*.tif binary
+*.jpg binary

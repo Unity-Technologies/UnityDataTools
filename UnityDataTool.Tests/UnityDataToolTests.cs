@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using UnityDataTools.TestCommon;
 using UnityDataTools.FileSystem;
+using UnityDataTools.TestCommon;
 
 namespace UnityDataTools.UnityDataTool.Tests;
 
@@ -57,8 +57,22 @@ public class UnityDataToolTests : AssetBundleTestFixture
         Assert.AreNotEqual(0, await Program.Main(command.ToArray()));
     }
 
+    public void IsWebBundle_True()
+    {
+
+        var webBundlePath = Path.Combine(Context.TestDataFolder, "WebBundles", "HelloWorld.data");
+        Assert.IsTrue(Archive.IsWebBundle(new FileInfo(webBundlePath)));
+    }
+
     [Test]
-    public async Task ArchiveExtract_FilesExtractedSuccessfully(
+    public void IsWebBundle_False()
+    {
+        var nonWebBundlePath = Path.Combine(Context.TestDataFolder, "WebBundles", "NotAWebBundle.txt");
+        Assert.IsFalse(Archive.IsWebBundle(new FileInfo(nonWebBundlePath)));
+    }
+
+    [Test]
+    public async Task ArchiveExtract_AssetBundle_FilesExtractedSuccessfully(
         [Values("", "-o archive", "--output-path archive")] string options)
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
@@ -70,32 +84,105 @@ public class UnityDataToolTests : AssetBundleTestFixture
     }
 
     [Test]
-    public async Task ArchiveList_ListFilesCorrectly()
+    public async Task ArchiveExtract_WebBundle_FileExtractedSuccessfully(
+        [Values("", "-o archive", "--output-path archive")] string options,
+        [Values("HelloWorld.data", "HelloWorld.data.gz", "HelloWorld.data.br")] string bundlePath)
+    {
+        var path = Path.Combine(Context.TestDataFolder, "WebBundles", bundlePath);
+        string[] expectedFiles = {
+            "boot.config",
+            "data.unity3d",
+            "RuntimeInitializeOnLoads.json",
+            "ScriptingAssemblies.json",
+            Path.Combine("Il2CppData", "Metadata", "global-metadata.dat"),
+            Path.Combine("Resources", "unity_default_resources"),
+        };
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+        foreach (var file in expectedFiles)
+        {
+            Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", file)));
+        }
+    }
+
+    [Test]
+    public async Task ArchiveList_AssetBundle_ListFilesCorrectly()
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
-
         using var sw = new StringWriter();
-
         var currentOut = Console.Out;
-        Console.SetOut(sw);
+        try
+        {
+            Console.SetOut(sw);
 
-        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path }));
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path }));
 
-        var lines = sw.ToString().Split(sw.NewLine);
+            var lines = sw.ToString().Split(sw.NewLine);
 
-        Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994", lines[0]);
-        Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Size")}", lines[1]);
-        Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Flags")}", lines[2]);
+            Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994", lines[0]);
+            Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Size")}", lines[1]);
+            Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Flags")}", lines[2]);
 
-        Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS", lines[4]);
-        Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Size")}", lines[5]);
-        Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Flags")}", lines[6]);
+            Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS", lines[4]);
+            Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Size")}", lines[5]);
+            Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Flags")}", lines[6]);
 
-        Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource", lines[8]);
-        Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Size")}", lines[9]);
-        Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Flags")}", lines[10]);
+            Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource", lines[8]);
+            Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Size")}", lines[9]);
+            Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Flags")}", lines[10]);
 
-        Console.SetOut(currentOut);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveList_WebBundle_ListFilesCorrectly(
+         [Values(
+            "HelloWorld.data",
+            "HelloWorld.data.gz",
+            "HelloWorld.data.br"
+        )] string bundlePath)
+    {
+        var path = Path.Combine(Context.TestDataFolder, "WebBundles", bundlePath);
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path }));
+
+            var actualOutput = sw.ToString();
+            var expectedOutput = (
+@"data.unity3d
+  Size: 253044
+
+RuntimeInitializeOnLoads.json
+  Size: 700
+
+ScriptingAssemblies.json
+  Size: 3060
+
+boot.config
+  Size: 93
+
+Il2CppData/Metadata/global-metadata.dat
+  Size: 1641180
+
+Resources/unity_default_resources
+  Size: 607376
+
+"
+            );
+
+            Assert.AreEqual(expectedOutput, actualOutput);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
     }
 
     [Test]

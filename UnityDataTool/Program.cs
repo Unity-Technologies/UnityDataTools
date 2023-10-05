@@ -3,9 +3,9 @@ using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
 using UnityDataTools.Analyzer;
+using UnityDataTools.FileSystem;
 using UnityDataTools.ReferenceFinder;
 using UnityDataTools.TextDumper;
-using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.UnityDataTool;
 
@@ -72,7 +72,7 @@ public static class Program
             var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o"}, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
 
-            var dumpCommand = new Command("dump", "Dump the content of an AssetBundle or SerializedFile.")
+            var dumpCommand = new Command("dump", "Dump the contents of an AssetBundle or SerializedFile.")
             {
                 pathArg,
                 fOpt,
@@ -90,26 +90,26 @@ public static class Program
             var pathArg = new Argument<FileInfo>("filename", "The path of the archive file").ExistingOnly();
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output directory of the extracted archive", getDefaultValue: () => new DirectoryInfo("archive"));
 
-            var extractArchiveCommand = new Command("extract", "Extract the archive.")
+            var extractArchiveCommand = new Command("extract", "Extract an AssetBundle or .data file.")
             {
                 pathArg,
                 oOpt,
             };
 
             extractArchiveCommand.SetHandler(
-                (FileInfo fi, DirectoryInfo o) => Task.FromResult(HandleExtractArchive(fi, o)),
+                (FileInfo fi, DirectoryInfo o) => Task.FromResult(Archive.HandleExtract(fi, o)),
                 pathArg, oOpt);
 
-            var listArchiveCommand = new Command("list", "List the content of an archive.")
+            var listArchiveCommand = new Command("list", "List the contents of an AssetBundle or .data file.")
             {
                 pathArg,
             };
 
             listArchiveCommand.SetHandler(
-                (FileInfo fi) => Task.FromResult(HandleListArchive(fi)),
+                (FileInfo fi) => Task.FromResult(Archive.HandleList(fi)),
                 pathArg);
 
-            var archiveCommand = new Command("archive", "Unity Archive (AssetBundle) functions.")
+            var archiveCommand = new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
             {
                 extractArchiveCommand,
                 listArchiveCommand,
@@ -174,66 +174,5 @@ public static class Program
         }
 
         return 1;
-    }
-
-    static int HandleExtractArchive(FileInfo filename, DirectoryInfo outputFolder)
-    {
-        try
-        {
-            using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
-            foreach (var node in archive.Nodes)
-            {
-                Console.WriteLine($"Extracting {node.Path}...");
-                CopyFile("/" + node.Path, Path.Combine(outputFolder.FullName, node.Path));
-            }
-        }
-        catch (NotSupportedException)
-        {
-            Console.Error.WriteLine("Error opening archive!");
-            return 1;
-        }
-
-        return 0;
-    }
-
-    static int HandleListArchive(FileInfo filename)
-    {
-        try
-        {
-            using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
-            foreach (var node in archive.Nodes)
-            {
-                Console.WriteLine($"{node.Path}");
-                Console.WriteLine($"  Size: {node.Size}");
-                Console.WriteLine($"  Flags: {node.Flags}");
-                Console.WriteLine();
-            }
-        }
-        catch (NotSupportedException)
-        {
-            Console.Error.WriteLine("Error opening archive!");
-            return 1;
-        }
-
-        return 0;
-    }
-
-    static void CopyFile(string source, string dest)
-    {
-        using var sourceFile = UnityFileSystem.OpenFile(source);
-        // Create the containing directory if it doesn't exist.
-        Directory.CreateDirectory(Path.GetDirectoryName(dest));
-        using var destFile = new FileStream(dest, FileMode.Create);
-
-        const int blockSize = 256 * 1024;
-        var buffer = new byte[blockSize];
-        long actualSize;
-
-        do
-        {
-            actualSize = sourceFile.Read(blockSize, buffer);
-            destFile.Write(buffer, 0, (int)actualSize);
-        }
-        while (actualSize == blockSize);
     }
 }
