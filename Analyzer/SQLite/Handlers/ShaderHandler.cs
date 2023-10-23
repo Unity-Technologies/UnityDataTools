@@ -33,7 +33,7 @@ public class ShaderHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@unique_programs", DbType.Int32);
 
         m_InsertSubProgramCommand = new SQLiteCommand(db);
-        m_InsertSubProgramCommand.CommandText = "INSERT INTO shader_subprograms(shader, sub_shader, pass, pass_name, sub_program, hw_tier, shader_type, api) VALUES(@shader, @sub_shader, @pass, @pass_name, @sub_program, @hw_tier, @shader_type, @api)";
+        m_InsertSubProgramCommand.CommandText = "INSERT INTO shader_subprograms(id, shader, sub_shader, pass, pass_name, sub_program, hw_tier, shader_type, api) VALUES(@id, @shader, @sub_shader, @pass, @pass_name, @sub_program, @hw_tier, @shader_type, @api)";
         m_InsertSubProgramCommand.Parameters.Add("@id", DbType.Int64);
         m_InsertSubProgramCommand.Parameters.Add("@shader", DbType.Int64);
         m_InsertSubProgramCommand.Parameters.Add("@sub_shader", DbType.Int32);
