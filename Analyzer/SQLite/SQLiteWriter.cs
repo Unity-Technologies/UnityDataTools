@@ -125,6 +125,7 @@ public class SQLiteWriter : IWriter
         m_AddObjectCommand.Parameters.Add("@name", DbType.String);
         m_AddObjectCommand.Parameters.Add("@game_object", DbType.Int64);
         m_AddObjectCommand.Parameters.Add("@size", DbType.Int64);
+        m_AddObjectCommand.Parameters.Add("@crc32", DbType.Int32);
 
         m_AddTypeCommand = m_Database.CreateCommand();
         m_AddTypeCommand.CommandText = "INSERT INTO types (id, name) VALUES (@id, @name)";
@@ -193,6 +194,7 @@ public class SQLiteWriter : IWriter
                 m_AddObjectCommand.Parameters["@type"].Value = -1;
                 m_AddObjectCommand.Parameters["@name"].Value = sceneName;
                 m_AddObjectCommand.Parameters["@size"].Value = 0;
+                m_AddObjectCommand.Parameters["@crc32"].Value = 0;
                 m_AddObjectCommand.ExecuteNonQuery();
             }
         }
@@ -232,6 +234,7 @@ public class SQLiteWriter : IWriter
 
                 var root = sf.GetTypeTreeRoot(obj.Id);
                 var offset = obj.Offset;
+                var crc32 = reader.ComputeCRC(offset, (int)obj.Size);
 
                 if (!m_TypeSet.Contains(obj.TypeId))
                 {
@@ -275,6 +278,7 @@ public class SQLiteWriter : IWriter
                 m_AddObjectCommand.Parameters["@type"].Value = obj.TypeId;
                 m_AddObjectCommand.Parameters["@name"].Value = name;
                 m_AddObjectCommand.Parameters["@size"].Value = obj.Size + streamDataSize;
+                m_AddObjectCommand.Parameters["@crc32"].Value = crc32;
                 m_AddObjectCommand.ExecuteNonQuery();
 
                 // If this is a Scene AssetBundle, add the object as a depencency of the

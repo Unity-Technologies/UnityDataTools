@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using Force.Crc32;
 
 namespace UnityDataTools.FileSystem;
 
@@ -114,6 +115,12 @@ public class UnityFileReader : IDisposable
     {
         var offset = GetBufferOffset(fileOffset, 1);
         return m_Buffer[offset];
+    }
+
+    public uint ComputeCRC(long fileOffset, int size)
+    {
+        var offset = GetBufferOffset(fileOffset, size);
+        return Crc32Algorithm.Compute(m_Buffer, offset, size);
     }
 
     public void Dispose()

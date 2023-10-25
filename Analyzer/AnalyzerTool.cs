@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.Analyzer.SQLite;
 using UnityDataTools.FileSystem;
-using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer;
 

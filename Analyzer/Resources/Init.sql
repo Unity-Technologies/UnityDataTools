@@ -30,6 +30,7 @@ CREATE TABLE objects
     name TEXT,
     game_object INTEGER,
     size INTEGER,
+    crc32 INTEGER,
     PRIMARY KEY (id)
 );
 
@@ -81,7 +82,7 @@ size,
 pretty_size,
 REPLACE(GROUP_CONCAT(DISTINCT asset_bundle), ',', ',' || CHAR(13)) AS in_bundles
 FROM object_view
-GROUP BY name, type, size
+GROUP BY name, type, size, crc32
 HAVING instances > 1
 ORDER BY size DESC, instances DESC;
 
