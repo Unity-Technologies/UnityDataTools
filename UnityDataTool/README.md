@@ -30,8 +30,8 @@ The command takes the path of the folder containing the files to analyze as argu
 provides the following options:
 * -o, --output-file \<database-filename\>: filename of the database that will be created, the
   default is database.db.
-* -r, --extract-references: extract all references (PPtrs), the default is off as it significantly
-  increases the processing time and the size of the database.
+* -s, --skip-references: skip CRC and reference (PPtrs) extraction. Faster processing and smaller
+  database, but inaccurate duplicate asset detection and no references table.
 * -p, --search-pattern \<pattern\>: search pattern used to determine which files are asset bundles,
   the default is \*.
 
@@ -45,7 +45,7 @@ about the output database structure.**
 > Note: this is an experimental command, it may not work as expected.
 
 This command finds reference chains leading to specific objects. It requires a database that was
-created by the 'analyze' command with the --extract-references option. It takes an object id or
+created by the 'analyze' command without the --skip-references option. It takes an object id or
 name as input and will find reference chains originating from a root asset to the specified object
 (s). A root asset is an asset that was explicitly added to an AssetBundle at build time. It can be
 particularly useful to determine why an asset was included (and potentially more than once) in a

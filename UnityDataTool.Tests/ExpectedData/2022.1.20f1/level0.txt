@@ -59,25 +59,17 @@ ID: 1 (ClassID: 89) Cubemap
 
 ID: 2 (ClassID: 1) GameObject
   m_Component (vector)
-    Array<ComponentPair>[4]
+    Array<ComponentPair>[2]
       data[0] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 6
+          m_PathID (SInt64) 44
       data[1] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 13
-      data[2] (ComponentPair)
-        component (PPtr<Component>)
-          m_FileID (int) 0
-          m_PathID (SInt64) 11
-      data[3] (ComponentPair)
-        component (PPtr<Component>)
-          m_FileID (int) 0
-          m_PathID (SInt64) 15
+          m_PathID (SInt64) 89
   m_Layer (unsigned int) 0
-  m_Name (string) Cube
+  m_Name (string) Directional Light
   m_Tag (UInt16) 0
   m_IsActive (bool) True
 
@@ -87,15 +79,15 @@ ID: 3 (ClassID: 1) GameObject
       data[0] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 7
+          m_PathID (SInt64) 45
       data[1] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 10
+          m_PathID (SInt64) 86
       data[2] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 16
+          m_PathID (SInt64) 87
   m_Layer (unsigned int) 0
   m_Name (string) Main Camera
   m_Tag (UInt16) 5
@@ -103,56 +95,508 @@ ID: 3 (ClassID: 1) GameObject
 
 ID: 4 (ClassID: 1) GameObject
   m_Component (vector)
-    Array<ComponentPair>[2]
+    Array<ComponentPair>[1]
       data[0] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 8
-      data[1] (ComponentPair)
-        component (PPtr<Component>)
-          m_FileID (int) 0
-          m_PathID (SInt64) 18
+          m_PathID (SInt64) 59
   m_Layer (unsigned int) 0
-  m_Name (string) Directional Light
+  m_Name (string) Robot_A_Body
   m_Tag (UInt16) 0
   m_IsActive (bool) True
 
 ID: 5 (ClassID: 1) GameObject
   m_Component (vector)
-    Array<ComponentPair>[4]
+    Array<ComponentPair>[1]
       data[0] (ComponentPair)
         component (PPtr<Component>)
           m_FileID (int) 0
-          m_PathID (SInt64) 9
-      data[1] (ComponentPair)
-        component (PPtr<Component>)
-          m_FileID (int) 0
-          m_PathID (SInt64) 14
-      data[2] (ComponentPair)
-        component (PPtr<Component>)
-          m_FileID (int) 0
-          m_PathID (SInt64) 12
-      data[3] (ComponentPair)
-        component (PPtr<Component>)
-          m_FileID (int) 0
-          m_PathID (SInt64) 19
+          m_PathID (SInt64) 67
   m_Layer (unsigned int) 0
-  m_Name (string) Capsule
+  m_Name (string) Head
   m_Tag (UInt16) 0
   m_IsActive (bool) True
 
-ID: 6 (ClassID: 4) Transform
+ID: 6 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 53
+  m_Layer (unsigned int) 0
+  m_Name (string) Camera
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 7 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 47
+  m_Layer (unsigned int) 0
+  m_Name (string) Robot_Basic
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 8 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 65
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Foot
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 9 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 79
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Offhand_IK
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 10 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 69
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Hand_Attach
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 11 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 54
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_UpperArm
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 12 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 48
+  m_Layer (unsigned int) 0
+  m_Name (string) Neck
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 13 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 82
+  m_Layer (unsigned int) 0
+  m_Name (string) Geometry
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 14 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[2]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 55
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 90
+  m_Layer (unsigned int) 0
+  m_Name (string) Robot_A_Body_LOD03
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 15 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 62
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Toes
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 16 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 72
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_UpperArm
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 17 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 84
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Hand_Attach
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 18 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 80
+  m_Layer (unsigned int) 0
+  m_Name (string) Spine
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 19 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 83
+  m_Layer (unsigned int) 0
+  m_Name (string) Hips
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 20 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 49
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_UpperLeg
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 21 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 56
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Foot
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 22 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 68
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Offhand_IK
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 23 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 63
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Hand_End
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 24 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 46
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_LowerArm_Attach
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 25 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 60
+  m_Layer (unsigned int) 0
+  m_Name (string) Chest
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 26 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 51
+  m_Layer (unsigned int) 0
+  m_Name (string) Skeleton
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 27 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 85
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Shoulder
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 28 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 74
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_LowerArm_Attach
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 29 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 70
+  m_Layer (unsigned int) 0
+  m_Name (string) Robot_A_LowerArm_Left
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 30 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 81
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_UpperLeg
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 31 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 78
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Toes
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 32 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[2]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 71
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 91
+  m_Layer (unsigned int) 0
+  m_Name (string) Robot_A_LowerArm_Right_LOD03
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 33 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 66
+  m_Layer (unsigned int) 0
+  m_Name (string) UpperChest
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 34 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 73
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Hand
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 35 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 52
+  m_Layer (unsigned int) 0
+  m_Name (string) Robot_A_LowerArm_Right
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 36 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 64
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Hand_End
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 37 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 50
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_LowerLeg
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 38 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 76
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_Hand
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 39 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 77
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_Shoulder
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 40 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 75
+  m_Layer (unsigned int) 0
+  m_Name (string) Right_LowerArm
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 41 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[2]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 61
+      data[1] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 92
+  m_Layer (unsigned int) 0
+  m_Name (string) Robot_A_LowerArm_Left_LOD03
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 42 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 57
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_LowerLeg
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 43 (ClassID: 1) GameObject
+  m_Component (vector)
+    Array<ComponentPair>[1]
+      data[0] (ComponentPair)
+        component (PPtr<Component>)
+          m_FileID (int) 0
+          m_PathID (SInt64) 58
+  m_Layer (unsigned int) 0
+  m_Name (string) Left_LowerArm
+  m_Tag (UInt16) 0
+  m_IsActive (bool) True
+
+ID: 44 (ClassID: 4) Transform
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
     m_PathID (SInt64) 2
   m_LocalRotation (Quaternionf)
-    x (float) 0
-    y (float) 0
-    z (float) 0
-    w (float) 1
+    x (float) 0.40821788
+    y (float) -0.23456968
+    z (float) 0.10938163
+    w (float) 0.8754261
   m_LocalPosition (Vector3f)
-    x (float) 2.43
-    y (float) 0
+    x (float) 0
+    y (float) 3
     z (float) 0
   m_LocalScale (Vector3f)
     x (float) 1
@@ -164,7 +608,7 @@ ID: 6 (ClassID: 4) Transform
     m_FileID (int) 0
     m_PathID (SInt64) 0
 
-ID: 7 (ClassID: 4) Transform
+ID: 45 (ClassID: 4) Transform
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
     m_PathID (SInt64) 3
@@ -187,18 +631,408 @@ ID: 7 (ClassID: 4) Transform
     m_FileID (int) 0
     m_PathID (SInt64) 0
 
-ID: 8 (ClassID: 4) Transform
+ID: 46 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 24
+  m_LocalRotation (Quaternionf)
+    x (float) 4.3297806E-17
+    y (float) -0.7071068
+    z (float) 0.7071068
+    w (float) -4.3297806E-17
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 2.1316276E-16
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 75
+
+ID: 47 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 7
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 82
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 51
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+
+ID: 48 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 12
+  m_LocalRotation (Quaternionf)
+    x (float) 0.10886688
+    y (float) 0
+    z (float) -0
+    w (float) 0.99405634
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0.31186458
+    z (float) -0.045722228
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 67
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 66
+
+ID: 49 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 20
+  m_LocalRotation (Quaternionf)
+    x (float) -0.00024114638
+    y (float) 4.16028E-08
+    z (float) 1.0032365E-11
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) 0.21857393
+    y (float) -0.0068564042
+    z (float) 2.5855654E-10
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 50
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 83
+
+ID: 50 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 37
+  m_LocalRotation (Quaternionf)
+    x (float) 0.032175455
+    y (float) -2.308285E-07
+    z (float) 2.4948275E-07
+    w (float) 0.9994823
+  m_LocalPosition (Vector3f)
+    x (float) -9.999998E-07
+    y (float) -0.46666494
+    z (float) 8.8870337E-07
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 56
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 49
+
+ID: 51 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 26
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 53
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 83
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 47
+
+ID: 52 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 35
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 71
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 82
+
+ID: 53 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 6
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 8.512719E-18
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 51
+
+ID: 54 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 11
+  m_LocalRotation (Quaternionf)
+    x (float) 0.10896118
+    y (float) 0.24430433
+    z (float) 0.91461
+    w (float) 0.3032018
+  m_LocalPosition (Vector3f)
+    x (float) 0.17401317
+    y (float) -0.007597579
+    z (float) 8.8817815E-18
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 75
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 77
+
+ID: 55 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 14
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 59
+
+ID: 56 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 21
+  m_LocalRotation (Quaternionf)
+    x (float) -0.031934097
+    y (float) -2.1988333E-07
+    z (float) 1.7068868E-07
+    w (float) 0.99949
+  m_LocalPosition (Vector3f)
+    x (float) -2.189708E-06
+    y (float) -0.4501199
+    z (float) -9.088136E-07
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 62
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 50
+
+ID: 57 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 42
+  m_LocalRotation (Quaternionf)
+    x (float) 0.032175455
+    y (float) -2.9005143E-06
+    z (float) -1.5648941E-06
+    w (float) 0.9994823
+  m_LocalPosition (Vector3f)
+    x (float) -1.8614897E-07
+    y (float) 0.46665984
+    z (float) -3.4593346E-12
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 65
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 81
+
+ID: 58 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 43
+  m_LocalRotation (Quaternionf)
+    x (float) 0.21559888
+    y (float) 0
+    z (float) -0
+    w (float) 0.97648203
+  m_LocalPosition (Vector3f)
+    x (float) -3.4334607E-07
+    y (float) 0.37655988
+    z (float) -2.1316275E-16
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 76
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 74
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 72
+
+ID: 59 (ClassID: 4) Transform
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
     m_PathID (SInt64) 4
   m_LocalRotation (Quaternionf)
-    x (float) 0.40821788
-    y (float) -0.23456968
-    z (float) 0.10938163
-    w (float) 0.8754261
-  m_LocalPosition (Vector3f)
     x (float) 0
-    y (float) 3
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 55
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 82
+
+ID: 60 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 25
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0.12399507
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 66
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 80
+
+ID: 61 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 41
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
     z (float) 0
   m_LocalScale (Vector3f)
     x (float) 1
@@ -208,19 +1042,244 @@ ID: 8 (ClassID: 4) Transform
     Array<PPtr<Transform>>[0]
   m_Father (PPtr<Transform>)
     m_FileID (int) 0
-    m_PathID (SInt64) 0
+    m_PathID (SInt64) 70
 
-ID: 9 (ClassID: 4) Transform
+ID: 62 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 15
+  m_LocalRotation (Quaternionf)
+    x (float) -0.7071068
+    y (float) 6.4545395E-07
+    z (float) -6.4545395E-07
+    w (float) 0.7071068
+  m_LocalPosition (Vector3f)
+    x (float) -8.7067934E-07
+    y (float) -0.055852856
+    z (float) 0.20679161
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 56
+
+ID: 63 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 23
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) 1.1055284E-06
+    y (float) -0.10000101
+    z (float) -1.239128E-07
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 73
+
+ID: 64 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 36
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -4.9735142E-12
+    y (float) 0.09999997
+    z (float) -2.8421706E-16
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 76
+
+ID: 65 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 8
+  m_LocalRotation (Quaternionf)
+    x (float) -0.03193812
+    y (float) -1.4844047E-08
+    z (float) -6.5528246E-07
+    w (float) 0.9994899
+  m_LocalPosition (Vector3f)
+    x (float) 1.0912577E-08
+    y (float) 0.45011988
+    z (float) -1.7987557E-09
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 78
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 57
+
+ID: 66 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 33
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0.12399507
+    z (float) 0.0010370604
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[3]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 85
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 48
+      data[2] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 77
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 60
+
+ID: 67 (ClassID: 4) Transform
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
     m_PathID (SInt64) 5
   m_LocalRotation (Quaternionf)
-    x (float) 0
+    x (float) -0.039832145
     y (float) 0
-    z (float) 0
+    z (float) -0
+    w (float) 0.99920636
+  m_LocalPosition (Vector3f)
+    x (float) -3.7747567E-17
+    y (float) 0.108984716
+    z (float) -4.9737965E-16
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 48
+
+ID: 68 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 22
+  m_LocalRotation (Quaternionf)
+    x (float) -0.7071068
+    y (float) 0.7071068
+    z (float) -1.4901204E-08
+    w (float) -2.5451019E-16
+  m_LocalPosition (Vector3f)
+    x (float) 4.8443085E-06
+    y (float) -0.04999999
+    z (float) 5.4058187E-06
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 69
+
+ID: 69 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 10
+  m_LocalRotation (Quaternionf)
+    x (float) -0.7071067
+    y (float) 0.7071068
+    z (float) -4.3297806E-17
+    w (float) 4.32978E-17
+  m_LocalPosition (Vector3f)
+    x (float) 0.049999144
+    y (float) 3.9354302E-07
+    z (float) -1.687093E-06
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 68
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 73
+
+ID: 70 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 29
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
     w (float) 1
   m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 61
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 82
+
+ID: 71 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 32
+  m_LocalRotation (Quaternionf)
     x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
     y (float) 0
     z (float) 0
   m_LocalScale (Vector3f)
@@ -231,9 +1290,385 @@ ID: 9 (ClassID: 4) Transform
     Array<PPtr<Transform>>[0]
   m_Father (PPtr<Transform>)
     m_FileID (int) 0
-    m_PathID (SInt64) 0
+    m_PathID (SInt64) 52
 
-ID: 10 (ClassID: 20) Camera
+ID: 72 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 16
+  m_LocalRotation (Quaternionf)
+    x (float) 0.10896118
+    y (float) 0.24430433
+    z (float) 0.91461
+    w (float) 0.3032018
+  m_LocalPosition (Vector3f)
+    x (float) -0.17401306
+    y (float) 0.007597574
+    z (float) -9.53674E-09
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 58
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 85
+
+ID: 73 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 34
+  m_LocalRotation (Quaternionf)
+    x (float) 0.0014214484
+    y (float) -0.008619276
+    z (float) 0.1170365
+    w (float) 0.9930892
+  m_LocalPosition (Vector3f)
+    x (float) -2.4162216E-06
+    y (float) -0.28589824
+    z (float) -1.2148497E-06
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 69
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 63
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 75
+
+ID: 74 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 28
+  m_LocalRotation (Quaternionf)
+    x (float) -4.3297806E-17
+    y (float) 0.7071068
+    z (float) 0.7071068
+    w (float) -4.3297806E-17
+  m_LocalPosition (Vector3f)
+    x (float) 6.047403E-08
+    y (float) -2.6063086E-08
+    z (float) 3.7886103E-08
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 58
+
+ID: 75 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 40
+  m_LocalRotation (Quaternionf)
+    x (float) 0.21559888
+    y (float) 0
+    z (float) -0
+    w (float) 0.97648203
+  m_LocalPosition (Vector3f)
+    x (float) 1.1129974E-07
+    y (float) -0.37655917
+    z (float) -5.297813E-07
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 73
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 46
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 54
+
+ID: 76 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 38
+  m_LocalRotation (Quaternionf)
+    x (float) 0.0014214484
+    y (float) -0.008619276
+    z (float) 0.1170365
+    w (float) 0.9930892
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0.2858999
+    z (float) 1.4210853E-16
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 84
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 64
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 58
+
+ID: 77 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 39
+  m_LocalRotation (Quaternionf)
+    x (float) 0.99976206
+    y (float) -0.021814886
+    z (float) 1.3357765E-18
+    w (float) -6.121778E-17
+  m_LocalPosition (Vector3f)
+    x (float) 0.25436094
+    y (float) 0.21834178
+    z (float) -0.034605987
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 54
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 66
+
+ID: 78 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 31
+  m_LocalRotation (Quaternionf)
+    x (float) -0.7071068
+    y (float) -1.283265E-06
+    z (float) 1.283265E-06
+    w (float) 0.7071068
+  m_LocalPosition (Vector3f)
+    x (float) -3.5527126E-17
+    y (float) 0.055854883
+    z (float) -0.20679079
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 65
+
+ID: 79 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 9
+  m_LocalRotation (Quaternionf)
+    x (float) -0.7071068
+    y (float) 0.7071068
+    z (float) -4.8009277E-09
+    w (float) 4.8009277E-09
+  m_LocalPosition (Vector3f)
+    x (float) -1.4210853E-16
+    y (float) -0.049999986
+    z (float) -4.263256E-16
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[0]
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 84
+
+ID: 80 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 18
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0.15712158
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 60
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 83
+
+ID: 81 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 30
+  m_LocalRotation (Quaternionf)
+    x (float) 1
+    y (float) 9.555866E-07
+    z (float) 2.3043625E-10
+    w (float) 0.00024114636
+  m_LocalPosition (Vector3f)
+    x (float) -0.21857415
+    y (float) -0.0068612928
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 57
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 83
+
+ID: 82 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 13
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[3]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 59
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 70
+      data[2] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 52
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 47
+
+ID: 83 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 19
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) -0
+    z (float) -0
+    w (float) 1
+  m_LocalPosition (Vector3f)
+    x (float) -0
+    y (float) 1.129366
+    z (float) 0.00023833466
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[3]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 81
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 49
+      data[2] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 80
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 51
+
+ID: 84 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 17
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) 0
+    z (float) -0.7071068
+    w (float) 0.7071067
+  m_LocalPosition (Vector3f)
+    x (float) -0.049999986
+    y (float) 0
+    z (float) 0
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 79
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 76
+
+ID: 85 (ClassID: 4) Transform
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 27
+  m_LocalRotation (Quaternionf)
+    x (float) 0
+    y (float) 0
+    z (float) 0.021814886
+    w (float) 0.99976206
+  m_LocalPosition (Vector3f)
+    x (float) -0.25436115
+    y (float) 0.21834318
+    z (float) -0.034605987
+  m_LocalScale (Vector3f)
+    x (float) 1
+    y (float) 1
+    z (float) 1
+  m_Children (vector)
+    Array<PPtr<Transform>>[1]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 72
+  m_Father (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 66
+
+ID: 86 (ClassID: 20) Camera
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
     m_PathID (SInt64) 3
@@ -280,157 +1715,13 @@ ID: 10 (ClassID: 20) Camera
   m_StereoConvergence (float) 10
   m_StereoSeparation (float) 0.022
 
-ID: 11 (ClassID: 23) MeshRenderer
-  m_GameObject (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 2
-  m_Enabled (bool) True
-  m_CastShadows (UInt8) 1
-  m_ReceiveShadows (UInt8) 1
-  m_DynamicOccludee (UInt8) 1
-  m_StaticShadowCaster (UInt8) 0
-  m_MotionVectors (UInt8) 1
-  m_LightProbeUsage (UInt8) 1
-  m_ReflectionProbeUsage (UInt8) 1
-  m_RayTracingMode (UInt8) 2
-  m_RayTraceProcedural (UInt8) 0
-  m_RenderingLayerMask (unsigned int) 1
-  m_RendererPriority (int) 0
-  m_LightmapIndex (UInt16) 65535
-  m_LightmapIndexDynamic (UInt16) 65535
-  m_LightmapTilingOffset (Vector4f)
-    x (float) 1
-    y (float) 1
-    z (float) 0
-    w (float) 0
-  m_LightmapTilingOffsetDynamic (Vector4f)
-    x (float) 1
-    y (float) 1
-    z (float) 0
-    w (float) 0
-  m_Materials (vector)
-    Array<PPtr<Material>>[1]
-      data[0] (PPtr<Material>)
-        m_FileID (int) 1
-        m_PathID (SInt64) 2
-  m_StaticBatchInfo (StaticBatchInfo)
-    firstSubMesh (UInt16) 0
-    subMeshCount (UInt16) 0
-  m_StaticBatchRoot (PPtr<Transform>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_ProbeAnchor (PPtr<Transform>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_LightProbeVolumeOverride (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_SortingLayerID (int) 0
-  m_SortingLayer (SInt16) 0
-  m_SortingOrder (SInt16) 0
-  m_AdditionalVertexStreams (PPtr<Mesh>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_EnlightenVertexStream (PPtr<Mesh>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-
-ID: 12 (ClassID: 23) MeshRenderer
-  m_GameObject (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 5
-  m_Enabled (bool) True
-  m_CastShadows (UInt8) 1
-  m_ReceiveShadows (UInt8) 1
-  m_DynamicOccludee (UInt8) 1
-  m_StaticShadowCaster (UInt8) 0
-  m_MotionVectors (UInt8) 1
-  m_LightProbeUsage (UInt8) 1
-  m_ReflectionProbeUsage (UInt8) 1
-  m_RayTracingMode (UInt8) 2
-  m_RayTraceProcedural (UInt8) 0
-  m_RenderingLayerMask (unsigned int) 1
-  m_RendererPriority (int) 0
-  m_LightmapIndex (UInt16) 65535
-  m_LightmapIndexDynamic (UInt16) 65535
-  m_LightmapTilingOffset (Vector4f)
-    x (float) 1
-    y (float) 1
-    z (float) 0
-    w (float) 0
-  m_LightmapTilingOffsetDynamic (Vector4f)
-    x (float) 1
-    y (float) 1
-    z (float) 0
-    w (float) 0
-  m_Materials (vector)
-    Array<PPtr<Material>>[1]
-      data[0] (PPtr<Material>)
-        m_FileID (int) 1
-        m_PathID (SInt64) 2
-  m_StaticBatchInfo (StaticBatchInfo)
-    firstSubMesh (UInt16) 0
-    subMeshCount (UInt16) 0
-  m_StaticBatchRoot (PPtr<Transform>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_ProbeAnchor (PPtr<Transform>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_LightProbeVolumeOverride (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_SortingLayerID (int) 0
-  m_SortingLayer (SInt16) 0
-  m_SortingOrder (SInt16) 0
-  m_AdditionalVertexStreams (PPtr<Mesh>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_EnlightenVertexStream (PPtr<Mesh>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-
-ID: 13 (ClassID: 33) MeshFilter
-  m_GameObject (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 2
-  m_Mesh (PPtr<Mesh>)
-    m_FileID (int) 2
-    m_PathID (SInt64) 10202
-
-ID: 14 (ClassID: 33) MeshFilter
-  m_GameObject (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 5
-  m_Mesh (PPtr<Mesh>)
-    m_FileID (int) 2
-    m_PathID (SInt64) 10208
-
-ID: 15 (ClassID: 65) BoxCollider
-  m_GameObject (PPtr<GameObject>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 2
-  m_Material (PPtr<PhysicMaterial>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
-  m_IsTrigger (bool) False
-  m_Enabled (bool) True
-  m_Size (Vector3f)
-    x (float) 2
-    y (float) 2
-    z (float) 2
-  m_Center (Vector3f)
-    x (float) 0
-    y (float) 0
-    z (float) 0
-
-ID: 16 (ClassID: 81) AudioListener
+ID: 87 (ClassID: 81) AudioListener
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
     m_PathID (SInt64) 3
   m_Enabled (UInt8) 1
 
-ID: 17 (ClassID: 104) RenderSettings
+ID: 88 (ClassID: 104) RenderSettings
   m_Fog (bool) False
   m_FogColor (ColorRGBA)
     r (float) 0.5
@@ -465,7 +1756,7 @@ ID: 17 (ClassID: 104) RenderSettings
     a (float) 1
   m_SkyboxMaterial (PPtr<Material>)
     m_FileID (int) 1
-    m_PathID (SInt64) 3
+    m_PathID (SInt64) 5
   m_HaloStrength (float) 0.5
   m_FlareStrength (float) 1
   m_FlareFadeSpeed (float) 3
@@ -515,7 +1806,7 @@ ID: 17 (ClassID: 104) RenderSettings
     m_PathID (SInt64) 1
   m_Sun (PPtr<Light>)
     m_FileID (int) 0
-    m_PathID (SInt64) 0
+    m_PathID (SInt64) 89
   m_IndirectSpecularColor (ColorRGBA)
     r (float) 0.44657815
     g (float) 0.49641192
@@ -523,10 +1814,10 @@ ID: 17 (ClassID: 104) RenderSettings
     a (float) 1
   m_UseRadianceAmbientProbe (bool) False
 
-ID: 18 (ClassID: 108) Light
+ID: 89 (ClassID: 108) Light
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
-    m_PathID (SInt64) 4
+    m_PathID (SInt64) 2
   m_Enabled (UInt8) 1
   m_Type (int) 1
   m_Shape (int) 0
@@ -538,7 +1829,7 @@ ID: 18 (ClassID: 108) Light
   m_Intensity (float) 1
   m_Range (float) 10
   m_SpotAngle (float) 30
-  m_InnerSpotAngle (float) 21.80208
+  m_InnerSpotAngle (float) 21.802082
   m_CookieSize (float) 10
   m_Shadows (ShadowSettings)
     m_Type (int) 2
@@ -584,7 +1875,7 @@ ID: 18 (ClassID: 108) Light
   m_CullingMask (BitField)
     m_Bits (unsigned int) 4294967295
   m_RenderingLayerMask (unsigned int) 1
-  m_Lightmapping (int) 4
+  m_Lightmapping (int) 1
   m_LightShadowCasterMode (int) 0
   m_AreaSize (Vector2f)
     x (float) 1
@@ -600,24 +1891,301 @@ ID: 18 (ClassID: 108) Light
   m_UseBoundingSphereOverride (bool) False
   m_UseViewFrustumForShadowCasterCull (bool) True
 
-ID: 19 (ClassID: 136) CapsuleCollider
+ID: 90 (ClassID: 137) SkinnedMeshRenderer
   m_GameObject (PPtr<GameObject>)
     m_FileID (int) 0
-    m_PathID (SInt64) 5
-  m_Material (PPtr<PhysicMaterial>)
+    m_PathID (SInt64) 14
+  m_Enabled (bool) True
+  m_CastShadows (UInt8) 1
+  m_ReceiveShadows (UInt8) 1
+  m_DynamicOccludee (UInt8) 1
+  m_StaticShadowCaster (UInt8) 0
+  m_MotionVectors (UInt8) 1
+  m_LightProbeUsage (UInt8) 1
+  m_ReflectionProbeUsage (UInt8) 1
+  m_RayTracingMode (UInt8) 3
+  m_RayTraceProcedural (UInt8) 0
+  m_RenderingLayerMask (unsigned int) 1
+  m_RendererPriority (int) 0
+  m_LightmapIndex (UInt16) 65535
+  m_LightmapIndexDynamic (UInt16) 65535
+  m_LightmapTilingOffset (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_LightmapTilingOffsetDynamic (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_Materials (vector)
+    Array<PPtr<Material>>[5]
+      data[0] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 2
+      data[1] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 3
+      data[2] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 7
+      data[3] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 4
+      data[4] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 6
+  m_StaticBatchInfo (StaticBatchInfo)
+    firstSubMesh (UInt16) 0
+    subMeshCount (UInt16) 0
+  m_StaticBatchRoot (PPtr<Transform>)
     m_FileID (int) 0
     m_PathID (SInt64) 0
-  m_IsTrigger (bool) False
-  m_Enabled (bool) True
-  m_Radius (float) 0.5
-  m_Height (float) 2
-  m_Direction (int) 1
-  m_Center (Vector3f)
-    x (float) 0
-    y (float) 0
-    z (float) 0
+  m_ProbeAnchor (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_LightProbeVolumeOverride (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_SortingLayerID (int) 0
+  m_SortingLayer (SInt16) 0
+  m_SortingOrder (SInt16) 0
+  m_Quality (int) 0
+  m_UpdateWhenOffscreen (bool) False
+  m_SkinnedMotionVectors (bool) True
+  m_Mesh (PPtr<Mesh>)
+    m_FileID (int) 1
+    m_PathID (SInt64) 9
+  m_Bones (vector)
+    Array<PPtr<Transform>>[18]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 66
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 48
+      data[2] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 67
+      data[3] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 85
+      data[4] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 72
+      data[5] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 77
+      data[6] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 54
+      data[7] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 81
+      data[8] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 57
+      data[9] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 65
+      data[10] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 78
+      data[11] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 49
+      data[12] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 50
+      data[13] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 56
+      data[14] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 62
+      data[15] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 83
+      data[16] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 80
+      data[17] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 60
+  m_BlendShapeWeights (vector)
+    Array<float>[0]
+  m_RootBone (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 83
+  m_AABB (AABB)
+    m_Center (Vector3f)
+      x (float) -0.05392465
+      y (float) 0.019282818
+      z (float) -0.027583972
+    m_Extent (Vector3f)
+      x (float) 0.84744215
+      y (float) 1.1483861
+      z (float) 0.4433027
+  m_DirtyAABB (bool) False
 
-ID: 20 (ClassID: 157) LightmapSettings
+ID: 91 (ClassID: 137) SkinnedMeshRenderer
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 32
+  m_Enabled (bool) True
+  m_CastShadows (UInt8) 1
+  m_ReceiveShadows (UInt8) 1
+  m_DynamicOccludee (UInt8) 1
+  m_StaticShadowCaster (UInt8) 0
+  m_MotionVectors (UInt8) 1
+  m_LightProbeUsage (UInt8) 1
+  m_ReflectionProbeUsage (UInt8) 1
+  m_RayTracingMode (UInt8) 3
+  m_RayTraceProcedural (UInt8) 0
+  m_RenderingLayerMask (unsigned int) 1
+  m_RendererPriority (int) 0
+  m_LightmapIndex (UInt16) 65535
+  m_LightmapIndexDynamic (UInt16) 65535
+  m_LightmapTilingOffset (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_LightmapTilingOffsetDynamic (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_Materials (vector)
+    Array<PPtr<Material>>[1]
+      data[0] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 3
+  m_StaticBatchInfo (StaticBatchInfo)
+    firstSubMesh (UInt16) 0
+    subMeshCount (UInt16) 0
+  m_StaticBatchRoot (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_ProbeAnchor (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_LightProbeVolumeOverride (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_SortingLayerID (int) 0
+  m_SortingLayer (SInt16) 0
+  m_SortingOrder (SInt16) 0
+  m_Quality (int) 0
+  m_UpdateWhenOffscreen (bool) False
+  m_SkinnedMotionVectors (bool) True
+  m_Mesh (PPtr<Mesh>)
+    m_FileID (int) 1
+    m_PathID (SInt64) 10
+  m_Bones (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 75
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 73
+  m_BlendShapeWeights (vector)
+    Array<float>[0]
+  m_RootBone (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 75
+  m_AABB (AABB)
+    m_Center (Vector3f)
+      x (float) 0.070383824
+      y (float) -0.3120732
+      z (float) -0.043070003
+    m_Extent (Vector3f)
+      x (float) 0.17962179
+      y (float) 0.37392363
+      z (float) 0.1831482
+  m_DirtyAABB (bool) False
+
+ID: 92 (ClassID: 137) SkinnedMeshRenderer
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 41
+  m_Enabled (bool) True
+  m_CastShadows (UInt8) 1
+  m_ReceiveShadows (UInt8) 1
+  m_DynamicOccludee (UInt8) 1
+  m_StaticShadowCaster (UInt8) 0
+  m_MotionVectors (UInt8) 1
+  m_LightProbeUsage (UInt8) 1
+  m_ReflectionProbeUsage (UInt8) 1
+  m_RayTracingMode (UInt8) 3
+  m_RayTraceProcedural (UInt8) 0
+  m_RenderingLayerMask (unsigned int) 1
+  m_RendererPriority (int) 0
+  m_LightmapIndex (UInt16) 65535
+  m_LightmapIndexDynamic (UInt16) 65535
+  m_LightmapTilingOffset (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_LightmapTilingOffsetDynamic (Vector4f)
+    x (float) 1
+    y (float) 1
+    z (float) 0
+    w (float) 0
+  m_Materials (vector)
+    Array<PPtr<Material>>[1]
+      data[0] (PPtr<Material>)
+        m_FileID (int) 1
+        m_PathID (SInt64) 3
+  m_StaticBatchInfo (StaticBatchInfo)
+    firstSubMesh (UInt16) 0
+    subMeshCount (UInt16) 0
+  m_StaticBatchRoot (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_ProbeAnchor (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_LightProbeVolumeOverride (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 0
+  m_SortingLayerID (int) 0
+  m_SortingLayer (SInt16) 0
+  m_SortingOrder (SInt16) 0
+  m_Quality (int) 0
+  m_UpdateWhenOffscreen (bool) False
+  m_SkinnedMotionVectors (bool) True
+  m_Mesh (PPtr<Mesh>)
+    m_FileID (int) 1
+    m_PathID (SInt64) 8
+  m_Bones (vector)
+    Array<PPtr<Transform>>[2]
+      data[0] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 58
+      data[1] (PPtr<Transform>)
+        m_FileID (int) 0
+        m_PathID (SInt64) 76
+  m_BlendShapeWeights (vector)
+    Array<float>[0]
+  m_RootBone (PPtr<Transform>)
+    m_FileID (int) 0
+    m_PathID (SInt64) 58
+  m_AABB (AABB)
+    m_Center (Vector3f)
+      x (float) -0.07139376
+      y (float) 0.31277427
+      z (float) 0.04507722
+    m_Extent (Vector3f)
+      x (float) 0.18062884
+      y (float) 0.3793737
+      z (float) 0.18523143
+  m_DirtyAABB (bool) False
+
+ID: 93 (ClassID: 157) LightmapSettings
   m_EnlightenSceneMapping (EnlightenSceneMapping)
     m_Renderers (vector)
       Array<EnlightenRendererInformation>[0]
@@ -643,10 +2211,10 @@ ID: 20 (ClassID: 157) LightmapSettings
     m_EnableBakedLightmaps (bool) True
     m_EnableRealtimeLightmaps (bool) False
   m_LightingSettings (PPtr<LightingSettings>)
-    m_FileID (int) 0
-    m_PathID (SInt64) 0
+    m_FileID (int) 1
+    m_PathID (SInt64) 13
 
-ID: 21 (ClassID: 196) NavMeshSettings
+ID: 94 (ClassID: 196) NavMeshSettings
   m_NavMeshData (PPtr<NavMeshData>)
     m_FileID (int) 0
     m_PathID (SInt64) 0

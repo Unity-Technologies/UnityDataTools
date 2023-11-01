@@ -146,19 +146,19 @@ public class UnityDataToolTests : AssetBundleTestFixture
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }));
 
-        ValidateDatabase(databasePath, false);
+        ValidateDatabase(databasePath, true);
     }
 
     [Test]
-    public async Task Analyze_WithRefs_DatabaseCorrect(
-        [Values("-r", "--extract-references")] string options)
+    public async Task Analyze_WithoutRefs_DatabaseCorrect(
+        [Values("-s", "--skip-references")] string options)
     {
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        ValidateDatabase(databasePath, true);
+        ValidateDatabase(databasePath, false);
     }
 
     [Test]
@@ -170,7 +170,7 @@ public class UnityDataToolTests : AssetBundleTestFixture
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        ValidateDatabase(databasePath, false);
+        ValidateDatabase(databasePath, true);
     }
 
     [Test]
@@ -202,7 +202,7 @@ public class UnityDataToolTests : AssetBundleTestFixture
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        ValidateDatabase(databasePath, false);
+        ValidateDatabase(databasePath, true);
     }
 
     private void ValidateDatabase(string databasePath, bool withRefs)
@@ -282,7 +282,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-r" }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-p", "*." }));
 
         using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();

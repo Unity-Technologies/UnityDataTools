@@ -8,9 +8,9 @@ namespace UnityDataTools.Analyzer;
 
 public class AnalyzerTool
 {
-    public int Analyze(string path, string databaseName, string searchPattern, bool extractReferences)
+    public int Analyze(string path, string databaseName, string searchPattern, bool skipReferences)
     {
-        using SQLiteWriter writer = new (databaseName, extractReferences);
+        using SQLiteWriter writer = new (databaseName, skipReferences);
         
         try
         {
@@ -46,7 +46,7 @@ public class AnalyzerTool
 
                     Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
 
-                    writer.WriteSerializedFile(serializedFileName, file);
+                    writer.WriteSerializedFile(serializedFileName, Path.GetDirectoryName(file) + Path.DirectorySeparatorChar);
                 }
 
                 if (archive != null)
@@ -65,7 +65,7 @@ public class AnalyzerTool
                         {
                             if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                             {
-                                writer.WriteSerializedFile(node.Path, "/" + node.Path);
+                                writer.WriteSerializedFile(node.Path, "/");
                             }
                         }
                     }

@@ -49,7 +49,7 @@ CASE
     WHEN size >=  1024 AND size < (1024 * 1024) THEN printf('%!5.1f KB', size / 1024.0)
     WHEN size >= (1024 * 1024)  AND size < (1024 * 1024 * 1024) THEN printf('%!5.1f MB', size / 1024.0 / 1024)
     WHEN size >= (1024 * 1024 * 1024) THEN printf('%!5.1f GB', size / 1024.0 / 1024 / 1024)
-END AS pretty_size
+END AS pretty_size, o.crc32
 FROM objects o
 INNER JOIN types t ON o.type = t.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id

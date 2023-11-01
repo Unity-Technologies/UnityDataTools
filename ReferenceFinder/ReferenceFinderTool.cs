@@ -47,7 +47,7 @@ public class ReferenceFinderTool
         var hasRefs = checkRefsTableCmd.ExecuteScalar();
         if ((long)hasRefs == 0)
         {
-            Console.WriteLine("Database 'refs' table empty! Did you use the 'analyze' command with the -r option to generate the database?");
+            Console.WriteLine("Database 'refs' table empty! Make sure to not use the --skip-references option when generating the database");
             return 1;
         }
 

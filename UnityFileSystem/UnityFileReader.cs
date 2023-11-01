@@ -117,10 +117,19 @@ public class UnityFileReader : IDisposable
         return m_Buffer[offset];
     }
 
-    public uint ComputeCRC(long fileOffset, int size)
+    public uint ComputeCRC(long fileOffset, int size, uint crc32 = 0)
     {
-        var offset = GetBufferOffset(fileOffset, size);
-        return Crc32Algorithm.Compute(m_Buffer, offset, size);
+        var readSize = size > m_Buffer.Length ? m_Buffer.Length : size;
+        var readBytes = 0;
+        
+        while (readBytes < size)
+        {
+            var offset = GetBufferOffset(fileOffset, readSize);
+            crc32 = Crc32Algorithm.Append(crc32, m_Buffer, offset, readSize);
+            readBytes += readSize;
+        }
+
+        return crc32;
     }
 
     public void Dispose()

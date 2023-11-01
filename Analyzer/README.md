@@ -22,11 +22,13 @@ but it can easily be adapter to use another writer type. It takes four parameter
   recursively.
 * databaseName (string): database filename, it will be overwritten if it already exists.
 * searchPattern (string): file search pattern (e.g. \*.bundle).
-* extractReferences (bool): determines if the references (PPtrs) must be extracted and saved in
-  the 'refs' table. Calling this method will create the SQLite output database and will recursively
-  process the files matching the search pattern in the provided path. It will add a row in
-  the 'objects' table for each serialized object. This table contain basic information such as the
-  size and the name of the object (if it has one).
+* skipReferences (bool): determines if the CRC calculation and references (PPtrs) extraction must
+  skipped. This is faster, but the refs table will be empty and the duplicate assets won't be
+  accurate.
+Calling this method will create the SQLite output database and will recursively
+process the files matching the search pattern in the provided path. It will add a row in
+the 'objects' table for each serialized object. This table contain basic information such as the
+size and the name of the object (if it has one).
 
 # How to use the database
 
@@ -62,10 +64,8 @@ case, Unity will include the asset in all the AssetBundles with a reference to i
 view_potential_duplicates provides the number of instances and the total size of the potentially
 duplicated assets. It also lists all the AssetBundles where the asset was found.
 
-It is important to understand that there is a lot of false positives in that view. All the objects
-having an identical name, size and type are reported as potential duplicates. For example, if
-several animated characters have a bone GameObject named "Hand_L", they will all be reported as
-potential duplicates even if they are not part of the same object.
+If the skipReferences option is used, there will be a lot of false positives in that view. Otherwise,
+it should be very accurate because CRCs are used to determine if objects are identical. 
 
 ## asset_view (AssetBundleProcessor)
 
