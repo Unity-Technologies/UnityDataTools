@@ -46,7 +46,7 @@ public class AnalyzerTool
 
                     Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
 
-                    writer.WriteSerializedFile(serializedFileName, Path.GetDirectoryName(file) + Path.DirectorySeparatorChar);
+                    writer.WriteSerializedFile(serializedFileName, path.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
                 }
 
                 if (archive != null)
