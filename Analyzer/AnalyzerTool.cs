@@ -36,7 +36,7 @@ public class AnalyzerTool
 
                 try
                 {
-                    archive = UnityFileSystem.MountArchive(file, "/");
+                    archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar);
                 }
                 catch (NotSupportedException)
                 {
@@ -65,7 +65,7 @@ public class AnalyzerTool
                         {
                             if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                             {
-                                writer.WriteSerializedFile(node.Path, "/");
+                                writer.WriteSerializedFile(node.Path, "archive:" + Path.DirectorySeparatorChar);
                             }
                         }
                     }
