@@ -165,10 +165,10 @@ public class SQLiteWriter : IWriter
     
     public void WriteSerializedFile(string filename, string folder)
     {
-        var fullPath = folder + filename;
+        var fullPath = Path.Join(folder, filename);
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
-        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, folder, AddReference);
+        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, Path.GetDirectoryName(fullPath), AddReference);
         int serializedFileId = m_SerializedFileIdProvider.GetId(filename.ToLower());
         int sceneId = -1;
 

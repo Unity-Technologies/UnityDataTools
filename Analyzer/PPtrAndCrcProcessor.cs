@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityDataTools.FileSystem;
 using Force.Crc32;
@@ -54,7 +55,7 @@ public class PPtrAndCrcProcessor : IDisposable
         
         if (!m_resourceReaders.TryGetValue(filename, out var reader))
         {
-            reader = new UnityFileReader(m_Folder + filename, 4 * 1024 * 1024);
+            reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
             m_resourceReaders[filename] = reader;
         }
 

@@ -80,7 +80,7 @@ END AS pretty_total_size,
 sum(size) AS total_size,
 size,
 pretty_size,
-REPLACE(GROUP_CONCAT(DISTINCT asset_bundle), ',', ',' || CHAR(13)) AS in_bundles
+REPLACE(GROUP_CONCAT(DISTINCT IIF(asset_bundle IS NULL, serialized_file, asset_bundle)), ',', ',' || CHAR(13)) AS in_files
 FROM object_view
 GROUP BY name, type, size, crc32
 HAVING instances > 1
