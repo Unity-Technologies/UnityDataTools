@@ -38,7 +38,7 @@ public class TextDumperTool
             catch (NotSupportedException)
             {
                 // Try as SerializedFile
-                using (m_Writer = new StreamWriter(Path.GetFileName(path) + ".txt", false))
+                using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
                 {
                     OutputSerializedFile(path);
                 }

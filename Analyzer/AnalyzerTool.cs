@@ -42,11 +42,11 @@ public class AnalyzerTool
                 {
                     // It wasn't an AssetBundle, try to open the file as a SerializedFile.
                     
-                    var serializedFileName = Path.GetRelativePath(path, file);
+                    var relativePath = Path.GetRelativePath(path, file);
 
                     Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
 
-                    writer.WriteSerializedFile(serializedFileName, path);
+                    writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
                 }
 
                 if (archive != null)
@@ -65,7 +65,15 @@ public class AnalyzerTool
                         {
                             if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                             {
-                                writer.WriteSerializedFile(node.Path, "archive:" + Path.DirectorySeparatorChar);
+                                try
+                                {
+                                    writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.Error.WriteLine();
+                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
+                                }
                             }
                         }
                     }

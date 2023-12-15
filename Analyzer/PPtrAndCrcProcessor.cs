@@ -39,7 +39,7 @@ public class PPtrAndCrcProcessor : IDisposable
     {
         foreach (var r in m_resourceReaders.Values)
         {
-            r.Dispose();
+            r?.Dispose();
         }
         
         m_resourceReaders.Clear();
@@ -55,7 +55,24 @@ public class PPtrAndCrcProcessor : IDisposable
         
         if (!m_resourceReaders.TryGetValue(filename, out var reader))
         {
-            reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
+            try
+            {
+                reader = new UnityFileReader("archive:/" + filename, 4 * 1024 * 1024);
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"Error opening resource file {filename}");
+                    reader = null;
+                }
+            }
+
             m_resourceReaders[filename] = reader;
         }
 
@@ -121,7 +138,10 @@ public class PPtrAndCrcProcessor : IDisposable
             {
                 var resourceFile = GetResourceReader(filename);
 
-                m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+                if (resourceFile != null)
+                {
+                    m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+                }
             }
         }
         else if (node.Type == "StreamedResource")
@@ -144,7 +164,10 @@ public class PPtrAndCrcProcessor : IDisposable
             {
                 var resourceFile = GetResourceReader(filename);
 
-                m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+                if (resourceFile != null)
+                {
+                    m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+                }
             }
         }
         else if (node.CSharpType == typeof(string))

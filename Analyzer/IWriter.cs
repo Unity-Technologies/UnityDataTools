@@ -10,6 +10,6 @@ public interface IWriter : IDisposable
     void Begin();
     void BeginAssetBundle(string name, long size);
     void EndAssetBundle();
-    void WriteSerializedFile(string filename, string fullPath);
+    void WriteSerializedFile(string relativePath, string fullPath, string containingFolder);
     void End();
 }

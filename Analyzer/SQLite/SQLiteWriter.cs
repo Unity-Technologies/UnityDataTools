@@ -163,16 +163,15 @@ public class SQLiteWriter : IWriter
         m_CurrentAssetBundleId = -1;
     }
     
-    public void WriteSerializedFile(string filename, string folder)
+    public void WriteSerializedFile(string relativePath, string fullPath, string containingFolder)
     {
-        var fullPath = Path.Join(folder, filename);
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
-        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, Path.GetDirectoryName(fullPath), AddReference);
-        int serializedFileId = m_SerializedFileIdProvider.GetId(filename.ToLower());
+        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, AddReference);
+        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLower());
         int sceneId = -1;
 
-        var match = m_RegexSceneFile.Match(filename);
+        var match = m_RegexSceneFile.Match(relativePath);
 
         if (match.Success)
         {
@@ -185,7 +184,7 @@ public class SQLiteWriter : IWriter
 
             // There are 2 SerializedFiles per Scene, one ends with .sharedAssets. This is a
             // dirty trick to avoid inserting the scene object a second time.
-            if (filename.EndsWith(".sharedAssets"))
+            if (relativePath.EndsWith(".sharedAssets"))
             {
                 m_AddObjectCommand.Parameters["@id"].Value = sceneId;
                 m_AddObjectCommand.Parameters["@object_id"].Value = 0;
@@ -218,7 +217,7 @@ public class SQLiteWriter : IWriter
         {
             m_AddSerializedFileCommand.Parameters["@id"].Value = serializedFileId;
             m_AddSerializedFileCommand.Parameters["@asset_bundle"].Value = m_CurrentAssetBundleId == -1 ? null : m_CurrentAssetBundleId;
-            m_AddSerializedFileCommand.Parameters["@name"].Value = filename;
+            m_AddSerializedFileCommand.Parameters["@name"].Value = relativePath;
             m_AddSerializedFileCommand.ExecuteNonQuery();
 
             int localId = 0;
