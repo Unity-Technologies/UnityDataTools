@@ -274,6 +274,7 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    id INTEGER,
         ///    width INTEGER,
         ///    height INTEGER,
+        ///    image_count INTEGER,
         ///    format INTEGER,
         ///    mip_count INTEGER,
         ///    rw_enabled INTEGER,
@@ -285,6 +286,7 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    o.*,
         ///    t.width,
         ///    t.height,
+        ///    t.image_count,
         ///    f.name AS format,
         ///    t.mip_count,
         ///    t.rw_enabled
@@ -295,6 +297,46 @@ namespace UnityDataTools.Analyzer.Properties {
         internal static string Texture2D {
             get {
                 return ResourceManager.GetString("Texture2D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to --CREATE TABLE texture_formats
+        ///--(
+        ///--    id INTEGER,
+        ///--    name TEXT,
+        ///--    PRIMARY KEY (id)
+        ///--);
+        ///
+        ///CREATE TABLE video_clips
+        ///(
+        ///    id INTEGER,
+        ///    width INTEGER,
+        ///    height INTEGER,
+        ///    format INTEGER,
+        ///    frame_rate REAL,
+        ///    frame_count INTEGER,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE VIEW video_clip_view AS
+        ///SELECT
+        ///    o.*,
+        ///    v.width,
+        ///    v.height,
+        ///    v.frame_rate,
+        ///    v.frame_count,
+        ///    v.format
+        ///FROM object_view o
+        ///INNER JOIN video_clips v ON o.id = v.id
+        ///
+        ///--INSERT INTO texture_formats (id, name)
+        ///--VALUES
+        ///--(0,  [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string VideoClip {
+            get {
+                return ResourceManager.GetString("VideoClip", resourceCulture);
             }
         }
     }

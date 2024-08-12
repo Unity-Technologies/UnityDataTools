@@ -10,6 +10,7 @@ CREATE TABLE textures
     id INTEGER,
     width INTEGER,
     height INTEGER,
+    image_count INTEGER,
     format INTEGER,
     mip_count INTEGER,
     rw_enabled INTEGER,
@@ -21,6 +22,7 @@ SELECT
     o.*,
     t.width,
     t.height,
+    t.image_count,
     f.name AS format,
     t.mip_count,
     t.rw_enabled
