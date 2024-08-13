@@ -33,12 +33,14 @@ public class SQLiteWriter : IWriter
     private Dictionary<string, ISQLiteHandler> m_Handlers = new ()
     {
         { "Mesh", new MeshHandler() },
-        { "Texture2D", new Texture2DHandler() },
+        { "Texture2D", new Texture2DHandler(false) },
+        { "Cubemap", new Texture2DHandler(true) },
         { "Shader", new ShaderHandler() },
         { "AudioClip", new AudioClipHandler() },
         { "AnimationClip", new AnimationClipHandler() },
         { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
+        { "VideoClip", new VideoClipHandler() },
     };
 
     private SQLiteConnection m_Database;

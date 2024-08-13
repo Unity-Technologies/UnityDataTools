@@ -8,6 +8,7 @@ public class Texture2D
     public int StreamDataSize { get; init; }
     public int Width { get; init; }
     public int Height { get; init; }
+    public int ImageCount { get; init; }
     public int Format { get; init; }
     public int MipCount { get; init; }
     public bool RwEnabled { get; init; }
@@ -21,6 +22,7 @@ public class Texture2D
             Name = reader["m_Name"].GetValue<string>(),
             Width = reader["m_Width"].GetValue<int>(),
             Height = reader["m_Height"].GetValue<int>(),
+            ImageCount = reader["m_ImageCount"].GetValue<int>(),
             Format = reader["m_TextureFormat"].GetValue<int>(),
             RwEnabled = reader["m_IsReadable"].GetValue<int>() != 0,
             MipCount = reader["m_MipCount"].GetValue<int>(),
