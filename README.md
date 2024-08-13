@@ -89,6 +89,16 @@ It is also possible to build the projects from the CLI using this command:
 
 `dotnet build -c Release`
 
+### How to build on osx-arm64 (such as M1)
+
+The project depends on the `System.Data.SQLite` package which is not yet supported on osx-arm64. To build and run tests 
+on osx-arm64 you need to use the osx-x64 architecture instead. To do so: 
+1. Build Unity on your target platform:
+    `./jam MacEditor` (the target MacEditor builds for the osx-x64 platform)
+2. Copy UnityFIleSystemApi.dylib to the `UnityDataTools/UnityFileSystem` folder
+3. To verify the setup in a terminal, run `dotnet test -r osx-x64` in the `UnityDataTools/UnityFileSystem.Tests` folder
+4. Configure your IDE test runner to use target architecture x64
+
 ## Disclaimer
 
 This project is provided on an "as-is" basis and is not officially supported by Unity. It is an
