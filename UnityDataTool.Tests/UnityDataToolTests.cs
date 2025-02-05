@@ -1,5 +1,5 @@
 using System;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -269,7 +269,7 @@ Resources/unity_default_resources
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();
 
         using (var cmd = db.CreateCommand())
@@ -294,7 +294,7 @@ Resources/unity_default_resources
 
     private void ValidateDatabase(string databasePath, bool withRefs)
     {
-        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();
 
         using (var cmd = db.CreateCommand())
@@ -371,7 +371,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-p", "*." }));
 
-        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
         db.Open();
         using var cmd = db.CreateCommand();
 

@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;

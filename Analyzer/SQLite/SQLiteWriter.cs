@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
+using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Text.RegularExpressions;
-using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
@@ -40,15 +39,15 @@ public class SQLiteWriter : IWriter
         { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
     };
-
-    private SQLiteConnection m_Database;
-    private SQLiteCommand m_AddReferenceCommand;
-    private SQLiteCommand m_AddAssetBundleCommand;
-    private SQLiteCommand m_AddSerializedFileCommand;
-    private SQLiteCommand m_AddObjectCommand;
-    private SQLiteCommand m_AddTypeCommand;
-    private SQLiteCommand m_InsertDepCommand;
-
+    
+    private SqliteConnection m_Database;
+    private SqliteCommand m_AddReferenceCommand = new SqliteCommand();
+    private SqliteCommand m_AddAssetBundleCommand = new SqliteCommand();
+    private SqliteCommand m_AddSerializedFileCommand = new SqliteCommand();
+    private SqliteCommand m_AddObjectCommand = new SqliteCommand();
+    private SqliteCommand m_AddTypeCommand = new SqliteCommand();
+    private SqliteCommand m_InsertDepCommand = new SqliteCommand();
+    private SqliteTransaction m_CurrentTransaction = null;
     public SQLiteWriter(string databaseName, bool skipReferences)
     {
         m_DatabaseName = databaseName;
@@ -61,11 +60,19 @@ public class SQLiteWriter : IWriter
         {
             throw new InvalidOperationException("SQLiteWriter.Begin called twice");
         }
-        
-        m_Database = new SQLiteConnection($"Data Source={m_DatabaseName};Version=3;New=True;Foreign Keys=False;");
-        
-        SQLiteConnection.CreateFile(m_DatabaseName);
-        m_Database.Open();
+        SqliteConnectionStringBuilder builder = new();
+        builder.DataSource = m_DatabaseName;
+        builder.Mode = SqliteOpenMode.ReadWriteCreate;
+        m_Database = new SqliteConnection(builder.ConnectionString);
+        File.WriteAllBytes(m_DatabaseName, Array.Empty<byte>());
+        try
+        {
+            m_Database.Open();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error creating database: {e.Message}");
+        }
 
         using var command = m_Database.CreateCommand();
         command.CommandText = Properties.Resources.Init;
@@ -73,7 +80,11 @@ public class SQLiteWriter : IWriter
 
         foreach (var handler in m_Handlers.Values)
         {
+            Console.WriteLine($"Init handler: {handler.GetType().Name}");
+            Console.WriteLine($"Connection state before init: {m_Database.State}");
             handler.Init(m_Database);
+            Console.WriteLine($"Connection state after init: {m_Database.State}");
+            
         }
         
         CreateSQLiteCommands();
@@ -100,43 +111,43 @@ public class SQLiteWriter : IWriter
     {
         m_AddAssetBundleCommand = m_Database.CreateCommand();
         m_AddAssetBundleCommand.CommandText = "INSERT INTO asset_bundles (id, name, file_size) VALUES (@id, @name, @file_size)";
-        m_AddAssetBundleCommand.Parameters.Add("@id", DbType.Int32);
-        m_AddAssetBundleCommand.Parameters.Add("@name", DbType.String);
-        m_AddAssetBundleCommand.Parameters.Add("@file_size", DbType.Int64);
+        m_AddAssetBundleCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_AddAssetBundleCommand.Parameters.Add("@name", SqliteType.Text);
+        m_AddAssetBundleCommand.Parameters.Add("@file_size", SqliteType.Integer);
 
         m_AddSerializedFileCommand = m_Database.CreateCommand();
         m_AddSerializedFileCommand.CommandText = "INSERT INTO serialized_files (id, asset_bundle, name) VALUES (@id, @asset_bundle, @name)";
-        m_AddSerializedFileCommand.Parameters.Add("@id", DbType.Int32);
-        m_AddSerializedFileCommand.Parameters.Add("@asset_bundle", DbType.Int32);
-        m_AddSerializedFileCommand.Parameters.Add("@name", DbType.String);
+        m_AddSerializedFileCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_AddSerializedFileCommand.Parameters.Add("@asset_bundle", SqliteType.Integer);
+        m_AddSerializedFileCommand.Parameters.Add("@name", SqliteType.Text);
 
         m_AddReferenceCommand = m_Database.CreateCommand();
         m_AddReferenceCommand.CommandText = "INSERT INTO refs (object, referenced_object, property_path, property_type) VALUES (@object, @referenced_object, @property_path, @property_type)";
-        m_AddReferenceCommand.Parameters.Add("@object", DbType.Int64);
-        m_AddReferenceCommand.Parameters.Add("@referenced_object", DbType.Int64);
-        m_AddReferenceCommand.Parameters.Add("@property_path", DbType.String);
-        m_AddReferenceCommand.Parameters.Add("@property_type", DbType.String);
+        m_AddReferenceCommand.Parameters.Add("@object", SqliteType.Integer);
+        m_AddReferenceCommand.Parameters.Add("@referenced_object", SqliteType.Integer);
+        m_AddReferenceCommand.Parameters.Add("@property_path", SqliteType.Text);
+        m_AddReferenceCommand.Parameters.Add("@property_type", SqliteType.Text);
         
         m_AddObjectCommand = m_Database.CreateCommand();
         m_AddObjectCommand.CommandText = "INSERT INTO objects (id, object_id, serialized_file, type, name, game_object, size, crc32) VALUES (@id, @object_id, @serialized_file, @type, @name, @game_object, @size, @crc32)";
-        m_AddObjectCommand.Parameters.Add("@id", DbType.Int64);
-        m_AddObjectCommand.Parameters.Add("@object_id", DbType.Int64);
-        m_AddObjectCommand.Parameters.Add("@serialized_file", DbType.Int32);
-        m_AddObjectCommand.Parameters.Add("@type", DbType.Int32);
-        m_AddObjectCommand.Parameters.Add("@name", DbType.String);
-        m_AddObjectCommand.Parameters.Add("@game_object", DbType.Int64);
-        m_AddObjectCommand.Parameters.Add("@size", DbType.Int64);
-        m_AddObjectCommand.Parameters.Add("@crc32", DbType.UInt32);
+        m_AddObjectCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_AddObjectCommand.Parameters.Add("@object_id", SqliteType.Integer);
+        m_AddObjectCommand.Parameters.Add("@serialized_file", SqliteType.Integer);
+        m_AddObjectCommand.Parameters.Add("@type", SqliteType.Integer);
+        m_AddObjectCommand.Parameters.Add("@name", SqliteType.Text);
+        m_AddObjectCommand.Parameters.Add("@game_object", SqliteType.Integer);
+        m_AddObjectCommand.Parameters.Add("@size", SqliteType.Integer);
+        m_AddObjectCommand.Parameters.Add("@crc32", SqliteType.Integer);
 
         m_AddTypeCommand = m_Database.CreateCommand();
         m_AddTypeCommand.CommandText = "INSERT INTO types (id, name) VALUES (@id, @name)";
-        m_AddTypeCommand.Parameters.Add("@id", DbType.Int32);
-        m_AddTypeCommand.Parameters.Add("@name", DbType.String);
+        m_AddTypeCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_AddTypeCommand.Parameters.Add("@name", SqliteType.Text);
 
         m_InsertDepCommand = m_Database.CreateCommand();
         m_InsertDepCommand.CommandText = "INSERT INTO asset_dependencies(object, dependency) VALUES(@object, @dependency)";
-        m_InsertDepCommand.Parameters.Add("@object", DbType.Int64);
-        m_InsertDepCommand.Parameters.Add("@dependency", DbType.Int64);
+        m_InsertDepCommand.Parameters.Add("@object", SqliteType.Integer);
+        m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
     }
 
     public void BeginAssetBundle(string name, long size)
@@ -212,11 +223,13 @@ public class SQLiteWriter : IWriter
         };
 
         using var transaction = m_Database.BeginTransaction();
-        
+        m_CurrentTransaction = transaction;
+        ctx.Transaction = transaction;
         try
         {
+            m_AddSerializedFileCommand.Transaction = transaction;
             m_AddSerializedFileCommand.Parameters["@id"].Value = serializedFileId;
-            m_AddSerializedFileCommand.Parameters["@asset_bundle"].Value = m_CurrentAssetBundleId == -1 ? null : m_CurrentAssetBundleId;
+            m_AddSerializedFileCommand.Parameters["@asset_bundle"].Value = m_CurrentAssetBundleId == -1 ? "" : m_CurrentAssetBundleId;
             m_AddSerializedFileCommand.Parameters["@name"].Value = relativePath;
             m_AddSerializedFileCommand.ExecuteNonQuery();
 
@@ -231,13 +244,14 @@ public class SQLiteWriter : IWriter
             foreach (var obj in sf.Objects)
             {
                 var currentObjectId = m_ObjectIdProvider.GetId((serializedFileId, obj.Id));
-
+                // Console.WriteLine($"\nProcessing {currentObjectId}");
                 var root = sf.GetTypeTreeRoot(obj.Id);
                 var offset = obj.Offset;
                 uint crc32 = 0;
 
                 if (!m_TypeSet.Contains(obj.TypeId))
                 {
+                    m_AddTypeCommand.Transaction = transaction;
                     m_AddTypeCommand.Parameters["@id"].Value = obj.TypeId;
                     m_AddTypeCommand.Parameters["@name"].Value = root.Type;
                     m_AddTypeCommand.ExecuteNonQuery();
@@ -247,7 +261,7 @@ public class SQLiteWriter : IWriter
 
                 var randomAccessReader = new RandomAccessReader(sf, root, reader, offset);
 
-                string name = null;
+                string name = string.Empty;
                 long streamDataSize = 0;
 
                 if (m_Handlers.TryGetValue(root.Type, out var handler))
@@ -259,22 +273,30 @@ public class SQLiteWriter : IWriter
                 {
                     name = randomAccessReader["m_Name"].GetValue<string>();
                 }
-
+                
                 if (randomAccessReader.HasChild("m_GameObject"))
                 {
                     var pptr = randomAccessReader["m_GameObject"];
                     var fileId = m_LocalToDbFileId[pptr["m_FileID"].GetValue<int>()];
-                    m_AddObjectCommand.Parameters["@game_object"].Value =
-                        m_ObjectIdProvider.GetId((fileId, pptr["m_PathID"].GetValue<long>()));
+                    var gameObjectID = m_ObjectIdProvider.GetId((fileId, pptr["m_PathID"].GetValue<long>()));
+                    m_AddObjectCommand.Parameters["@game_object"].Value = gameObjectID;
                 }
                 else
                 {
-                    m_AddObjectCommand.Parameters["@game_object"].Value = null;
+                    m_AddObjectCommand.Parameters["@game_object"].Value = "";
                 }
 
                 if (!m_SkipReferences)
                 {
-                    crc32 = pptrReader.Process(currentObjectId, offset, root);
+                    try
+                    {
+                        crc32 = pptrReader.Process(currentObjectId, offset, root);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine(e);
+                        throw e;
+                    }
                 }
 
                 m_AddObjectCommand.Parameters["@id"].Value = currentObjectId;
@@ -284,6 +306,7 @@ public class SQLiteWriter : IWriter
                 m_AddObjectCommand.Parameters["@name"].Value = name;
                 m_AddObjectCommand.Parameters["@size"].Value = obj.Size + streamDataSize;
                 m_AddObjectCommand.Parameters["@crc32"].Value = crc32;
+                m_AddObjectCommand.Transaction = transaction;
                 m_AddObjectCommand.ExecuteNonQuery();
 
                 // If this is a Scene AssetBundle, add the object as a depencency of the
@@ -292,14 +315,16 @@ public class SQLiteWriter : IWriter
                 {
                     m_InsertDepCommand.Parameters["@object"].Value = ctx.SceneId;
                     m_InsertDepCommand.Parameters["@dependency"].Value = currentObjectId;
+                    m_InsertDepCommand.Transaction = transaction;
                     m_InsertDepCommand.ExecuteNonQuery();
                 }
             }
 
             transaction.Commit();
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            Console.Error.WriteLine($"Error processing {serializedFileId} error: {e.Message}");
             transaction.Rollback();
             throw;
         }
@@ -308,6 +333,7 @@ public class SQLiteWriter : IWriter
     private int AddReference(long objectId, int fileId, long pathId, string propertyPath, string propertyType)
     {
         var referencedObjectId = m_ObjectIdProvider.GetId((m_LocalToDbFileId[fileId], pathId));
+        m_AddReferenceCommand.Transaction = m_CurrentTransaction;
         m_AddReferenceCommand.Parameters["@object"].Value = objectId;
         m_AddReferenceCommand.Parameters["@referenced_object"].Value = referencedObjectId;
         m_AddReferenceCommand.Parameters["@property_path"].Value = propertyPath;
