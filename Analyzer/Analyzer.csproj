@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SQLite"/>
+    <PackageReference Include="Microsoft.Data.SQLite" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
