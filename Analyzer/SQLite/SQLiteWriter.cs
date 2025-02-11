@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -295,7 +293,7 @@ public class SQLiteWriter : IWriter
                     catch (Exception e)
                     {
                         Console.Error.WriteLine(e);
-                        throw e;
+                        throw;
                     }
                 }
 
