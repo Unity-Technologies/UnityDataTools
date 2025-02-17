@@ -82,22 +82,12 @@ The repository contains the following items:
 
 ## How to build
 
-The projects in this solution require the .NET 6.0 SDK. You can use your favorite IDE to build them.
+The projects in this solution require the .NET 9.0 SDK. You can use your favorite IDE to build them.
 They were tested in Visual Studio on Windows and Rider on Mac.
 
 It is also possible to build the projects from the CLI using this command:
 
 `dotnet build -c Release`
-
-### How to build on osx-arm64 (such as M1)
-
-The project depends on the `System.Data.SQLite` package which is not yet supported on osx-arm64. To build and run tests 
-on osx-arm64 you need to use the osx-x64 architecture instead. To do so: 
-1. Build Unity on your target platform:
-    `./jam MacEditor` (the target MacEditor builds for the osx-x64 platform)
-2. Copy UnityFIleSystemApi.dylib to the `UnityDataTools/UnityFileSystem` folder
-3. To verify the setup in a terminal, run `dotnet test -r osx-x64` in the `UnityDataTools/UnityFileSystem.Tests` folder
-4. Configure your IDE test runner to use target architecture x64
 
 ## Disclaimer
 
