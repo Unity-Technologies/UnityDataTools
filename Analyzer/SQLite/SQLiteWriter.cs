@@ -180,6 +180,9 @@ public class SQLiteWriter : IWriter
         int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLower());
         int sceneId = -1;
 
+        using var transaction = m_Database.BeginTransaction();
+        m_CurrentTransaction = transaction;
+
         var match = m_RegexSceneFile.Match(relativePath);
 
         if (match.Success)
@@ -195,6 +198,7 @@ public class SQLiteWriter : IWriter
             // dirty trick to avoid inserting the scene object a second time.
             if (relativePath.EndsWith(".sharedAssets"))
             {
+                m_AddObjectCommand.Transaction = transaction;
                 m_AddObjectCommand.Parameters["@id"].Value = sceneId;
                 m_AddObjectCommand.Parameters["@object_id"].Value = 0;
                 m_AddObjectCommand.Parameters["@serialized_file"].Value = serializedFileId;
@@ -218,10 +222,9 @@ public class SQLiteWriter : IWriter
             ObjectIdProvider = m_ObjectIdProvider,
             SerializedFileIdProvider = m_SerializedFileIdProvider,
             LocalToDbFileId = m_LocalToDbFileId,
+            Transaction = transaction,
         };
 
-        using var transaction = m_Database.BeginTransaction();
-        m_CurrentTransaction = transaction;
         ctx.Transaction = transaction;
         try
         {
