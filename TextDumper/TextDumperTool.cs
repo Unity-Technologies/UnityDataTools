@@ -262,7 +262,7 @@ public class TextDumperTool
         }
         else
         {
-            throw new Exception("Unsupported ManagedReferenceRegistry version");
+            throw new Exception($"Unsupported ManagedReferenceRegistry version {version}");
         }
     }
 

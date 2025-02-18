@@ -290,7 +290,7 @@ public class PPtrAndCrcProcessor : IDisposable
         }
         else
         {
-            throw new Exception("Unsupported ManagedReferenceRegistry version");
+            throw new Exception($"Unsupported ManagedReferenceRegistry version {version}");
         }
     }
 

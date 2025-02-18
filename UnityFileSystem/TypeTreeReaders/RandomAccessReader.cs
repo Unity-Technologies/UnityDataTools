@@ -117,7 +117,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                 }
                 else
                 {
-                    throw new Exception("Unsupported ManagedReferenceRegistry version");
+                    throw new Exception($"Unsupported ManagedReferenceRegistry version {version}");
                 }
             }
             else if (isReferencedObject)
