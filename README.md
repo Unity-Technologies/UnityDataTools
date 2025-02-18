@@ -78,16 +78,13 @@ The repository contains the following items:
 
 ## How to build
 
-The projects in this solution require the [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0). 
-You can use your favorite IDE to build them.
-They were tested in Visual Studio on Windows and Rider on Mac.
+1) The projects in this solution require the [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
+2) Copy `UnityFileSystemApi` library from UnityEditor installation 
+`{UnityEditor}/Data/Tools/` to `UnityDataTool/UnityFileSystem/` before building.
+3) Build using `dotnet build -c Release`
 
-It is also possible to build the projects from the CLI using this command:
-
-`dotnet build -c Release`
-
-(Optional) Copying current editor `UnityFileSystemApi`(.so/.dll/.dylib) library from 
-`{UnityEditor Install Folder}/Data/Tools/` to `UnityDataTool/UnityFileSystem/` before building. 
+Note: You can use your favorite IDE to build solution.
+Tested Visual Studio and Rider on Windows and Rider on Mac.
 
 ## Disclaimer
 This project is provided on an "as-is" basis and is not officially supported by Unity. It is an
