@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.IO;
 
 namespace UnityDataTools.ReferenceFinder;
@@ -19,8 +19,8 @@ class ReferenceTreeNode
 
 public class ReferenceFinderTool
 {
-    SQLiteCommand m_GetRefsCommand;
-    SQLiteCommand m_GetObjectCommand;
+    SqliteCommand m_GetRefsCommand;
+    SqliteCommand m_GetObjectCommand;
     List<ReferenceTreeNode> m_Roots = new List<ReferenceTreeNode>();
     HashSet<(long, string)> m_ProcessedObjects = new HashSet<(long, string)>();
 
@@ -29,11 +29,11 @@ public class ReferenceFinderTool
     public int FindReferences(string objectName, string objectType, string databasePath, string outputFile, bool findAll)
     {
         var objectIds = new List<long>();
-        SQLiteConnection db;
+        SqliteConnection db;
 
         try
         {
-            db = new SQLiteConnection($"Data Source={databasePath};Version=3;Foreign Keys=False;");
+            db = new SqliteConnection($"Data Source={databasePath};Version=3;Foreign Keys=False;");
             db.Open();
         }
         catch (Exception e)
@@ -51,7 +51,7 @@ public class ReferenceFinderTool
             return 1;
         }
 
-        SQLiteCommand getObjectIds;
+        SqliteCommand getObjectIds;
 
         if (objectType != null && objectType != "")
         {
@@ -87,11 +87,11 @@ public class ReferenceFinderTool
     public int FindReferences(long objectId, string databasePath, string outputFile, bool findAll)
     {
         var objectIds = new List<long>();
-        SQLiteConnection db;
+        SqliteConnection db;
 
         try
         {
-            db = new SQLiteConnection($"Data Source={databasePath};Version=3;Foreign Keys=False;");
+            db = new SqliteConnection($"Data Source={databasePath};Version=3;Foreign Keys=False;");
             db.Open();
         }
         catch (Exception e)
@@ -105,13 +105,13 @@ public class ReferenceFinderTool
         return FindReferences(db, outputFile, objectIds, findAll);
     }
 
-    int FindReferences(SQLiteConnection db, string outputFile, IList<long> objectIds, bool findAll)
+    int FindReferences(SqliteConnection db, string outputFile, IList<long> objectIds, bool findAll)
     {
         m_Writer = new StreamWriter(outputFile);
 
         m_GetRefsCommand = db.CreateCommand();
         m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assets a WHERE a.object = r.object) FROM refs r WHERE referenced_object = @id";
-        m_GetRefsCommand.Parameters.Add("@id", DbType.Int64);
+        m_GetRefsCommand.Parameters.Add("@id", SqliteType.Integer);
 
         m_GetObjectCommand = db.CreateCommand();
         m_GetObjectCommand.CommandText =
@@ -129,7 +129,7 @@ public class ReferenceFinderTool
 	            '') script
             FROM object_view o
             WHERE o.id =  @id";
-        m_GetObjectCommand.Parameters.Add("@id", DbType.Int64);
+        m_GetObjectCommand.Parameters.Add("@id", SqliteType.Integer);
 
         for (int i = 0; i < objectIds.Count; ++i)
         {

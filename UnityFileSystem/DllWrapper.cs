@@ -4,7 +4,7 @@ using System.Text;
 
 namespace UnityDataTools.FileSystem;
 
-internal class UnityArchiveHandle : SafeHandle
+public class UnityArchiveHandle : SafeHandle
 {
     public UnityArchiveHandle() : base(IntPtr.Zero, true)
     {
@@ -18,7 +18,7 @@ internal class UnityArchiveHandle : SafeHandle
     }
 }
 
-internal class UnityFileHandle : SafeHandle
+public class UnityFileHandle : SafeHandle
 {
     public UnityFileHandle() : base(IntPtr.Zero, true)
     {
@@ -32,7 +32,7 @@ internal class UnityFileHandle : SafeHandle
     }
 }
 
-internal class SerializedFileHandle : SafeHandle
+public class SerializedFileHandle : SafeHandle
 {
     public SerializedFileHandle() : base(IntPtr.Zero, true)
     {
@@ -46,7 +46,7 @@ internal class SerializedFileHandle : SafeHandle
     }
 }
 
-internal class TypeTreeHandle : SafeHandle
+public class TypeTreeHandle : SafeHandle
 {
     public TypeTreeHandle() : base(IntPtr.Zero, true)
     {
@@ -62,7 +62,7 @@ internal class TypeTreeHandle : SafeHandle
     internal IntPtr Handle => handle;
 }
 
-internal enum ReturnCode
+public enum ReturnCode
 {
     Success,
     AlreadyInitialized,
@@ -138,7 +138,7 @@ public enum TypeTreeMetaFlags
     AnyChildUsesAlignBytes  = 1 << 15,
 }
 
-internal static class DllWrapper
+public static class DllWrapper
 {
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,

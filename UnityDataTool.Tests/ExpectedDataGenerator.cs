@@ -1,4 +1,4 @@
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.IO;
 using UnityDataTools.FileSystem;
 using UnityDataTools.TestCommon;
@@ -26,7 +26,7 @@ public static class ExpectedDataGenerator
         
         Program.Main(new string[] { "analyze", Path.Combine(context.UnityDataFolder), "-r" });
         
-        using var db = new SQLiteConnection($"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "database.db")};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection($"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "database.db")};Version=3;New=True;Foreign Keys=False;");
         db.Open();
 
         using (var cmd = db.CreateCommand())

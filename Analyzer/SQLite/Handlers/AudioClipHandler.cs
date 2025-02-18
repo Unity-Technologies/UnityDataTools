@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using Microsoft.Data.Sqlite;
 using System.Data;
-using System.Data.SQLite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -9,29 +8,28 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 public class AudioClipHandler : ISQLiteHandler
 {
-    SQLiteCommand m_InsertCommand;
+    private SqliteCommand m_InsertCommand;
 
-    public void Init(SQLiteConnection db)
+    public void Init(SqliteConnection db)
     {
-        using var command = new SQLiteCommand(db);
-
+        using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.AudioClip;
         command.ExecuteNonQuery();
 
-        m_InsertCommand = new SQLiteCommand(db);
+        m_InsertCommand = db.CreateCommand();
         m_InsertCommand.CommandText = "INSERT INTO audio_clips(id, bits_per_sample, frequency, channels, load_type, format) VALUES(@id, @bits_per_sample, @frequency, @channels, @load_type, @format)";
-        m_InsertCommand.Parameters.Add("@id", DbType.Int64);
-        m_InsertCommand.Parameters.Add("@bits_per_sample", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@frequency", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@channels", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@load_type", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@format", DbType.Int32);
+        m_InsertCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@bits_per_sample", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@frequency", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@channels", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@load_type", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@format", SqliteType.Integer);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var audioClip = AudioClip.Read(reader);
-        
+        m_InsertCommand.Transaction = ctx.Transaction;
         m_InsertCommand.Parameters["@id"].Value = objectId;
         m_InsertCommand.Parameters["@bits_per_sample"].Value = audioClip.BitsPerSample;
         m_InsertCommand.Parameters["@frequency"].Value = audioClip.Frequency;
@@ -45,12 +43,12 @@ public class AudioClipHandler : ISQLiteHandler
         name = audioClip.Name;
     }
 
-    public void Finalize(SQLiteConnection db)
+    public void Finalize(SqliteConnection db)
     {
     }
 
     void IDisposable.Dispose()
     {
-        m_InsertCommand.Dispose();
+        m_InsertCommand?.Dispose();
     }
 }

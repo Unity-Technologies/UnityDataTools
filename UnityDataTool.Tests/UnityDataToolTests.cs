@@ -1,5 +1,5 @@
 using System;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -37,6 +37,8 @@ public class UnityDataToolTests : AssetBundleTestFixture
     [TearDown]
     public void Teardown()
     {
+        SqliteConnection.ClearAllPools();
+
         var testDir = new DirectoryInfo(m_TestOutputFolder);
         testDir.EnumerateFiles()
             .ToList().ForEach(f => f.Delete());
@@ -269,7 +271,13 @@ Resources/unity_default_resources
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Pooling = false,
+            ForeignKeys = false,
+        }.ConnectionString);
         db.Open();
 
         using (var cmd = db.CreateCommand())
@@ -294,7 +302,14 @@ Resources/unity_default_resources
 
     private void ValidateDatabase(string databasePath, bool withRefs)
     {
-        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Pooling = false,
+            ForeignKeys = false,
+        }.ConnectionString);
+
         db.Open();
 
         using (var cmd = db.CreateCommand())
@@ -357,6 +372,8 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     [TearDown]
     public void Teardown()
     {
+        SqliteConnection.ClearAllPools();
+
         foreach (var file in new DirectoryInfo(m_TestOutputFolder).EnumerateFiles())
         {
             file.Delete();
@@ -370,9 +387,15 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-p", "*." }));
-
-        using var db = new SQLiteConnection($"Data Source={databasePath};Version=3;New=True;Foreign Keys=False;");
+        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Pooling = false,
+            ForeignKeys = false,
+        }.ConnectionString);
         db.Open();
+        
         using var cmd = db.CreateCommand();
 
         cmd.CommandText =

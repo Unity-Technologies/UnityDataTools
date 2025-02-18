@@ -30,6 +30,10 @@ public class AnalyzerTool
         int lastLength = 0;
         foreach (var file in files)
         {
+            // Automatically ignore these annoying OS X style files meta files.
+            if (Path.GetFileName(file) == ".DS_Store")
+                continue;
+
             try
             {
                 UnityArchive archive = null;
@@ -44,9 +48,11 @@ public class AnalyzerTool
                     
                     var relativePath = Path.GetRelativePath(path, file);
 
-                    Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
-
                     writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
+
+                    var message = $"Processing {i * 100 / files.Length}% ({i}/{files.Length}) {file}";
+                    Console.Write($"\rProcessing {i * 100 / files.Length}% ({i}/{files.Length}) {file}");
+                    lastLength = message.Length;
                 }
 
                 if (archive != null)
@@ -71,23 +77,29 @@ public class AnalyzerTool
                                 }
                                 catch (Exception e)
                                 {
-                                    Console.Error.WriteLine();
-                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
+                                    Console.Error.WriteLine($"\rError processing {node.Path} in archive {file}{new string(' ', Math.Max(0, lastLength - message.Length))}");
+                                    Console.Error.WriteLine(e);
+                                    Console.WriteLine();
                                 }
                             }
                         }
                     }
                     finally
                     {
+                        Console.Write($"\r{new string(' ', lastLength)}");
                         writer.EndAssetBundle();
                         archive.Dispose();
                     }
                 }
             }
-            catch (Exception e)
+            catch(NotSupportedException) {
+                Console.Error.WriteLine();
+                //Console.Error.WriteLine($"File not supported: {file}"); // This is commented out because another codepath will output "failed to load"
+            }
+            catch (Exception e) 
             {
                 Console.Error.WriteLine();
-                Console.Error.WriteLine($"Error processing file {file}!");
+                Console.Error.WriteLine($"Error processing file: {file}");
                 Console.Write($"{e.GetType()}: ");
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);

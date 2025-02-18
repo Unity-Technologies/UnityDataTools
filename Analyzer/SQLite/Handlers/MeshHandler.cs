@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Text;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
@@ -10,33 +8,32 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 public class MeshHandler : ISQLiteHandler
 {
-    SQLiteCommand m_InsertCommand;
+    SqliteCommand m_InsertCommand;
 
-    public void Init(SQLiteConnection db)
+    public void Init(SqliteConnection db)
     {
-        using var command = new SQLiteCommand(db);
-
+        using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.Mesh;
         command.ExecuteNonQuery();
 
-        m_InsertCommand = new SQLiteCommand(db);
+        m_InsertCommand = db.CreateCommand();
         m_InsertCommand.CommandText = "INSERT INTO meshes(id, sub_meshes, blend_shapes, bones, indices, vertices, compression, rw_enabled, vertex_size, channels) VALUES(@id, @sub_meshes, @blend_shapes, @bones, @indices, @vertices, @compression, @rw_enabled, @vertex_size, @channels)";
-        m_InsertCommand.Parameters.Add("@id", DbType.Int64);
-        m_InsertCommand.Parameters.Add("@sub_meshes", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@blend_shapes", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@bones", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@indices", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@vertices", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@compression", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@rw_enabled", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@vertex_size", DbType.Int32);
-        m_InsertCommand.Parameters.Add("@channels", DbType.String);
+        m_InsertCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@sub_meshes", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@blend_shapes", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@bones", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@indices", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@vertices", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@compression", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@rw_enabled", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@vertex_size", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@channels", SqliteType.Text);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var mesh = Mesh.Read(reader);
-        
+        m_InsertCommand.Transaction = ctx.Transaction;
         m_InsertCommand.Parameters["@id"].Value = objectId;
         m_InsertCommand.Parameters["@indices"].Value = mesh.Indices;
         m_InsertCommand.Parameters["@vertices"].Value = mesh.Vertices;
@@ -58,7 +55,7 @@ public class MeshHandler : ISQLiteHandler
             channels.AppendLine("]");
         }
         
-        m_InsertCommand.Parameters["@channels"].Value = channels;
+        m_InsertCommand.Parameters["@channels"].Value = channels.ToString();
 
         m_InsertCommand.ExecuteNonQuery();
 
@@ -66,12 +63,12 @@ public class MeshHandler : ISQLiteHandler
         name = mesh.Name;
     }
 
-    public void Finalize(SQLiteConnection db)
+    public void Finalize(SqliteConnection db)
     {
     }
 
     void IDisposable.Dispose()
     {
-        m_InsertCommand.Dispose();
+        m_InsertCommand?.Dispose();
     }
 }

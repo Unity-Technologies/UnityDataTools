@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Linq;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
