@@ -78,10 +78,10 @@ public class SQLiteWriter : IWriter
 
         foreach (var handler in m_Handlers.Values)
         {
-            Console.WriteLine($"Init handler: {handler.GetType().Name}");
-            Console.WriteLine($"Connection state before init: {m_Database.State}");
+            // Console.WriteLine($"Init handler: {handler.GetType().Name}");
+            // Console.WriteLine($"Connection state before init: {m_Database.State}");
             handler.Init(m_Database);
-            Console.WriteLine($"Connection state after init: {m_Database.State}");
+            // Console.WriteLine($"Connection state after init: {m_Database.State}");
             
         }
         
@@ -289,15 +289,7 @@ public class SQLiteWriter : IWriter
 
                 if (!m_SkipReferences)
                 {
-                    try
-                    {
-                        crc32 = pptrReader.Process(currentObjectId, offset, root);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.Error.WriteLine(e);
-                        throw;
-                    }
+                    crc32 = pptrReader.Process(currentObjectId, offset, root);
                 }
 
                 m_AddObjectCommand.Parameters["@id"].Value = currentObjectId;
@@ -325,7 +317,6 @@ public class SQLiteWriter : IWriter
         }
         catch (Exception e)
         {
-            Console.Error.WriteLine($"Error processing {serializedFileId} error: {e.Message}");
             transaction.Rollback();
             throw;
         }
