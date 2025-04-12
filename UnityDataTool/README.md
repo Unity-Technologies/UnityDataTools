@@ -1,22 +1,29 @@
 # UnityDataTool
 
 The UnityDataTool is a command line tool providing a set of commands related to Unity data files. It
-is the main project of this repository and produces an executable file that can be found in
-UnityDataTool/bin/[target specific folders] after a build.
+is the main purpose of this repository.
 
-> Note that on Mac, you need to publish the UnityDataTool project to get an executable file. You
-can do it from your IDE or execute this command in the UnityDataTool folder (not from the root
-folder):
->
-> `dotnet publish -c Release -r osx-x64 -p:PublishSingleFile=true -p:UseAppHost=true`
->
-> Also on Mac, if you get a warning because "UnityFileSystemApi.dylib" cannot be opened because the
-developer cannot be verified, click "Cancel" and then open the System Preferences -> Security &
-Privacy window. You should be able to allow the file from there.
+## Running UnityDataTool
+
+First you need to build, as described [here](../README.md#how-to-build).
+
+Once built, the UnityDataTools executable can be found inside `UnityDataTool/bin/[target specific folders]`.
 
 The tool is invoked from the command line like this:
 
 `UnityDataTool [command] [command options]`
+
+### Instructions for running on Mac
+
+Note that on Mac, you need to publish the UnityDataTool project to get an executable file. You
+can do it from your IDE or execute this command in the UnityDataTool folder (not from the root
+folder):
+
+`dotnet publish -c Release -r osx-x64 -p:PublishSingleFile=true -p:UseAppHost=true`
+
+Also on Mac, you may be a warning that "UnityFileSystemApi.dylib" cannot be opened because the
+developer cannot be verified.  In that case click "Cancel", then open the System Preferences -> Security &
+Privacy window. You should be able to allow the file from there.
 
 # Commands
 
@@ -39,6 +46,31 @@ Example: `UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p *.ab
 
 **Refer to this [documentation](../Analyzer/README.md#How-to-use-the-database) for more information
 about the output database structure.**
+
+## dump
+
+This command dumps the contents of a SerializedFile into a file of the selected format. It currently
+only supports the 'text' format, which is similar to the binary2text output format.
+
+The command takes the path of the file to dump as argument. It also provides the following options:
+* -f, --output-format \<format\>: output format, default is 'text'.
+* -s, --skip-large-arrays: the contents of basic data type arrays with a large number of elements
+  won't be dumped.
+
+Example: `UnityDataTool dump /path/to/file`
+
+**Refer to this [documentation](../TextDumper/README.md#How-to-interpret-the-output-files) for more
+information about the contents of the output file.**
+
+## archive
+
+The archive command offers a set of sub-commands related to Unity archives (AssetBundles and web platform .data files).
+
+**extract** This sub-command extracts the contents of an archive. This is similar to the WebExtract tool that is part of the Unity installation. 
+It takes the archive path as argument and also accepts the following option:
+* -o, --output-path \<path\>: Output directory of the extracted archive (default: archive)
+
+**list** This sub-command lists the contents of an archive. It takes the archive path as argument.
 
 ## find-refs
 
@@ -67,28 +99,3 @@ references.txt`
 
 **Refer to this [documentation](../ReferenceFinder/README.md#How-to-interpret-the-output-file) for
 more information about the contents of the output file.**
-
-## dump
-
-This command dumps the contents of a SerializedFile into a file of the selected format. It currently
-only supports the 'text' format, which is similar to the binary2text output format.
-
-The command takes the path of the file to dump as argument. It also provides the following options:
-* -f, --output-format \<format\>: output format, default is 'text'.
-* -s, --skip-large-arrays: the contents of basic data type arrays with a large number of elements
-  won't be dumped.
-
-Example: `UnityDataTool dump /path/to/file`
-
-**Refer to this [documentation](../TextDumper/README.md#How-to-interpret-the-output-files) for more
-information about the contents of the output file.**
-
-## archive
-
-The archive command offers a set of sub-commands related to Unity archives (AssetBundles and web platform .data files).
-
-**extract** This sub-command extracts the contents of an archive. It takes the archive path as
-argument and also provides the following option:
-* -o, --output-path \<path\>: Output directory of the extracted archive (default: archive)
-
-**list** This sub-command lists the contents of an archive. It takes the archive path as argument.

@@ -1,7 +1,7 @@
 # TextDumper
 
 The TextDumper is a class library that can be used to dump the content of a Unity data
-file (AssetBundle or SerializedFile) into human-readable text files.
+file (AssetBundle or SerializedFile) into human-readable yaml-style text file.
 
 ## How to use
 
@@ -26,13 +26,11 @@ The first lines of the output file looks like this:
 
 This information can be used to dereference PPtrs. A PPtr is a type used by Unity to locate and load
 objects in SerializedFiles. It has two fields:
-* m_FileID: the file identifier where the object is located.
-* m_PathID: the object identifier in the file. The file identifier is an index in the External
-  References list above (the number in parenthesis). It will be 0 if the asset is in the same
-  file.
+* m_FileID: The file identifier is an index in the External References list above (the number in parenthesis). It will be 0 if the asset is in the same file.
+* m_PathID: The object identifier in the file.  Each object in a file has a unique 64 identifier, often called a Local File Identifier (LFID).
 
 The string after the path is the SerializedFile name corresponding to the file identifier in
-parenthesis. The GUID and Type are internal data used by Unity.
+parenthesis. In the case of AssetBundles this can be the path of a file inside another AssetBundle (e.g. a path starting with "archive:".  The GUID and Type are internal data used by Unity.
 
 The rest of the file will contain an entry similar to this one for each object in the files:
 
@@ -53,6 +51,10 @@ The rest of the file will contain an entry similar to this one for each object i
 
 The first line contains the object identifier, the internal ClassID used by Unity, and the type name
 corresponding to this ClassID. Note that the object identifier is guaranteed to be unique in this
-file only. The next lines are the serialized fields of the objects. The first value is the field
+file only. 
+
+The next lines are the serialized fields of the objects. The first value is the field
 name, the second is the type and the last is the value. If there is no value, it means that it is a
 sub-object that is dumped on the next lines with a higher indentation level.
+
+Note: This tool is similar to the binary2text.exe executable that is included with Unity.  However the syntax of the output is somewhat different.
