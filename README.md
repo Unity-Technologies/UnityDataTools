@@ -1,13 +1,12 @@
 # UnityDataTools
 
 The UnityDataTool is a command line tool and showcase of the UnityFileSystemApi native dynamic library.
-The main purpose is for analysis of the content of Unity data files, for example AssetBundles,
-Player content, or ContentFiles from projects that use the entities package (Dots).
+The main purpose is for analysis of the content of Unity data files, for example AssetBundles and
+Player content.
 
-The [command line tool](./UnityDataTool/README.md) covers the functionality of the WebExtract and binary2text tools, but added a lot of
-additional functonality. 
+The [command line tool](./UnityDataTool/README.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content.  It is designed to scale for large build outputs and has been used to fine-tune big Unity-based games.
 
-The command line tool uses the UnityFileSystemApi library to access the content of Unity Archives and Serialized files, which are Unity's primary binary formats. That library can also be used directly if you are creating custom tools to expose information that is not available through UnityDataTools.
+The command line tool uses the UnityFileSystemApi library to access the content of Unity Archives and Serialized files, which are Unity's primary binary formats. This repository also serves as a reference for how this library could be used as part of incorporating functionality into your own tools.
 
 ## Repository content
 
@@ -37,9 +36,11 @@ serialized data you want to analyze.
 
 ## How to build
 
+Current we do not host builds of UnityDataTools, you will need to clone or download this repo and build it yourself.
+
 1) The projects in this solution require the [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
-2) Copy `UnityFileSystemApi` library from UnityEditor installation 
-`{UnityEditor}/Data/Tools/` to `UnityDataTool/UnityFileSystem/` before building.
+2) Copy `UnityFileSystemApi` library from your Unity Editor installation, in 
+`{UnityEditor}/Data/Tools/` to `UnityDataTool/UnityFileSystem/`.  This step is typically optional, because a previously built version of the library is included in the repo that can read the output from most Unity Versions.
 3) Build using `dotnet build -c Release`
 
 Note: Alternatively you can build with your favorite IDE.  This was tested with Visual Studio and Rider on Windows and Rider on Mac.
@@ -56,9 +57,9 @@ To better understand the files and data formats that the Unity supports in the r
 ## Origins
 
 This tool is the evolution of the [AssetBundle Analyzer](https://github.com/faelenor/asset-bundle-analyzer)
-written by [@faelenor] (https://www.github.com/faelenor).
+written by [Francis Pagé](https://www.github.com/faelenor).
 
-That project the the first to introduce the SQLite database analysis of Unity build output to address
+That project was the first to introduce the SQLite database analysis of Unity build output to address
 the difficulty of diagnosing build issues through the raw binary2text output, which is large and difficult to navigate.
 
 The AssetBundle Analyzer was quite successful, but it has several issues. It
@@ -66,8 +67,8 @@ is extremely slow as it runs WebExtract and binary2text on all the AssetBundles 
 has to parse very large text files. It can also easily fail because the syntax used by binary2text
 is not standard and can even be impossible to parse in some occasions.
 
-To address those problems [@faelenor](https://www.github.com/faelenor) established this 
-package and the UnityFileSystemApi library was created to replace the usage of WebExtract and
+To address those problems [@faelenor](https://www.github.com/faelenor) established this UnityDataTools
+repository and the UnityFileSystemApi library was created within Unity, to replace the usage of WebExtract and
 binary2text functionalities.  With the library, it becomes very easy to create a binary2text-like tool
 that can output the data in any format, as well as the fast and simpler code for generating the SQLite output.
 
