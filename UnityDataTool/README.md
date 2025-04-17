@@ -43,8 +43,7 @@ For help on a specific command use `--help` along with the command name, for exa
 This command extracts information from AssetBundles and SerializedFiles and dumps the results
 into a SQLite database. 
 
-The command will fail is the SerializedFiles were built without TypeTrees, see [this topic](../Documentation/unity-content-format.md) for more information.
-
+The command will fail if the SerializedFiles were built without TypeTrees, see [this topic](../Documentation/unity-content-format.md) for more information.
 The command takes the path of the folder containing the files to analyze as argument.
 
 It also provides the following options:

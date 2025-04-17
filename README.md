@@ -36,7 +36,7 @@ serialized data you want to analyze.
 
 ## How to build
 
-Current we do not host builds of UnityDataTools, you will need to clone or download this repo and build it yourself.
+Currently, we do not host builds of UnityDataTools, you will need to clone or download this repo and build it yourself.
 
 1) The projects in this solution require the [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 2) Copy `UnityFileSystemApi` library from your Unity Editor installation, in 
@@ -57,7 +57,7 @@ To better understand the files and data formats that the Unity supports in the r
 ## Origins
 
 This tool is the evolution of the [AssetBundle Analyzer](https://github.com/faelenor/asset-bundle-analyzer)
-written by [Francis Pagé](https://www.github.com/faelenor).
+written by [Francis PagÃ©](https://www.github.com/faelenor).
 
 That project was the first to introduce the SQLite database analysis of Unity build output to address
 the difficulty of diagnosing build issues through the raw binary2text output, which is large and difficult to navigate.
