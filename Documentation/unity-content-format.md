@@ -38,9 +38,9 @@ The SerializedFiles are named in a predictable way.  This is a very quick summar
 
 If [compression](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/BuildOptions.CompressWithLz4HC.html) is enabled, the Player build will compress all the serialized files into a single Unity Archive file, called `data.unity3d`.
 
-UnityDataTools supports Player build output, because that uses the same SerializedFiles and Archives that AssetBundles use.  But often its output is not very useful. That is because, by default, Player builds do not include TypeTrees.
-
 ### Enabling TypeTrees in the Player
+
+UnityDataTools supports Player build output, because that uses the same SerializedFiles and Archives that AssetBundles use.  But often its output is not very useful. That is because, by default, Player builds do not include TypeTrees.
 
 >[!IMPORTANT]
 >It is possible to generate TypeTrees for the Player data, starting in Unity 2021.2.
@@ -65,7 +65,8 @@ TypeTrees are important in the case of AssetBundles, to avoid rebuilding and red
 
 TypeTrees also make it possible to load an AssetBundle in the Editor, when testing game play.
 
-Tip: There is a flag available when building AssetBundles that will exclude TypeTrees, see [BuildAssetBundleOptions.DisableWriteTypeTree](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/BuildAssetBundleOptions.DisableWriteTypeTree.html).  However this should only be used with caution.
+>[!NOTE]
+>There is a flag available when building AssetBundles that will exclude TypeTrees, see [BuildAssetBundleOptions.DisableWriteTypeTree](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/BuildAssetBundleOptions.DisableWriteTypeTree.html).  This has implications for future redistribution of your content, so use this flag with caution.
 
 For Player Data the expectation is that you always rebuild all content together with each new build of the player. 
 So the Assemblies and serialized objects will all have matching types definitions.  That is why, by default, the types are not included.
@@ -76,7 +77,8 @@ not need to hard code any knowledge about what exact types and properties to exp
 and objects serialized through the SerializeReference attribute).  That also means that UnityDataTools cannot understand
 Player built content, unless the Player was built with TypeTrees enabled.
 
-Tip: The binary2text tool has an optional argument to enable dumping out the TypeTrees in a SerializedFile header.  That is a useful way to learn more about TypeTrees and to see exactly how Unity data is represented in the binary format.
+>[!TIP]
+>The `binary2text` tool supports an optional argument `-typeinfo` to enable dumping out the TypeTrees in a SerializedFile header.  That is a useful way to learn more about TypeTrees and to see exactly how Unity data is represented in the binary format.
 
 ### Platform details for using UnityDataTool with Player Data
 
@@ -87,3 +89,19 @@ On some platforms the content is packaged into platform-specific container files
 UnityDataTools directly supports opening the .data container file format used in Player builds that target Web platforms (e.g. WebGL).  Specifically the "archive list" and "archive extract" command line option works with that format.  Once extracted you can run other UnityDataTool commands on the output.
 
 Android APK files are not difficult to open and expand using freely available utilities.  For example on Windows they can be opened using 7-zip. Once the content is extracted you can run UnityDataTool commands on the output.
+
+## Mapping back to Source Assets
+
+Because Unity rearranges objects in the build into a build layout there is no 1-1 mapping between the output files and the original source assets.  Only Scene files have a pretty direct mapping into the build output.
+
+The UnityDataTool only looks at the output of the build, and has no information available about the source paths. This is expected, because the built output is optimized for speed and size, and there is no need to "leak" a lot of details about the source project in the data that gets shipped with the Player.
+
+However in cases where you want to understand what contributes to the size your build, or to confirm whether certain content is actually included, then you may want to correlate the output back to the source assets in your project.
+
+Often the source of content can be easily inferred, based on your own knowledge of your project, and the names of objects.  For example the name of a Shader should be unique, and typically has a filename that closely matches the Shader name.
+
+You can also use the [BuildReport](https://docs.unity3d.com/Documentation/ScriptReference/Build.Reporting.BuildReport.html) for Player and AssetBundle builds (excluding Addressables).  The [Build Report Inspector](https://github.com/Unity-Technologies/BuildReportInspector) is a tool to aid in analyzing that data.  
+
+For AssetBundles built by [BuildPipeline.BuildAssetBundles()](https://docs.unity3d.com/ScriptReference/BuildPipeline.BuildAssetBundles.html), there is also source information available in the .manifest files for each bundle.
+
+Addressables builds do not produce a BuildReport or .manifest files, but it offers similar build information in the user interface.

@@ -12,7 +12,7 @@ Once built, the UnityDataTools executable can be found inside `UnityDataTool/bin
 For example, on Windows the tool may be found a `[UnityDataTools repo path]\UnityDataTool\bin\Release\net9.0\UnityDataTool.exe`
 
 >[!TIP]
->Adding the path to your PATH environmental variable will make it easier to invoke UnityDataTool from the command line.
+>Consider adding the directory that contains the UnityDataTool executable to the "Path" environmental variable on your computer.  That makes it easy to invoke UnityDataTool from the command line and from other scripts, without specifying the full path every time.
 
 ### Instructions for running on Mac
 
@@ -41,7 +41,9 @@ For help on a specific command use `--help` along with the command name, for exa
 ## analyze/analyse
 
 This command extracts information from AssetBundles and SerializedFiles and dumps the results
-into a SQLite database. The files must include a TypeTree, otherwise it will fail.
+into a SQLite database. 
+
+The command will fail is the SerializedFiles were built without TypeTrees, see [this topic](../Documentation/unity-content-format.md) for more information.
 
 The command takes the path of the folder containing the files to analyze as argument.
 
@@ -52,12 +54,12 @@ It also provides the following options:
   database, but inaccurate duplicate asset detection and no references table.
 * -p, --search-pattern \<pattern\>: search pattern used to determine which files are AssetBundles.  The default is \*.  The * and ? characters are supported, but not regular expressions. The search is always recursive.
 
-Example: `UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p *.ab`
+Example: `UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p *.bundle`
 
 **Refer to this [documentation](../Analyzer/README.md#How-to-use-the-database) for more information
 about the output database structure.**
 
-### Warnings during Analysis
+### Common Warnings during Analysis
 
 The analysis search may find files that are not actually Archives or SerializedFiles, for example .manifest files, text dumps etc.
 
@@ -97,7 +99,7 @@ Running this command:
 UnityDataTool dump scenes.bundle
 ```
 
-will write out these text dumps to the current directory:
+writes out these text dumps to the current directory:
 
 ```
 BuildPlayer-SampleScene.sharedAssets.txt
@@ -126,7 +128,7 @@ Running this command:
 UnityDataTool archive extract scenes.bundle -o contents
 ```
 
-That would write these 4 files:
+write out these 4 files:
 
 ```
 contents/BuildPlayer-SampleScene.sharedAssets
