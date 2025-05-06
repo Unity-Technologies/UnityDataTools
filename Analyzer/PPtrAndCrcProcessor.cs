@@ -65,7 +65,7 @@ public class PPtrAndCrcProcessor : IDisposable
                 {
                     reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.Error.WriteLine();
                     Console.Error.WriteLine($"Error opening resource file {filename}");

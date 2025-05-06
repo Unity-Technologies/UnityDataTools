@@ -23,7 +23,7 @@ public class SQLiteWriter : IWriter
     private Util.ObjectIdProvider m_ObjectIdProvider = new ();
 
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
-    
+
     // Used to map PPtr fileId to its corresponding serialized file id in the database.
     Dictionary<int, int> m_LocalToDbFileId = new ();
 
@@ -37,7 +37,7 @@ public class SQLiteWriter : IWriter
         { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
     };
-    
+
     private SqliteConnection m_Database;
     private SqliteCommand m_AddReferenceCommand = new SqliteCommand();
     private SqliteCommand m_AddAssetBundleCommand = new SqliteCommand();
@@ -82,9 +82,9 @@ public class SQLiteWriter : IWriter
             // Console.WriteLine($"Connection state before init: {m_Database.State}");
             handler.Init(m_Database);
             // Console.WriteLine($"Connection state after init: {m_Database.State}");
-            
+
         }
-        
+
         CreateSQLiteCommands();
     }
 
@@ -94,7 +94,7 @@ public class SQLiteWriter : IWriter
         {
             throw new InvalidOperationException("SQLiteWriter.End called before SQLiteWriter.Begin");
         }
-        
+
         foreach (var handler in m_Handlers.Values)
         {
             handler.Finalize(m_Database);
@@ -125,7 +125,7 @@ public class SQLiteWriter : IWriter
         m_AddReferenceCommand.Parameters.Add("@referenced_object", SqliteType.Integer);
         m_AddReferenceCommand.Parameters.Add("@property_path", SqliteType.Text);
         m_AddReferenceCommand.Parameters.Add("@property_type", SqliteType.Text);
-        
+
         m_AddObjectCommand = m_Database.CreateCommand();
         m_AddObjectCommand.CommandText = "INSERT INTO objects (id, object_id, serialized_file, type, name, game_object, size, crc32) VALUES (@id, @object_id, @serialized_file, @type, @name, @game_object, @size, @crc32)";
         m_AddObjectCommand.Parameters.Add("@id", SqliteType.Integer);
@@ -154,7 +154,7 @@ public class SQLiteWriter : IWriter
         {
             throw new InvalidOperationException("SQLWriter.BeginAssetBundle called twice");
         }
-        
+
         m_CurrentAssetBundleId = m_NextAssetBundleId++;
         m_AddAssetBundleCommand.Parameters["@id"].Value = m_CurrentAssetBundleId;
         m_AddAssetBundleCommand.Parameters["@name"].Value = name;
@@ -171,7 +171,7 @@ public class SQLiteWriter : IWriter
 
         m_CurrentAssetBundleId = -1;
     }
-    
+
     public void WriteSerializedFile(string relativePath, string fullPath, string containingFolder)
     {
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
@@ -188,8 +188,8 @@ public class SQLiteWriter : IWriter
         if (match.Success)
         {
             var sceneName = match.Groups[1].Value;
-            
-            // There is no Scene object in Unity (a Scene is the full content of a 
+
+            // There is no Scene object in Unity (a Scene is the full content of a
             // SerializedFile). We generate an object id using the name of the Scene
             // as SerializedFile name, and the object id 0.
             sceneId = m_ObjectIdProvider.GetId((m_SerializedFileIdProvider.GetId(sceneName), 0));
@@ -212,7 +212,7 @@ public class SQLiteWriter : IWriter
                 m_AddObjectCommand.ExecuteNonQuery();
             }
         }
-        
+
         m_LocalToDbFileId.Clear();
 
         Context ctx = new()
@@ -275,7 +275,7 @@ public class SQLiteWriter : IWriter
                 {
                     name = randomAccessReader["m_Name"].GetValue<string>();
                 }
-                
+
                 if (randomAccessReader.HasChild("m_GameObject"))
                 {
                     var pptr = randomAccessReader["m_GameObject"];
@@ -316,7 +316,7 @@ public class SQLiteWriter : IWriter
 
             transaction.Commit();
         }
-        catch (Exception e)
+        catch (Exception)
         {
             transaction.Rollback();
             throw;

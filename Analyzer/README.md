@@ -4,31 +4,8 @@ The Analyzer is a class library that can be used to analyze the content of Unity
 as AssetBundles and SerializedFiles. It iterates through all the serialized objects and uses the
 TypeTree to extract information about these objects (e.g. name, size, etc.)
 
-The extracted information is forwarded to an object implementing the [IWriter](./IWriter.cs)
-interface. The library provides the [SQLiteWriter](./SQLite/SQLiteWriter.cs) implementation that
-writes the data into a SQLite database.
-
-It is possible to extract type-specific properties using classes inheriting from the
-[SerializedObject](./SerializedObjects/SerializedObject.cs) class. The project already provides
-the most common SerializedObject implementations in the [SerializedObjects](./SerializedObjects)
-folder.
-
-# How to use the library
-
-The [AnalyzerTool](./AnalyzerTool.cs) class is the API entry point. The main method is called
-Analyze. It is currently hardcoded to write using the [SQLiteWriter](./SQLite/SQLiteWriter.cs),
-but it can easily be adapter to use another writer type. It takes four parameters:
-* path (string): path of the folder where the files to analyze are located. It will be searched
-  recursively.
-* databaseName (string): database filename, it will be overwritten if it already exists.
-* searchPattern (string): file search pattern (e.g. \*.bundle).
-* skipReferences (bool): determines if the CRC calculation and references (PPtrs) extraction must
-  skipped. This is faster, but the refs table will be empty and the duplicate assets won't be
-  accurate.
-Calling this method will create the SQLite output database and will recursively
-process the files matching the search pattern in the provided path. It will add a row in
-the 'objects' table for each serialized object. This table contain basic information such as the
-size and the name of the object (if it has one).
+The most common use of this library is through the [analyze](UnityDataTool/README.md#analyzeanalyse)
+command of the UnityDataTool.  This uses the Analyze library to generate a SQLite database.
 
 # How to use the database
 
@@ -178,3 +155,35 @@ stripping it won't make a big difference.
 This view lists all the shaders aggregated by name. The *instances* column indicates how many time
 the shader was found in the data files. It also provides the total size per shader and the list of
 AssetBundles in which they were found.
+
+
+# Advanced
+
+## Using the library
+
+The [AnalyzerTool](./AnalyzerTool.cs) class is the API entry point. The main method is called
+Analyze. It is currently hard coded to write using the [SQLiteWriter](./SQLite/SQLiteWriter.cs),
+but this approach could be extended to add support for other outputs.
+
+Calling this method will recursively process the files matching the search pattern in the provided
+path. It will add a row in the 'objects' table for each serialized object. This table contain basic
+information such as the size and the name of the object (if it has one).
+
+## Extending the Library
+
+The extracted information is forwarded to an object implementing the [IWriter](./IWriter.cs)
+interface. The library provides the [SQLiteWriter](./SQLite/SQLiteWriter.cs) implementation that
+writes the data into a SQLite database.
+
+The core properties that apply to all Unity Objects are extracted into the `objects` table.
+However much of the most useful Analyze functionality comes by virtue of the type-specific information that is extracted for
+important types like Meshes, Shaders, Texture2D and AnimationClips.  For example, when a Mesh object is encountered in a Serialized
+File, then rows are added to both the `objects` table and the `meshes` table.  The meshes table contains columns that only apply to Mesh objects, for example the number of vertices, indices, bones, and channels.  The `mesh_view` is a view that joins the `objects` table with the `meshes` table, so that you can see all the properties of a Mesh object in one place.
+
+Each supported Unity object type follows the same pattern:
+* A Handler class in the SQLite/Handlers (e.g. [MeshHandler.cs](./SQLite/Handler/MeshHandler.cs).
+* The registration of the handler in the m_Handlers dictionary in [SQLiteWriter.cs](./SQLite/SQLiteWriter.cs).
+* SQL statements defining extra tables and views associated with the type, e.g. [Mesh.sql](./SQLite/Resources/Mesh.sql).
+* A Reader class that uses RandomAccessReader to read properties from the serialized object. e.g. [Mesh.cs](./SerializedObjects/Mesh.cs).
+
+It would be possible to extend the Analyze library to add additional columns for the existing types, or by following the same pattern to add additional types.  The [dump](UnityDataTool/README.md#dump) feature of UnityDataTool is a useful way to see the property names and other details of the serialization for a type.  Based on that information, code in the Reader class can use the RandomAccessReader to retrieve those properties to bring them into the SQLite database.
