@@ -4,14 +4,20 @@ The Analyzer is a class library that can be used to analyze the content of Unity
 as AssetBundles and SerializedFiles. It iterates through all the serialized objects and uses the
 TypeTree to extract information about these objects (e.g. name, size, etc.)
 
-The most common use of this library is through the [analyze](UnityDataTool/README.md#analyzeanalyse)
+The most common use of this library is through the [analyze](../UnityDataTool/README.md#analyzeanalyse)
 command of the UnityDataTool.  This uses the Analyze library to generate a SQLite database.
 
-# How to use the database
+Once generated a tool such as the [DB Browser for SQLite](https://sqlitebrowser.org/), or the command line `sqlite3` tool, can be used to look at the content of the database.
 
-A tool such as the [DB Browser for SQLite](https://sqlitebrowser.org/) is required to look at the
-content of the database. The database provides different views that can be used to easily find the
-information you might need.
+# Example usage
+
+See [analyze-examples.md](../Documentation/analyze-examples.md) for some examples of how to use the SQLite output of the UnityDataTool Analyze command.
+
+# DataBase Reference
+
+The database provides different views.  The views join multiple tables together and often it is not necessary to write your own SQL queries to find the information you want, especially when you are using a visual SQLite tool.
+
+This section gives an overview of the main views.
 
 ## object_view
 
@@ -156,7 +162,6 @@ This view lists all the shaders aggregated by name. The *instances* column indic
 the shader was found in the data files. It also provides the total size per shader and the list of
 AssetBundles in which they were found.
 
-
 # Advanced
 
 ## Using the library
@@ -186,4 +191,4 @@ Each supported Unity object type follows the same pattern:
 * SQL statements defining extra tables and views associated with the type, e.g. [Mesh.sql](./SQLite/Resources/Mesh.sql).
 * A Reader class that uses RandomAccessReader to read properties from the serialized object. e.g. [Mesh.cs](./SerializedObjects/Mesh.cs).
 
-It would be possible to extend the Analyze library to add additional columns for the existing types, or by following the same pattern to add additional types.  The [dump](UnityDataTool/README.md#dump) feature of UnityDataTool is a useful way to see the property names and other details of the serialization for a type.  Based on that information, code in the Reader class can use the RandomAccessReader to retrieve those properties to bring them into the SQLite database.
+It would be possible to extend the Analyze library to add additional columns for the existing types, or by following the same pattern to add additional types.  The [dump](../UnityDataTool/README.md#dump) feature of UnityDataTool is a useful way to see the property names and other details of the serialization for a type.  Based on that information, code in the Reader class can use the RandomAccessReader to retrieve those properties to bring them into the SQLite database.
