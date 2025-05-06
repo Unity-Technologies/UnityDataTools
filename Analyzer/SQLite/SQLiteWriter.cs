@@ -108,10 +108,11 @@ public class SQLiteWriter : IWriter
     private void CreateSQLiteCommands()
     {
         m_AddAssetBundleCommand = m_Database.CreateCommand();
-        m_AddAssetBundleCommand.CommandText = "INSERT INTO asset_bundles (id, name, file_size) VALUES (@id, @name, @file_size)";
+        m_AddAssetBundleCommand.CommandText = "INSERT INTO asset_bundles (id, name, file_size, compression) VALUES (@id, @name, @file_size, @compression)";
         m_AddAssetBundleCommand.Parameters.Add("@id", SqliteType.Integer);
         m_AddAssetBundleCommand.Parameters.Add("@name", SqliteType.Text);
         m_AddAssetBundleCommand.Parameters.Add("@file_size", SqliteType.Integer);
+        m_AddAssetBundleCommand.Parameters.Add("@compression", SqliteType.Text);
 
         m_AddSerializedFileCommand = m_Database.CreateCommand();
         m_AddSerializedFileCommand.CommandText = "INSERT INTO serialized_files (id, asset_bundle, name) VALUES (@id, @asset_bundle, @name)";
@@ -148,7 +149,7 @@ public class SQLiteWriter : IWriter
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
     }
 
-    public void BeginAssetBundle(string name, long size)
+    public void BeginAssetBundle(string name, long size, CompressionType compressionType)
     {
         if (m_CurrentAssetBundleId != -1)
         {
@@ -159,6 +160,7 @@ public class SQLiteWriter : IWriter
         m_AddAssetBundleCommand.Parameters["@id"].Value = m_CurrentAssetBundleId;
         m_AddAssetBundleCommand.Parameters["@name"].Value = name;
         m_AddAssetBundleCommand.Parameters["@file_size"].Value = size;
+        m_AddAssetBundleCommand.Parameters["@compression"].Value = compressionType.ToString();
         m_AddAssetBundleCommand.ExecuteNonQuery();
     }
 

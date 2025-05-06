@@ -33,7 +33,7 @@ public static class UnityFileSystem
         var r = DllWrapper.MountArchive(path, mountPoint, out var handle);
         HandleErrors(r, path);
 
-        return new UnityArchive() { m_Handle = handle };
+        return new UnityArchive(handle);
     }
 
     public static UnityFile OpenFile(string path)

@@ -162,6 +162,11 @@ public static class DllWrapper
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetArchiveCompression")]
+    public static extern ReturnCode GetArchiveCompression(UnityArchiveHandle handle, out CompressionType compressionType);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_GetArchiveNodeCount")]
     public static extern ReturnCode GetArchiveNodeCount(UnityArchiveHandle handle, out int count);
 

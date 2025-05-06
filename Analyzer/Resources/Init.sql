@@ -10,6 +10,7 @@ CREATE TABLE asset_bundles
     id INTEGER,
     name TEXT,
     file_size INTEGER,
+    compression TEXT,
     PRIMARY KEY (id)
 );
 

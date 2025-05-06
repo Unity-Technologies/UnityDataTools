@@ -17,12 +17,17 @@ public class UnityArchive : IDisposable
 {
     internal UnityArchiveHandle m_Handle;
     Lazy<List<ArchiveNode>> m_Nodes;
+    CompressionType m_CompressionType;
 
     public IReadOnlyList<ArchiveNode> Nodes => m_Nodes.Value.AsReadOnly();
+    public CompressionType CompressionType => m_CompressionType;
 
-    internal UnityArchive()
+    internal UnityArchive(UnityArchiveHandle handle)
     {
+        m_Handle = handle;
         m_Nodes = new Lazy<List<ArchiveNode>>(() => GetArchiveNodes());
+        var r = DllWrapper.GetArchiveCompression(m_Handle, out m_CompressionType);
+        UnityFileSystem.HandleErrors(r);
     }
 
     List<ArchiveNode> GetArchiveNodes()
@@ -38,7 +43,7 @@ public class UnityArchive : IDisposable
 
         for (var i = 0; i < count; ++i)
         {
-            DllWrapper.GetArchiveNode(m_Handle, i, path, path.Capacity, out var size, out var flags);
+            r = DllWrapper.GetArchiveNode(m_Handle, i, path, path.Capacity, out var size, out var flags);
             UnityFileSystem.HandleErrors(r);
 
             nodes.Add(new ArchiveNode() { Path = path.ToString(), Size = size, Flags = flags });

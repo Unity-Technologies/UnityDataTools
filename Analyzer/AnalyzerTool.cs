@@ -127,7 +127,7 @@ public class AnalyzerTool
                 {
                     var assetBundleName = Path.GetRelativePath(rootDirectory, file);
 
-                    writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
+                    writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length, archive.CompressionType);
                     ReportProgress(assetBundleName, fileIndex, cntFiles);
 
                     foreach (var node in archive.Nodes)
