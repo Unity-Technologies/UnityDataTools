@@ -102,6 +102,31 @@ INNER JOIN object_view t ON r.referenced_object = t.id
 LEFT JOIN assets a ON m.id = a.object
 WHERE m.type = "Material";
 
+-- TODO: Re-write with objects table as reference, and not objects-view because then at least we can keep the assetbundle ID
+CREATE VIEW serialized_files_view AS
+select 
+    ov.serialized_file, 
+    ov.asset_bundle, 
+    count(*) as num_objects, 
+    sum(ov.size) as objects_size,
+    ab.file_size,
+    ab.compression,
+    (case 
+         when ab.file_size is null then null 
+         else (ab.file_size * 1.0 / sum(ov.size))
+     end) as compression_ratio
+from 
+    object_view ov
+left join 
+    asset_bundles ab
+on 
+    ov.asset_bundle = ab.name
+group by 
+    ov.serialized_file, 
+    ov.asset_bundle, 
+    ab.file_size, 
+    ab.compression;
+
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
 PRAGMA synchronous = OFF;
