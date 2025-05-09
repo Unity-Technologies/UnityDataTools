@@ -16,7 +16,7 @@ However often it is useful to run queries from the command line, and to incorpor
 
 These examples assume you have `sqlite3` available in the path for your command prompt or terminal. On Windows that means that a directory containing `sqlite3.exe` is included in your PATH environmental variable.
 
-On Windows, sqlite3.exe is available as part of the "SQLite command line tools", published from [www.sqlite.org|www.sqlite.org].
+On Windows, sqlite3.exe is available as part of the "SQLite command line tools", published from [www.sqlite.org](www.sqlite.org).
 
 Note: Many of the examples in this topic assume that your database file is named `Analysis.db` in your current working directory.  
 
@@ -137,7 +137,7 @@ WHERE mb.type = 'MonoBehaviour'
   AND ms.name = 'ReferencedUnityObjects';
 ```
 
-## Example: Quick Summary for Individual AssetBundles
+## Example: Quick summary for individual AssetBundles
 
 Often Analyze is used for an entire build output, so that you can view information about the build output as a whole.
 However it can also be used in a more light weight fashion for quickly printing information about a specific AssetBundle.
@@ -216,10 +216,20 @@ object_id             type         name            pretty_size  crc32
 
 ## Example: Matching content back to the source asset
 
-UnityDataTool only works on the output of a Unity build, so it has no direct information about the originating project.  However, it is common to want to match content back to the original source asset or scene.
+UnityDataTool works on the output of a Unity build, which, by its very nature, only contains the crucial data needed to efficiently load built content in the Player.  So it does not include any information about the assets and scenes in the project that was used to create that build.  However you may want to match content back to the original source asset or scene.  For example if the size of an AssetBundle has unexpectedly changed between builds then you may want to track down which source assets could be responsible for that change.  Or you may want to confirm that some particular image has been included in the build.
 
 In many cases the source asset can be inferred based on your specific knowledge of your project, and how the build was configured.  For example the level files in a Player build match the Scenes in the Build Profile Scene list.  And the content of AssetBundles is driven from the assignment of specific assets to those AssetBundles (or Addressable groups).
 
-Also, in many cases the name of objects matches the file name of the asset.  For example the Texture2D "red" object probably comes from a file named red.png somewhere in the project.
+Also, in many cases the name of objects matches the file name of the asset.  For example the Texture2D "red" object probably comes from a file named red.png somewhere in the project.  
 
-For more precise information about how Source Assets contribute to the build result it may be better to consult the [BuildReport](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.html) instead of using UnityDataTools.  The [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) is a useful way to examine the BuildReport for Player and regular AssetBundle builds.  Addressable builds do not produce a BuildReport file, but there is similar reporting, for example the [Build Layout Report](https://docs.unity3d.com/Packages/com.unity.addressables@2.4/manual/BuildLayoutReport.html).
+Similarly, it may be possible to find an object based on a distinctive property values, such as a string or hash, by doing text-based searches in the output from the `dump` command.
+
+For more precise information about how Source Assets contribute to the build result it may be better to consult files that are produced during the build process, instead of UnityDataTools.
+
+Examples of alternative sources of build information:
+
+* The [BuildReport](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.html) has detailed source information in the PackedAssets section.  The [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) is a useful way to view data from the BuildReport.
+* The Editor log reports a lot of information during a build. 
+* Regular AssetBundle builds create [.manifest files](https://docs.unity3d.com/Manual/assetbundles-file-format.html), which contain information about the source assets and types.
+* Addressable builds do not produce BuildReport files, nor .manifest files. But there is similar reporting, for example the [Build Layout Report](https://docs.unity3d.com/Packages/com.unity.addressables@2.4/manual/BuildLayoutReport.html).
+
