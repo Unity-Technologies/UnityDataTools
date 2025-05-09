@@ -100,7 +100,7 @@ Note: Both MonoBehaviours and ScriptableObjects have the same serialized type "M
 
 The previous example shows how to find all MonoBehaviours and ScriptableObjects.  But you may want to filter this based on the actual scripting class.  This is a bit more involved than the previous examples, so lets first breakdown the approach.
 
-The serialized data for scipting class does not directly sort the class name, instead it stores a reference to a MonoScript.  The MonoScript in turn records the assembly, namespace and classname.
+The serialized data for scripting class does not directly sort the class name, instead it stores a reference to a MonoScript.  The MonoScript in turn records the assembly, namespace and classname.
 
 This is an example MonoScript from a `UnityDataTool dump` of a Serialized File:
 
