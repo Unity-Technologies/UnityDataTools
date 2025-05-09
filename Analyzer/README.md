@@ -7,11 +7,11 @@ TypeTree to extract information about these objects (e.g. name, size, etc.)
 The most common use of this library is through the [analyze](../UnityDataTool/README.md#analyzeanalyse)
 command of the UnityDataTool.  This uses the Analyze library to generate a SQLite database.
 
-Once generated a tool such as the [DB Browser for SQLite](https://sqlitebrowser.org/), or the command line `sqlite3` tool, can be used to look at the content of the database.
+Once generated, a tool such as the [DB Browser for SQLite](https://sqlitebrowser.org/), or the command line `sqlite3` tool, can be used to look at the content of the database.
 
 # Example usage
 
-See [analyze-examples.md](../Documentation/analyze-examples.md) for some examples of how to use the SQLite output of the UnityDataTool Analyze command.
+See [this topic](../Documentation/analyze-examples.md) for examples of how to use the SQLite output of the UnityDataTool Analyze command.
 
 # DataBase Reference
 

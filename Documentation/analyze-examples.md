@@ -12,15 +12,17 @@ You can find data in the SQLite database by running SQL queries.
 
 Graphical tools such as "DB Browser" offer a way to run these queries directly from the UI based on whatever database you have open.
 
-However often it is useful to run queries from the command line, and to incorporate queries into your scripts (bash, powershell, etc).  So some of the example on this page show the command line syntax for running simple queries.
+However often it is useful to run queries from the command line, and to incorporate queries into your scripts (bash, PowerShell, etc).  Some of the example on this page show the command line syntax for running simple queries.
 
 These examples assume you have `sqlite3` available in the path for your command prompt or terminal. On Windows that means that a directory containing `sqlite3.exe` is included in your PATH environmental variable.
 
 On Windows, sqlite3.exe is available as part of the "SQLite command line tools", published from [www.sqlite.org|www.sqlite.org].
 
-Note: The examples in this topic assume that your database file is called `Analysis.db`, and that is in your current working directory.
+Note: Many of the examples in this topic assume that your database file is named `Analysis.db` in your current working directory.  
 
-## Example: Object Count
+Disclaimer: The command line examples and scripts will need to be modified for your specific needs, and may need to be rewritten for your platform and preferred command line environment.  It is a best practice to only run commands that you fully understand from a command prompt.
+
+## Example: Object count
 
 Starting things simple: running the following command on a command prompt will invoke a query will print the total number of objects in the build.
 
@@ -28,7 +30,7 @@ Starting things simple: running the following command on a command prompt will i
 sqlite3 Analysis.db "SELECT COUNT(*) FROM objects;"
 ```
 
-## Example: Shader Information
+## Example: Shader information
 
 shader_view has a lot of useful information about shaders.  For example to see the list of keywords for a particular shader, try the following command.  This should work with both Powershell and Bash:
 ```
@@ -85,7 +87,7 @@ If you want to find out which AssetBundles in a build contain a certain object t
 sqlite3 Analysis.db "SELECT DISTINCT asset_bundle FROM object_view WHERE type = 'MonoBehaviour';"
 ```
 
-The above query takes advantage of the object_view which pulls together the data from multiple tables.  The equivalent query that works with the underlying tables directly would be the following:_
+The above query takes advantage of the object_view which pulls together the data from multiple tables.  The following query does exactly the same thing, but uses the underlying tables directly: 
 
 ```
 sqlite3 Analysis.db "SELECT DISTINCT ab.name AS asset_bundle FROM objects o INNER JOIN types t ON o.type = t.id INNER JOIN serialized_files sf ON o.serialized_file = sf.id LEFT JOIN asset_bundles ab ON sf.asset_bundle = ab.id WHERE t.name = 'MonoBehaviour';"
@@ -134,3 +136,90 @@ WHERE mb.type = 'MonoBehaviour'
   AND r.property_type = 'MonoScript'
   AND ms.name = 'ReferencedUnityObjects';
 ```
+
+## Example: Quick Summary for Individual AssetBundles
+
+Often Analyze is used for an entire build output, so that you can view information about the build output as a whole.
+However it can also be used in a more light weight fashion for quickly printing information about a specific AssetBundle.
+Typically the time to run analyze on a single file should be very fast, so it can be acceptable to use a temporary database and
+erase it immediately after that.
+
+This is an example if you want to look at an AssetBundle called sprites.bundle in the current working directory.
+
+```
+UnityDataTool analyze . -o sprites.bundle.db -p sprites.bundle
+sqlite3 .\sprites.bundle.db ".mode column" "SELECT object_id, type, name, pretty_size, crc32 from object_view"
+```
+
+After running this sprites.bundle.db is not needed anymore, and could be erased (e.g. using a platform/shell appropriate command like "del" or "rm").
+
+The following is an example PowerShell script that generalizes the idea:
+
+```
+# PowerShell Script to run UnityDataTool on a single AssetBundle (or single SerializedFile) and print out a summary of the objects.
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$FileName
+)
+
+if (-not (Test-Path -Path $FileName)) {
+    Write-Error "File '$FileName' does not exist."
+    exit 1
+}
+
+#Query to run on the temporary analyze database
+$select_statement = "SELECT object_id, type, name, pretty_size, crc32 from object_view"
+
+# Separate the directory and file name
+$FileDir = Split-Path -Path $FileName -Parent
+$FileLeaf = Split-Path -Path $FileName -Leaf
+
+# If no directory is detected (relative file name), use the current working directory
+if (-not $FileDir) {
+    $FileDir = "."
+}
+
+# Retrieve the system's temp folder and create the temporary database file name
+$tempFolder = $env:TEMP
+$dbName = Join-Path -Path $tempFolder -ChildPath ("$FileLeaf.db")
+
+try {
+    # Run UnityDataTool
+    UnityDataTool analyze $FileDir -o $dbName -p $FileLeaf
+
+    # Query the database using sqlite3
+    sqlite3 $dbName ".mode column" $select_statement
+
+    # Delete the temporary database file
+    Remove-Item $dbName -Force
+} catch {
+    Write-Error "An error occurred: $_"
+}
+```
+
+Here is an example output from the script above (where the script has been saved as `objectlist.ps1` somewhere in the Path):
+
+```
+>objectlist.ps1 .\AssetBundles\sprites.bundle
+
+...
+
+object_id             type         name            pretty_size  crc32
+--------------------  -----------  --------------  -----------  ----------
+-3600607445234681765  Texture2D    red             148.5 KB     3115177070
+-2408881041259534328  Sprite       Snow            460.0 B      2324949527
+-1350043613627603771  Texture2D    Snow            512.2 KB     3894005184
+1                     AssetBundle  sprites.bundle  332.0 B      2353941696
+3866367853307903194   Sprite       red             460.0 B      1811343945
+```
+
+## Example: Matching content back to the source asset
+
+UnityDataTool only works on the output of a Unity build, so it has no direct information about the originating project.  However, it is common to want to match content back to the original source asset or scene.
+
+In many cases the source asset can be inferred based on your specific knowledge of your project, and how the build was configured.  For example the level files in a Player build match the Scenes in the Build Profile Scene list.  And the content of AssetBundles is driven from the assignment of specific assets to those AssetBundles (or Addressable groups).
+
+Also, in many cases the name of objects matches the file name of the asset.  For example the Texture2D "red" object probably comes from a file named red.png somewhere in the project.
+
+For more precise information about how Source Assets contribute to the build result it may be better to consult the [BuildReport](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.html) instead of using UnityDataTools.  The [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) is a useful way to examine the BuildReport for Player and regular AssetBundle builds.  Addressable builds do not produce a BuildReport file, but there is similar reporting, for example the [Build Layout Report](https://docs.unity3d.com/Packages/com.unity.addressables@2.4/manual/BuildLayoutReport.html).

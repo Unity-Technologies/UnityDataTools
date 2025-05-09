@@ -4,7 +4,9 @@ The UnityDataTool is a command line tool and showcase of the UnityFileSystemApi 
 The main purpose is for analysis of the content of Unity data files, for example AssetBundles and
 Player content.
 
-The [command line tool](./UnityDataTool/README.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content.  It is designed to scale for large build outputs and has been used to fine-tune big Unity-based games.
+The [command line tool](./UnityDataTool/README.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content (See [examples](./Documentation/analyze-examples.md) for more detail).
+
+It is designed to scale for large build outputs and has been used to fine-tune big Unity-based games.
 
 The command line tool uses the UnityFileSystemApi library to access the content of Unity Archives and Serialized files, which are Unity's primary binary formats. This repository also serves as a reference for how this library could be used as part of incorporating functionality into your own tools.
 
