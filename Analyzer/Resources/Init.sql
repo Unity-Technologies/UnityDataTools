@@ -103,5 +103,44 @@ WHERE m.type = "Material";
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
+CREATE TABLE build_layouts
+(
+    id INTEGER,
+    name TEXT,
+    build_target INTEGER,
+    start_time TEXT,
+    duration REAL,
+    error TEXT,
+    package_version TEXT,
+    player_version TEXT,
+    build_script TEXT,
+    result_hash TEXT,
+    type INTEGER,
+    unity_version TEXT,
+    PRIMARY KEY (id)
+);
+
+create table build_layout_explicit_assets
+(
+    id INTEGER,
+    build_id INTEGER,
+    bundle INTEGER,
+    file INTEGER,
+    asset_hash TEXT,
+    asset_path TEXT,
+    addressable_name TEXT,
+    externally_referenced_assets TEXT,
+    group_guid TEXT,
+    guid TEXT,
+    internal_id TEXT,
+    internal_referenced_explicit_assets TEXT,
+    internal_referenced_other_assets TEXT,
+    labels TEXT,
+    main_asset_type INTEGER,
+    serialized_size INTEGER,
+    streamed_size INTEGER,
+    PRIMARY KEY (id, build_id)
+);
+
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

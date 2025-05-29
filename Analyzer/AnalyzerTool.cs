@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using UnityDataTools.Analyzer.Build;
 using UnityDataTools.Analyzer.SQLite;
 using UnityDataTools.FileSystem;
 
@@ -44,6 +46,12 @@ public class AnalyzerTool
         int i = 1;
         foreach (var file in files)
         {
+            if (Path.GetExtension(file) == ".json")
+            {
+                ProcessBuildLayout(file, writer, i, files.Length);
+                ++i;
+                continue;
+            }
             if (ShouldIgnoreFile(file))
             {
                 var relativePath = Path.GetRelativePath(path, file);
@@ -171,6 +179,33 @@ public class AnalyzerTool
             if (m_Verbose)
                 Console.WriteLine(e.StackTrace);
         }
+    }
+
+
+
+    void ProcessBuildLayout(string file, SQLiteWriter writer, int fileIndex, int cntFiles)
+    {
+        try
+        {
+            Console.Error.WriteLine(file);
+            using (StreamReader reader = File.OpenText(file))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                BuildLayout buildLayout = (BuildLayout)serializer.Deserialize(reader, typeof(BuildLayout));
+                writer.WriteBuildLayout(file, buildLayout);
+                ReportProgress(file, fileIndex, cntFiles);
+            }
+        }
+        catch (Exception e)
+        {
+            EraseProgressLine();
+            Console.Error.WriteLine();
+            Console.Error.WriteLine($"Error processing file: {file}");
+            Console.WriteLine($"{e.GetType()}: {e.Message}");
+            if (m_Verbose)
+                Console.WriteLine(e.StackTrace);
+        }
+
     }
 
     int m_LastProgressMessageLength = 0;
