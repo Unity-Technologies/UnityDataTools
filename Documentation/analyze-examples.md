@@ -214,6 +214,10 @@ object_id             type         name            pretty_size  crc32
 3866367853307903194   Sprite       red             460.0 B      1811343945
 ```
 
+## Example: Finding differences between two builds
+
+This is a larger topics, see [Comparing Builds](comparing-builds.md).
+
 ## Example: Matching content back to the source asset
 
 UnityDataTool works on the output of a Unity build, which, by its very nature, only contains the crucial data needed to efficiently load built content in the Player.  So it does not include any information about the assets and scenes in the project that was used to create that build.  However you may want to match content back to the original source asset or scene.  For example if the size of an AssetBundle has unexpectedly changed between builds then you may want to track down which source assets could be responsible for that change.  Or you may want to confirm that some particular image has been included in the build.
