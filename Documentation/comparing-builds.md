@@ -5,7 +5,7 @@ This topic gives examples using several tools and techniques to compare build ou
 The tools used in this topic are as follows:
 
 * [comparebuilds.ps1](../Scripts/comparebuilds.ps1) An example script using UnityDataTool to compare two builds at the object level
-* [comparebundles.ps1](../Scripts/comparebundles.ps1) An example script using UnityDatatTool to compare two versions of an AssetBundle.
+* [comparebundles.ps1](../Scripts/comparebundles.ps1) An example script using UnityDataTool to compare two versions of an AssetBundle.
 * A diff tool for comparing directories, binary files and text files.  These tools are readily available on Windows, Mac and Linux.  For example Beyond Compare, WinMerge, and kdiff3.
 * WebExtract.  A tool for extracting contents of an Unity Archive file (WebExtract is included in the Unity Editor installation).
 * `UnityDataTool dump`.  A feature of UnityDataTool that create a text representation of the content of a Unity Serialized File.
