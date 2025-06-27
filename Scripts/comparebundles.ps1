@@ -105,9 +105,8 @@ FULL OUTER JOIN (
         db2.serialized_files sf ON o.serialized_file = sf.id
     LEFT JOIN
         db2.asset_bundles ab ON sf.asset_bundle = ab.id
-) AS o2 ON o1.asset_bundle = o2.asset_bundle
+) AS o2 ON o1.serialized_file = o2.serialized_file
     AND o1.object_id = o2.object_id
-    AND o1.serialized_file = o2.serialized_file
 WHERE NOT (o1.asset_bundle IS NOT NULL AND o2.asset_bundle IS NOT NULL AND o1.crc32 = o2.crc32 AND o1.size = o2.size);
 
 DETACH DATABASE db2;

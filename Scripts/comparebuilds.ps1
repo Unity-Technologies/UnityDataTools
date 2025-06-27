@@ -33,6 +33,8 @@ if (-not (Test-Path $db2)) {
 
 # SQL query to compare the content of two builds.
 # Note: when the ID of an object changes then it will not be matched as the same.
+# Note: matching is done based on the SerializedFile, but not the AssetBundle name. In this way AssetBundles that include
+# the content hash in the name can still be compared.
 $query = @"
 ATTACH DATABASE '$db2' AS db2;
 
@@ -86,8 +88,7 @@ FULL OUTER JOIN (
         db2.serialized_files sf ON o.serialized_file = sf.id
     LEFT JOIN
         db2.asset_bundles ab ON sf.asset_bundle = ab.id
-) AS o2 ON o1.asset_bundle = o2.asset_bundle
-    AND o1.object_id = o2.object_id
+) AS o2 ON o1.object_id = o2.object_id
     AND o1.type = o2.type
     AND o1.name = o2.name
     AND o1.serialized_file = o2.serialized_file;
@@ -96,6 +97,5 @@ DETACH DATABASE db2;
 "@
 
 # Execute the query
-Write-Host "Objects with differences, only in one DB, or the same:"
 $results = sqlite3 $db1 ".mode column" $query
 $results | ForEach-Object { Write-Output $_ }
