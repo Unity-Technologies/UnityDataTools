@@ -80,7 +80,7 @@ UnityDataTool.exe analyze -o build1.db .\Build1\
 UnityDataTool.exe analyze -o build2.db .\Build2\
 ```
 
-The [comparebuilds.ps1](../Scripts/comparebuilds.ps1) script is an example power shell script that prints a comparison of each object. In this case the output would be something like this:
+The [comparebuilds.ps1](../Scripts/comparebuilds.ps1) script is an example PowerShell script that prints a comparison of each object. In this case the output would be something like this:
 
 
 ```

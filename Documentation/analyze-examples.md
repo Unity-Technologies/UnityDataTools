@@ -216,7 +216,7 @@ object_id             type         name            pretty_size  crc32
 
 ## Example: Finding differences between two builds
 
-This is a larger topics, see [Comparing Builds](comparing-builds.md).
+This is a large subject, see [Comparing Builds](comparing-builds.md).
 
 ## Example: Matching content back to the source asset
 
