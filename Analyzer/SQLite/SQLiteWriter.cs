@@ -10,6 +10,7 @@ using UnityDataTools.Analyzer.Build;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite;
 
@@ -49,8 +50,8 @@ public class SQLiteWriter : IWriter
     private SqliteCommand m_AddObjectCommand = new SqliteCommand();
     private SqliteCommand m_AddTypeCommand = new SqliteCommand();
     private SqliteCommand m_InsertDepCommand = new SqliteCommand();
-    private SqliteCommand m_InsertBuild = new SqliteCommand();
-    private SqliteCommand m_ExplicitAsset = new SqliteCommand();
+    private AddressablesBuild m_AddressablesBuild = new AddressablesBuild();
+    private AddressablesBuildExplicitAsset m_AddressablesExplicitAsset = new AddressablesBuildExplicitAsset();
     private SqliteCommand m_LastId = new SqliteCommand();
     private SqliteTransaction m_CurrentTransaction = null;
     public SQLiteWriter(string databaseName, bool skipReferences)
@@ -154,40 +155,8 @@ public class SQLiteWriter : IWriter
         m_InsertDepCommand.Parameters.Add("@object", SqliteType.Integer);
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
 
-        m_InsertBuild = m_Database.CreateCommand();
-        m_InsertBuild.CommandText = "INSERT INTO build_layouts (name, build_target, start_time, duration, error, package_version, player_version, build_script, result_hash, type, unity_version) VALUES (@name, @build_target, @start_time, @duration, @error, @package_version, @player_version, @build_script, @result_hash, @type, @unity_version)";
-        m_InsertBuild.Parameters.Add("@name", SqliteType.Text);
-        m_InsertBuild.Parameters.Add("@build_target", SqliteType.Integer);
-        m_InsertBuild.Parameters.Add("@start_time", SqliteType.Integer);
-        m_InsertBuild.Parameters.Add("@duration", SqliteType.Real);
-        m_InsertBuild.Parameters.Add("@error", SqliteType.Text);
-        m_InsertBuild.Parameters.Add("@package_version", SqliteType.Text);
-        m_InsertBuild.Parameters.Add("@player_version", SqliteType.Text);
-        m_InsertBuild.Parameters.Add("@build_script", SqliteType.Text);
-        m_InsertBuild.Parameters.Add("@result_hash", SqliteType.Text);
-        m_InsertBuild.Parameters.Add("@type", SqliteType.Integer);
-        m_InsertBuild.Parameters.Add("@unity_version", SqliteType.Text);
-
-        m_ExplicitAsset = m_Database.CreateCommand();
-        m_ExplicitAsset.CommandText =
-        "INSERT INTO build_layout_explicit_assets (id, build_id, bundle, file, asset_hash, asset_path, addressable_name, externally_referenced_assets, group_guid, guid, internal_id, internal_referenced_explicit_assets, internal_referenced_other_assets, labels, streamed_size, serialized_size, main_asset_type) VALUES (@id, @build_id, @bundle, @file, @asset_hash, @asset_path, @addressable_name, @externally_referenced_assets, @group_guid, @guid, @internal_id, @internal_referenced_explicit_assets, @internal_referenced_other_assets, @labels, @streamed_size, @serialized_size, @main_asset_type)";
-        m_ExplicitAsset.Parameters.Add("@id", SqliteType.Integer);
-        m_ExplicitAsset.Parameters.Add("@build_id", SqliteType.Integer);
-        m_ExplicitAsset.Parameters.Add("@bundle", SqliteType.Integer);
-        m_ExplicitAsset.Parameters.Add("@file", SqliteType.Integer);
-        m_ExplicitAsset.Parameters.Add("@asset_hash", SqliteType.Text);
-        m_ExplicitAsset.Parameters.Add("@asset_path", SqliteType.Text);
-        m_ExplicitAsset.Parameters.Add("@addressable_name", SqliteType.Text);
-        m_ExplicitAsset.Parameters.Add("@externally_referenced_assets", SqliteType.Text); // JSONB type in SQLite uses TEXT
-        m_ExplicitAsset.Parameters.Add("@group_guid", SqliteType.Text);
-        m_ExplicitAsset.Parameters.Add("@guid", SqliteType.Text);
-        m_ExplicitAsset.Parameters.Add("@internal_id", SqliteType.Text);
-        m_ExplicitAsset.Parameters.Add("@internal_referenced_explicit_assets", SqliteType.Text); // JSONB type in SQLite uses TEXT
-        m_ExplicitAsset.Parameters.Add("@internal_referenced_other_assets", SqliteType.Text); // JSONB type in SQLite uses TEXT
-        m_ExplicitAsset.Parameters.Add("@labels", SqliteType.Text); // JSONB type in SQLite uses TEXT
-        m_ExplicitAsset.Parameters.Add("@streamed_size", SqliteType.Integer);
-        m_ExplicitAsset.Parameters.Add("@serialized_size", SqliteType.Integer);
-        m_ExplicitAsset.Parameters.Add("@main_asset_type", SqliteType.Integer);
+        m_AddressablesBuild.CreateCommand(m_Database);
+        m_AddressablesExplicitAsset.CreateCommand(m_Database);
 
         m_LastId = m_Database.CreateCommand();
         m_LastId.CommandText = "SELECT last_insert_rowid()";
@@ -216,26 +185,26 @@ public class SQLiteWriter : IWriter
         m_CurrentAssetBundleId = -1;
     }
 
-    public void WriteBuildLayout(string filename, BuildLayout buildLayout)
+    public void WriteAddressablesBuild(string filename, BuildLayout buildLayout)
     {
         using var transaction = m_Database.BeginTransaction();
         m_CurrentTransaction = transaction;
 
         try
         {
-            m_InsertBuild.Transaction = transaction;
-            m_InsertBuild.Parameters["@name"].Value = Path.GetFileName(filename);
-            m_InsertBuild.Parameters["@build_target"].Value = buildLayout.BuildTarget;
-            m_InsertBuild.Parameters["@start_time"].Value = buildLayout.BuildStartTime;
-            m_InsertBuild.Parameters["@duration"].Value = buildLayout.Duration;
-            m_InsertBuild.Parameters["@error"].Value = buildLayout.BuildError;
-            m_InsertBuild.Parameters["@package_version"].Value = buildLayout.PackageVersion;
-            m_InsertBuild.Parameters["@player_version"].Value = buildLayout.PlayerBuildVersion;
-            m_InsertBuild.Parameters["@build_script"].Value = buildLayout.BuildScript;
-            m_InsertBuild.Parameters["@result_hash"].Value = buildLayout.BuildResultHash;
-            m_InsertBuild.Parameters["@type"].Value = buildLayout.BuildType;
-            m_InsertBuild.Parameters["@unity_version"].Value = buildLayout.UnityVersion;
-            m_InsertBuild.ExecuteNonQuery();
+            m_AddressablesBuild.SetTransaction(transaction);
+            m_AddressablesBuild.SetValue("name", Path.GetFileName(filename));
+            m_AddressablesBuild.SetValue("build_target", buildLayout.BuildTarget);
+            m_AddressablesBuild.SetValue("start_time", buildLayout.BuildStartTime);
+            m_AddressablesBuild.SetValue("duration", buildLayout.Duration);
+            m_AddressablesBuild.SetValue("error", buildLayout.BuildError);
+            m_AddressablesBuild.SetValue("package_version", buildLayout.PackageVersion);
+            m_AddressablesBuild.SetValue("player_version", buildLayout.PlayerBuildVersion);
+            m_AddressablesBuild.SetValue("build_script", buildLayout.BuildScript);
+            m_AddressablesBuild.SetValue("result_hash", buildLayout.BuildResultHash);
+            m_AddressablesBuild.SetValue("type", buildLayout.BuildType);
+            m_AddressablesBuild.SetValue("unity_version", buildLayout.UnityVersion);
+            m_AddressablesBuild.ExecuteNonQuery();
 
             m_LastId.Transaction = transaction;
             long buildId = (long) m_LastId.ExecuteScalar();
@@ -246,25 +215,27 @@ public class SQLiteWriter : IWriter
                 switch(reference.type.Class)
                 {
                     case "BuildLayout/ExplicitAsset":
-                        m_ExplicitAsset.Transaction = transaction;
-                        m_ExplicitAsset.Parameters["@id"].Value = reference.rid;
-                        m_ExplicitAsset.Parameters["@build_id"].Value = buildId;
-                        m_ExplicitAsset.Parameters["@bundle"].Value = reference.data.Bundle.rid;
-                        m_ExplicitAsset.Parameters["@file"].Value = reference.data.File.rid;
-                        m_ExplicitAsset.Parameters["@asset_hash"].Value = reference.data.AssetHash.Hash;
-                        m_ExplicitAsset.Parameters["@asset_path"].Value = reference.data.AssetPath;
-                        m_ExplicitAsset.Parameters["@addressable_name"].Value = reference.data.AddressableName;
-                        m_ExplicitAsset.Parameters["@externally_referenced_assets"].Value = JsonConvert.SerializeObject(reference.data.ExternallyReferencedAssets) ?? "[]";
-                        m_ExplicitAsset.Parameters["@group_guid"].Value = reference.data.GroupGuid;
-                        m_ExplicitAsset.Parameters["@guid"].Value = reference.data.Guid;
-                        m_ExplicitAsset.Parameters["@internal_id"].Value = reference.data.InternalId;
-                        m_ExplicitAsset.Parameters["@internal_referenced_explicit_assets"].Value = JsonConvert.SerializeObject(reference.data.InternalReferencedExplicitAssets) ?? "[]";
-                        m_ExplicitAsset.Parameters["@internal_referenced_other_assets"].Value = JsonConvert.SerializeObject(reference.data.InternalReferencedOtherAssets) ?? "[]";
-                        m_ExplicitAsset.Parameters["@labels"].Value = JsonConvert.SerializeObject(reference.data.Labels) ?? "[]";
-                        m_ExplicitAsset.Parameters["@main_asset_type"].Value = reference.data.MainAssetType;
-                        m_ExplicitAsset.Parameters["@serialized_size"].Value = reference.data.SerializedSize;
-                        m_ExplicitAsset.Parameters["@streamed_size"].Value = reference.data.StreamedSize;
-                        m_ExplicitAsset.ExecuteNonQuery();
+                        m_AddressablesExplicitAsset.SetTransaction(transaction);
+                        m_AddressablesExplicitAsset.SetValue("id", reference.rid);
+                        m_AddressablesExplicitAsset.SetValue("build_id", buildId);
+                        m_AddressablesExplicitAsset.SetValue("bundle", reference.data.Bundle.rid);
+                        m_AddressablesExplicitAsset.SetValue("file", reference.data.File.rid);
+                        m_AddressablesExplicitAsset.SetValue("asset_hash", reference.data.AssetHash.Hash);
+                        m_AddressablesExplicitAsset.SetValue("asset_path", reference.data.AssetPath);
+                        m_AddressablesExplicitAsset.SetValue("addressable_name", reference.data.AddressableName);
+                        m_AddressablesExplicitAsset.SetValue("externally_referenced_assets",
+                            JsonConvert.SerializeObject(reference.data.ExternallyReferencedAssets) ?? "[]");
+                        m_AddressablesExplicitAsset.SetValue("group_guid", reference.data.GroupGuid);
+                        m_AddressablesExplicitAsset.SetValue("guid", reference.data.Guid);
+                        m_AddressablesExplicitAsset.SetValue("internal_id", reference.data.InternalId);
+                        m_AddressablesExplicitAsset.SetValue("internal_referenced_explicit_assets",
+                            JsonConvert.SerializeObject(reference.data.InternalReferencedExplicitAssets) ?? "[]");
+                        m_AddressablesExplicitAsset.SetValue("internal_referenced_other_assets",
+                            JsonConvert.SerializeObject(reference.data.InternalReferencedOtherAssets) ?? "[]");
+                        m_AddressablesExplicitAsset.SetValue("labels",
+                            JsonConvert.SerializeObject(reference.data.Labels) ?? "[]");
+                        m_AddressablesExplicitAsset.SetValue("main_asset_type", reference.data.MainAssetType);
+                        m_AddressablesExplicitAsset.ExecuteNonQuery();
                         break;
                 }
             }

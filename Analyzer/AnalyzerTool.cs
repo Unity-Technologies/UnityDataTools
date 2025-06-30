@@ -48,7 +48,7 @@ public class AnalyzerTool
         {
             if (Path.GetExtension(file) == ".json")
             {
-                ProcessBuildLayout(file, writer, i, files.Length);
+                ProcessAddressablesBuild(file, writer, i, files.Length);
                 ++i;
                 continue;
             }
@@ -183,7 +183,7 @@ public class AnalyzerTool
 
 
 
-    void ProcessBuildLayout(string file, SQLiteWriter writer, int fileIndex, int cntFiles)
+    void ProcessAddressablesBuild(string file, SQLiteWriter writer, int fileIndex, int cntFiles)
     {
         try
         {
@@ -192,7 +192,7 @@ public class AnalyzerTool
             {
                 JsonSerializer serializer = new JsonSerializer();
                 BuildLayout buildLayout = (BuildLayout)serializer.Deserialize(reader, typeof(BuildLayout));
-                writer.WriteBuildLayout(file, buildLayout);
+                writer.WriteAddressablesBuild(file, buildLayout);
                 ReportProgress(file, fileIndex, cntFiles);
             }
         }

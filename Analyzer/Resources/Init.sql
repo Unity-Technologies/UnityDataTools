@@ -103,7 +103,7 @@ WHERE m.type = "Material";
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
-CREATE TABLE build_layouts
+CREATE TABLE addr_builds
 (
     id INTEGER,
     name TEXT,
@@ -120,7 +120,7 @@ CREATE TABLE build_layouts
     PRIMARY KEY (id)
 );
 
-create table build_layout_explicit_assets
+create table addr_build_explicit_assets
 (
     id INTEGER,
     build_id INTEGER,
