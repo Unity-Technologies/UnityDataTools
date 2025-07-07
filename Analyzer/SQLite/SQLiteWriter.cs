@@ -51,7 +51,13 @@ public class SQLiteWriter : IWriter
     private SqliteCommand m_AddTypeCommand = new SqliteCommand();
     private SqliteCommand m_InsertDepCommand = new SqliteCommand();
     private AddressablesBuild m_AddressablesBuild = new AddressablesBuild();
+    private AddressablesBuildBundle m_AddressablesBuildBundle = new AddressablesBuildBundle();
+    private AddressablesBuildDataFromOtherAsset m_AddressablesDataFromOtherAsset = new AddressablesBuildDataFromOtherAsset();
     private AddressablesBuildExplicitAsset m_AddressablesExplicitAsset = new AddressablesBuildExplicitAsset();
+    private AddressablesBuildFile m_AddressablesBuildFile = new AddressablesBuildFile();
+    private AddressablesBuildGroup m_AddressablesBuildGroup = new AddressablesBuildGroup();
+    private AddressablesBuildSchema m_AddressablesBuildSchema = new AddressablesBuildSchema();
+    private AddressablesBuildSubFile m_AddressablesBuildSubFile = new AddressablesBuildSubFile();
     private SqliteCommand m_LastId = new SqliteCommand();
     private SqliteTransaction m_CurrentTransaction = null;
     public SQLiteWriter(string databaseName, bool skipReferences)
@@ -156,7 +162,13 @@ public class SQLiteWriter : IWriter
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
 
         m_AddressablesBuild.CreateCommand(m_Database);
+        m_AddressablesBuildBundle.CreateCommand(m_Database);
+        m_AddressablesDataFromOtherAsset.CreateCommand(m_Database);
         m_AddressablesExplicitAsset.CreateCommand(m_Database);
+        m_AddressablesBuildFile.CreateCommand(m_Database);
+        m_AddressablesBuildGroup.CreateCommand(m_Database);
+        m_AddressablesBuildSchema.CreateCommand(m_Database);
+        m_AddressablesBuildSubFile.CreateCommand(m_Database);
 
         m_LastId = m_Database.CreateCommand();
         m_LastId.CommandText = "SELECT last_insert_rowid()";
@@ -214,6 +226,48 @@ public class SQLiteWriter : IWriter
             {
                 switch(reference.type.Class)
                 {
+                    case "BuildLayout/Bundle":
+                        m_AddressablesBuildBundle.SetTransaction(transaction);
+                        m_AddressablesBuildBundle.SetValue("id", reference.rid);
+                        m_AddressablesBuildBundle.SetValue("build_id", buildId);
+                        m_AddressablesBuildBundle.SetValue("asset_count", reference.data.AssetCount);
+                        m_AddressablesBuildBundle.SetValue("build_status", reference.data.BuildStatus);
+                        m_AddressablesBuildBundle.SetValue("bundle_dependencies", JsonConvert.SerializeObject(reference.data.BundleDependencies) ?? "[]");
+                        m_AddressablesBuildBundle.SetValue("crc", reference.data.CRC);
+                        m_AddressablesBuildBundle.SetValue("compression", reference.data.Compression);
+                        m_AddressablesBuildBundle.SetValue("dependencies", JsonConvert.SerializeObject(reference.data.Dependencies) ?? "[]");
+                        m_AddressablesBuildBundle.SetValue("dependency_file_size", reference.data.DependencyFileSize);
+                        m_AddressablesBuildBundle.SetValue("dependent_bundles", JsonConvert.SerializeObject(reference.data.DependentBundles) ?? "[]");
+                        m_AddressablesBuildBundle.SetValue("expanded_dependencies", JsonConvert.SerializeObject(reference.data.ExpandedDependencies) ?? "[]");
+                        m_AddressablesBuildBundle.SetValue("expanded_dependency_file_size", reference.data.ExpandedDependencyFileSize);
+                        m_AddressablesBuildBundle.SetValue("file_size", reference.data.FileSize);
+                        m_AddressablesBuildBundle.SetValue("files", JsonConvert.SerializeObject(reference.data.Files) ?? "[]");
+                        m_AddressablesBuildBundle.SetValue("group_rid", reference.data.Group.rid);
+                        m_AddressablesBuildBundle.SetValue("hash", JsonConvert.SerializeObject(reference.data.Hash));
+                        m_AddressablesBuildBundle.SetValue("internal_name", reference.data.InternalName);
+                        m_AddressablesBuildBundle.SetValue("load_path", reference.data.LoadPath);
+                        m_AddressablesBuildBundle.SetValue("name", reference.data.Name);
+                        m_AddressablesBuildBundle.SetValue("provider", reference.data.Provider);
+                        m_AddressablesBuildBundle.SetValue("result_type", reference.data.ResultType);
+                        m_AddressablesBuildBundle.ExecuteNonQuery();
+                        break;
+
+                    case "BuildLayout/DataFromOtherAsset":
+                        m_AddressablesDataFromOtherAsset.SetTransaction(transaction);
+                        m_AddressablesDataFromOtherAsset.SetValue("id", reference.rid);
+                        m_AddressablesDataFromOtherAsset.SetValue("build_id", buildId);
+                        m_AddressablesDataFromOtherAsset.SetValue("asset_guid", reference.data.AssetGuid);
+                        m_AddressablesDataFromOtherAsset.SetValue("asset_path", reference.data.AssetPath);
+                        m_AddressablesDataFromOtherAsset.SetValue("file", reference.data.File.rid);
+                        m_AddressablesDataFromOtherAsset.SetValue("main_asset_type", reference.data.MainAssetType);
+                        m_AddressablesDataFromOtherAsset.SetValue("object_count", reference.data.ObjectCount);
+                        m_AddressablesDataFromOtherAsset.SetValue("objects", JsonConvert.SerializeObject(reference.data.Objects) ?? "[]");
+                        m_AddressablesDataFromOtherAsset.SetValue("referencing_assets", JsonConvert.SerializeObject(reference.data.ReferencingAssets) ?? "[]");
+                        m_AddressablesDataFromOtherAsset.SetValue("serialized_size", reference.data.SerializedSize);
+                        m_AddressablesDataFromOtherAsset.SetValue("streamed_size", reference.data.StreamedSize);
+                        m_AddressablesDataFromOtherAsset.ExecuteNonQuery();
+                        break;
+
                     case "BuildLayout/ExplicitAsset":
                         m_AddressablesExplicitAsset.SetTransaction(transaction);
                         m_AddressablesExplicitAsset.SetValue("id", reference.rid);
@@ -234,9 +288,63 @@ public class SQLiteWriter : IWriter
                             JsonConvert.SerializeObject(reference.data.InternalReferencedOtherAssets) ?? "[]");
                         m_AddressablesExplicitAsset.SetValue("labels",
                             JsonConvert.SerializeObject(reference.data.Labels) ?? "[]");
+                        m_AddressablesExplicitAsset.SetValue("streamed_size", reference.data.StreamedSize);
+                        m_AddressablesExplicitAsset.SetValue("serialized_size", reference.data.SerializedSize);
                         m_AddressablesExplicitAsset.SetValue("main_asset_type", reference.data.MainAssetType);
                         m_AddressablesExplicitAsset.ExecuteNonQuery();
                         break;
+                    case "BuildLayout/File":
+                        m_AddressablesBuildFile.SetTransaction(transaction);
+                        m_AddressablesBuildFile.SetValue("id", reference.rid);
+                        m_AddressablesBuildFile.SetValue("build_id", buildId);
+                        m_AddressablesBuildFile.SetValue("assets", JsonConvert.SerializeObject(reference.data.Assets) ?? "[]");
+                        m_AddressablesBuildFile.SetValue("bundle", reference.data.Bundle.rid);
+                        m_AddressablesBuildFile.SetValue("bundle_object_info_size", reference.data.BundleObjectInfo.Size);
+                        m_AddressablesBuildFile.SetValue("external_references", JsonConvert.SerializeObject(reference.data.ExternalReferences) ?? "[]");
+                        m_AddressablesBuildFile.SetValue("mono_script_count", reference.data.MonoScriptCount);
+                        m_AddressablesBuildFile.SetValue("mono_script_size", reference.data.MonoScriptSize);
+                        m_AddressablesBuildFile.SetValue("name", reference.data.Name);
+                        m_AddressablesBuildFile.SetValue("other_assets", JsonConvert.SerializeObject(reference.data.OtherAssets) ?? "[]");
+                        m_AddressablesBuildFile.SetValue("preload_info_size", reference.data.PreloadInfoSize);
+                        m_AddressablesBuildFile.SetValue("sub_files", JsonConvert.SerializeObject(reference.data.SubFiles) ?? "[]");
+                        m_AddressablesBuildFile.SetValue("write_result_filename", reference.data.WriteResultFilename);
+                        m_AddressablesBuildFile.ExecuteNonQuery();
+                        break;
+
+                    case "BuildLayout/Group":
+                        m_AddressablesBuildGroup.SetTransaction(transaction);
+                        m_AddressablesBuildGroup.SetValue("id", reference.rid);
+                        m_AddressablesBuildGroup.SetValue("build_id", buildId);
+                        m_AddressablesBuildGroup.SetValue("bundles", JsonConvert.SerializeObject(reference.data.Bundles) ?? "[]");
+                        m_AddressablesBuildGroup.SetValue("guid", reference.data.Guid);
+                        m_AddressablesBuildGroup.SetValue("name", reference.data.Name);
+                        m_AddressablesBuildGroup.SetValue("packing_mode", reference.data.PackingMode);
+                        m_AddressablesBuildGroup.SetValue("schemas", JsonConvert.SerializeObject(reference.data.Schemas) ?? "[]");
+                        m_AddressablesBuildGroup.ExecuteNonQuery();
+                        break;
+
+                    case "BuildLayout/SchemaData":
+                        m_AddressablesBuildSchema.SetTransaction(transaction);
+                        m_AddressablesBuildSchema.SetValue("id", reference.rid);
+                        m_AddressablesBuildSchema.SetValue("build_id", buildId);
+                        m_AddressablesBuildSchema.SetValue("guid", reference.data.Guid);
+                        m_AddressablesBuildSchema.SetValue("schema_data_pairs", JsonConvert.SerializeObject(reference.data.SchemaDataPairs) ?? "[]");
+                        m_AddressablesBuildSchema.SetValue("type", reference.data.Type);
+                        m_AddressablesBuildSchema.ExecuteNonQuery();
+                        break;
+
+                    case "BuildLayout/SubFile":
+                        m_AddressablesBuildSubFile.SetTransaction(transaction);
+                        m_AddressablesBuildSubFile.SetValue("id", reference.rid);
+                        m_AddressablesBuildSubFile.SetValue("build_id", buildId);
+                        m_AddressablesBuildSubFile.SetValue("is_serialized_file", reference.data.IsSerializedFile ? 1 : 0);
+                        m_AddressablesBuildSubFile.SetValue("name", reference.data.Name);
+                        m_AddressablesBuildSubFile.SetValue("size", reference.data.Size);
+                        m_AddressablesBuildSubFile.ExecuteNonQuery();
+                        break;
+
+
+
                 }
             }
 
@@ -245,6 +353,7 @@ public class SQLiteWriter : IWriter
         }
         catch (Exception e)
         {
+            Console.WriteLine(e.StackTrace.ToString());
             transaction.Rollback();
             throw;
         }

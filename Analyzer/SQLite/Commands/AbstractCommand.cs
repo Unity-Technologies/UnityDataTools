@@ -31,9 +31,10 @@ namespace Analyzer.SQLite.Commands
         }
         public void SetValue(string key, object value)
         {
-            if (m_Command.Parameters.Contains(key))
+            string prefixedKey = $"@{key}";
+            if (m_Command.Parameters.Contains(prefixedKey))
             {
-                m_Command.Parameters[key].Value = value ?? DBNull.Value;
+                m_Command.Parameters[prefixedKey].Value = value ?? DBNull.Value;
             }
             else
             {
