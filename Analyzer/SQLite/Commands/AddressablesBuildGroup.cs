@@ -8,11 +8,9 @@ namespace Analyzer.SQLite.Commands
         (
             id INTEGER,
             build_id INTEGER,
-            bundles TEXT,
             guid TEXT,
             name TEXT,
             packing_mode TEXT,
-            schemas TEXT,
             PRIMARY KEY (id, build_id)
         );
     */
@@ -24,11 +22,9 @@ namespace Analyzer.SQLite.Commands
         {
             { "id", SqliteType.Integer },
             { "build_id", SqliteType.Integer },
-            { "bundles", SqliteType.Text }, // JSONB type in SQLite uses TEXT
             { "guid", SqliteType.Text },
             { "name", SqliteType.Text },
             { "packing_mode", SqliteType.Text },
-            { "schemas", SqliteType.Text } // JSONB type in SQLite uses TEXT
         };
 
         public AddressablesBuildGroup()

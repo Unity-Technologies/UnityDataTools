@@ -13,8 +13,6 @@ namespace Analyzer.SQLite.Commands
             file INTEGER,
             main_asset_type INTEGER,
             object_count INTEGER,
-            objects TEXT,
-            referencing_assets TEXT,
             serialized_size INTEGER,
             streamed_size INTEGER,
             PRIMARY KEY (id, build_id)
@@ -33,8 +31,6 @@ namespace Analyzer.SQLite.Commands
             { "file", SqliteType.Integer },
             { "main_asset_type", SqliteType.Integer },
             { "object_count", SqliteType.Integer },
-            { "objects", SqliteType.Text }, // JSONB type in SQLite uses TEXT
-            { "referencing_assets", SqliteType.Text }, // JSONB type in SQLite uses TEXT
             { "serialized_size", SqliteType.Integer },
             { "streamed_size", SqliteType.Integer }
         };

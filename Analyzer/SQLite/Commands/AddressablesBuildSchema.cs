@@ -9,7 +9,6 @@ namespace Analyzer.SQLite.Commands
             id INTEGER,
             build_id INTEGER,
             guid TEXT,
-            schema_data_pairs TEXT,
             type TEXT,
             PRIMARY KEY (id, build_id)
         );
@@ -23,7 +22,6 @@ namespace Analyzer.SQLite.Commands
             { "id", SqliteType.Integer },
             { "build_id", SqliteType.Integer },
             { "guid", SqliteType.Text },
-            { "schema_data_pairs", SqliteType.Text }, // JSONB type in SQLite uses TEXT
             { "type", SqliteType.Text }
         };
 
