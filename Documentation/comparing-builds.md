@@ -164,7 +164,7 @@ As expected, it's only fields on the MonoBehaviour and one of the Transforms tha
 
 In a normal case we would not know exactly what changed in the build, so rather than confirming the expected changes we probably would be working in the other direction - using comparison technique to see which objects and values changed and try to build an understanding of whether this is "expected" or not.
 
-Note: When you know the id of the object that has changed you can pass the `--object-id` argument to the `dump` command to only dump that object.  This can be useful for large Serialized Files with many objects, where you want to focus on changes to a single object.
+Note: When you know the id of the object that has changed you can pass the `--objectid` argument to the `dump` command to only dump that object.  This can be useful for large Serialized Files with many objects, where you want to focus on changes to a single object.
 
 # Example 2 - Changes in a texture
 
