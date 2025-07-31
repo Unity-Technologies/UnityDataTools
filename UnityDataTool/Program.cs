@@ -75,6 +75,7 @@ public static class Program
             var fOpt = new Option<DumpFormat>(aliases: new[] { "--output-format", "-f" }, description: "Output format", getDefaultValue: () => DumpFormat.Text);
             var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o"}, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
+            var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
 
             var dumpCommand = new Command("dump", "Dump the contents of an AssetBundle or SerializedFile.")
             {
@@ -82,10 +83,11 @@ public static class Program
                 fOpt,
                 sOpt,
                 oOpt,
+                objectIdOpt,
             };
             dumpCommand.SetHandler(
-                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o) => Task.FromResult(HandleDump(fi, f, s, o)),
-                pathArg, fOpt, sOpt, oOpt);
+                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId) => Task.FromResult(HandleDump(fi, f, s, o, objectId)),
+                pathArg, fOpt, sOpt, oOpt, objectIdOpt);
 
             rootCommand.AddCommand(dumpCommand);
         }
@@ -173,14 +175,14 @@ public static class Program
         }
     }
 
-    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder)
+    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder, long objectId = 0)
     {
         switch (format)
         {
             case DumpFormat.Text:
             {
                 var textDumper = new TextDumperTool();
-                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays);
+                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId);
             }
         }
 
