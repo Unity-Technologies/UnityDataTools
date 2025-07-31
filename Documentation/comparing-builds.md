@@ -164,6 +164,8 @@ As expected, it's only fields on the MonoBehaviour and one of the Transforms tha
 
 In a normal case we would not know exactly what changed in the build, so rather than confirming the expected changes we probably would be working in the other direction - using comparison technique to see which objects and values changed and try to build an understanding of whether this is "expected" or not.
 
+Note: When you know the id of the object that has changed you can pass the `--object-id` argument to the `dump` command to only dump that object.  This can be useful for large Serialized Files with many objects, where you want to focus on changes to a single object.
+
 # Example 2 - Changes in a texture
 
 The previous example covers the common case where the changes are limited to serialized values directly inside Serialized Files.  However its also common that data inside the auxiliary .resS and .resource files can change, based on changes to textures, meshes, audio or video.  This can also cause the AssetBundle content to change, even if the Serialized Files themselves are unchanged.

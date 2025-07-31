@@ -22,6 +22,8 @@ public class TextDumperTool
         {
             try
             {
+                // Try the input as an unity archive, e.g. an AssetBundle
+                // In that case we dump each serialized file contained inside it.
                 using var archive = UnityFileSystem.MountArchive(path, "/");
                 foreach (var node in archive.Nodes)
                 {
