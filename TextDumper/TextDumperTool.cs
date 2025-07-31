@@ -356,34 +356,23 @@ public class TextDumperTool
             }
             m_Writer.WriteLine();
 
-            if (objectId == 0)
+            bool dumpedObject = false;
+            foreach (var obj in m_SerializedFile.Objects)
             {
-                foreach (var obj in m_SerializedFile.Objects)
-                {
-                    var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
-                    var offset = obj.Offset;
+                if (objectId != 0 && obj.Id != objectId)
+                    continue;
 
-                    m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
-                    RecursiveDump(root, ref offset, 0);
-                    m_Writer.WriteLine();
-                }
+                var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+                var offset = obj.Offset;
+
+                m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
+                RecursiveDump(root, ref offset, 0);
+                m_Writer.WriteLine();
+                dumpedObject = true;
             }
-            else
-            {
-                var obj = m_SerializedFile.Objects.FirstOrDefault(o => o.Id == objectId);
-                if (obj.Equals(default(ObjectInfo)))
-                {
-                    m_Writer.WriteLine($"Object with ID {objectId} not found.");
-                }
-                else
-                {
-                    var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
-                    var offset = obj.Offset;
-                    m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
-                    RecursiveDump(root, ref offset, 0);
-                    m_Writer.WriteLine();
-                }
-            }
+
+            if (objectId != 0 && !dumpedObject)
+                m_Writer.WriteLine($"Object with ID {objectId} not found.");
         }
     }
 
