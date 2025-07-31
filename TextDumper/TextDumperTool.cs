@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using UnityDataTools.FileSystem;
 
@@ -343,7 +342,7 @@ public class TextDumperTool
         return true;
     }
 
-    void OutputSerializedFile(string path, long objectId = 0)
+    void OutputSerializedFile(string path, long objectId)
     {
         using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
         using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
