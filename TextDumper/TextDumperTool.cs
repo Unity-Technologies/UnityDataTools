@@ -13,7 +13,7 @@ public class TextDumperTool
     SerializedFile m_SerializedFile;
     StreamWriter m_Writer;
 
-    public int Dump(string path, string outputPath, bool skipLargeArrays)
+    public int Dump(string path, string outputPath, bool skipLargeArrays, long objectId = 0)
     {
         m_SkipLargeArrays = skipLargeArrays;
 
@@ -21,6 +21,8 @@ public class TextDumperTool
         {
             try
             {
+                // Try the input as an unity archive, e.g. an AssetBundle
+                // In that case we dump each serialized file contained inside it.
                 using var archive = UnityFileSystem.MountArchive(path, "/");
                 foreach (var node in archive.Nodes)
                 {
@@ -30,7 +32,7 @@ public class TextDumperTool
                     {
                         using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false))
                         {
-                            OutputSerializedFile("/" + node.Path);
+                            OutputSerializedFile("/" + node.Path, objectId);
                         }
                     }
                 }
@@ -40,7 +42,7 @@ public class TextDumperTool
                 // Try as SerializedFile
                 using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
                 {
-                    OutputSerializedFile(path);
+                    OutputSerializedFile(path, objectId);
                 }
             }
         }
@@ -340,7 +342,7 @@ public class TextDumperTool
         return true;
     }
 
-    void OutputSerializedFile(string path)
+    void OutputSerializedFile(string path, long objectId)
     {
         using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
         using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
@@ -355,15 +357,23 @@ public class TextDumperTool
             }
             m_Writer.WriteLine();
 
+            bool dumpedObject = false;
             foreach (var obj in m_SerializedFile.Objects)
             {
+                if (objectId != 0 && obj.Id != objectId)
+                    continue;
+
                 var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
                 var offset = obj.Offset;
 
                 m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
                 RecursiveDump(root, ref offset, 0);
                 m_Writer.WriteLine();
+                dumpedObject = true;
             }
+
+            if (objectId != 0 && !dumpedObject)
+                m_Writer.WriteLine($"Object with ID {objectId} not found.");
         }
     }
 

@@ -111,9 +111,10 @@ only supports the 'text' format, which is similar to the binary2text output form
 
 The command takes the path of the file to dump as argument. It also provides the following options:
 * -o, --output-path <output-path>  Output folder, default is the current folder.
-* -f, --output-format \<format\>: output format, default is 'text'.
+* -f, --output-format <format>: output format, default is 'text'.
 * -s, --skip-large-arrays: the contents of basic data type arrays with a large number of elements
   won't be dumped.
+* -i, --objectid <objectid>: only dump the object with this local file id. If not specified or 0, all objects will be dumped.
 
 Example: `UnityDataTool dump /path/to/file -o /path/to/output`
 
