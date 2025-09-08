@@ -51,5 +51,10 @@ namespace Analyzer.SQLite.Commands
         {
             return m_Command.ExecuteNonQuery();
         }
+
+        public void Dispose()
+        {
+            m_Command?.Dispose();
+        }
     }
 }
