@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
+
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 public class AnimationClipHandler : ISQLiteHandler
@@ -12,7 +13,7 @@ public class AnimationClipHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.AnimationClip;
+        command.CommandText = Resources.AnimationClip;
         command.ExecuteNonQuery();
         
         m_InsertCommand = db.CreateCommand();

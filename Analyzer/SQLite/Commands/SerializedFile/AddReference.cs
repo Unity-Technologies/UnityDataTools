@@ -18,6 +18,8 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
     {
         protected override string TableName => "refs";
 
+        protected override string DDLSource => null;
+
         protected override Dictionary<string, SqliteType> Fields => new()
         {
             { "object", SqliteType.Integer },

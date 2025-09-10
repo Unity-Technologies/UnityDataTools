@@ -18,6 +18,8 @@ namespace Analyzer.SQLite.Commands.AddressablesBuildReport
     {
         protected override string TableName => "addr_build_schema_data_pairs";
 
+        protected override string DDLSource => Properties.Resources.AddrBuildSchemaDataPairs;
+
         protected override Dictionary<string, SqliteType> Fields => new Dictionary<string, SqliteType>
         {
             { "schema_id", SqliteType.Integer },

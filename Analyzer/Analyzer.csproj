@@ -18,6 +18,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="Analyzer.Properties" />
+</ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
   </ItemGroup>

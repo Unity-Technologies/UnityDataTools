@@ -1,16 +1,13 @@
 ﻿using Microsoft.Data.Sqlite;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Analyzer.SQLite.Commands.AddressablesBuildReport
 {
     internal class AddressablesBuild : AbstractCommand
     {
         protected override string TableName { get => "addr_builds"; }
+
+        protected override string DDLSource => Properties.Resources.AddrBuilds;
         protected override Dictionary<string, SqliteType> Fields { get => new Dictionary<string, SqliteType>
         {
             { "name", SqliteType.Text },

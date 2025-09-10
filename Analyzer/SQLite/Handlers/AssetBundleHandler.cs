@@ -15,7 +15,7 @@ public class AssetBundleHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.AssetBundle;
+        command.CommandText = Resources.AssetBundle;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();

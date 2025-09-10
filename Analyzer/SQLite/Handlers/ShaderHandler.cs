@@ -21,7 +21,7 @@ public class ShaderHandler : ISQLiteHandler
         s_GlobalKeywords.Clear();
             
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.Shader;
+        command.CommandText = Resources.Shader;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();

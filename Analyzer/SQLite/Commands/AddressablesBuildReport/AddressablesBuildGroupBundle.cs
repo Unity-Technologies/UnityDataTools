@@ -17,6 +17,8 @@ namespace Analyzer.SQLite.Commands.AddressablesBuildReport
     {
         protected override string TableName => "addr_build_group_bundles";
 
+        protected override string DDLSource => Properties.Resources.AddrBuildGroupBundles;
+
         protected override Dictionary<string, SqliteType> Fields => new Dictionary<string, SqliteType>
         {
             { "group_id", SqliteType.Integer },

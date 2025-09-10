@@ -7,8 +7,6 @@ using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 using UnityDataTools.Analyzer.Build;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Xml.Linq;
 using Newtonsoft.Json;
 using Analyzer.SQLite.Commands.AddressablesBuildReport;
 using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
@@ -118,7 +116,7 @@ public class SQLiteWriter : IWriter
         }
 
         using var command = m_Database.CreateCommand();
-        command.CommandText = Properties.Resources.Init;
+        command.CommandText = Resources.Init;
         command.ExecuteNonQuery();
 
         foreach (var handler in m_Handlers.Values)
@@ -146,7 +144,7 @@ public class SQLiteWriter : IWriter
         }
 
         using var finalizeCommand = m_Database.CreateCommand();
-        finalizeCommand.CommandText = Properties.Resources.Finalize;
+        finalizeCommand.CommandText = Resources.Finalize;
         finalizeCommand.ExecuteNonQuery();
     }
 

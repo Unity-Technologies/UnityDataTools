@@ -17,6 +17,8 @@ namespace Analyzer.SQLite.Commands.AddressablesBuildReport
     {
         protected override string TableName => "addr_build_explicit_asset_labels";
 
+        protected override string DDLSource => Properties.Resources.AddrBuildExplicitAssetLabels;
+
         protected override Dictionary<string, SqliteType> Fields => new Dictionary<string, SqliteType>
         {
             { "explicit_asset_id", SqliteType.Integer },

@@ -17,6 +17,8 @@ namespace Analyzer.SQLite.Commands.AddressablesBuildReport
     {
         protected override string TableName => "addr_build_file_other_assets";
 
+        protected override string DDLSource => Properties.Resources.AddrBuildFileOtherAssets;
+
         protected override Dictionary<string, SqliteType> Fields => new Dictionary<string, SqliteType>
         {
             { "file_id", SqliteType.Integer },

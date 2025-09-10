@@ -14,8 +14,25 @@ namespace Analyzer.SQLite.Commands
 
         private SqliteCommand m_Command = new SqliteCommand();
 
+        protected virtual string DDLSource { get => null; }
+
+        // run data definition language commands to create
+        // tables and views, run once at the beginning of creating
+        // the database
+        public void RunDDL(SqliteConnection database)
+        {
+            if (DDLSource == null)
+                return;
+            using var command = database.CreateCommand();
+            command.CommandText = DDLSource;
+            command.ExecuteNonQuery();
+        }
+
         public void CreateCommand(SqliteConnection database)
         {
+            // TODO: Maybe make this explicit?
+            RunDDL(database);
+
             m_Command = database.CreateCommand();
             var commandText = new StringBuilder($"INSERT INTO {TableName} (");
             commandText.Append(string.Join(", ", Fields.Keys));

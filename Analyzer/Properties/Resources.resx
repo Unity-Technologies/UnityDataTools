@@ -142,4 +142,86 @@
   <data name="Texture2D" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Texture2D.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="AddrBuilds" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuilds.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildBundles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildBundles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildBundleDependentBundles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildBundleDependentBundles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildBundleDependencies" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildBundleDependencies.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildBundleExpandedDependencies" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildBundleExpandedDependencies.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildBundleFiles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildBundleFiles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildBundleRegularDependencies" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildBundleRegularDependencies.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildDataFromOtherAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildDataFromOtherAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildDataFromOtherAssetObjects" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildDataFromOtherAssetObjects.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildDataFromOtherAssetObjectReferences" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildDataFromOtherAssetObjectReferences.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildDataFromOtherAssetReferencingAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildDataFromOtherAssetReferencingAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildExplicitAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildExplicitAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildExplicitAssetExternallyReferencedAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildExplicitAssetExternallyReferencedAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildExplicitAssetInternalReferencedExplicitAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildExplicitAssetInternalReferencedExplicitAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildExplicitAssetInternalReferencedOtherAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildExplicitAssetInternalReferencedOtherAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildExplicitAssetLabels" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildExplicitAssetLabels.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildFiles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildFiles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildFileAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildFileAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildFileOtherAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildFileOtherAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildFileSubFiles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildFileSubFiles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildFileExternalReferences" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildFileExternalReferences.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildGroupBundles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildGroupBundles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+
+  <data name="AddrBuildGroups" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildGroups.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildGroupSchemas" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildGroupSchemas.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildSchemas" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildSchemas.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildSubFiles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildSubFiles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="AddrBuildSchemaDataPairs" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AddrBuildSchemaDataPairs.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>
