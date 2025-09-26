@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.CompilerServices;
 using UnityDataTools.Analyzer.SQLite;
 using UnityDataTools.FileSystem;
 
@@ -42,28 +41,35 @@ public class AnalyzerTool
             searchPattern,
             noRecursion ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories);
 
+        int countFailures = 0;
+        int countSuccess = 0;
+        int countIgnored = 0;
         int i = 1;
         foreach (var file in files)
         {
             if (ShouldIgnoreFile(file))
             {
-                var relativePath = Path.GetRelativePath(path, file);
-
                 if (m_Verbose)
                 {
+                    var relativePath = Path.GetRelativePath(path, file);
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
-                ++i;
-                continue;
+                countIgnored++;
             }
-
-            ProcessFile(file, path, writer, i, files.Length);
+            else if (!ProcessFile(file, path, writer, i, files.Length))
+            {
+                countFailures++;
+            }
+            else
+            {
+                countSuccess++;
+            }
             ++i;
         }
 
         Console.WriteLine();
-        Console.WriteLine("Finalizing database...");
+        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Ignored files: {countIgnored}");
 
         writer.End();
 
@@ -99,11 +105,13 @@ public class AnalyzerTool
 
     private static readonly HashSet<string> IgnoredExtensions = new()
     {
-        ".txt", ".resS", ".resource", ".json", ".dll", ".pdb", ".exe", ".manifest", ".entities", ".entityheader"
+        ".txt", ".resS", ".resource", ".json", ".dll", ".pdb", ".exe", ".manifest", ".entities", ".entityheader",
+        ".ini", ".config"
     };
 
-    void ProcessFile(string file, string rootDirectory, SQLiteWriter writer, int fileIndex, int cntFiles)
+    bool ProcessFile(string file, string rootDirectory, SQLiteWriter writer, int fileIndex, int cntFiles)
     {
+        bool successful = true;
         try
         {
             if (IsUnityArchive(file))
@@ -139,6 +147,10 @@ public class AnalyzerTool
                                     Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
                                     Console.Error.WriteLine(e.Message);
                                     Console.WriteLine();
+
+                                    // It is possible some files inside an archive will pass and others will fail, to have a partial analyze.
+                                    // Overall that is reported as a failure
+                                    successful = false;
                                 }
                             }
                         }
@@ -168,6 +180,8 @@ public class AnalyzerTool
             EraseProgressLine();
             Console.Error.WriteLine();
             //A "failed to load" error will already be logged by the UnityFileSystem library
+
+            successful = false;
         }
         catch (Exception e)
         {
@@ -177,7 +191,11 @@ public class AnalyzerTool
             Console.WriteLine($"{e.GetType()}: {e.Message}");
             if (m_Verbose)
                 Console.WriteLine(e.StackTrace);
+
+            successful = false;
         }
+
+        return successful;
     }
 
     private static bool IsUnityArchive(string filePath)
