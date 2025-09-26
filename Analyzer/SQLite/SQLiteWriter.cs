@@ -177,7 +177,14 @@ public class SQLiteWriter : IWriter
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
         using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, AddReference);
-        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLower());
+
+        // Determine a unique id for this serialized file.
+        // When processing AssetBundles the fullPath is a virtual path inside the AssetBundle.
+        // Normally the serialized files have unique names across the output of an AssetBundle build.
+        // But we mix in the containing folder in case analyze is being run on the output of more than one build.
+        var uniquePath = $"{Path.GetFileName(fullPath).ToLower()}-{containingFolder}";
+        int serializedFileId = m_SerializedFileIdProvider.GetId(uniquePath);
+
         int sceneId = -1;
 
         using var transaction = m_Database.BeginTransaction();
@@ -192,7 +199,8 @@ public class SQLiteWriter : IWriter
             // There is no Scene object in Unity (a Scene is the full content of a
             // SerializedFile). We generate an object id using the name of the Scene
             // as SerializedFile name, and the object id 0.
-            sceneId = m_ObjectIdProvider.GetId((m_SerializedFileIdProvider.GetId(sceneName), 0));
+            string uniqueSceneName = $"{sceneName}-{containingFolder}";
+            sceneId = m_ObjectIdProvider.GetId((m_SerializedFileIdProvider.GetId(uniqueSceneName), 0));
 
             // There are 2 SerializedFiles per Scene, one ends with .sharedAssets. This is a
             // dirty trick to avoid inserting the scene object a second time.
@@ -239,8 +247,14 @@ public class SQLiteWriter : IWriter
             m_LocalToDbFileId.Add(localId++, serializedFileId);
             foreach (var extRef in sf.ExternalReferences)
             {
-                m_LocalToDbFileId.Add(localId++,
-                    m_SerializedFileIdProvider.GetId(extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLower()));
+                // References inside an AssetBundle point to the SerializedFile, not the AssetBundle.
+                // This works provided the AssetBundle is loaded, making the Serialized Files visible, and those
+                // files are normally unique per build output.
+                // To support analyzing multiple builds in different folders we mix in the containing folder to
+                // generate the unique id.  If multiple AssetBundles in the same folder have the same serialized file name
+                // then the reference is ambiguous and there will be an SQL unique constraint exception.
+                string uniqueExternalPath = $"{extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLower()}-{containingFolder}";
+                m_LocalToDbFileId.Add(localId++, m_SerializedFileIdProvider.GetId(uniqueExternalPath));
             }
 
             foreach (var obj in sf.Objects)
