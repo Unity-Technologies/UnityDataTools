@@ -1,4 +1,4 @@
-create table addr_build_schema_data_pairs
+CREATE TABLE IF NOT EXISTS addr_build_schema_data_pairs
 (
     schema_id INTEGER,
     build_id INTEGER,

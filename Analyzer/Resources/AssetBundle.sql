@@ -1,9 +1,9 @@
-﻿CREATE TABLE assets(
+﻿CREATE TABLE IF NOT EXISTS assets(
     object INTEGER,
     name TEXT
 );
 
-CREATE TABLE asset_dependencies(
+CREATE TABLE IF NOT EXISTS asset_dependencies(
     object INTEGER,
     dependency INTEGER
 );

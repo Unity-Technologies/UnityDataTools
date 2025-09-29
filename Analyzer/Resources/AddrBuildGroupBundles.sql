@@ -1,4 +1,4 @@
-create table addr_build_group_bundles
+CREATE TABLE IF NOT EXISTS addr_build_group_bundles
 (
     group_id INTEGER,
     build_id INTEGER,

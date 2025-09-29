@@ -1,4 +1,4 @@
-CREATE TABLE addr_builds
+CREATE TABLE IF NOT EXISTS addr_builds
 (
     id INTEGER,
     name TEXT,

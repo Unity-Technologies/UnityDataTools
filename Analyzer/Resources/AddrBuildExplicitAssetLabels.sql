@@ -1,4 +1,4 @@
-create table addr_build_explicit_asset_labels
+CREATE TABLE IF NOT EXISTS addr_build_explicit_asset_labels
 (
     explicit_asset_id INTEGER,
     build_id INTEGER,

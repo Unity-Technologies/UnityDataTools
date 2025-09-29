@@ -1,4 +1,4 @@
-create table addr_build_file_assets
+CREATE TABLE IF NOT EXISTS addr_build_file_assets
 (
     file_id INTEGER,
     build_id INTEGER,

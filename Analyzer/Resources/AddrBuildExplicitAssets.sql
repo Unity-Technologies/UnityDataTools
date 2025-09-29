@@ -1,4 +1,4 @@
-create table addr_build_explicit_assets
+CREATE TABLE IF NOT EXISTS addr_build_explicit_assets
 (
     id INTEGER,
     build_id INTEGER,

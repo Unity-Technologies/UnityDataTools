@@ -1,4 +1,4 @@
-create table addr_build_data_from_other_assets
+CREATE TABLE IF NOT EXISTS addr_build_data_from_other_assets
 (
     id INTEGER,
     build_id INTEGER,

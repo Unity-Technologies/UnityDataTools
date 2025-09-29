@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,7 +47,7 @@ public class AnalyzerTool
         int i = 1;
         foreach (var file in files)
         {
-            if (Path.GetExtension(file) == ".json")
+            if (Path.GetExtension(file) == ".json" && IsAddressablesBuildReport(file))
             {
                 ProcessAddressablesBuild(file, writer, i, files.Length);
                 ++i;
@@ -233,5 +234,46 @@ public class AnalyzerTool
             Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}");
         else
             Console.WriteLine();
+    }
+
+    bool IsAddressablesBuildReport(string filename)
+    {
+        // Read the first line of the JSON file and check if it contains BuildResultHash
+        string firstLine = "";
+        try
+        {
+            using (StreamReader reader = new StreamReader(filename))
+            {
+                firstLine = reader.ReadLine();
+                if (firstLine != null)
+                {
+                    // Remove trailing comma if present and add closing brace to make it valid JSON
+                    if (firstLine.TrimEnd().EndsWith(","))
+                    {
+                        firstLine = firstLine.TrimEnd().TrimEnd(',') + "}";
+                    }
+
+                    using (JsonTextReader jsonReader = new JsonTextReader(new StringReader(firstLine)))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        var jsonObject = serializer.Deserialize<JObject>(jsonReader);
+
+                        // If the file has BuildResultHash, process it as an Addressables build
+                        if (jsonObject != null && jsonObject["BuildResultHash"] != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            if (m_Verbose)
+            {
+                Console.Error.WriteLine($"Error reading JSON file {filename}: {e.Message}");
+            }
+        }
+        return false;
     }
 }

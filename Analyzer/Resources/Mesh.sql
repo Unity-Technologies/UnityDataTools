@@ -1,4 +1,4 @@
-﻿CREATE TABLE meshes(
+﻿CREATE TABLE IF NOT EXISTS meshes(
     id INTEGER,
     sub_meshes INTEGER,
     blend_shapes INTEGER,

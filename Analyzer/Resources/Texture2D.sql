@@ -1,11 +1,11 @@
-﻿CREATE TABLE texture_formats
+﻿CREATE TABLE IF NOT EXISTS texture_formats
 (
     id INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE textures
+CREATE TABLE IF NOT EXISTS textures
 (
     id INTEGER,
     width INTEGER,

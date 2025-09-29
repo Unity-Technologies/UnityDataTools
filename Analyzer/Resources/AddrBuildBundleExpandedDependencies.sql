@@ -1,4 +1,4 @@
-create table addr_build_bundle_expanded_dependencies
+CREATE TABLE IF NOT EXISTS addr_build_bundle_expanded_dependencies
 (
     bundle_id INTEGER,
     build_id INTEGER,

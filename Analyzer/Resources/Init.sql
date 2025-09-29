@@ -1,11 +1,11 @@
-CREATE TABLE types
+CREATE TABLE IF NOT EXISTS types
 (
     id INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE asset_bundles
+CREATE TABLE IF NOT EXISTS asset_bundles
 (
     id INTEGER,
     name TEXT,
@@ -13,7 +13,7 @@ CREATE TABLE asset_bundles
     PRIMARY KEY (id)
 );
 
-CREATE TABLE serialized_files
+CREATE TABLE IF NOT EXISTS serialized_files
 (
     id INTEGER,
     asset_bundle INTEGER,
@@ -21,7 +21,7 @@ CREATE TABLE serialized_files
     PRIMARY KEY (id)
 );
 
-CREATE TABLE objects
+CREATE TABLE IF NOT EXISTS objects
 (
     id INTEGER,
     object_id INTEGER,
@@ -34,7 +34,7 @@ CREATE TABLE objects
     PRIMARY KEY (id)
 );
 
-CREATE TABLE refs
+CREATE TABLE IF NOT EXISTS refs
 (
     object INTEGER,
     referenced_object INTEGER,
@@ -103,272 +103,5 @@ WHERE m.type = "Material";
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
-CREATE TABLE addr_builds
-(
-    id INTEGER,
-    name TEXT,
-    build_target INTEGER,
-    start_time TEXT,
-    duration REAL,
-    error TEXT,
-    package_version TEXT,
-    player_version TEXT,
-    build_script TEXT,
-    result_hash TEXT,
-    type INTEGER,
-    unity_version TEXT,
-    PRIMARY KEY (id)
-);
-
-create table addr_build_bundles
-(
-    id INTEGER,
-    build_id INTEGER,
-    asset_count INTEGER,
-    build_status INTEGER,
-    crc INTEGER,
-    compression TEXT,
-    dependency_file_size INTEGER,
-    expanded_dependency_file_size INTEGER,
-    file_size INTEGER,
-    group_rid INTEGER,
-    hash TEXT,
-    internal_name TEXT,
-    load_path TEXT,
-    name TEXT,
-    provider TEXT,
-    result_type TEXT,
-    PRIMARY KEY (id, build_id)
-);
-create table addr_build_bundle_dependent_bundles
-(
-    bundle_id INTEGER,
-    build_id INTEGER,
-    dependent_bundle_rid INTEGER,
-    PRIMARY KEY (bundle_id, build_id, dependent_bundle_rid),
-    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
-);
-create table addr_build_bundle_dependencies
-(
-    bundle_id INTEGER,
-    build_id INTEGER,
-    dependency_rid INTEGER,
-    PRIMARY KEY (bundle_id, build_id, dependency_rid),
-    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
-);
-create table addr_build_bundle_expanded_dependencies
-(
-    bundle_id INTEGER,
-    build_id INTEGER,
-    dependency_rid INTEGER,
-    PRIMARY KEY (bundle_id, build_id, dependency_rid),
-    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
-);
-
-create table addr_build_bundle_files
-(
-    bundle_id INTEGER,
-    build_id INTEGER,
-    file_rid INTEGER,
-    PRIMARY KEY (bundle_id, build_id, file_rid),
-    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
-);
-    create table addr_build_bundle_regular_dependencies
-(
-    bundle_id INTEGER,
-    build_id INTEGER,
-    dependency_rid INTEGER,
-    PRIMARY KEY (bundle_id, build_id, dependency_rid),
-    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
-);
-    create table addr_build_data_from_other_assets
-(
-    id INTEGER,
-    build_id INTEGER,
-    asset_guid TEXT,
-    asset_path TEXT,
-    file INTEGER,
-    main_asset_type INTEGER,
-    object_count INTEGER,
-    serialized_size INTEGER,
-    streamed_size INTEGER,
-    PRIMARY KEY (id, build_id)
-);
-create table addr_build_data_from_other_asset_objects
-(
-    data_from_other_asset_id INTEGER,
-    build_id INTEGER,
-    asset_type INTEGER,
-    component_name TEXT,
-    local_identifier_in_file INTEGER,
-    object_name TEXT,
-    serialized_size INTEGER,
-    streamed_size INTEGER,
-    PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file),
-    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addr_build_data_from_other_assets(id, build_id)
-);
-create table addr_build_data_from_other_asset_object_references
-(
-    data_from_other_asset_id INTEGER,
-    build_id INTEGER,
-    local_identifier_in_file INTEGER,
-    asset_id INTEGER,
-    object_id INTEGER,
-    PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file, asset_id, object_id),
-    FOREIGN KEY (data_from_other_asset_id, build_id, local_identifier_in_file) REFERENCES addr_build_data_from_other_asset_objects(data_from_other_asset_id, build_id, local_identifier_in_file)
-);
-create table addr_build_data_from_other_asset_referencing_assets
-(
-    data_from_other_asset_id INTEGER,
-    build_id INTEGER,
-    referencing_asset_rid INTEGER,
-    PRIMARY KEY (data_from_other_asset_id, build_id, referencing_asset_rid),
-    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addr_build_data_from_other_assets(id, build_id)
-);
-create table addr_build_explicit_assets
-(
-    id INTEGER,
-    build_id INTEGER,
-    bundle INTEGER,
-    file INTEGER,
-    asset_hash TEXT,
-    asset_path TEXT,
-    addressable_name TEXT,
-    group_guid TEXT,
-    guid TEXT,
-    internal_id TEXT,
-    main_asset_type INTEGER,
-    serialized_size INTEGER,
-    streamed_size INTEGER,
-    PRIMARY KEY (id, build_id)
-);
-create table addr_build_explicit_asset_externally_referenced_assets
-(
-    explicit_asset_id INTEGER,
-    build_id INTEGER,
-    externally_referenced_asset_rid INTEGER,
-    PRIMARY KEY (explicit_asset_id, build_id, externally_referenced_asset_rid),
-    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
-);
-create table addr_build_explicit_asset_internal_referenced_explicit_assets
-(
-    explicit_asset_id INTEGER,
-    build_id INTEGER,
-    internal_referenced_explicit_asset_rid INTEGER,
-    PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_explicit_asset_rid),
-    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
-);
-create table addr_build_explicit_asset_internal_referenced_other_assets
-(
-    explicit_asset_id INTEGER,
-    build_id INTEGER,
-    internal_referenced_other_asset_rid INTEGER,
-    PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_other_asset_rid),
-    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
-);
-create table addr_build_explicit_asset_labels
-(
-    explicit_asset_id INTEGER,
-    build_id INTEGER,
-    label TEXT,
-    PRIMARY KEY (explicit_asset_id, build_id, label),
-    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
-);
-create table addr_build_files
-(
-    id INTEGER,
-    build_id INTEGER,
-    bundle INTEGER,
-    bundle_object_info_size INTEGER,
-    mono_script_count INTEGER,
-    mono_script_size INTEGER,
-    name TEXT,
-    preload_info_size INTEGER,
-    write_result_filename TEXT,
-    PRIMARY KEY (id, build_id)
-);
-create table addr_build_file_assets
-(
-    file_id INTEGER,
-    build_id INTEGER,
-    asset_rid INTEGER,
-    PRIMARY KEY (file_id, build_id, asset_rid),
-    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
-);
-create table addr_build_file_other_assets
-(
-    file_id INTEGER,
-    build_id INTEGER,
-    other_asset_rid INTEGER,
-    PRIMARY KEY (file_id, build_id, other_asset_rid),
-    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
-);
-create table addr_build_file_sub_files
-(
-    file_id INTEGER,
-    build_id INTEGER,
-    sub_file_rid INTEGER,
-    PRIMARY KEY (file_id, build_id, sub_file_rid),
-    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
-);
-create table addr_build_file_external_references
-(
-    file_id INTEGER,
-    build_id INTEGER,
-    external_reference_rid INTEGER,
-    PRIMARY KEY (file_id, build_id, external_reference_rid),
-    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
-);
-create table addr_build_groups
-(
-    id INTEGER,
-    build_id INTEGER,
-    guid TEXT,
-    name TEXT,
-    packing_mode TEXT,
-    PRIMARY KEY (id, build_id)
-);
-create table addr_build_group_bundles
-(
-    group_id INTEGER,
-    build_id INTEGER,
-    bundle_rid INTEGER,
-    PRIMARY KEY (group_id, build_id, bundle_rid),
-    FOREIGN KEY (group_id, build_id) REFERENCES addr_build_groups(id, build_id)
-);
-create table addr_build_group_schemas
-(
-    group_id INTEGER,
-    build_id INTEGER,
-    schema_rid INTEGER,
-    PRIMARY KEY (group_id, build_id, schema_rid),
-    FOREIGN KEY (group_id, build_id) REFERENCES addr_build_groups(id, build_id)
-);
-create table addr_build_schemas
-(
-    id INTEGER,
-    build_id INTEGER,
-    guid TEXT,
-    type TEXT,
-    PRIMARY KEY (id, build_id)
-);
-create table addr_build_schema_data_pairs
-(
-    schema_id INTEGER,
-    build_id INTEGER,
-    key TEXT,
-    value TEXT,
-    PRIMARY KEY (schema_id, build_id, key),
-    FOREIGN KEY (schema_id, build_id) REFERENCES addr_build_schemas(id, build_id)
-);
-create table addr_build_sub_files
-(
-    id INTEGER,
-    build_id INTEGER,
-    is_serialized_file INTEGER,
-    name TEXT,
-    size INTEGER,
-    PRIMARY KEY (id, build_id)
-);
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

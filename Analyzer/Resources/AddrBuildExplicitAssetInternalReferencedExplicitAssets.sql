@@ -1,4 +1,4 @@
-create table addr_build_explicit_asset_internal_referenced_explicit_assets
+CREATE TABLE IF NOT EXISTS addr_build_explicit_asset_internal_referenced_explicit_assets
 (
     explicit_asset_id INTEGER,
     build_id INTEGER,

@@ -1,4 +1,4 @@
-create table addr_build_file_external_references
+CREATE TABLE IF NOT EXISTS addr_build_file_external_references
 (
     file_id INTEGER,
     build_id INTEGER,
