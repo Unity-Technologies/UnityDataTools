@@ -41,28 +41,35 @@ public class AnalyzerTool
             searchPattern,
             noRecursion ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories);
 
+        int countFailures = 0;
+        int countSuccess = 0;
+        int countIgnored = 0;
         int i = 1;
         foreach (var file in files)
         {
             if (ShouldIgnoreFile(file))
             {
-                var relativePath = Path.GetRelativePath(path, file);
-
                 if (m_Verbose)
                 {
+                    var relativePath = Path.GetRelativePath(path, file);
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
-                ++i;
-                continue;
+                countIgnored++;
             }
-
-            ProcessFile(file, path, writer, i, files.Length);
+            else if (!ProcessFile(file, path, writer, i, files.Length))
+            {
+                countFailures++;
+            }
+            else
+            {
+                countSuccess++;
+            }
             ++i;
         }
 
         Console.WriteLine();
-        Console.WriteLine("Finalizing database...");
+        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Ignored files: {countIgnored}");
 
         writer.End();
 
@@ -98,62 +105,74 @@ public class AnalyzerTool
 
     private static readonly HashSet<string> IgnoredExtensions = new()
     {
-        ".txt", ".resS", ".resource", ".json", ".dll", ".pdb", ".exe", ".manifest", ".entities", ".entityheader"
+        ".txt", ".resS", ".resource", ".json", ".dll", ".pdb", ".exe", ".manifest", ".entities", ".entityheader",
+        ".ini", ".config"
     };
 
-    void ProcessFile(string file, string rootDirectory, SQLiteWriter writer, int fileIndex, int cntFiles)
+    bool ProcessFile(string file, string rootDirectory, SQLiteWriter writer, int fileIndex, int cntFiles)
     {
+        bool successful = true;
         try
         {
-            UnityArchive archive = null;
-
-            try
+            if (IsUnityArchive(file))
             {
-                archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar);
+                using (UnityArchive archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar))
+                {
+                    if (archive == null)
+                        throw new FileLoadException($"Failed to mount archive: {file}");
+
+                    try
+                    {
+                        var assetBundleName = Path.GetRelativePath(rootDirectory, file);
+
+                        writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
+                        ReportProgress(assetBundleName, fileIndex, cntFiles);
+
+                        foreach (var node in archive.Nodes)
+                        {
+                            if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
+                            {
+                                try
+                                {
+                                    writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
+                                }
+                                catch (Exception e)
+                                {
+                                    // the most likely exception here is Microsoft.Data.Sqlite.SqliteException,
+                                    // for example 'UNIQUE constraint failed: serialized_files.id'.
+                                    // or 'UNIQUE constraint failed: objects.id' which can happen
+                                    // if AssetBundles from different builds are being processed by a single call to Analyze
+                                    // or if there is a Unity Data Tool bug.
+                                    EraseProgressLine();
+                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
+                                    Console.Error.WriteLine(e.Message);
+                                    Console.WriteLine();
+
+                                    // It is possible some files inside an archive will pass and others will fail, to have a partial analyze.
+                                    // Overall that is reported as a failure
+                                    successful = false;
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        writer.EndAssetBundle();
+                    }
+                }
             }
-            catch (NotSupportedException)
+            else
             {
-                // It wasn't an AssetBundle, try to open the file as a SerializedFile.
-
+                // This isn't a Unity Archive file.  Try to open it as a SerializedFile.
+                // Unfortunately there is no standard file extension, or clear signature at the start of the file,
+                // to test if it truly is a SerializedFile.  So this will process files that are clearly not unity build files,
+                // and there is a chance for crashes and freezes if the parser misinterprets the file content.
                 var relativePath = Path.GetRelativePath(rootDirectory, file);
                 writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
 
                 ReportProgress(relativePath, fileIndex, cntFiles);
             }
 
-            if (archive != null)
-            {
-                try
-                {
-                    var assetBundleName = Path.GetRelativePath(rootDirectory, file);
-
-                    writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
-                    ReportProgress(assetBundleName, fileIndex, cntFiles);
-
-                    foreach (var node in archive.Nodes)
-                    {
-                        if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                        {
-                            try
-                            {
-                                writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
-                            }
-                            catch (Exception e)
-                            {
-                                EraseProgressLine();
-                                Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
-                                Console.Error.WriteLine(e);
-                                Console.WriteLine();
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    writer.EndAssetBundle();
-                    archive.Dispose();
-                }
-            }
             EraseProgressLine();
         }
         catch (NotSupportedException)
@@ -161,6 +180,8 @@ public class AnalyzerTool
             EraseProgressLine();
             Console.Error.WriteLine();
             //A "failed to load" error will already be logged by the UnityFileSystem library
+
+            successful = false;
         }
         catch (Exception e)
         {
@@ -170,8 +191,46 @@ public class AnalyzerTool
             Console.WriteLine($"{e.GetType()}: {e.Message}");
             if (m_Verbose)
                 Console.WriteLine(e.StackTrace);
+
+            successful = false;
+        }
+
+        return successful;
+    }
+
+    private static bool IsUnityArchive(string filePath)
+    {
+        // Check whether a file is a Unity Archive (AssetBundle) by looking for known signatures at the start of the file.
+        // "UnifyFS" is the current signature, but some older formats of the file are still supported
+        string[] signatures = { "UnityFS", "UnityWeb", "UnityRaw", "UnityArchive" };
+        int maxLen = 12; // "UnityArchive".Length
+        byte[] buffer = new byte[maxLen];
+
+        using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            int read = fs.Read(buffer, 0, buffer.Length);
+            foreach (var sig in signatures)
+            {
+                if (read >= sig.Length)
+                {
+                    bool match = true;
+                    for (int i = 0; i < sig.Length; ++i)
+                    {
+                        if (buffer[i] != sig[i])
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match)
+                        return true;
+                }
+            }
+            return false;
         }
     }
+
+
 
     int m_LastProgressMessageLength = 0;
 
@@ -195,7 +254,7 @@ public class AnalyzerTool
     void EraseProgressLine()
     {
         if (!m_Verbose)
-            Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}");
+            Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}\r");
         else
             Console.WriteLine();
     }
