@@ -17,19 +17,19 @@ namespace Analyzer.SQLite.Parsers
 {
     public class AddressablesBuildLayoutParser : ISQLiteFileParser
     {
-        private AddressablesBuildLayoutSQLWriter writer;
+        private AddressablesBuildLayoutSQLWriter m_Writer;
 
         public bool Verbose { get; set; }
         public bool SkipReferences { get; set; }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            m_Writer.Dispose();
         }
         public void Init(SqliteConnection db)
         {
-            writer = new AddressablesBuildLayoutSQLWriter(db);
-            writer.Init();
+            m_Writer = new AddressablesBuildLayoutSQLWriter(db);
+            m_Writer.Init();
         }
 
         public bool CanParse(string filename)
@@ -83,7 +83,7 @@ namespace Analyzer.SQLite.Parsers
             {
                 JsonSerializer serializer = new JsonSerializer();
                 BuildLayout buildLayout = (BuildLayout)serializer.Deserialize(reader, typeof(BuildLayout));
-                writer.WriteAddressablesBuild(filename, buildLayout);
+                m_Writer.WriteAddressablesBuild(filename, buildLayout);
             }
         }
     }

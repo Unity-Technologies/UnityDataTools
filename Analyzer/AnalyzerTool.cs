@@ -109,7 +109,7 @@ public class AnalyzerTool
             parser.Dispose();
         }
 
-            timer.Stop();
+        timer.Stop();
         Console.WriteLine();
         Console.WriteLine($"Total time: {(timer.Elapsed.TotalMilliseconds / 1000.0):F3} s");
 

@@ -1,9 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Analyzer.SQLite.Commands
 {
@@ -30,7 +28,6 @@ namespace Analyzer.SQLite.Commands
 
         public void CreateCommand(SqliteConnection database)
         {
-            // TODO: Maybe make this explicit?
             RunDDL(database);
 
             m_Command = database.CreateCommand();

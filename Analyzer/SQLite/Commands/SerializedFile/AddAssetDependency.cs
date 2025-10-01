@@ -16,7 +16,7 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
     {
         protected override string TableName => "asset_dependencies";
 
-        protected override string DDLSource => null;
+        protected override string DDLSource => Resources.AssetBundle;
 
         protected override Dictionary<string, SqliteType> Fields => new()
         {

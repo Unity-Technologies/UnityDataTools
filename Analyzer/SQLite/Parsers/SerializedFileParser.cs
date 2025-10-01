@@ -22,7 +22,7 @@ namespace Analyzer.SQLite.Parsers
         {
             return ShouldIgnoreFile(filename) == false;
         }
-        
+
 
         public void Dispose()
         {
@@ -31,7 +31,8 @@ namespace Analyzer.SQLite.Parsers
 
         public void Init(SqliteConnection db)
         {
-            m_Writer = new AssetBundleSQLiteWriter(db, Verbose);
+            m_Writer = new AssetBundleSQLiteWriter(db, SkipReferences);
+            m_Writer.Init();
         }
 
         public void Parse(string filename)
