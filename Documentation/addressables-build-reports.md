@@ -19,7 +19,7 @@ The Addressables build data is stored across multiple related tables in the SQLi
 **Files** - the file in the asset bundle that contains serialized files
 **SubFiles** - files that are bundled in the asset bundle, but not stored with the rest of the serialized files (resS, scene sharedAssets)
 **Explicit Assets** - these are assets that have had the Addressable checkbox checked in the Editor
-**Other Assets** - these are assets that are included because an explcit asset depends upon them
+**Other Assets** - these are assets that are included because an explicit asset depends upon them
 
 ### Core Tables
 
@@ -50,7 +50,7 @@ Bundle-level information including asset counts and file sizes.
 #### `addr_build_bundle_dependent_bundles
 Maps bundles to the bundles they depend upon (dependent bundles will be loaded as long as the bundle in question is loaded).
   * bundle_id maps to addr_build_bundles.id
-  * dependent_bundle_rid maps ot addr_build_bundles.id
+  * dependent_bundle_rid maps to addr_build_bundles.id
 
 #### `addr_build_bundle_files`
 List files in bundles. These are the serialized files and external files.
@@ -102,6 +102,7 @@ Once the data is in the database, you can run queries to analyze your Addressabl
 SELECT cached_name
 FROM addr_build_cached_bundles
 WHERE catalog_name = 'packedassets7_assets_all_61d3358060e969d3aad2d9c5c3a7d69b.bundle';
+```
 
 #### Bundle Size Analysis
 ```sql
