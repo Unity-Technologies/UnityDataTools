@@ -12,78 +12,68 @@ The Addressables build data is stored across multiple related tables in the SQLi
 
 ## Concepts
 
-**Builds** - a build is 
+**Builds** - a build corresponds to a content build. This can be part of a player build, or standalone through the Addressables groups window
+**Bundles** - asset bundles that are output by the build. 
+**Groups** - groups in the Addressable Groups window whose settings generate one or more Asset Bundles
+**Schemas** - settings for groups that determine how bundles are generated
+**Files** - the file in the asset bundle that contains serialized files
+**SubFiles** - files that are bundled in the asset bundle, but not stored with the rest of the serialized files (resS, scene sharedAssets)
 **Explicit Assets** - these are assets that have had the Addressable checkbox checked in the Editor
-
-
+**Other Assets** - these are assets that are included because an explcit asset depends upon them
 
 ### Core Tables
 
 #### `addr_builds`
-Main build information table containing:
-- Build metadata (target, start time, duration, errors)
-- Unity and Addressables version information
-- Build script and result hash
-- Build type (new build vs. update)
-
-#### `addr_build_bundles`
-Bundle-level information including:
-- Asset counts and file sizes
-- Compression settings and CRC values
-- Load paths and provider information
-- Dependency file sizes (compressed and expanded)
-- Internal name (filename used in Unity cache)
-- Build status and result types
-
-#### `addr_build_cached_bundles`
-A view that contains the filename of the built bundle and the name it is stored in the Unity runtime cache.`
+Main build information table
+  * id maps to build_id in other tables
 
 #### `addr_build_groups`
-Addressables group configuration:
-- Group names and GUIDs
-- Packing mode settings
-- Associated bundles and schemas
+Contains groups used in the build and whether they're pack separate or together.
+  * guid maps to group_guid in other tables
 
-#### `addr_build_files`
-File-level details within bundles:
-- MonoScript counts and sizes
-- Bundle object information
-- Preload information sizes
-- File names and result filenames
-
-### Asset and Reference Tables
-
-#### `addr_build_explicit_assets`
-Explicit Addressable assets. These are assets that have had the Addressables checkbox checked. With:
-- Asset paths and addresses
-- GUID and internal ID information
-- Size information (serialized and streamed)
-- Asset type and labeling information
-
-#### `addr_build_explicit_asset_labels`
-Labels that have been assigned to explict addresable asses.
+#### `addr_build_group_schemas`
+Map groups to their schemas
+  * schema_rid maps to addr_group_schemas.id
+  * group_id maps to addr_build_groups.id
 
 #### `addr_build_schemas`
-Group schema configurations:
-- Schema types and GUIDs
-- Configuration data pairs
+Contain schema names.
+  * id maps to addr_group_schemas.id
 
-#### `addr_build_sub_files`
-Sub-file information:
-- File sizes and serialization status
-- Relationship to parent files
+#### `add_build_schema_data_pairs`
+Contains key value pairs of schema settings at time of build.
+  * schema_id maps to addr_build_schemas.id
 
-### Relationship Tables
+#### `addr_build_bundles`
+Bundle-level information including asset counts and file sizes.
 
-The system includes several junction tables to maintain relationships:
-- `addr_build_bundle_dependencies`: Bundle-to-bundle dependencies
-- `addr_build_bundle_files`: Bundle-to-file relationships
-- `addr_build_group_bundles`: Group-to-bundle associations
-- `addr_build_group_schemas`: Group-to-schema relationships
-- `addr_build_explicit_asset_labels`: Asset labeling information
-- `addr_build_file_assets`: File-to-asset associations
+#### `addr_build_bundle_dependent_bundles
+Maps bundles to the bundles they depend upon (dependent bundles will be loaded as long as the bundle in question is loaded).
+  * bundle_id maps to addr_build_bundles.id
+  * dependent_bundle_rid maps ot addr_build_bundles.id
 
-## Usage
+#### `addr_build_bundle_files`
+List files in bundles. These are the serialized files and external files.
+  * bundle_id maps to addr_build_bundles.id
+  * file_rid maps to addr_build_files.id
+
+### `addr_build_explicit_assets`
+Explicit assets (marked as Addressable). Has Addressable name and asset information including paths. 
+  * bundle maps to addr_build_bundles.id
+  * group_guid maps to addr_build_groups.guid
+  * file maps to addr_build_files.id
+
+### `addr_build_explicit_asset_internal_referenced_other_assets`
+Map explicit assets to other assets they refer to. For instance a prefab to its underlying FBX
+  * referencing_asset_rid maps to addr_build_explicit_assets.id
+  * data_from_other_asset_Id maps to addr_build_data_from_other_assets.id
+
+### `addr_build_data_from_other_assets`
+Assets added into the build implicitly by explictly defined assets.
+  * file maps to addr_build_files.id
+
+#### `addr_build_cached_bundles`
+A view that contains the filename of the built bundle and the name it is stored in the Unity runtime cache.
 
 ### Basic Analysis
 
@@ -91,13 +81,13 @@ To analyze Addressables build reports in your project:
 
 ```bash
 # Analyze all files in a directory (automatically detects Addressables JSON files)
-UnityDataTools.exe "C:\MyProject\ServerData" -o "addressables_analysis.db"
+UnityDataTools.exe "Library\com.unity.addressables\BuildReports\" -o "addressables_analysis.db"
 
 # Include verbose output to see processing details
-UnityDataTools.exe "C:\MyProject\ServerData" -o "addressables_analysis.db" --verbose
+UnityDataTools.exe "Library\com.unity.addressables\BuildReports\" -o "addressables_analysis.db" --verbose
 
 # Analyze only JSON files specifically
-UnityDataTools.exe "C:\MyProject\ServerData" -o "addressables_analysis.db" -p "*.json"
+UnityDataTools.exe "C:\Temp\MyExtractedFiles" -o "addressables_analysis.db" -p "*.json"
 ```
 
 You can analyze a directory with both asset bundles (*.bundle) and json files (*.json) at the same time.
@@ -106,6 +96,13 @@ You can analyze a directory with both asset bundles (*.bundle) and json files (*
 
 Once the data is in the database, you can run queries to analyze your Addressables build:
 
+#### Find the cache name for an addressables bundle
+```sql
+-- Find cache name for an addressables bundle
+SELECT cached_name
+FROM addr_build_cached_bundles
+WHERE catalog_name = 'packedassets7_assets_all_61d3358060e969d3aad2d9c5c3a7d69b.bundle';
+
 #### Bundle Size Analysis
 ```sql
 -- Find largest bundles by file size
@@ -113,6 +110,7 @@ SELECT name, file_size, asset_count, compression
 FROM addr_build_bundles 
 ORDER BY file_size DESC 
 LIMIT 10;
+```
 
 #### Build Performance Analysis
 ```sql
@@ -131,29 +129,6 @@ GROUP BY a.rowid;
 SELECT name, start_time, duration, error 
 FROM addr_builds 
 WHERE error IS NOT NULL AND error != '';
-```
-
-#### Asset and Dependency Analysis
-```sql
--- Find assets with the most references
-SELECT 
-    asset_path,
-    addressable_name,
-    serialized_size,
-    streamed_size
-FROM addr_build_explicit_assets
-ORDER BY (serialized_size + streamed_size) DESC
-LIMIT 20;
-
--- Analyze bundle dependencies
-SELECT 
-    b1.name as bundle,
-    b2.name as depends_on,
-    b2.file_size as dependency_size
-FROM addr_build_bundle_dependencies bd
-JOIN addr_build_bundles b1 ON bd.bundle_id = b1.id AND bd.build_id = b1.build_id
-JOIN addr_build_bundles b2 ON bd.dependency_rid = b2.id AND bd.build_id = b2.build_id
-ORDER BY b1.name, b2.file_size DESC;
 ```
 
 #### MonoScript Analysis
