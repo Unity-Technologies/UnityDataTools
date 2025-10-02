@@ -5,11 +5,11 @@ file (AssetBundle or SerializedFile) into human-readable yaml-style text file.
 
 ## How to use
 
-The library consists of a single class called [TextDumperTool](./TextDumperTool.cs). It has a single 
-method named Dump and takes three parameters:
+The library consists of a single class called [TextDumperTool](./TextDumperTool.cs). It has a method named Dump and takes four parameters:
 * path (string): path of the data file.
 * outputPath (string): path where the output files will be created.
 * skipLargeArrays (bool): if true, the content of arrays larger than 1KB won't be dumped.
+* objectId (long, optional): if specified and not 0, only the object with this signed 64-bit id will be dumped. If 0 (default), all objects are dumped.
 
 ## How to interpret the output files
 

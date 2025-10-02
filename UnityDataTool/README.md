@@ -62,14 +62,6 @@ Example: `UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p "*.b
 **Refer to this [documentation](../Analyzer/README.md#How-to-use-the-database) for more information
 about the output database structure.**
 
-Note: If a SerializedFile is built without TypeTrees, then the command will not be able to extract information about the contained objects.  It will print an error similar to this example, then skip to the next file:
-
-```
-Error processing file: C:\Src\TestProject\Build\Player\TestProject_Data\level0
-System.ArgumentException: Invalid object id.
-```
-
-See [this topic](../Documentation/unity-content-format.md) for more information about TypeTrees.
 
 ### Example Input to the Analyze command
 
@@ -104,6 +96,44 @@ For Player builds there is no single -p option that can catch all SerializedFile
 
 The `--no-recurse` option can reduce the volume of these warnings.
 
+
+### Errors when TypeTrees are missing
+
+If a SerializedFile is built without TypeTrees, then the Analyze command will not be able to extract information about the contained objects.  It will print an error similar to this example, then skip to the next file:
+
+```
+Error processing file: C:\Src\TestProject\Build\Player\TestProject_Data\level0
+System.ArgumentException: Invalid object id.
+```
+
+See [this topic](../Documentation/unity-content-format.md) for more information about TypeTrees.
+
+### SQL Errors
+
+The following SQL errors may occur when running the analyze command:
+
+```
+SQLite Error 19: 'UNIQUE constraint failed: objects.id'
+```
+
+or
+
+```
+SQLite Error 19: 'UNIQUE constraint failed: serialized_files.id'.
+```
+
+The likely cause of these errors is the same serialized file name appearing in more than Player or AssetBundle file that is processed by Analyze.
+
+This may occur:
+
+* If you analyze files from more than one version of the same build (e.g. if you run it on a directory that contains two different builds of the same project in separate sub-directories).
+* If two scenes with the same filename (but different paths) are included in a build.
+* In a build that used AssetBundle variants.
+
+The conflicting name makes it impossible to uniquely identify the serialized file and its object in the database, and makes it ambiguous how to interpret dependencies from one file to another.
+
+The [comparing builds](../Documentation/comparing-builds.md) topic gives some ideas about how to run Analyze more than once if you want to compare two different versions of the same build.
+
 ## dump
 
 This command dumps the contents of a SerializedFile into a file of the selected format. It currently
@@ -111,9 +141,10 @@ only supports the 'text' format, which is similar to the binary2text output form
 
 The command takes the path of the file to dump as argument. It also provides the following options:
 * -o, --output-path <output-path>  Output folder, default is the current folder.
-* -f, --output-format \<format\>: output format, default is 'text'.
+* -f, --output-format <format>: output format, default is 'text'.
 * -s, --skip-large-arrays: the contents of basic data type arrays with a large number of elements
   won't be dumped.
+* -i, --objectid <objectid>: only dump the object with this local file id. If not specified or 0, all objects will be dumped.
 
 Example: `UnityDataTool dump /path/to/file -o /path/to/output`
 

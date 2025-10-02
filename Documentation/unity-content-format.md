@@ -32,9 +32,9 @@ The content compromises of the scenes in the Scene List, the contents of Resourc
 The SerializedFiles are named in a predictable way.  This is a very quick summary: 
 
 * Each scene in the SceneList becomes a "level" file, e.g. "level0", "level1".
-* Referenced Assets shared between the Scenes becomes "sharedAssets" files, e.g. "sharedAssets0.assets", "sharedAssets1.assets".
+* Assets referenced from Scenes becomes "sharedAssets" files, e.g. "sharedAssets0.assets", "sharedAssets1.assets".  Scenes are processed in order of the scene list and assets are stored in the sharedasset file corresponding to the scene where they are first encountered.  This means that a level file may reference multiple sharedasset files, but only the ones at the same number and lower.  For example the 3rd scene, level2 can reference "sharedAssets2.assets", "sharedAssets1.assets" and "sharedAssets0.assets" but never "sharedAssets3.assets".
 * The contents of the Resources folder becomes "resources.assets".
-* The Preferences become "globalgamemanager", "globalgamemanager.assets".
+* The Preferences become "globalgamemanager".  Assets referenced from "globalgamemanager" are saved in "globalgamemanager.assets".
 
 If [compression](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/BuildOptions.CompressWithLz4HC.html) is enabled, the Player build will compress all the serialized files into a single Unity Archive file, called `data.unity3d`.
 

@@ -60,6 +60,9 @@ public class AnalyzerTool
             searchPattern,
             noRecursion ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories);
 
+        int countFailures = 0;
+        int countSuccess = 0;
+        int countIgnored = 0;
         int i = 1;
         foreach (var file in files)
         {
@@ -74,6 +77,7 @@ public class AnalyzerTool
                     {
                         parser.Parse(file);
                         ReportProgress(Path.GetRelativePath(path, file), i, files.Length);
+                        countSuccess++;
                     }
                     catch (Exception e)
                     {                        
@@ -83,25 +87,27 @@ public class AnalyzerTool
                         Console.WriteLine($"{e.GetType()}: {e.Message}");
                         if (m_Verbose)
                             Console.WriteLine(e.StackTrace);
+                        countFailures++;
                     }
                     ++i;
                 }
             }
             if (!foundParser)
             {
-                var relativePath = Path.GetRelativePath(path, file);
-
                 if (m_Verbose)
                 {
+                    var relativePath = Path.GetRelativePath(path, file);
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
                 ++i;
+                countIgnored++;
+                continue;
             }
         }
 
         Console.WriteLine();
-        Console.WriteLine("Finalizing database...");
+        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Ignored files: {countIgnored}");
 
         writer.End();
         foreach (var parser in parsers)
@@ -114,6 +120,11 @@ public class AnalyzerTool
         Console.WriteLine($"Total time: {(timer.Elapsed.TotalMilliseconds / 1000.0):F3} s");
 
         return 0;
+    }
+
+    private bool ProcessFile(string file, string path, SQLiteWriter writer, int i, int length)
+    {
+        throw new NotImplementedException();
     }
 
     int m_LastProgressMessageLength = 0;
@@ -138,7 +149,7 @@ public class AnalyzerTool
     void EraseProgressLine()
     {
         if (!m_Verbose)
-            Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}");
+            Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}\r");
         else
             Console.WriteLine();
     }
