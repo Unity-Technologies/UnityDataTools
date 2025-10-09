@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using UnityDataTools.Analyzer.SQLite;
 using UnityDataTools.FileSystem;
 
@@ -125,7 +126,9 @@ public class AnalyzerTool
                     {
                         var assetBundleName = Path.GetRelativePath(rootDirectory, file);
 
-                        writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
+                        long abContentSize = archive.Nodes.Sum(node => (long)node.Size);
+
+                        writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length, abContentSize);
                         ReportProgress(assetBundleName, fileIndex, cntFiles);
 
                         foreach (var node in archive.Nodes)

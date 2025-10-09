@@ -5,11 +5,11 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class Texture2DHandler : ISQLiteHandler
+public class Texture2DHandler : SQLiteHandlerBase
 {
     SqliteCommand m_InsertCommand = new SqliteCommand();
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.Texture2D;
@@ -25,7 +25,7 @@ public class Texture2DHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@mip_count", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var texture2d = Texture2D.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -41,11 +41,7 @@ public class Texture2DHandler : ISQLiteHandler
         streamDataSize = texture2d.StreamDataSize;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertCommand?.Dispose();
     }

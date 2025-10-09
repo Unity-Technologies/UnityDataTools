@@ -27,7 +27,7 @@ public class SQLiteWriter : IWriter
     // Used to map PPtr fileId to its corresponding serialized file id in the database.
     Dictionary<int, int> m_LocalToDbFileId = new ();
 
-    private Dictionary<string, ISQLiteHandler> m_Handlers = new ()
+    private Dictionary<string, SQLiteHandlerBase> m_Handlers = new ()
     {
         { "Mesh", new MeshHandler() },
         { "Texture2D", new Texture2DHandler() },
@@ -36,6 +36,7 @@ public class SQLiteWriter : IWriter
         { "AnimationClip", new AnimationClipHandler() },
         { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
+        { "TypeTreeHash", new TypeTreeHashHandler() },
     };
 
     private SqliteConnection m_Database;
@@ -108,10 +109,11 @@ public class SQLiteWriter : IWriter
     private void CreateSQLiteCommands()
     {
         m_AddAssetBundleCommand = m_Database.CreateCommand();
-        m_AddAssetBundleCommand.CommandText = "INSERT INTO asset_bundles (id, name, file_size) VALUES (@id, @name, @file_size)";
+        m_AddAssetBundleCommand.CommandText = "INSERT INTO asset_bundles (id, name, file_size, content_size) VALUES (@id, @name, @file_size, @content_size)";
         m_AddAssetBundleCommand.Parameters.Add("@id", SqliteType.Integer);
         m_AddAssetBundleCommand.Parameters.Add("@name", SqliteType.Text);
         m_AddAssetBundleCommand.Parameters.Add("@file_size", SqliteType.Integer);
+        m_AddAssetBundleCommand.Parameters.Add("@content_size", SqliteType.Integer);
 
         m_AddSerializedFileCommand = m_Database.CreateCommand();
         m_AddSerializedFileCommand.CommandText = "INSERT INTO serialized_files (id, asset_bundle, name) VALUES (@id, @asset_bundle, @name)";
@@ -148,7 +150,7 @@ public class SQLiteWriter : IWriter
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
     }
 
-    public void BeginAssetBundle(string name, long size)
+    public void BeginAssetBundle(string name, long size, long uncompressedContentSize)
     {
         if (m_CurrentAssetBundleId != -1)
         {
@@ -159,6 +161,7 @@ public class SQLiteWriter : IWriter
         m_AddAssetBundleCommand.Parameters["@id"].Value = m_CurrentAssetBundleId;
         m_AddAssetBundleCommand.Parameters["@name"].Value = name;
         m_AddAssetBundleCommand.Parameters["@file_size"].Value = size;
+        m_AddAssetBundleCommand.Parameters["@content_size"].Value = uncompressedContentSize;
         m_AddAssetBundleCommand.ExecuteNonQuery();
     }
 
@@ -182,6 +185,12 @@ public class SQLiteWriter : IWriter
 
         using var transaction = m_Database.BeginTransaction();
         m_CurrentTransaction = transaction;
+
+        // Call SerializedFile-level handlers
+        foreach (var handler in m_Handlers.Values)
+        {
+            handler.ProcessSerializedFile(sf, transaction);
+        }
 
         var match = m_RegexSceneFile.Match(relativePath);
 
@@ -268,7 +277,7 @@ public class SQLiteWriter : IWriter
 
                 if (m_Handlers.TryGetValue(root.Type, out var handler))
                 {
-                    handler.Process(ctx, currentObjectId, randomAccessReader,
+                    handler.ProcessObject(ctx, currentObjectId, randomAccessReader,
                         out name, out streamDataSize);
                 }
                 else if (randomAccessReader.HasChild("m_Name"))

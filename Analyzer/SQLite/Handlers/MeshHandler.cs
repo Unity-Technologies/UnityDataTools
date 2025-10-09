@@ -6,11 +6,11 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class MeshHandler : ISQLiteHandler
+public class MeshHandler : SQLiteHandlerBase
 {
     SqliteCommand m_InsertCommand;
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.Mesh;
@@ -30,7 +30,7 @@ public class MeshHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@channels", SqliteType.Text);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var mesh = Mesh.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -63,11 +63,7 @@ public class MeshHandler : ISQLiteHandler
         name = mesh.Name;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertCommand?.Dispose();
     }

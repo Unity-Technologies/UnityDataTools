@@ -5,7 +5,7 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class ShaderHandler : ISQLiteHandler
+public class ShaderHandler : SQLiteHandlerBase
 {
     private SqliteCommand m_InsertCommand;
     private SqliteCommand m_InsertSubProgramCommand;
@@ -15,7 +15,7 @@ public class ShaderHandler : ISQLiteHandler
     static long s_SubProgramId = 0;
     static Dictionary<string, int> s_GlobalKeywords = new();
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         s_SubProgramId = 0;
         s_GlobalKeywords.Clear();
@@ -53,7 +53,7 @@ public class ShaderHandler : ISQLiteHandler
         m_InsertSubProgramKeywordsCommand.Parameters.Add("@keyword_id", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var shader = SerializedObjects.Shader.Read(reader);
         var uniquePrograms = new HashSet<uint>();
@@ -143,7 +143,7 @@ public class ShaderHandler : ISQLiteHandler
         return id;
     }
 
-    public void Finalize(SqliteConnection db)
+    public override void Finalize(SqliteConnection db)
     {
         using var command = new SqliteCommand();
         command.Connection = db;
@@ -154,7 +154,7 @@ public class ShaderHandler : ISQLiteHandler
         command.ExecuteNonQuery();
     }
 
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertCommand?.Dispose();
         m_InsertSubProgramCommand?.Dispose();

@@ -8,7 +8,7 @@ namespace UnityDataTools.Analyzer;
 public interface IWriter : IDisposable
 {
     void Begin();
-    void BeginAssetBundle(string name, long size);
+    void BeginAssetBundle(string name, long size, long uncompressedSize);
     void EndAssetBundle();
     void WriteSerializedFile(string relativePath, string fullPath, string containingFolder);
     void End();

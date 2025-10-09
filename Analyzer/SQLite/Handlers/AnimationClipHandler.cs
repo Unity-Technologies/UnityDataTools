@@ -5,11 +5,11 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class AnimationClipHandler : ISQLiteHandler
+public class AnimationClipHandler : SQLiteHandlerBase
 {
     SqliteCommand m_InsertCommand;
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.AnimationClip;
@@ -22,7 +22,7 @@ public class AnimationClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@events", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var animationClip = AnimationClip.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -35,11 +35,7 @@ public class AnimationClipHandler : ISQLiteHandler
         streamDataSize = 0;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertCommand?.Dispose();
     }

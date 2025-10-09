@@ -6,13 +6,13 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class AssetBundleHandler : ISQLiteHandler
+public class AssetBundleHandler : SQLiteHandlerBase
 {
     SqliteCommand m_InsertCommand;
     private SqliteCommand m_InsertDepCommand;
     private Regex m_SceneNameRegex = new Regex(@"([^//]+)\.unity");
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.AssetBundle;
@@ -31,7 +31,7 @@ public class AssetBundleHandler : ISQLiteHandler
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var assetBundle = AssetBundle.Read(reader);
         
@@ -77,7 +77,7 @@ public class AssetBundleHandler : ISQLiteHandler
         streamDataSize = 0;
     }
 
-    public void Finalize(SqliteConnection db)
+    public override void Finalize(SqliteConnection db)
     {
         using var command = new SqliteCommand();
         command.Connection = db;
@@ -88,7 +88,7 @@ public class AssetBundleHandler : ISQLiteHandler
         command.ExecuteNonQuery();
     }
 
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertCommand?.Dispose();
         m_InsertDepCommand?.Dispose();

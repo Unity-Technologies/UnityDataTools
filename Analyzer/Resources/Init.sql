@@ -5,11 +5,23 @@ CREATE TABLE types
     PRIMARY KEY (id)
 );
 
+CREATE TABLE typetree_hashes
+(
+    hash TEXT,
+    count INTEGER,
+    serialized_size INTEGER,
+    category TEXT,
+    type_id INTEGER,
+    qualified_name TEXT,
+    PRIMARY KEY (hash)
+);
+
 CREATE TABLE asset_bundles
 (
     id INTEGER,
     name TEXT,
     file_size INTEGER,
+    content_size INTEGER,
     PRIMARY KEY (id)
 );
 
@@ -102,6 +114,16 @@ LEFT JOIN assets a ON m.id = a.object
 WHERE m.type = "Material";
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
+
+CREATE VIEW view_typetree_summary AS
+SELECT
+    COUNT(*) AS total_typetrees,
+    SUM(count) AS total_instances,
+    SUM(count * serialized_size) AS total_memory_with_duplicates,
+    SUM(serialized_size) AS total_memory_deduplicated,
+    SUM(CASE WHEN count > 1 THEN count - 1 ELSE 0 END) AS duplicate_count,
+    SUM(count * serialized_size) - SUM(serialized_size) AS memory_wasted_by_duplicates
+FROM typetree_hashes;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

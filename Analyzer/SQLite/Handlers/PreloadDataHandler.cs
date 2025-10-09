@@ -6,11 +6,11 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class PreloadDataHandler : ISQLiteHandler
+public class PreloadDataHandler : SQLiteHandlerBase
 {
     private SqliteCommand m_InsertDepCommand;
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         m_InsertDepCommand = db.CreateCommand();
         m_InsertDepCommand.Connection = db;
@@ -19,7 +19,7 @@ public class PreloadDataHandler : ISQLiteHandler
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var preloadData = PreloadData.Read(reader);
         m_InsertDepCommand.Transaction = ctx.Transaction;
@@ -38,11 +38,7 @@ public class PreloadDataHandler : ISQLiteHandler
         streamDataSize = 0;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertDepCommand?.Dispose();
     }

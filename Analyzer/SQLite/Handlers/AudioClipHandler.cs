@@ -6,11 +6,11 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-public class AudioClipHandler : ISQLiteHandler
+public class AudioClipHandler : SQLiteHandlerBase
 {
     private SqliteCommand m_InsertCommand;
 
-    public void Init(SqliteConnection db)
+    public override void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
         command.CommandText = Properties.Resources.AudioClip;
@@ -26,7 +26,7 @@ public class AudioClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@format", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public override void ProcessObject(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var audioClip = AudioClip.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -43,11 +43,7 @@ public class AudioClipHandler : ISQLiteHandler
         name = audioClip.Name;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
-    void IDisposable.Dispose()
+    public override void Dispose()
     {
         m_InsertCommand?.Dispose();
     }
