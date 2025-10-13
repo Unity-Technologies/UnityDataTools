@@ -2,24 +2,34 @@ name: Build UnityDataTool
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Build environment'
+        default: 'release'
+        required: true
+        options:
+          - debug
+          - release
   push:
     branches:
       - main
 
+env:
+  environment: ${{ inputs.environment || 'release' }}
+
 jobs:
   build:
-    runs-on: ${{ matrix.os }}-latest
-
     strategy:
       matrix:
         os: [windows, macos]
         arch: [x64, arm64]
-        environment: [debug, release]
         exclude:
           - os: windows
             arch: arm64
           - os: macos
             arch: x64
+
+    runs-on: ${{ matrix.os }}-latest
 
     steps:
       - name: Checkout repository
@@ -30,17 +40,17 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Publish UnityDataTool (${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.environment }})
+      - name: Publish UnityDataTool (${{ matrix.os }}-${{ matrix.arch }}-${{ env.environment }})
         run: >
           dotnet publish UnityDataTool
-          -c ${{ matrix.environment }}
+          -c ${{ env.environment }}
           -a ${{ matrix.arch }}
           -p:PublishSingleFile=true
           -p:UseAppHost=true
-          -o publish/${{ matrix.os }}/${{ matrix.arch }}-${{ matrix.environment }}
+          -o publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.environment }}
-          path: publish/${{ matrix.os }}/${{ matrix.arch }}-${{ matrix.environment }}
+          name: UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}-${{ env.environment }}
+          path: publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}
