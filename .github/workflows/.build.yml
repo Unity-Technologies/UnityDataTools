@@ -29,11 +29,11 @@ jobs:
       - name: Publish UnityDataTool (${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.environment }})
         run: >
           dotnet publish UnityDataTool
-          -c Release
+          -c ${{ matrix.environment }}
           -a ${{ matrix.arch }}
           -p:PublishSingleFile=true
           -p:UseAppHost=true
-          -o publish/${{ matrix.arch }}
+          -o publish/${{ matrix.os }}/${{ matrix.arch }}-${{ matrix.environment }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
