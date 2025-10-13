@@ -1,0 +1,42 @@
+name: Build UnityDataTool
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}-latest
+
+    strategy:
+      matrix:
+        os: [windows, macos]
+        arch: [x64, arm64]
+        environment: [debug, release]
+        exclude:
+          - os: windows
+            arch: arm64
+          - os: macos
+            arch: x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish UnityDataTool (${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.environment }})
+        run: >
+          dotnet publish UnityDataTool
+          -c Release
+          -a ${{ matrix.arch }}
+          -p:PublishSingleFile=true
+          -p:UseAppHost=true
+          -o publish/${{ matrix.arch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.environment }}
+          path: publish/${{ matrix.os }}/${{ matrix.arch }}-${{ matrix.environment }}
