@@ -5,6 +5,7 @@
 [Tt]emp/
 [Ll]og/
 [Ll]ogs/
+[Pp]ublish/
 
 **/*.csproj.user
 **/*.suo
