@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Numerics;
 
-namespace UnityDataTools.Analyzer.Build
+// this file comes from Adddressables and is use to serialize and deserialze
+// build layout information to JSON
+namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
 {
     public class BuildLayout
     {

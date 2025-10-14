@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Analyzer.SQLite.Writers
+namespace UnityDataTools.Analyzer.SQLite.Writers
 {
     public class SQLiteWriter : IDisposable
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Analyzer.SQLite.Commands
+namespace UnityDataTools.Analyzer.SQLite.Commands
 {
     internal abstract class AbstractCommand
     {

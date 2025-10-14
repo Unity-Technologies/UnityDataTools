@@ -1,15 +1,11 @@
-﻿using Analyzer.SQLite.Commands.AddressablesBuildReport;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityDataTools.Analyzer.Build;
+using UnityDataTools.Analyzer.SQLite.Parsers.Models;
+using UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport;
 
-namespace Analyzer.SQLite.Writers
+namespace UnityDataTools.Analyzer.SQLite.Writers
 {
     internal class AddressablesBuildLayoutSQLWriter : IDisposable
     {
@@ -49,7 +45,6 @@ namespace Analyzer.SQLite.Writers
 
         private SqliteCommand m_LastId = new SqliteCommand();
 
-        private string m_DatabaseName;
         private SqliteConnection m_Database;
 
         public AddressablesBuildLayoutSQLWriter(SqliteConnection database)

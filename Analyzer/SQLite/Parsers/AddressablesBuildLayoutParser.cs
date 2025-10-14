@@ -1,19 +1,13 @@
-﻿using Analyzer.SQLite.Commands.AddressablesBuildReport;
-using Analyzer.SQLite.Writers;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityDataTools.Analyzer;
-using UnityDataTools.Analyzer.Build;
+using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Handlers;
+using UnityDataTools.Analyzer.SQLite.Writers;
 
-namespace Analyzer.SQLite.Parsers
+namespace UnityDataTools.Analyzer.SQLite.Parsers
 {
     public class AddressablesBuildLayoutParser : ISQLiteFileParser
     {

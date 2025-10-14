@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 
-namespace Analyzer.SQLite.Commands.AddressablesBuildReport
+namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
 {
     internal class AddressablesBuild : AbstractCommand
     {

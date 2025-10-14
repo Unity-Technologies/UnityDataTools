@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Analyzer.Properties {
+namespace UnityDataTools.Analyzer.Properties {
     using System;
     
     

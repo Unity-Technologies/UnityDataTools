@@ -1,14 +1,11 @@
-﻿using Analyzer.SQLite.Parsers;
-using Analyzer.SQLite.Writers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using UnityDataTools.Analyzer.Build;
 using UnityDataTools.Analyzer.SQLite.Handlers;
-using UnityDataTools.FileSystem;
+using UnityDataTools.Analyzer.SQLite.Parsers;
+using UnityDataTools.Analyzer.SQLite.Parsers.Models;
+using UnityDataTools.Analyzer.SQLite.Writers;
 
 namespace UnityDataTools.Analyzer;
 

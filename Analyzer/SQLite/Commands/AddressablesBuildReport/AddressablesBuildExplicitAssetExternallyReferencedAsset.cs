@@ -1,7 +1,7 @@
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 
-namespace Analyzer.SQLite.Commands.AddressablesBuildReport
+namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
 {
     /* TABLE DEFINITION:
         create table addr_build_explicit_asset_externally_referenced_assets

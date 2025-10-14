@@ -1,4 +1,4 @@
-using Analyzer.SQLite.Commands;
+using UnityDataTools.Analyzer.SQLite.Commands;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 

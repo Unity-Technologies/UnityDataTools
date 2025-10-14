@@ -1,4 +1,4 @@
-﻿using Analyzer.SQLite.Writers;
+﻿using UnityDataTools.Analyzer.SQLite.Writers;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.FileSystem;
 
-namespace Analyzer.SQLite.Parsers
+namespace UnityDataTools.Analyzer.SQLite.Parsers
 {
     public class SerializedFileParser : ISQLiteFileParser
     {

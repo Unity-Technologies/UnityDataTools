@@ -10,7 +10,7 @@ using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
 using UnityDataTools.Analyzer;
 using UnityDataTools.Analyzer.Util;
 
-namespace Analyzer.SQLite.Writers;
+namespace UnityDataTools.Analyzer.SQLite.Writers;
 
 public class AssetBundleSQLiteWriter : IDisposable
 {
