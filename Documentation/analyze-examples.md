@@ -115,7 +115,7 @@ ID: -5763254701832525334 (ClassID: 115) MonoScript
   m_AssemblyName (string) Unity.Scenes
 ```
 
-Currently UnityDataTool does implement custom handling for MonoScript objects, so we only have the m_Name field, which matches the m_ClassName field._ However so long as the class name is unique in your project this can be used to match against.
+Currently UnityDataTool does not implement custom handling for MonoScript objects, so the ClassName, Namespace and AssemblyName fields are not in the database.  However the main object table records the m_Name field of object, and for a MonoScript that should match the m_Classname.  For the common case, where the class name is itself unique in a project, it is possible to use the name field as the way to identify instances of the script.
 
 For example to list all distinct class names in the build you can run this query
 
