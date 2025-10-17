@@ -39,6 +39,7 @@ For a list of available commands run it like this: `UnityDataTool --help`
 
 For help on a specific command use `--help` along with the command name, for example: `UnityDataTool analyze --help`
 
+Use `UnityDataTool --version` to print the current version of the tool.
 
 # Commands
 
