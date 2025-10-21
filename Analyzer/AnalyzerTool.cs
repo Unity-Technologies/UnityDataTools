@@ -69,11 +69,10 @@ public class AnalyzerTool
                 if (parser.CanParse(file))
                 {
                     foundParser = true;
-                    Console.WriteLine(file);
                     try
                     {
                         parser.Parse(file);
-                        ReportProgress(Path.GetRelativePath(path, file), i, files.Length);
+                        ReportProgress(Path.GetRelativePath(path, file), i, files.Length);                        
                         countSuccess++;
                     }
                     catch (Exception e)
@@ -86,7 +85,6 @@ public class AnalyzerTool
                             Console.WriteLine(e.StackTrace);
                         countFailures++;
                     }
-                    ++i;
                 }
             }
             if (!foundParser)
@@ -97,10 +95,10 @@ public class AnalyzerTool
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
-                ++i;
+                
                 countIgnored++;
-                continue;
             }
+            ++i;
         }
 
         Console.WriteLine();

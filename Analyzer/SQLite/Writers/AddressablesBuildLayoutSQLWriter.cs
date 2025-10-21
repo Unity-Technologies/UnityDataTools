@@ -46,6 +46,7 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
         private SqliteCommand m_LastId = new SqliteCommand();
 
         private SqliteConnection m_Database;
+        public bool Verbose { get; set; }
 
         public AddressablesBuildLayoutSQLWriter(SqliteConnection database)
         {
@@ -169,7 +170,8 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
                 m_LastId.Transaction = transaction;
                 long buildId = (long)m_LastId.ExecuteScalar();
-                Console.WriteLine($"Build ID: {buildId}");
+                if (Verbose)
+                    Console.WriteLine($"Assigned report build ID: {buildId}");
 
                 foreach (var reference in buildLayout.references.RefIds)
                 {

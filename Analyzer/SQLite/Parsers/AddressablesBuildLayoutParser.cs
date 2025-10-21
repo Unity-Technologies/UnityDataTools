@@ -24,6 +24,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
         {
             m_Writer = new AddressablesBuildLayoutSQLWriter(db);
             m_Writer.Init();
+            m_Writer.Verbose = Verbose;
         }
 
         public bool CanParse(string filename)
