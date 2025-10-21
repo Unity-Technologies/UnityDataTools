@@ -32,5 +32,3 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
     }
 }
 
-
-
