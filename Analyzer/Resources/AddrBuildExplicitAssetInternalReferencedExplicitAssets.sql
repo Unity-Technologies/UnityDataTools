@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS addr_build_explicit_asset_internal_referenced_explicit_assets
+CREATE TABLE IF NOT EXISTS addressables_build_explicit_asset_internal_referenced_explicit_assets
 (
     explicit_asset_id INTEGER,
     build_id INTEGER,
     internal_referenced_explicit_asset_rid INTEGER,
     PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_explicit_asset_rid),
-    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
+    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
 );

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS addr_build_bundles
+CREATE TABLE IF NOT EXISTS addressables_build_bundles
 (
     id INTEGER,
     build_id INTEGER,
@@ -19,4 +19,4 @@ CREATE TABLE IF NOT EXISTS addr_build_bundles
     PRIMARY KEY (id, build_id)
 );
 
-CREATE VIEW IF NOT EXISTS addr_build_cached_bundles AS SELECT build_id, concat(internal_name, '.bundle') AS cached_name, name AS name_in_catalog FROM addr_build_bundles;
+CREATE VIEW IF NOT EXISTS addressables_build_cached_bundles AS SELECT build_id, concat(internal_name, '.bundle') AS cached_name, name AS name_in_catalog FROM addressables_build_bundles;

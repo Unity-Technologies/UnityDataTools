@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
 {
     /* TABLE DEFINITION:
-        create table addr_build_data_from_other_asset_objects
+        create table addressables_build_data_from_other_asset_objects
         (
             data_from_other_asset_id INTEGER,
             build_id INTEGER,
@@ -15,12 +15,12 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
             serialized_size INTEGER,
             streamed_size INTEGER,
             PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file),
-            FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addr_build_data_from_other_assets(id, build_id)
+            FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addressables_build_data_from_other_assets(id, build_id)
         );
     */
     internal class AddressablesBuildDataFromOtherAssetObject : AbstractCommand
     {
-        protected override string TableName => "addr_build_data_from_other_asset_objects";
+        protected override string TableName => "addressables_build_data_from_other_asset_objects";
 
         protected override string DDLSource => Properties.Resources.AddrBuildDataFromOtherAssetObjects;
 

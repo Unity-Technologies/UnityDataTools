@@ -4,18 +4,18 @@ using System.Collections.Generic;
 namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
 {
     /* TABLE DEFINITION:
-        create table addr_build_bundle_files
+        create table addressables_build_bundle_files
         (
             bundle_id INTEGER,
             build_id INTEGER,
             file_rid INTEGER,
             PRIMARY KEY (bundle_id, build_id, file_rid),
-            FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
+            FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
         );
     */
     internal class AddressablesBuildBundleFile : AbstractCommand
     {
-        protected override string TableName => "addr_build_bundle_files";
+        protected override string TableName => "addressables_build_bundle_files";
 
         protected override string DDLSource => Properties.Resources.AddrBuildBundleFiles;
 

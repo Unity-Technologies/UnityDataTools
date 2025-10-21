@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS addr_build_sub_files
+CREATE TABLE IF NOT EXISTS addressables_build_sub_files
 (
     id INTEGER,
     build_id INTEGER,

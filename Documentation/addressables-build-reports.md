@@ -6,7 +6,7 @@ Unity Data Tools provides the ability to analyse Unity Addressables build report
 
 When you run the analyzer on a directory containing Addressables build reports, the tool will parse them and add the data to the sqlite database.
 
-Each build report is generated a unique id that is used as the id in addr_builds and build_id field in subsequent tables. This allows you to compare builds against each other.
+Each build report is generated a unique id that is used as the id in addressables_builds and build_id field in subsequent tables. This allows you to compare builds against each other.
 
 ## Database Schema
 
@@ -40,56 +40,56 @@ The Addressables build data is stored across multiple related tables in the SQLi
 
 ### Core Tables
 
-#### `addr_builds`
+#### `addressables_builds`
 Main build information table
   * id maps to build_id in other tables
 
-#### `addr_build_groups`
+#### `addressables_build_groups`
 Contains groups used in the build and whether they're pack separate or together.
   * guid maps to group_guid in other tables
 
-#### `addr_build_group_schemas`
+#### `addressables_build_group_schemas`
 Map groups to their schemas
-  * schema_rid maps to addr_group_schemas.id
-  * group_id maps to addr_build_groups.id
+  * schema_rid maps to addressables_group_schemas.id
+  * group_id maps to addressables_build_groups.id
 
-#### `addr_build_schemas`
+#### `addressables_build_schemas`
 Contain schema names.
-  * id maps to addr_group_schemas.id
+  * id maps to addressables_group_schemas.id
 
 #### `add_build_schema_data_pairs`
 Contains key value pairs of schema settings at time of build.
-  * schema_id maps to addr_build_schemas.id
+  * schema_id maps to addressables_build_schemas.id
 
-#### `addr_build_bundles`
+#### `addressables_build_bundles`
 Bundle-level information including asset counts and file sizes.
 
-#### `addr_build_bundle_dependent_bundles`
+#### `addressables_build_bundle_dependent_bundles`
 Maps bundles to the bundles they depend upon (dependent bundles will be loaded as long as the bundle in question is loaded).
-  * bundle_id maps to addr_build_bundles.id
-  * dependent_bundle_rid maps to addr_build_bundles.id
+  * bundle_id maps to addressables_build_bundles.id
+  * dependent_bundle_rid maps to addressables_build_bundles.id
 
-#### `addr_build_bundle_files`
+#### `addressables_build_bundle_files`
 List files in bundles. These are the serialized files and external files.
-  * bundle_id maps to addr_build_bundles.id
-  * file_rid maps to addr_build_files.id
+  * bundle_id maps to addressables_build_bundles.id
+  * file_rid maps to addressables_build_files.id
 
-#### `addr_build_explicit_assets`
+#### `addressables_build_explicit_assets`
 Explicit assets (marked as Addressable). Has Addressable name and asset information including paths. 
-  * bundle maps to addr_build_bundles.id
-  * group_guid maps to addr_build_groups.guid
-  * file maps to addr_build_files.id
+  * bundle maps to addressables_build_bundles.id
+  * group_guid maps to addressables_build_groups.guid
+  * file maps to addressables_build_files.id
 
-#### `addr_build_explicit_asset_internal_referenced_other_assets`
+#### `addressables_build_explicit_asset_internal_referenced_other_assets`
 Map explicit assets to other assets they refer to. For instance a prefab to its underlying FBX
-  * referencing_asset_rid maps to addr_build_explicit_assets.id
-  * data_from_other_asset_Id maps to addr_build_data_from_other_assets.id
+  * referencing_asset_rid maps to addressables_build_explicit_assets.id
+  * data_from_other_asset_Id maps to addressables_build_data_from_other_assets.id
 
-#### `addr_build_data_from_other_assets`
+#### `addressables_build_data_from_other_assets`
 Assets added into the build implicitly by explictly defined assets.
-  * file maps to addr_build_files.id
+  * file maps to addressables_build_files.id
 
-#### `addr_build_cached_bundles`
+#### `addressables_build_cached_bundles`
 A view that contains the filename of the built bundle and the name it is stored in the Unity runtime cache.
 
 ### Basic Analysis
@@ -114,11 +114,11 @@ You can analyze a directory with both asset bundles (*.bundle) and json files (*
 Once the data is in the database, you can run queries to analyze your Addressables build:
 
 #### Find the cache name for an addressables bundle
-Addressables renames bundles to make it possible to do content updates. Internally bundles are still named by their internal hash and are cached based upon this name. If you want to lookup how a remote bundle will be cached in Unity's [cache](https://docs.unity3d.com/ScriptReference/Caching.html) you can use the addr_build_cached_bundles view.
+Addressables renames bundles to make it possible to do content updates. Internally bundles are still named by their internal hash and are cached based upon this name. If you want to lookup how a remote bundle will be cached in Unity's [cache](https://docs.unity3d.com/ScriptReference/Caching.html) you can use the addressables_build_cached_bundles view.
 ```sql
 -- Find cache name for an addressables bundle
 SELECT cached_namei
-  FROM addr_build_cached_bundles
+  FROM addressables_build_cached_bundles
  WHERE name_in_catalog = 'sharedenvironment_assets_all_5935f9c20c9b10664721f1591e3d2036.bundle'
    AND build_id = 1;
 ```
@@ -129,10 +129,10 @@ This query works for groups that are packed together. It assumes group guids sta
 -- Compare bundle size changes between builds
 SELECT second_build.name as bundle_name, second_build.file_size as second_build_file_size, second_build.asset_count as second_build_asset_count, 
 first_build.file_size as first_build_File_size, first_build.asset_count as first_build_asset_count
-FROM addr_build_bundles first_build,
-     addr_build_bundles second_build,
-     addr_build_groups g1,
-     addr_build_groups g2
+FROM addressables_build_bundles first_build,
+     addressables_build_bundles second_build,
+     addressables_build_groups g1,
+     addressables_build_groups g2
  WHERE second_build.file_size > first_build.file_size
    AND first_build.group_rid = g1.id
    AND second_build.group_rid = g2.id
@@ -155,13 +155,13 @@ SELECT
     COUNT(b.id) as bundle_count,
     SUM(b.asset_count) as total_assets,
     SUM(b.file_size) as total_size
-FROM addr_builds a
-LEFT JOIN addr_build_bundles b ON a.id = b.build_id
+FROM addressables_builds a
+LEFT JOIN addressables_build_bundles b ON a.id = b.build_id
 WHERE coalesce(a.error, '') = ''
 group by a.id;
 
 -- Find builds with errors
 SELECT name, start_time, duration, error 
-FROM addr_builds 
+FROM addressables_builds 
 WHERE coalesce(error, '') != '';
 ```

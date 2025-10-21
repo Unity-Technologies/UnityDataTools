@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS addr_build_data_from_other_asset_referencing_assets
+CREATE TABLE IF NOT EXISTS addressables_build_data_from_other_asset_referencing_assets
 (
     data_from_other_asset_id INTEGER,
     build_id INTEGER,
     referencing_asset_rid INTEGER,
     PRIMARY KEY (data_from_other_asset_id, build_id, referencing_asset_rid),
-    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addr_build_data_from_other_assets(id, build_id)
+    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addressables_build_data_from_other_assets(id, build_id)
 );

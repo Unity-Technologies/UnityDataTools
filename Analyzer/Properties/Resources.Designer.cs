@@ -61,13 +61,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_bundle_dependencies
+        ///   Looks up a localized string similar to create table addressables_build_bundle_dependencies
         ///(
         ///    bundle_id INTEGER,
         ///    build_id INTEGER,
         ///    dependency_rid INTEGER,
         ///    PRIMARY KEY (bundle_id, build_id, dependency_rid),
-        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildBundleDependencies {
@@ -77,13 +77,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_bundle_dependent_bundles
+        ///   Looks up a localized string similar to create table addressables_build_bundle_dependent_bundles
         ///(
         ///    bundle_id INTEGER,
         ///    build_id INTEGER,
         ///    dependent_bundle_rid INTEGER,
         ///    PRIMARY KEY (bundle_id, build_id, dependent_bundle_rid),
-        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildBundleDependentBundles {
@@ -93,13 +93,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_bundle_expanded_dependencies
+        ///   Looks up a localized string similar to create table addressables_build_bundle_expanded_dependencies
         ///(
         ///    bundle_id INTEGER,
         ///    build_id INTEGER,
         ///    dependency_rid INTEGER,
         ///    PRIMARY KEY (bundle_id, build_id, dependency_rid),
-        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildBundleExpandedDependencies {
@@ -109,13 +109,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_bundle_files
+        ///   Looks up a localized string similar to create table addressables_build_bundle_files
         ///(
         ///    bundle_id INTEGER,
         ///    build_id INTEGER,
         ///    file_rid INTEGER,
         ///    PRIMARY KEY (bundle_id, build_id, file_rid),
-        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildBundleFiles {
@@ -125,13 +125,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_bundle_regular_dependencies
+        ///   Looks up a localized string similar to create table addressables_build_bundle_regular_dependencies
         ///(
         ///    bundle_id INTEGER,
         ///    build_id INTEGER,
         ///    dependency_rid INTEGER,
         ///    PRIMARY KEY (bundle_id, build_id, dependency_rid),
-        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addr_build_bundles(id, build_id)
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildBundleRegularDependencies {
@@ -141,7 +141,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_bundles
+        ///   Looks up a localized string similar to create table addressables_build_bundles
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,
@@ -169,7 +169,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_data_from_other_asset_object_references
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_asset_object_references
         ///(
         ///    data_from_other_asset_id INTEGER,
         ///    build_id INTEGER,
@@ -177,7 +177,7 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    asset_id INTEGER,
         ///    object_id INTEGER,
         ///    PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file, asset_id, object_id),
-        ///    FOREIGN KEY (data_from_other_asset_id, build_id, local_identifier_in_file) REFERENCES addr_build_data_from_other_asset_objects(data_from_other_asset_id, build_id, local_identifier_in_file)
+        ///    FOREIGN KEY (data_from_other_asset_id, build_id, local_identifier_in_file) REFERENCES addressables_build_data_from_other_asset_objects(data_from_other_asset_id, build_id, local_identifier_in_file)
         /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AddrBuildDataFromOtherAssetObjectReferences {
@@ -187,7 +187,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_data_from_other_asset_objects
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_asset_objects
         ///(
         ///    data_from_other_asset_id INTEGER,
         ///    build_id INTEGER,
@@ -198,7 +198,7 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    serialized_size INTEGER,
         ///    streamed_size INTEGER,
         ///    PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file),
-        ///    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addr_build_data_from_other_assets(id, build_id)
+        ///    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addressables_build_data_from_other_assets(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildDataFromOtherAssetObjects {
@@ -208,13 +208,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_data_from_other_asset_referencing_assets
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_asset_referencing_assets
         ///(
         ///    data_from_other_asset_id INTEGER,
         ///    build_id INTEGER,
         ///    referencing_asset_rid INTEGER,
         ///    PRIMARY KEY (data_from_other_asset_id, build_id, referencing_asset_rid),
-        ///    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addr_build_data_from_other_assets(id, build_id)
+        ///    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addressables_build_data_from_other_assets(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildDataFromOtherAssetReferencingAssets {
@@ -224,7 +224,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_data_from_other_assets
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_assets
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,
@@ -245,13 +245,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_explicit_asset_externally_referenced_assets
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_externally_referenced_assets
         ///(
         ///    explicit_asset_id INTEGER,
         ///    build_id INTEGER,
         ///    externally_referenced_asset_rid INTEGER,
         ///    PRIMARY KEY (explicit_asset_id, build_id, externally_referenced_asset_rid),
-        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildExplicitAssetExternallyReferencedAssets {
@@ -261,13 +261,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_explicit_asset_internal_referenced_explicit_assets
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_internal_referenced_explicit_assets
         ///(
         ///    explicit_asset_id INTEGER,
         ///    build_id INTEGER,
         ///    internal_referenced_explicit_asset_rid INTEGER,
         ///    PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_explicit_asset_rid),
-        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildExplicitAssetInternalReferencedExplicitAssets {
@@ -277,13 +277,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_explicit_asset_internal_referenced_other_assets
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_internal_referenced_other_assets
         ///(
         ///    explicit_asset_id INTEGER,
         ///    build_id INTEGER,
         ///    internal_referenced_other_asset_rid INTEGER,
         ///    PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_other_asset_rid),
-        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildExplicitAssetInternalReferencedOtherAssets {
@@ -293,13 +293,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_explicit_asset_labels
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_labels
         ///(
         ///    explicit_asset_id INTEGER,
         ///    build_id INTEGER,
         ///    label TEXT,
         ///    PRIMARY KEY (explicit_asset_id, build_id, label),
-        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addr_build_explicit_assets(id, build_id)
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildExplicitAssetLabels {
@@ -309,7 +309,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_explicit_assets
+        ///   Looks up a localized string similar to create table addressables_build_explicit_assets
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,
@@ -334,13 +334,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_file_assets
+        ///   Looks up a localized string similar to create table addressables_build_file_assets
         ///(
         ///    file_id INTEGER,
         ///    build_id INTEGER,
         ///    asset_rid INTEGER,
         ///    PRIMARY KEY (file_id, build_id, asset_rid),
-        ///    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildFileAssets {
@@ -350,13 +350,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_file_external_references
+        ///   Looks up a localized string similar to create table addressables_build_file_external_references
         ///(
         ///    file_id INTEGER,
         ///    build_id INTEGER,
         ///    external_reference_rid INTEGER,
         ///    PRIMARY KEY (file_id, build_id, external_reference_rid),
-        ///    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildFileExternalReferences {
@@ -366,13 +366,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_file_other_assets
+        ///   Looks up a localized string similar to create table addressables_build_file_other_assets
         ///(
         ///    file_id INTEGER,
         ///    build_id INTEGER,
         ///    other_asset_rid INTEGER,
         ///    PRIMARY KEY (file_id, build_id, other_asset_rid),
-        ///    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildFileOtherAssets {
@@ -382,7 +382,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_files
+        ///   Looks up a localized string similar to create table addressables_build_files
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,
@@ -403,13 +403,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_file_sub_files
+        ///   Looks up a localized string similar to create table addressables_build_file_sub_files
         ///(
         ///    file_id INTEGER,
         ///    build_id INTEGER,
         ///    sub_file_rid INTEGER,
         ///    PRIMARY KEY (file_id, build_id, sub_file_rid),
-        ///    FOREIGN KEY (file_id, build_id) REFERENCES addr_build_files(id, build_id)
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildFileSubFiles {
@@ -419,13 +419,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_group_bundles
+        ///   Looks up a localized string similar to create table addressables_build_group_bundles
         ///(
         ///    group_id INTEGER,
         ///    build_id INTEGER,
         ///    bundle_rid INTEGER,
         ///    PRIMARY KEY (group_id, build_id, bundle_rid),
-        ///    FOREIGN KEY (group_id, build_id) REFERENCES addr_build_groups(id, build_id)
+        ///    FOREIGN KEY (group_id, build_id) REFERENCES addressables_build_groups(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildGroupBundles {
@@ -435,7 +435,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_groups
+        ///   Looks up a localized string similar to create table addressables_build_groups
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,
@@ -452,13 +452,13 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_group_schemas
+        ///   Looks up a localized string similar to create table addressables_build_group_schemas
         ///(
         ///    group_id INTEGER,
         ///    build_id INTEGER,
         ///    schema_rid INTEGER,
         ///    PRIMARY KEY (group_id, build_id, schema_rid),
-        ///    FOREIGN KEY (group_id, build_id) REFERENCES addr_build_groups(id, build_id)
+        ///    FOREIGN KEY (group_id, build_id) REFERENCES addressables_build_groups(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildGroupSchemas {
@@ -468,7 +468,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CREATE TABLE addr_builds
+        ///   Looks up a localized string similar to CREATE TABLE addressables_builds
         ///(
         ///    id INTEGER,
         ///    name TEXT,
@@ -492,14 +492,14 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_schema_data_pairs
+        ///   Looks up a localized string similar to create table addressables_build_schema_data_pairs
         ///(
         ///    schema_id INTEGER,
         ///    build_id INTEGER,
         ///    key TEXT,
         ///    value TEXT,
         ///    PRIMARY KEY (schema_id, build_id, key),
-        ///    FOREIGN KEY (schema_id, build_id) REFERENCES addr_build_schemas(id, build_id)
+        ///    FOREIGN KEY (schema_id, build_id) REFERENCES addressables_build_schemas(id, build_id)
         ///);.
         /// </summary>
         internal static string AddrBuildSchemaDataPairs {
@@ -509,7 +509,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_schemas
+        ///   Looks up a localized string similar to create table addressables_build_schemas
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,
@@ -525,7 +525,7 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to create table addr_build_sub_files
+        ///   Looks up a localized string similar to create table addressables_build_sub_files
         ///(
         ///    id INTEGER,
         ///    build_id INTEGER,

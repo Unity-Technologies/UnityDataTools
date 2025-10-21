@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS addr_build_schemas
+CREATE TABLE IF NOT EXISTS addressables_build_schemas
 (
     id INTEGER,
     build_id INTEGER,

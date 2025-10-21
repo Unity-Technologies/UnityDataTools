@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
 {
     /* TABLE DEFINITION:
-        create table addr_build_files
+        create table addressables_build_files
         (
             id INTEGER,
             build_id INTEGER,
@@ -20,7 +20,7 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
     */
     internal class AddressablesBuildFile : AbstractCommand
     {
-        protected override string TableName => "addr_build_files";
+        protected override string TableName => "addressables_build_files";
 
         protected override string DDLSource => Properties.Resources.AddrBuildFiles;
 

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS addr_builds
+CREATE TABLE IF NOT EXISTS addressables_builds
 (
     id INTEGER,
     name TEXT,
