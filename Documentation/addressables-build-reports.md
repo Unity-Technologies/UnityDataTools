@@ -87,7 +87,7 @@ Map explicit assets to other assets they refer to. For instance a prefab to its 
   * data_from_other_asset_Id maps to addressables_build_data_from_other_assets.id
 
 #### `addressables_build_data_from_other_assets`
-Assets added into the build implicitly by explictly defined assets.
+Assets added into the build implicitly by explicitly defined assets.
   * file maps to addressables_build_files.id
 
 #### `addressables_build_cached_bundles`
