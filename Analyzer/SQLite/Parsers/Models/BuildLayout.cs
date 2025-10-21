@@ -37,7 +37,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public string BuildError;
 
         /// <summary>
-        /// Version of the Unity edtior used to perform the build.
+        /// Version of the Unity editor used to perform the build.
         /// </summary>
         public string UnityVersion;
 
