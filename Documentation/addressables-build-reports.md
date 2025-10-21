@@ -8,10 +8,6 @@ When you run the analyzer on a directory containing Addressables build reports, 
 
 Each build report is generated a unique id that is used as the id in addressables_builds and build_id field in subsequent tables. This allows you to compare builds against each other.
 
-## Database Schema
-
-The Addressables build data is stored across multiple related tables in the SQLite database:
-
 ## Concepts
 
 **Builds**
@@ -37,6 +33,11 @@ The Addressables build data is stored across multiple related tables in the SQLi
 
 **Other Assets**
 : these are assets that are included because an explicit asset depends upon them
+
+## Database Schema
+
+The Addressables build data is stored across multiple related tables in the SQLite database prefixed with addressables_.
+
 
 ### Core Tables
 
@@ -117,7 +118,7 @@ Once the data is in the database, you can run queries to analyze your Addressabl
 Addressables renames bundles to make it possible to do content updates. Internally bundles are still named by their internal hash and are cached based upon this name. If you want to lookup how a remote bundle will be cached in Unity's [cache](https://docs.unity3d.com/ScriptReference/Caching.html) you can use the addressables_build_cached_bundles view.
 ```sql
 -- Find cache name for an addressables bundle
-SELECT cached_namei
+SELECT cached_name
   FROM addressables_build_cached_bundles
  WHERE name_in_catalog = 'sharedenvironment_assets_all_5935f9c20c9b10664721f1591e3d2036.bundle'
    AND build_id = 1;
