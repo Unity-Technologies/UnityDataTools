@@ -212,7 +212,7 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.StackTrace.ToString());
+                Console.WriteLine(e.StackTrace);
                 transaction.Rollback();
                 throw;
             }
