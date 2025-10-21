@@ -29,7 +29,6 @@ public class AnalyzerTool
     {
         m_Verbose = verbose;
 
-        // TODO: skipReferences needs to be passed into AssetBundleWriter
         using SQLiteWriter writer = new (databaseName);
 
         try
