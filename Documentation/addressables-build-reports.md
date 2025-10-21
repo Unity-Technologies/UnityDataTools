@@ -6,7 +6,7 @@ Unity Data Tools provides the ability to analyse Unity Addressables build report
 
 When you run the analyzer on a directory containing Addressables build reports, the tool will parse them and add the data to the sqlite database.
 
-Each build report is generated a unique id that is used as the id in addressables_builds and build_id field in subsequent tables. This allows you to compare builds against each other.
+Each build report is assigned a unique id that is used as the id in addressables_builds and build_id field in subsequent tables. This allows you to compare builds against each other.
 
 ## Concepts
 
