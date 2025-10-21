@@ -77,9 +77,9 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public ReferenceType type;
     }
 
-    // This is a grab bag of data because Unity serialization does not 
-    // support polymorphism, so all possible fields are listed in the
-    // ReferenceData class.
+    // This is a grab bag of data because Unity's built-in serialization system
+    // (used for MonoBehaviours, ScriptableObjects, etc.) does not support polymorphism.
+    // To maintain compatibility, all possible fields are listed in the ReferenceData class.
     public class ReferenceData
     {
         public ReferenceId Bundle;
