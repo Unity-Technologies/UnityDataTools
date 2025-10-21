@@ -35,5 +35,4 @@ UnityFileSystemTestData/ProjectSettings/
 UnityFileSystemTestData/UserSettings/
 UnityFileSystemTestData/Packages/
 *.db
-*.txt
 *.csv

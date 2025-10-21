@@ -69,7 +69,7 @@ public class AnalyzerTool
                 if (parser.CanParse(file))
                 {
                     foundParser = true;
-                    Console.Error.WriteLine(file);
+                    Console.WriteLine(file);
                     try
                     {
                         parser.Parse(file);
@@ -117,11 +117,6 @@ public class AnalyzerTool
         Console.WriteLine($"Total time: {(timer.Elapsed.TotalMilliseconds / 1000.0):F3} s");
 
         return 0;
-    }
-
-    private bool ProcessFile(string file, string path, SQLiteWriter writer, int i, int length)
-    {
-        throw new NotImplementedException();
     }
 
     int m_LastProgressMessageLength = 0;
