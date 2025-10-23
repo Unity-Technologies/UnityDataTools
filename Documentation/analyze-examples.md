@@ -4,7 +4,7 @@ This topic gives some examples of using the SQLite output of the UnityDataTools 
 
 The command line arguments to invoke Analyze are documented [here](../UnityDataTool/README.md#analyzeanalyse).
 
-The definition of the views, and some internal details about how Analyze is implemented, can be found [here](../Analyzer/README.md).  
+The definition of the views, and some internal details about how Analyze is implemented, can be found [here](../Analyzer/README.md).
 
 ## Running Queries from the Command line
 

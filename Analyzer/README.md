@@ -186,10 +186,10 @@ important types like Meshes, Shaders, Texture2D and AnimationClips.  For example
 File, then rows are added to both the `objects` table and the `meshes` table.  The meshes table contains columns that only apply to Mesh objects, for example the number of vertices, indices, bones, and channels.  The `mesh_view` is a view that joins the `objects` table with the `meshes` table, so that you can see all the properties of a Mesh object in one place.
 
 Each supported Unity object type follows the same pattern:
-* A Handler class in the SQLite/Handlers (e.g. [MeshHandler.cs](./SQLite/Handler/MeshHandler.cs).
-* The registration of the handler in the m_Handlers dictionary in [SerializedFileSQLiteWriter.cs](./SQLite/SerializedFileSQLiteWriter.cs).
+* A Handler class in the SQLite/Handlers, e.g. [MeshHandler.cs](./SQLite/Handler/MeshHandler.cs).
+* The registration of the handler in the m_Handlers dictionary in [SerializedFileSQLiteWriter.cs](./SQLite/Writers/SerializedFileSQLiteWriter.cs).
 * SQL statements defining extra tables and views associated with the type, e.g. [Mesh.sql](./SQLite/Resources/Mesh.sql).
-* A Reader class that uses RandomAccessReader to read properties from the serialized object. e.g. [Mesh.cs](./SerializedObjects/Mesh.cs).
+* A Reader class that uses RandomAccessReader to read properties from the serialized object, e.g. [Mesh.cs](./SerializedObjects/Mesh.cs).
 
 It would be possible to extend the Analyze library to add additional columns for the existing types, or by following the same pattern to add additional types.  The [dump](../UnityDataTool/README.md#dump) feature of UnityDataTool is a useful way to see the property names and other details of the serialization for a type.  Based on that information, code in the Reader class can use the RandomAccessReader to retrieve those properties to bring them into the SQLite database.
 
