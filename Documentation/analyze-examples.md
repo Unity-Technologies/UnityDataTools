@@ -6,8 +6,6 @@ The command line arguments to invoke Analyze are documented [here](../UnityDataT
 
 The definition of the views, and some internal details about how Analyze is implemented, can be found [here](../Analyzer/README.md).  
 
-See [Addressables Build Reports](addressables-build-reports.md) for information about the tables and views created for Addressables build reports.
-
 ## Running Queries from the Command line
 
 You can find data in the SQLite database by running SQL queries.
@@ -222,9 +220,13 @@ This is a large subject, see [Comparing Builds](comparing-builds.md).
 
 ## Example: Matching content back to the source asset
 
-UnityDataTool works on the output of a Unity build, which, by its very nature, only contains the crucial data needed to efficiently load built content in the Player.  So it does not include any information about the assets and scenes in the project that was used to create that build.  However you may want to match content back to the original source asset or scene.  For example if the size of an AssetBundle has unexpectedly changed between builds then you may want to track down which source assets could be responsible for that change.  Or you may want to confirm that some particular image has been included in the build.
+UnityDataTool works on the output of a Unity build, which, by its very nature, only contains the crucial data needed to efficiently load built content in the Player.  It does not include complete information about the assets and scenes in the project that was used to create that build.  You may want to match content back to the original source asset or scene.  For example if the size of an AssetBundle has unexpectedly changed between builds then you may want to track down which source assets could be responsible for that change.  Or you may want to confirm that some particular image has been included in the build.
 
-In many cases the source asset can be inferred based on your specific knowledge of your project, and how the build was configured.  For example the level files in a Player build match the Scenes in the Build Profile Scene list.  And the content of AssetBundles is driven from the assignment of specific assets to those AssetBundles (or Addressable groups).
+For AssetBundles partial asset information can be found in the m_Containers list, inside the AssetBundle object.  This records assets that were explicitly added to AssetBundles.  In the database this can be found in the `assets` table.  However, asset that are included in the build implicitly (because they are referenced from the explicitly added assets) will not be recorded anywhere in the AssetBundle content. 
+
+Similarly for a player build the only paths populated in the `assets` table are the scenes from the Build Profile Scene List.  The paths of the assets in the sharedAsset files is not recorded anywhere in the build output.
+
+In many cases the source asset can be inferred based on your specific knowledge of your project, and how the build was configured.  For example the level files in a Player build match the Scenes in the Build Profile Scene list.  And the content of AssetBundles is driven from the assignment of specific assets to those AssetBundles (or Addressable groups), along with assets they depend on.
 
 Also, in many cases the name of objects matches the file name of the asset.  For example the Texture2D "red" object probably comes from a file named red.png somewhere in the project.  
 
@@ -237,5 +239,4 @@ Examples of alternative sources of build information:
 * The [BuildReport](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.html) has detailed source information in the PackedAssets section.  The [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) is a useful way to view data from the BuildReport.
 * The Editor log reports a lot of information during a build. 
 * Regular AssetBundle builds create [.manifest files](https://docs.unity3d.com/Manual/assetbundles-file-format.html), which contain information about the source assets and types.
-* Addressable builds do not produce BuildReport files, nor .manifest files. But there is similar reporting, for example the [Build Layout Report](https://docs.unity3d.com/Packages/com.unity.addressables@2.4/manual/BuildLayoutReport.html).
-
+* Addressable builds do not produce BuildReport files, nor .manifest files. But UnityDataTools supports analyzing the [Addressables Build Reports](addressables-build-reports.md) and will populate the `addressables_build_explicit_assets` and `addressables_build_implicit_assets` tables.

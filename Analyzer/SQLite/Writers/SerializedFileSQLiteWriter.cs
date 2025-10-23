@@ -35,6 +35,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         { "Shader", new ShaderHandler() },
         { "AudioClip", new AudioClipHandler() },
         { "AnimationClip", new AnimationClipHandler() },
+        { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
     };
 
