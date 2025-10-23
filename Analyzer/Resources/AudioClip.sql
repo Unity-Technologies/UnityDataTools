@@ -1,16 +1,16 @@
-﻿CREATE TABLE audio_load_types(
+﻿CREATE TABLE IF NOT EXISTS audio_load_types(
     id INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE audio_formats(
+CREATE TABLE IF NOT EXISTS audio_formats(
     id INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE audio_clips(
+CREATE TABLE IF NOT EXISTS audio_clips(
     id INTEGER,
     bits_per_sample INTEGER,
     frequency INTEGER,

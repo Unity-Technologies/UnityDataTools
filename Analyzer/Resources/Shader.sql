@@ -1,28 +1,28 @@
-﻿CREATE TABLE shaders(
+﻿CREATE TABLE IF NOT EXISTS shaders(
     id INTEGER,
     decompressed_size INTEGER,
     unique_programs INTEGER,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE shader_keywords(
+CREATE TABLE IF NOT EXISTS shader_keywords(
     id INTEGER,
     keyword TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE shader_subprogram_keywords(
+CREATE TABLE IF NOT EXISTS shader_subprogram_keywords(
     subprogram_id INTEGER,
     keyword_id INTEGER
 );
 
-CREATE TABLE shader_apis(
+CREATE TABLE IF NOT EXISTS shader_apis(
     id INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE shader_subprograms(
+CREATE TABLE IF NOT EXISTS shader_subprograms(
     id INTEGER,
     shader INTEGER,
     sub_shader INTEGER,

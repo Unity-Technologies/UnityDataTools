@@ -12,7 +12,7 @@ public class Texture2DHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.Texture2D;
+        command.CommandText = Resources.Texture2D;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();

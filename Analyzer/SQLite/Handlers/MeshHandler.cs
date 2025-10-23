@@ -13,7 +13,7 @@ public class MeshHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.Mesh;
+        command.CommandText = Resources.Mesh;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();

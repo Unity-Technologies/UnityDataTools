@@ -35,3 +35,5 @@ UnityFileSystemTestData/**/*.sln
 UnityFileSystemTestData/ProjectSettings/
 UnityFileSystemTestData/UserSettings/
 UnityFileSystemTestData/Packages/
+*.db
+*.csv

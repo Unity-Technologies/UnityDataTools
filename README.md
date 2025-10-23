@@ -8,6 +8,8 @@ The [command line tool](./UnityDataTool/README.md) runs directly on Unity data f
 
 It is designed to scale for large build outputs and has been used to fine-tune big Unity-based games.
 
+The tool also provides comprehensive analysis of **Unity Addressables build reports**, automatically detecting and parsing Addressables JSON build outputs to extract detailed information about bundles, assets, dependencies, file sizes, and build performance metrics. See the [Addressables Build Report Analysis documentation](./Documentation/addressables-build-reports.md) for complete details.
+
 The command line tool uses the UnityFileSystemApi library to access the content of Unity Archives and Serialized files, which are Unity's primary binary formats. This repository also serves as a reference for how this library could be used as part of incorporating functionality into your own tools.
 
 ## Repository content
