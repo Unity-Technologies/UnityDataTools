@@ -1,19 +1,16 @@
-﻿using UnityDataTools.Analyzer.SQLite.Writers;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityDataTools.Analyzer.SQLite.Handlers;
+using UnityDataTools.Analyzer.SQLite.Writers;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers
 {
     public class SerializedFileParser : ISQLiteFileParser
     {
-        private AssetBundleSQLiteWriter m_Writer;
+        private SerializedFileSQLiteWriter m_Writer;
 
         public bool Verbose { get; set; }
         public bool SkipReferences { get; set; }
@@ -31,12 +28,13 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public void Init(SqliteConnection db)
         {
-            m_Writer = new AssetBundleSQLiteWriter(db, SkipReferences);
-            m_Writer.Init();
+            m_Writer = new SerializedFileSQLiteWriter(db, SkipReferences);
         }
 
         public void Parse(string filename)
         {
+            // only init our writer if we are actually parsing a file
+            m_Writer.Init();
             ProcessFile(filename, Path.GetDirectoryName(filename));
         }
 

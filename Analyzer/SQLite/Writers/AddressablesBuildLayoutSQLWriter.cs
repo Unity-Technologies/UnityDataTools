@@ -2,8 +2,8 @@
 using Newtonsoft.Json;
 using System;
 using System.IO;
-using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport;
+using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 
 namespace UnityDataTools.Analyzer.SQLite.Writers
 {
@@ -45,16 +45,22 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
         private SqliteCommand m_LastId = new SqliteCommand();
 
+        private bool m_Initialized;
         private SqliteConnection m_Database;
         public bool Verbose { get; set; }
 
         public AddressablesBuildLayoutSQLWriter(SqliteConnection database)
         {
+            m_Initialized = false;
             m_Database = database;
         }
 
         public void Init()
         {
+            if (m_Initialized)
+                return;
+
+            m_Initialized = true;
             // build addressables file commands
             m_AddressablesBuild.CreateCommand(m_Database);
             // Build Bundle Tables

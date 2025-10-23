@@ -1,18 +1,17 @@
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Text.RegularExpressions;
+using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
 using UnityDataTools.Analyzer.SQLite.Handlers;
+using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
-using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
-using UnityDataTools.Analyzer;
-using UnityDataTools.Analyzer.Util;
 
 namespace UnityDataTools.Analyzer.SQLite.Writers;
 
-public class AssetBundleSQLiteWriter : IDisposable
+public class SerializedFileSQLiteWriter : IDisposable
 {
     private HashSet<int> m_TypeSet = new();
 
@@ -27,7 +26,7 @@ public class AssetBundleSQLiteWriter : IDisposable
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
     // Used to map PPtr fileId to its corresponding serialized file id in the database.
-    Dictionary<int, int> m_LocalToDbFileId = new ();
+    Dictionary<int, int> m_LocalToDbFileId = new();
 
     private Dictionary<string, ISQLiteHandler> m_Handlers = new()
     {
@@ -47,17 +46,23 @@ public class AssetBundleSQLiteWriter : IDisposable
     private AddType m_AddTypeCommand = new AddType();
     private AddAssetDependency m_InsertDepCommand = new AddAssetDependency();
 
+    private bool m_Initialized;
     private SqliteConnection m_Database;
     private SqliteCommand m_LastId = new SqliteCommand();
     private SqliteTransaction m_CurrentTransaction = null;
-    public AssetBundleSQLiteWriter(SqliteConnection database, bool skipReferences)
+    public SerializedFileSQLiteWriter(SqliteConnection database, bool skipReferences)
     {
+        m_Initialized = false;
         m_Database = database;
         m_SkipReferences = skipReferences;
     }
 
     public void Init()
-    {        
+    {
+        if (m_Initialized)
+            return;
+
+        m_Initialized = true;
         foreach (var handler in m_Handlers.Values)
         {
             handler.Init(m_Database);

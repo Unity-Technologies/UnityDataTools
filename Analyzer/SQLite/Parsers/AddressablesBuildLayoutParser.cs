@@ -3,8 +3,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
-using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Handlers;
+using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Writers;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers
@@ -23,7 +23,6 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
         public void Init(SqliteConnection db)
         {
             m_Writer = new AddressablesBuildLayoutSQLWriter(db);
-            m_Writer.Init();
             m_Writer.Verbose = Verbose;
         }
 
@@ -74,6 +73,8 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public void Parse(string filename)
         {
+            // only init our writer if we are actually parsing a file
+            m_Writer.Init();
             using (StreamReader reader = File.OpenText(filename))
             {
                 JsonSerializer serializer = new JsonSerializer();
