@@ -222,7 +222,7 @@ This is a large subject, see [Comparing Builds](comparing-builds.md).
 
 UnityDataTool works on the output of a Unity build, which, by its very nature, only contains the crucial data needed to efficiently load built content in the Player.  It does not include complete information about the assets and scenes in the project that was used to create that build.  You may want to match content back to the original source asset or scene.  For example if the size of an AssetBundle has unexpectedly changed between builds then you may want to track down which source assets could be responsible for that change.  Or you may want to confirm that some particular image has been included in the build.
 
-For AssetBundles partial asset information can be found in the m_Containers list, inside the AssetBundle object.  This records assets that were explicitly added to AssetBundles.  In the database this can be found in the `assets` table.  However, asset that are included in the build implicitly (because they are referenced from the explicitly added assets) will not be recorded anywhere in the AssetBundle content. 
+For AssetBundles partial asset information can be found in the m_Containers list, inside the AssetBundle object.  This records assets that were explicitly added to AssetBundles.  In the database this can be found in the `assets` table.  However, assets that are included in the build implicitly (because they are referenced from the explicitly added assets) will not be recorded anywhere in the AssetBundle content. 
 
 Similarly for a player build the only paths populated in the `assets` table are the scenes from the Build Profile Scene List.  The paths of the assets in the sharedAsset files is not recorded anywhere in the build output.
 
