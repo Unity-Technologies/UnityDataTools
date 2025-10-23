@@ -187,7 +187,7 @@ File, then rows are added to both the `objects` table and the `meshes` table.  T
 
 Each supported Unity object type follows the same pattern:
 * A Handler class in the SQLite/Handlers (e.g. [MeshHandler.cs](./SQLite/Handler/MeshHandler.cs).
-* The registration of the handler in the m_Handlers dictionary in [SQLiteWriter.cs](./SQLite/SQLiteWriter.cs).
+* The registration of the handler in the m_Handlers dictionary in [SerializedFileSQLiteWriter.cs](./SQLite/SQLiteWriter.cs).
 * SQL statements defining extra tables and views associated with the type, e.g. [Mesh.sql](./SQLite/Resources/Mesh.sql).
 * A Reader class that uses RandomAccessReader to read properties from the serialized object. e.g. [Mesh.cs](./SerializedObjects/Mesh.cs).
 
