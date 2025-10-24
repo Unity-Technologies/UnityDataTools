@@ -114,6 +114,19 @@ You can analyze a directory with both asset bundles (*.bundle) and json files (*
 
 Once the data is in the database, you can run queries to analyze your Addressables build:
 
+
+#### Find all implicit assets for an explicit asset
+```sql
+-- Find implicitly included assets for a given explicit asset id
+SELECT a.explicit_asset_id, b.id, b.asset_path, b.asset_path 
+  FROM addressables_build_explicit_asset_internal_referenced_other_assets a, 
+       addressables_build_data_from_other_assets b
+ WHERE a.internal_referenced_other_asset_rid = b.id 
+   AND a.build_id = b.build_id;
+   AND a.explicit_asset_id = 5092 
+   AND a.build_id = 3;
+```
+
 #### Find the cache name for an addressables bundle
 Addressables renames bundles to make it possible to do content updates. Internally bundles are still named by their internal hash and are cached based upon this name. If you want to lookup how a remote bundle will be cached in Unity's [cache](https://docs.unity3d.com/ScriptReference/Caching.html) you can use the addressables_build_cached_bundles view.
 ```sql
