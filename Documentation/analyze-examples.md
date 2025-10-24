@@ -239,4 +239,4 @@ Examples of alternative sources of build information:
 * The [BuildReport](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.html) has detailed source information in the PackedAssets section.  The [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) is a useful way to view data from the BuildReport.
 * The Editor log reports a lot of information during a build. 
 * Regular AssetBundle builds create [.manifest files](https://docs.unity3d.com/Manual/assetbundles-file-format.html), which contain information about the source assets and types.
-* Addressable builds do not produce BuildReport files, nor .manifest files. But UnityDataTools supports analyzing the [Addressables Build Reports](addressables-build-reports.md) and will populate the `addressables_build_explicit_assets` and `addressables_build_implicit_assets` tables.
+* Addressable builds do not produce BuildReport files, nor .manifest files. But UnityDataTools supports analyzing the [Addressables Build Reports](addressables-build-reports.md) and will populate the `addressables_build_explicit_assets` and `addressables_build_data_from_other_assets` tables.
