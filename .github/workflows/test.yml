@@ -1,0 +1,58 @@
+name: Test UnityDataTools
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows, macos]
+        arch: [x64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+          - os: macos
+            arch: x64
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build -c Release --no-restore
+
+      - name: Run UnityFileSystem.Tests
+        run: dotnet test UnityFileSystem.Tests/UnityFileSystem.Tests.csproj -c Release --no-build --verbosity normal --logger "trx;LogFileName=UnityFileSystem.Tests.trx"
+
+      - name: Run Analyzer.Tests
+        run: dotnet test Analyzer.Tests/Analyzer.Tests.csproj -c Release --no-build --verbosity normal --logger "trx;LogFileName=Analyzer.Tests.trx"
+
+      - name: Run UnityDataTool.Tests
+        run: dotnet test UnityDataTool.Tests/UnityDataTool.Tests.csproj -c Release --no-build --verbosity normal --logger "trx;LogFileName=UnityDataTool.Tests.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            **/TestResults/*.trx
+          retention-days: 30
