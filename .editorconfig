@@ -1,0 +1,316 @@
+# see http://editorconfig.org/ for docs on this file
+
+root = true
+
+#                                                        _   _   _
+#                                                       | | | | (_)
+#    ___ ___  _ __ ___  _ __ ___   ___  _ __    ___  ___| |_| |_ _ _ __   __ _ ___
+#   / __/ _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \  / __|/ _ \ __| __| | '_ \ / _` / __|
+#  | (_| (_) | | | | | | | | | | | (_) | | | | \__ \  __/ |_| |_| | | | | (_| \__ \
+#   \___\___/|_| |_| |_|_| |_| |_|\___/|_| |_| |___/\___|\__|\__|_|_| |_|\__, |___/
+#                                                                         __/ |
+#                                                                        |___/
+
+[*]
+
+# sanity across platforms
+end_of_line = lf
+
+# this is our general standard: exceptions permitted only when a) required by the format or b) strong de facto convention
+indent_style = space
+indent_size = 4
+
+# prevent files with BOMs on them coming into the repo
+charset = utf-8
+
+# other common settings
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+cpp_space_pointer_reference_alignment = left
+
+#                           _     _
+#                          (_)   | |
+#   _____   _____ _ __ _ __ _  __| | ___  ___
+#  / _ \ \ / / _ \ '__| '__| |/ _` |/ _ \/ __|
+# | (_) \ V /  __/ |  | |  | | (_| |  __/\__ \
+#  \___/ \_/ \___|_|  |_|  |_|\__,_|\___||___/
+#
+#
+
+[{Makefile,makefile}]
+indent_style = tab
+
+[*.{md,markdown,mdx}]
+# trailing whitespace is significant in markdown (bad choice, bad!)
+trim_trailing_whitespace = false
+
+# crlf because tool expectations (based on experimentation)
+[*.{bat,cmd,xaml,tt,t4,ttinclude}]
+end_of_line = crlf
+
+[*.{json,asmdef}]
+indent_size = 2
+
+[*.{yaml,yml}]
+indent_size = 2
+
+# msbuild-related files (these are usually not tool-authored)
+[*.{props,targets,msbuildproj,proj}]
+indent_size = 2
+
+### visual studio
+
+# these settings are based on experiments to see how vs will modify a file after it has been
+# manually edited. the settings are meant to match what vs does to minimize unnecessary diffs.
+
+# related notes from research:
+#
+#   1. rider tends to preserve existing file settings, but we must go with the more strict vs.
+#
+#   2. file-new templates in vs, rider, and `dotnet new` contain bom's (byte order markers) and
+#      crlf. crlf we must preserve because vs, but bom's must be burned with fire. all editors are
+#      fine with this.
+
+[*.sln]
+indent_style = tab
+end_of_line = crlf
+insert_final_newline = false
+
+[*.{vcxproj,vcxproj.filters}]
+indent_size = 2
+end_of_line = crlf
+insert_final_newline = false
+
+[*.vcproj]
+indent_style = tab
+end_of_line = crlf
+
+# csproj is a bit more flexible, in part because VS does some preservation of whitespace. however,
+# lines it adds will get crlf's, and if the rest of the file has lf, we'll get a mixed file. so we
+# must set the whole thing to be crlf.
+[*.csproj]
+indent_size = 2
+end_of_line = crlf
+
+
+#   __                           _                _
+#  / _|                         | |              | |
+# | |_ ___  _ __ _ __ ___   __ _| |_   _ __ _   _| | ___  ___
+# |  _/ _ \| '__| '_ ` _ \ / _` | __| | '__| | | | |/ _ \/ __|
+# | || (_) | |  | | | | | | (_| | |_  | |  | |_| | |  __/\__ \
+# |_| \___/|_|  |_| |_| |_|\__,_|\__| |_|   \__,_|_|\___||___/
+#
+#
+
+# http://go/format
+# https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-format
+
+
+[*.cs]
+
+# The entire monorepo has a single standard.
+#
+#    if you want to propose changes to the standard, raise it with the people assigned to .editorconfig in
+#    .github/UNITY_CODEOWNERS.
+
+#             ___  ___  __   __        __   ___
+# |  | |__| |  |  |__  /__` |__)  /\  /  ` |__
+# |/\| |  | |  |  |___ .__/ |    /~~\ \__, |___
+
+# whitespace-only format uses options under IDE0055 (https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0055)
+#
+# IDE0055 is made up of these formatting options:
+#   - https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/csharp-formatting-options
+#   - https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/dotnet-formatting-options
+
+# to reformat code with these rules, use `dotnet format whitespace <path> --folder`. the rules are exclusively about
+# code structure and do not require symbol awareness. they can be run on any file without needing a project or compile
+# to be done first.
+
+# newline options
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
+
+# indentation options
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = one_less_than_current
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents_when_block = false
+
+# spacing
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_parentheses = false
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_space_around_binary_operators = before_and_after
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
+csharp_space_between_method_declaration_name_and_open_parenthesis = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+csharp_space_after_comma = true
+csharp_space_before_comma = false
+csharp_space_after_dot = false
+csharp_space_before_dot = false
+csharp_space_after_semicolon_in_for_statement = true
+csharp_space_before_semicolon_in_for_statement = false
+csharp_space_around_declaration_statements = false
+csharp_space_before_open_square_brackets = false
+csharp_space_between_empty_square_brackets = false
+csharp_space_between_square_brackets = false
+
+# wrap options
+csharp_preserve_single_line_statements = true
+csharp_preserve_single_line_blocks = true
+max_line_length = 120
+
+# using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+#  __  ___           ___
+# /__`  |  \ / |    |__
+# .__/  |   |  |___ |___
+
+# https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/
+
+# Code-style naming rules
+# https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/naming-rules
+# A. dotnet_naming_symbols: specify a symbol group
+# B. dotnet_naming_style: specify a naming style
+# C. dotnet_naming_rule: specify a rule that applies a naming style to a symbol group
+
+# 1. General symbol rules
+# 1.1 Namespaces, classes, structs, enumerations, methods, and delegates: PascalCase
+dotnet_naming_symbols.majority_of_symbols.applicable_kinds = namespace, class, struct, enum, method, delegate
+dotnet_naming_symbols.majority_of_symbols.applicable_accessibilities = *
+# 1.2 Modifier preferences
+dotnet_style_require_accessibility_modifiers = omit_if_default:suggestion
+dotnet_style_readonly_field = true:suggestion
+
+# NOTE camelCase vs PascalCase for public fields/properties/events is the only different between
+# UnityEngine/UnityEditor and Unity (non-UnityEngine/UnityEditor to be exact) namespace conventions.
+# Search for "NOTE Unity namespace" to find the appropriate places where to do the adjustments.
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+dotnet_naming_rule.majority_of_symbols_should_be_pascal_case.symbols = majority_of_symbols # The symbol group that the rule applies to
+dotnet_naming_rule.majority_of_symbols_should_be_pascal_case.style = pascal_case_style # The naming style to associate with the rule
+dotnet_naming_rule.majority_of_symbols_should_be_pascal_case.severity = suggestion # The severity for enforcing the convention
+
+# 1.2 Interfaces: IPascalCase
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+dotnet_naming_style.ipascal_case_style.capitalization = pascal_case
+dotnet_naming_style.ipascal_case_style.required_prefix = I
+
+dotnet_naming_rule.interfaces_should_begin_with_i.symbols = interfaces
+dotnet_naming_rule.interfaces_should_begin_with_i.style = ipascal_case_style
+dotnet_naming_rule.interfaces_should_begin_with_i.severity = suggestion
+
+# 1.3 Type parameters: TPascalCase
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+dotnet_naming_symbols.type_parameters.applicable_accessibilities = *
+
+dotnet_naming_style.tpascal_case_style.capitalization = pascal_case
+dotnet_naming_style.tpascal_case_style.required_prefix = T
+
+dotnet_naming_rule.type_parameters_should_beging_with_t.symbols = type_parameters
+dotnet_naming_rule.type_parameters_should_beging_with_t.style = tpascal_case_style
+dotnet_naming_rule.type_parameters_should_beging_with_t.severity = suggestion
+
+# 2. Public fields, including events, all properties:
+
+# Public fields and properties case depends on the namespace and can't be generalized.
+# Public fields and properties in UnityEngine and UnityEditor namespaces should use camelCase,
+# and they should PascalCase in other namespaces.
+
+# To enforce this another .editorconfig file will be needed in the subfolders containing either
+# UnityEngine and UnityEditor code or other namespace code.
+# See /Modules/HierarchyCore/.editorconfig for an example of overriden rules for specific namespaces.
+
+# 2.1 fields
+dotnet_naming_symbols.public_fields.applicable_kinds = field, event
+dotnet_naming_symbols.public_fields.applicable_accessibilities = public
+
+dotnet_naming_rule.public_fields_use_correct_case.symbols = public_fields
+dotnet_naming_rule.public_fields_use_correct_case.style = pascal_case_style
+dotnet_naming_rule.public_fields_use_correct_case.severity = none
+
+# 2.2 properties
+dotnet_naming_symbols.properties.applicable_kinds = property
+dotnet_naming_symbols.properties.applicable_accessibilities = *
+
+dotnet_naming_rule.properties_use_correct_case.symbols = properties
+dotnet_naming_rule.properties_use_correct_case.style = pascal_case_style
+dotnet_naming_rule.properties_use_correct_case.severity = none
+
+# 3. Non-public fields, including events: m_PascalCase
+dotnet_naming_symbols.nonpublic_fields.applicable_kinds = field, event
+dotnet_naming_symbols.nonpublic_fields.applicable_accessibilities = internal, private, protected, protected_internal, private_protected
+
+dotnet_naming_style.m_pascal_case_style.capitalization = pascal_case
+dotnet_naming_style.m_pascal_case_style.required_prefix = m_
+
+dotnet_naming_rule.nonpublic_fields_must_be_prefixed.symbols = nonpublic_fields
+dotnet_naming_rule.nonpublic_fields_must_be_prefixed.style = m_pascal_case_style
+dotnet_naming_rule.nonpublic_fields_must_be_prefixed.severity = suggestion
+
+# 4. Non-public static fields: s_PascalCase
+dotnet_naming_symbols.nonpublic_static_fields.applicable_kinds = field, event
+dotnet_naming_symbols.nonpublic_static_fields.applicable_accessibilities = internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.nonpublic_static_fields.required_modifiers = static
+
+dotnet_naming_style.s_pascal_case_style.capitalization = pascal_case
+dotnet_naming_style.s_pascal_case_style.required_prefix = s_
+
+dotnet_naming_rule.nonpublic_static_fields_must_be_prefixed.symbols = nonpublic_static_fields
+dotnet_naming_rule.nonpublic_static_fields_must_be_prefixed.style = s_pascal_case_style
+dotnet_naming_rule.nonpublic_static_fields_must_be_prefixed.severity = suggestion
+
+# 5. Non-public const fields: k_PascalCase
+dotnet_naming_symbols.nonpublic_const_fields.applicable_kinds = field, event
+dotnet_naming_symbols.nonpublic_const_fields.applicable_accessibilities = internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.nonpublic_const_fields.required_modifiers = const
+
+dotnet_naming_style.k_pascal_case_style.capitalization = pascal_case
+dotnet_naming_style.k_pascal_case_style.required_prefix = k_
+
+dotnet_naming_rule.nonpublic_const_fields_must_be_prefixed.symbols = nonpublic_const_fields
+dotnet_naming_rule.nonpublic_const_fields_must_be_prefixed.style = k_pascal_case_style
+dotnet_naming_rule.nonpublic_const_fields_must_be_prefixed.severity = suggestion
+
+# 6. Non-public static readonly fields: k_PascalCase
+dotnet_naming_symbols.nonpublic_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.nonpublic_static_readonly_fields.applicable_accessibilities = internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.nonpublic_static_readonly_fields.required_modifiers = static, readonly
+
+dotnet_naming_rule.nonpublic_static_readonly_fields_must_be_prefixed.symbols = nonpublic_static_readonly_fields
+dotnet_naming_rule.nonpublic_static_readonly_fields_must_be_prefixed.style = k_pascal_case_style
+dotnet_naming_rule.nonpublic_static_readonly_fields_must_be_prefixed.severity = suggestion
+
+# 7. Parameters and local variables: camelCase
+# 7.1 parameters
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+
+dotnet_naming_rule.parameters_must_be_camel_case.symbols = parameters
+dotnet_naming_rule.parameters_must_be_camel_case.style = camel_case_style
+dotnet_naming_rule.parameters_must_be_camel_case.severity = suggestion
+
+# 7.2 local variables
+dotnet_naming_symbols.local_variables.applicable_kinds = local
+
+dotnet_naming_rule.local_variables_must_be_camel_case.symbols = local_variables
+dotnet_naming_rule.local_variables_must_be_camel_case.style = camel_case_style
+dotnet_naming_rule.local_variables_must_be_camel_case.severity = suggestion

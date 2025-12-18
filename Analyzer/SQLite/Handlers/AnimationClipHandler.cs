@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
@@ -15,7 +15,7 @@ public class AnimationClipHandler : ISQLiteHandler
         using var command = db.CreateCommand();
         command.CommandText = Resources.AnimationClip;
         command.ExecuteNonQuery();
-        
+
         m_InsertCommand = db.CreateCommand();
         m_InsertCommand.CommandText = "INSERT INTO animation_clips(id, legacy, events) VALUES(@id, @legacy, @events)";
         m_InsertCommand.Parameters.Add("@id", SqliteType.Integer);

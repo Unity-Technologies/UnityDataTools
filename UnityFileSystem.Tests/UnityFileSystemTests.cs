@@ -16,19 +16,19 @@ public class ArchiveTests : AssetBundleTestFixture
     public ArchiveTests(Context context) : base(context)
     {
     }
-    
+
     protected override void OnLoadExpectedData(Context context)
     {
         // Uncomment to regenerate expected data.
         //ExpectedDataGenerator.Generate(context);
     }
-    
+
     [OneTimeSetUp]
     public void Setup()
     {
         UnityFileSystem.Init();
     }
-    
+
     [OneTimeTearDown]
     public void TearDown()
     {
@@ -50,7 +50,7 @@ public class ArchiveTests : AssetBundleTestFixture
         var ex = Assert.Throws<NotSupportedException>(() => UnityFileSystem.MountArchive(path, "archive:/"));
         Assert.AreEqual($"Invalid file format reading {path}.", ex.Message);
     }
-        
+
     public void MountArchive_ValidArchive_ReturnsArchive()
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
@@ -61,7 +61,7 @@ public class ArchiveTests : AssetBundleTestFixture
 
         archive.Dispose();
     }
-    
+
     [Ignore("This test doesn't return the expected error, this condition is probably not handled correctly in Unity")]
     public void DisposeArchive_ValidArchive_UnmountsArchive()
     {
@@ -74,16 +74,16 @@ public class ArchiveTests : AssetBundleTestFixture
 
         archive.Dispose();
     }
-    
+
     public void Nodes_Disposed_ThrowsException()
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         var archive = UnityFileSystem.MountArchive(path, "archive:/");
         archive.Dispose();
-            
+
         Assert.Throws<ObjectDisposedException>(() => { var _ = archive.Nodes; });
     }
-    
+
     public void Nodes_ValidArchive_ExpectedContent(string testFolder)
     {
         var path = Path.Combine(testFolder, "AssetBundles", "assetbundle");
@@ -121,7 +121,7 @@ public class UnityFileTests : AssetBundleTestFixture
     public void Setup()
     {
         UnityFileSystem.Init();
-            
+
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
     }
@@ -130,7 +130,7 @@ public class UnityFileTests : AssetBundleTestFixture
     public void TearDown()
     {
         m_Archive.Dispose();
-            
+
         UnityFileSystem.Cleanup();
     }
 
@@ -282,7 +282,7 @@ public class SerializedFileTests : AssetBundleTestFixture
     public void Setup()
     {
         UnityFileSystem.Init();
-            
+
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
     }
@@ -291,7 +291,7 @@ public class SerializedFileTests : AssetBundleTestFixture
     public void TearDown()
     {
         m_Archive.Dispose();
-            
+
         UnityFileSystem.Cleanup();
     }
 
@@ -314,7 +314,7 @@ public class SerializedFileTests : AssetBundleTestFixture
     public void OpenSerializedFile_ValidSerializedFile_ReturnsFile()
     {
         SerializedFile file = null;
-            
+
         Assert.DoesNotThrow(() => file = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994"));
         Assert.IsNotNull(file);
 
@@ -419,7 +419,7 @@ public class TypeTreeTests : AssetBundleTestFixture
     public void Setup()
     {
         UnityFileSystem.Init();
-            
+
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
 
@@ -431,7 +431,7 @@ public class TypeTreeTests : AssetBundleTestFixture
     {
         m_SerializedFile.Dispose();
         m_Archive.Dispose();
-            
+
         UnityFileSystem.Cleanup();
     }
 
@@ -509,7 +509,7 @@ public class TypeTreeTests : AssetBundleTestFixture
     public void GetRefTypeTree_ValidSerializedFile_ReturnNode()
     {
         TypeTreeNode node = null;
-            
+
         Assert.DoesNotThrow(() => node = m_SerializedFile.GetRefTypeTypeTreeRoot("SerializeReferencePolymorphismExample/Apple", "", "Assembly-CSharp"));
         Assert.NotNull(node);
     }
@@ -523,11 +523,11 @@ public class TypeTreeTests : AssetBundleTestFixture
         Assert.AreEqual(2, node.Children.Count);
         Assert.AreEqual("Apple", node.Type);
         Assert.AreEqual("Base", node.Name);
-            
+
         Assert.AreEqual("int", node.Children[0].Type);
         Assert.AreEqual("m_Data", node.Children[0].Name);
         Assert.AreEqual(4, node.Children[0].Size);
-            
+
         Assert.AreEqual("string", node.Children[1].Type);
         Assert.AreEqual("m_Description", node.Children[1].Name);
     }
@@ -552,7 +552,7 @@ public class RandomAccessReaderTests : AssetBundleTestFixture
         m_Archive = UnityFileSystem.MountArchive(path, "archive:/");
 
         m_SerializedFile = UnityFileSystem.OpenSerializedFile("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994");
-        m_Reader = new UnityFileReader("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994", 1024*1024);
+        m_Reader = new UnityFileReader("archive:/CAB-5d40f7cad7c871cf2ad2af19ac542994", 1024 * 1024);
     }
 
     [OneTimeTearDown]
@@ -573,13 +573,13 @@ public class RandomAccessReaderTests : AssetBundleTestFixture
         for (i = 0; i < m_SerializedFile.Objects.Count; ++i)
         {
             obj = m_SerializedFile.Objects[i];
-                
+
             if (obj.Id == id)
             {
                 break;
             }
         }
-            
+
         Assert.Less(i, m_SerializedFile.Objects.Count);
 
         return obj;
@@ -589,31 +589,31 @@ public class RandomAccessReaderTests : AssetBundleTestFixture
     public void AccessProperty_ValidProperty_ReturnExpectedValues()
     {
         var obj = GetObjectInfo(-7865028809519950684);
-            
+
         var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
         var reader = new TypeTreeReaders.RandomAccessReader(m_SerializedFile, root, m_Reader, obj.Offset);
-            
+
         Assert.AreEqual("Lame", reader["m_Name"].GetValue<string>());
         Assert.AreEqual(228, reader["m_SubMeshes"][0]["vertexCount"].GetValue<UInt32>());
         Assert.AreEqual(false, reader["m_IsReadable"].GetValue<bool>());
     }
-        
+
     [Test]
     public void AccessProperty_InvalidProperty_ThrowException()
     {
         var obj = GetObjectInfo(-7865028809519950684);
-            
+
         var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
         var reader = new TypeTreeReaders.RandomAccessReader(m_SerializedFile, root, m_Reader, obj.Offset);
-            
+
         Assert.Throws<KeyNotFoundException>(() => reader["ThisIsAnUnexistingPropertyName"].GetValue<string>());
     }
-        
+
     [Test]
     public void AccessReferencedObject_ValidProperty_ReturnExpectedValues()
     {
         var obj = GetObjectInfo(-4606375687431940004);
-            
+
         var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
         var reader = new TypeTreeReaders.RandomAccessReader(m_SerializedFile, root, m_Reader, obj.Offset);
 
@@ -632,10 +632,10 @@ public class RandomAccessReaderTests : AssetBundleTestFixture
             id0 = reader["m_Item"]["rid"].GetValue<long>();
             id1 = reader["m_Item2"]["rid"].GetValue<long>();
         }
-            
+
         Assert.IsTrue(reader["references"].HasChild($"rid({id0})"));
         Assert.IsTrue(reader["references"].HasChild($"rid({id1})"));
-            
+
         Assert.AreEqual(1, reader["references"][$"rid({id0})"]["data"]["m_Data"].GetValue<int>());
         Assert.AreEqual("Ripe", reader["references"][$"rid({id0})"]["data"]["m_Description"].GetValue<string>());
         Assert.AreEqual(1, reader["references"][$"rid({id1})"]["data"]["m_Data"].GetValue<int>());

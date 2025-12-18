@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.FileSystem.TypeTreeReaders;
@@ -11,7 +11,7 @@ public class ShaderHandler : ISQLiteHandler
     private SqliteCommand m_InsertSubProgramCommand;
     private SqliteCommand m_InsertKeywordCommand;
     private SqliteCommand m_InsertSubProgramKeywordsCommand;
-        
+
     static long s_SubProgramId = 0;
     static Dictionary<string, int> s_GlobalKeywords = new();
 
@@ -19,7 +19,7 @@ public class ShaderHandler : ISQLiteHandler
     {
         s_SubProgramId = 0;
         s_GlobalKeywords.Clear();
-            
+
         using var command = db.CreateCommand();
         command.CommandText = Resources.Shader;
         command.ExecuteNonQuery();
@@ -62,7 +62,7 @@ public class ShaderHandler : ISQLiteHandler
         for (int i = 0; i < shader.Keywords.Count; ++i)
         {
             var keyword = shader.Keywords[i];
-            var id = GetKeywordId(keyword,ctx.Transaction);
+            var id = GetKeywordId(keyword, ctx.Transaction);
             localToGlobalKeywords[i] = id;
         }
 
@@ -78,7 +78,7 @@ public class ShaderHandler : ISQLiteHandler
             for (int passIndex = 0; passIndex < subShader.Passes.Count; ++passIndex)
             {
                 var pass = subShader.Passes[passIndex];
-                m_InsertSubProgramCommand.Transaction = ctx.Transaction;    
+                m_InsertSubProgramCommand.Transaction = ctx.Transaction;
                 m_InsertSubProgramCommand.Parameters["@shader"].Value = objectId;
                 m_InsertSubProgramCommand.Parameters["@pass"].Value = passIndex;
                 m_InsertSubProgramCommand.Parameters["@pass_name"].Value = pass.Name;
@@ -87,7 +87,7 @@ public class ShaderHandler : ISQLiteHandler
                 {
                     var progType = kv.Key;
                     var programs = kv.Value;
-                        
+
                     m_InsertSubProgramCommand.Parameters["@shader_type"].Value = progType;
 
                     for (int programIndex = 0; programIndex < programs.Count; ++programIndex)
@@ -95,13 +95,13 @@ public class ShaderHandler : ISQLiteHandler
                         var program = programs[programIndex];
 
                         uniquePrograms.Add(program.BlobIndex);
-                            
+
                         m_InsertSubProgramCommand.Parameters["@id"].Value = s_SubProgramId;
                         m_InsertSubProgramCommand.Parameters["@sub_program"].Value = programIndex;
                         m_InsertSubProgramCommand.Parameters["@hw_tier"].Value = program.HwTier;
                         m_InsertSubProgramCommand.Parameters["@api"].Value = program.Api;
                         m_InsertSubProgramCommand.ExecuteNonQuery();
-                        
+
                         m_InsertSubProgramKeywordsCommand.Transaction = ctx.Transaction;
                         m_InsertSubProgramKeywordsCommand.Parameters["@subprogram_id"].Value = s_SubProgramId;
                         foreach (var keyword in program.Keywords)
@@ -115,11 +115,11 @@ public class ShaderHandler : ISQLiteHandler
                 }
             }
         }
-            
+
         m_InsertCommand.Parameters["@id"].Value = objectId;
         m_InsertCommand.Parameters["@decompressed_size"].Value = shader.DecompressedSize;
         m_InsertCommand.Parameters["@unique_programs"].Value = uniquePrograms.Count;
-        
+
         m_InsertCommand.ExecuteNonQuery();
 
         name = shader.Name;
@@ -149,7 +149,7 @@ public class ShaderHandler : ISQLiteHandler
         command.Connection = db;
         command.CommandText = "CREATE INDEX shader_subprograms_shader_index ON shader_subprograms(shader)";
         command.ExecuteNonQuery();
-            
+
         command.CommandText = "CREATE INDEX shader_subprogram_keywords_subprogram_id_index ON shader_subprogram_keywords(subprogram_id)";
         command.ExecuteNonQuery();
     }

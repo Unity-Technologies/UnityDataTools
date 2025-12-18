@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace UnityDataTools.FileSystem;
@@ -16,7 +16,7 @@ public static class UnityFileSystem
             HandleErrors(r);
         }
     }
-        
+
     public static void Cleanup()
     {
         // Uninitialize the native library.
@@ -85,7 +85,7 @@ public static class UnityFileSystem
 
             case ReturnCode.FileError:
                 throw new IOException("File operation error.");
-                
+
             case ReturnCode.TypeNotFound:
                 throw new ArgumentException("Type not found.");
         }

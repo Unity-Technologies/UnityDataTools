@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.Sqlite;
@@ -12,7 +12,7 @@ class ReferenceTreeNode
     {
         Id = id;
     }
-        
+
     public readonly long Id;
     public Dictionary<(long id, string propertyPath), ReferenceTreeNode> Children = new Dictionary<(long, string), ReferenceTreeNode>();
 }

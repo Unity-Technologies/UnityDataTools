@@ -395,7 +395,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             ForeignKeys = false,
         }.ConnectionString);
         db.Open();
-        
+
         using var cmd = db.CreateCommand();
 
         cmd.CommandText =

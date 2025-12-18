@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +13,7 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
         private SqliteConnection m_Database;
         public SqliteConnection Connection => m_Database;
         private string m_DatabaseName;
-        
+
 
         public SQLiteWriter(string databaseName)
         {

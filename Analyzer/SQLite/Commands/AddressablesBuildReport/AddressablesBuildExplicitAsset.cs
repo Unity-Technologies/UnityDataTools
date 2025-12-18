@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport

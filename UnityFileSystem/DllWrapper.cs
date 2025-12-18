@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -83,10 +83,10 @@ public enum ReturnCode
 [Flags]
 public enum ArchiveNodeFlags
 {
-    None            = 0,
-    Directory       = 1 << 0,
-    Deleted         = 1 << 1,
-    SerializedFile  = 1 << 2,
+    None = 0,
+    Directory = 1 << 0,
+    Deleted = 1 << 1,
+    SerializedFile = 1 << 2,
 }
 
 public enum CompressionType
@@ -123,19 +123,19 @@ public struct ObjectInfo
 [Flags]
 public enum TypeTreeFlags
 {
-    None                        = 0,
-    IsArray                     = 1 << 0,
-    IsManagedReference          = 1 << 1,
-    IsManagedReferenceRegistry  = 1 << 2,
-    IsArrayOfRefs               = 1 << 3,
+    None = 0,
+    IsArray = 1 << 0,
+    IsManagedReference = 1 << 1,
+    IsManagedReferenceRegistry = 1 << 2,
+    IsArrayOfRefs = 1 << 3,
 }
 
 [Flags]
 public enum TypeTreeMetaFlags
 {
-    None                    = 0,
-    AlignBytes              = 1 << 14,
-    AnyChildUsesAlignBytes  = 1 << 15,
+    None = 0,
+    AlignBytes = 1 << 14,
+    AnyChildUsesAlignBytes = 1 << 15,
 }
 
 public static class DllWrapper

@@ -79,7 +79,8 @@ public static class Archive
         public string Path;
     }
 
-    static void ExtractWebBundle(FileInfo filename, DirectoryInfo outputFolder) {
+    static void ExtractWebBundle(FileInfo filename, DirectoryInfo outputFolder)
+    {
         Console.WriteLine($"Extracting web bundle: {filename}");
         using var fileStream = File.Open(filename.ToString(), FileMode.Open);
         using var stream = GetStream(filename, fileStream);
@@ -91,7 +92,8 @@ public static class Archive
         }
     }
 
-    static Stream GetStream(FileInfo filename, FileStream fileStream) {
+    static Stream GetStream(FileInfo filename, FileStream fileStream)
+    {
         var fileExtension = Path.GetExtension(filename.ToString());
         return fileExtension switch
         {
@@ -106,7 +108,8 @@ public static class Archive
     {
         var result = new List<WebBundleFileDescription>();
         var prefix = ReadBytes(reader, WebBundlePrefix.Length);
-        if (!prefix.SequenceEqual(WebBundlePrefix)) {
+        if (!prefix.SequenceEqual(WebBundlePrefix))
+        {
             throw new FileFormatException("File is not a valid web bundle.");
         }
         uint headerSize = ReadUInt32(reader);
@@ -117,8 +120,9 @@ public static class Archive
             var fileByteOffset = ReadUInt32(reader);
             var fileSize = ReadUInt32(reader);
             var filePathLength = ReadUInt32(reader);
-            var filePath = Encoding.UTF8.GetString(ReadBytes(reader, (int) filePathLength));
-            result.Add(new WebBundleFileDescription() {
+            var filePath = Encoding.UTF8.GetString(ReadBytes(reader, (int)filePathLength));
+            result.Add(new WebBundleFileDescription()
+            {
                 ByteOffset = fileByteOffset,
                 Size = fileSize,
                 Path = filePath,
@@ -135,12 +139,13 @@ public static class Archive
         Console.WriteLine($"... Extracting {description.Path}");
         var path = Path.Combine(outputFolder.ToString(), description.Path);
         Directory.CreateDirectory(Path.GetDirectoryName(path));
-        File.WriteAllBytes(path, ReadBytes(reader, (int) description.Size));
+        File.WriteAllBytes(path, ReadBytes(reader, (int)description.Size));
     }
 
     static uint ReadUInt32(BinaryReader reader)
     {
-        try {
+        try
+        {
             return reader.ReadUInt32();
         }
         catch (EndOfStreamException)

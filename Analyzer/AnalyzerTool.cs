@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,7 +29,7 @@ public class AnalyzerTool
     {
         m_Verbose = verbose;
 
-        using SQLiteWriter writer = new (databaseName);
+        using SQLiteWriter writer = new(databaseName);
 
         try
         {
@@ -39,7 +39,7 @@ public class AnalyzerTool
                 parser.Verbose = verbose;
                 parser.SkipReferences = skipReferences;
                 parser.Init(writer.Connection);
-                
+
             }
         }
         catch (Exception e)
@@ -63,7 +63,7 @@ public class AnalyzerTool
         foreach (var file in files)
         {
             bool foundParser = false;
-            foreach(var parser in parsers)
+            foreach (var parser in parsers)
             {
                 if (parser.CanParse(file))
                 {
@@ -71,11 +71,11 @@ public class AnalyzerTool
                     try
                     {
                         parser.Parse(file);
-                        ReportProgress(Path.GetRelativePath(path, file), i, files.Length);                        
+                        ReportProgress(Path.GetRelativePath(path, file), i, files.Length);
                         countSuccess++;
                     }
                     catch (Exception e)
-                    {                        
+                    {
                         EraseProgressLine();
                         Console.Error.WriteLine();
                         Console.Error.WriteLine($"Error processing file: {file}");
@@ -94,7 +94,7 @@ public class AnalyzerTool
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
-                
+
                 countIgnored++;
             }
             ++i;

@@ -23,7 +23,7 @@ public class Mesh
         BlendWeights,
         BlendIndices,
     };
-    
+
     public enum ChannelType
     {
         Float,
@@ -56,11 +56,11 @@ public class Mesh
     public int Vertices { get; init; }
     public int Compression { get; init; }
     public bool RwEnabled { get; init; }
-    
+
     public IReadOnlyList<Channel> Channels { get; init; }
-    
+
     public int VertexSize { get; init; }
-    
+
     private static readonly int[] s_ChannelTypeSizes =
     {
         4,  // Float
@@ -77,7 +77,7 @@ public class Mesh
         4,  // SInt32
     };
 
-    private Mesh() {}
+    private Mesh() { }
 
     public static Mesh Read(RandomAccessReader reader)
     {
@@ -95,7 +95,7 @@ public class Mesh
 
             indices = reader["m_IndexBuffer"].GetArraySize() / bytesPerIndex;
             vertices = reader["m_VertexData"]["m_VertexCount"].GetValue<int>();
-                
+
             // If vertex data size is 0, data is stored in a stream file.
             if (reader["m_VertexData"]["m_DataSize"].GetArraySize() == 0)
             {
@@ -123,7 +123,7 @@ public class Mesh
                         Type = (ChannelType)channel["format"].GetValue<byte>(),
                         Usage = (ChannelUsage)i,
                     };
-                    
+
                     channels.Add(c);
                     vertexSize += dimension * s_ChannelTypeSizes[(int)c.Type];
                 }
@@ -136,7 +136,7 @@ public class Mesh
             vertices = reader["m_CompressedMesh"]["m_Vertices"]["m_NumItems"].GetValue<int>() / 3;
             indices = reader["m_CompressedMesh"]["m_Triangles"]["m_NumItems"].GetValue<int>();
         }
-        
+
         return new Mesh()
         {
             Name = name,
