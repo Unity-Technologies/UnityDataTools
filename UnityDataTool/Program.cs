@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
@@ -180,10 +180,10 @@ public static class Program
         switch (format)
         {
             case DumpFormat.Text:
-                {
-                    var textDumper = new TextDumperTool();
-                    return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId);
-                }
+            {
+                var textDumper = new TextDumperTool();
+                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId);
+            }
         }
 
         return 1;

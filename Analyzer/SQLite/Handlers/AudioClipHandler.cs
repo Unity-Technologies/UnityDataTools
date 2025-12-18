@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Data.Sqlite;
 using System.Data;
 using UnityDataTools.Analyzer.SerializedObjects;
