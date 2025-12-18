@@ -5,6 +5,10 @@ using UnityDataTools.TestCommon;
 
 namespace UnityDataTools.UnityDataTool.Tests;
 
+// Collect and record the current output returned by the same UnityDataTool commands
+// that the tests will run.  Once saved these become the reference data, and if the output
+// changes the tests will fail.  So this can be repeated if there is an "expected" change
+// in the output.
 public static class ExpectedDataGenerator
 {
     public static void Generate(Context context)
@@ -71,6 +75,9 @@ public static class ExpectedDataGenerator
         var csprojFolder = Directory.GetParent(context.TestDataFolder).Parent.Parent.Parent.FullName;
         var outputFolder = Path.Combine(csprojFolder, "ExpectedData", context.UnityDataVersion);
 
+        expectedData.Save(outputFolder);
+
+        // Also take a snapshot of the output of running "dump" commands on the test file "assetbundle"
         Directory.CreateDirectory(outputFolder);
 
         var dumpPath = Path.Combine(outputFolder, "dump");
@@ -80,7 +87,5 @@ public static class ExpectedDataGenerator
         dumpPath = Path.Combine(outputFolder, "dump-s");
         Directory.CreateDirectory(dumpPath);
         Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "assetbundle"), "-o", dumpPath, "-s" });
-
-        expectedData.Save(outputFolder);
     }
 }
