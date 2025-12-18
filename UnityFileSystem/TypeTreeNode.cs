@@ -29,7 +29,7 @@ public class TypeTreeNode
 
     // Child nodes container.
     public List<TypeTreeNode> Children => m_Children.Value;
-        
+
     // True if the field has no child.
     public bool IsLeaf => m_FirstChildNodeIndex == 0;
 
@@ -38,7 +38,7 @@ public class TypeTreeNode
 
     // True if the field is an array.
     public bool IsArray => ((int)Flags & (int)TypeTreeFlags.IsArray) != 0;
-        
+
     // True if the field is a ManagedReferenceRegistry
     public bool IsManagedReferenceRegistry => ((int)Flags & (int)TypeTreeFlags.IsManagedReferenceRegistry) != 0;
 
@@ -168,26 +168,26 @@ public class TypeTreeNode
                 return typeof(string);
 
             default:
-            {
-                if (Size == 8)
                 {
-                    return typeof(long);
-                }
-                else if (Size == 4)
-                {
-                    return typeof(int);
-                }
-                else if (Size == 2)
-                {
-                    return typeof(short);
-                }
-                else if (Size == 1)
-                {
-                    return typeof(sbyte);
-                }
+                    if (Size == 8)
+                    {
+                        return typeof(long);
+                    }
+                    else if (Size == 4)
+                    {
+                        return typeof(int);
+                    }
+                    else if (Size == 2)
+                    {
+                        return typeof(short);
+                    }
+                    else if (Size == 1)
+                    {
+                        return typeof(sbyte);
+                    }
 
-                return typeof(object);
-            }
+                    return typeof(object);
+                }
         }
 
         throw new Exception($"Unknown type {Type}");

@@ -60,12 +60,12 @@ public static class ExpectedDataGenerator
             }
 
             UnityFileSystem.Cleanup();
-            
+
             var csprojFolder = Directory.GetParent(context.TestDataFolder).Parent.Parent.Parent.FullName;
             var outputFolder = Path.Combine(csprojFolder, "ExpectedData", context.UnityDataVersion);
 
             Directory.CreateDirectory(outputFolder);
-            
+
             expectedData.Save(outputFolder);
         }
     }

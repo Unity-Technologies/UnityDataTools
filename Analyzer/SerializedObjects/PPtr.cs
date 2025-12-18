@@ -6,8 +6,8 @@ public class PPtr
 {
     public int FileId { get; init; }
     public long PathId { get; init; }
-    
-    private PPtr() {}
+
+    private PPtr() { }
 
     public static PPtr Read(RandomAccessReader reader)
     {

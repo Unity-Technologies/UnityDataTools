@@ -12,8 +12,8 @@ public class Texture2D
     public int MipCount { get; init; }
     public bool RwEnabled { get; init; }
 
-    private Texture2D() {}
-    
+    private Texture2D() { }
+
     public static Texture2D Read(RandomAccessReader reader)
     {
         return new Texture2D()

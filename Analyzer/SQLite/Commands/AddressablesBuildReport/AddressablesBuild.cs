@@ -8,7 +8,9 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
         protected override string TableName { get => "addressables_builds"; }
 
         protected override string DDLSource => Properties.Resources.AddrBuilds;
-        protected override Dictionary<string, SqliteType> Fields { get => new Dictionary<string, SqliteType>
+        protected override Dictionary<string, SqliteType> Fields
+        {
+            get => new Dictionary<string, SqliteType>
         {
             { "name", SqliteType.Text },
             { "build_target", SqliteType.Integer },
@@ -21,7 +23,8 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
             { "result_hash", SqliteType.Text },
             { "type", SqliteType.Integer },
             { "unity_version", SqliteType.Text }
-        }; }
+        };
+        }
         public AddressablesBuild()
         {
 

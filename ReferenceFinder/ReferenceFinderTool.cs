@@ -12,7 +12,7 @@ class ReferenceTreeNode
     {
         Id = id;
     }
-        
+
     public readonly long Id;
     public Dictionary<(long id, string propertyPath), ReferenceTreeNode> Children = new Dictionary<(long, string), ReferenceTreeNode>();
 }

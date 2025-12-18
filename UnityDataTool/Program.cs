@@ -74,7 +74,7 @@ public static class Program
             var pathArg = new Argument<FileInfo>("filename", "The path of the file to dump").ExistingOnly();
             var fOpt = new Option<DumpFormat>(aliases: new[] { "--output-format", "-f" }, description: "Output format", getDefaultValue: () => DumpFormat.Text);
             var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
-            var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o"}, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
+            var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
             var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
 
             var dumpCommand = new Command("dump", "Dump the contents of an AssetBundle or SerializedFile.")
@@ -180,10 +180,10 @@ public static class Program
         switch (format)
         {
             case DumpFormat.Text:
-            {
-                var textDumper = new TextDumperTool();
-                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId);
-            }
+                {
+                    var textDumper = new TextDumperTool();
+                    return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId);
+                }
         }
 
         return 1;

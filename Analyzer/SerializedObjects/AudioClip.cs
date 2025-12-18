@@ -12,7 +12,7 @@ public class AudioClip
     public int LoadType { get; init; }
     public int Format { get; init; }
 
-    private AudioClip() {}
+    private AudioClip() { }
 
     public static AudioClip Read(RandomAccessReader reader)
     {

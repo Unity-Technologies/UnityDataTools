@@ -10,12 +10,12 @@ public static class ExpectedDataGenerator
     public static void Generate(Context context)
     {
         var expectedData = context.ExpectedData;
-                
+
         UnityFileSystem.Init();
         using (var archive = UnityFileSystem.MountArchive(Path.Combine(context.UnityDataFolder, "assetbundle"), "/"))
         {
             expectedData.Add("NodeCount", archive.Nodes.Count);
-                
+
             foreach (var n in archive.Nodes)
             {
                 expectedData.Add(n.Path + "-Size", n.Size);
@@ -23,9 +23,9 @@ public static class ExpectedDataGenerator
             }
         }
         UnityFileSystem.Cleanup();
-        
+
         Program.Main(new string[] { "analyze", Path.Combine(context.UnityDataFolder), "-r" });
-        
+
         using var db = new SqliteConnection($"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "database.db")};Version=3;New=True;Foreign Keys=False;");
         db.Open();
 
@@ -67,7 +67,7 @@ public static class ExpectedDataGenerator
             expectedData.Add("textures_count", reader.GetInt32(12));
             expectedData.Add("types_count", reader.GetInt32(13));
         }
-        
+
         var csprojFolder = Directory.GetParent(context.TestDataFolder).Parent.Parent.Parent.FullName;
         var outputFolder = Path.Combine(csprojFolder, "ExpectedData", context.UnityDataVersion);
 
@@ -76,11 +76,11 @@ public static class ExpectedDataGenerator
         var dumpPath = Path.Combine(outputFolder, "dump");
         Directory.CreateDirectory(dumpPath);
         Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "assetbundle"), "-o", dumpPath });
-            
+
         dumpPath = Path.Combine(outputFolder, "dump-s");
         Directory.CreateDirectory(dumpPath);
         Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "assetbundle"), "-o", dumpPath, "-s" });
-            
+
         expectedData.Save(outputFolder);
     }
 }

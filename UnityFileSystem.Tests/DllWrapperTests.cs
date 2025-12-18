@@ -111,7 +111,7 @@ public class DllMountUnmountTests : AssetBundleTestFixture
     public DllMountUnmountTests(Context context) : base(context)
     {
     }
-    
+
     [OneTimeSetUp]
     public void Setup()
     {
@@ -429,7 +429,7 @@ public class DllSerializedFileTests : AssetBundleTestFixture
     public DllSerializedFileTests(Context context) : base(context)
     {
     }
-        
+
     [OneTimeSetUp]
     public void Setup()
     {
@@ -527,11 +527,11 @@ public class DllSerializedFileTests : AssetBundleTestFixture
         DllWrapper.GetExternalReferenceCount(file, out var count);
         var path = new StringBuilder(256);
         var guid = new StringBuilder(32);
-            
+
         for (int i = 0; i < count; ++i)
         {
             var r = DllWrapper.GetExternalReference(file, i, path, 256, guid, out var refType);
-                
+
             Assert.AreEqual(ReturnCode.Success, r);
             Assert.AreEqual(Context.ExpectedData.Get($"CAB-5d40f7cad7c871cf2ad2af19ac542994-ExtRef{i}-Guid"), guid.ToString());
             Assert.AreEqual(Context.ExpectedData.Get($"CAB-5d40f7cad7c871cf2ad2af19ac542994-ExtRef{i}-Path"), path.ToString());
@@ -584,10 +584,10 @@ public class DllSerializedFileTests : AssetBundleTestFixture
         Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-FirstObj-Size"), objectInfo[0].Size);
         Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-FirstObj-TypeId"), objectInfo[0].TypeId);
 
-        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Id"), objectInfo[count-1].Id);
-        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Offset"), objectInfo[count-1].Offset);
-        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Size"), objectInfo[count-1].Size);
-        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-TypeId"), objectInfo[count-1].TypeId);
+        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Id"), objectInfo[count - 1].Id);
+        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Offset"), objectInfo[count - 1].Offset);
+        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-Size"), objectInfo[count - 1].Size);
+        Assert.AreEqual(Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-LastObj-TypeId"), objectInfo[count - 1].TypeId);
 
         file.Dispose();
     }
@@ -602,14 +602,14 @@ public class DllSerializedFileTests : AssetBundleTestFixture
 
 public class DllTypeTreeTests : AssetBundleTestFixture
 {
-    private UnityArchiveHandle      m_Archive;
-    private SerializedFileHandle    m_SerializedFile;
-    private ObjectInfo[]            m_Objects;
+    private UnityArchiveHandle m_Archive;
+    private SerializedFileHandle m_SerializedFile;
+    private ObjectInfo[] m_Objects;
 
     public DllTypeTreeTests(Context context) : base(context)
     {
     }
-        
+
     [OneTimeSetUp]
     public void Setup()
     {

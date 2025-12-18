@@ -79,7 +79,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                     {
                         // Create the referenced object reader.
                         var refObjReader = new RandomAccessReader(m_SerializedFile, refObjNode, reader, curOffset, true);
-                            
+
                         // A referenced object with null data means that we reached the end of the referenced objects.
                         if (refObjReader["data"] == null)
                         {
@@ -94,7 +94,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                 else if (version == 2)
                 {
                     // In version 2, referenced objects are stored in a vector.
-                        
+
                     // Second child is the RefIds vector.
                     var refIdsVectorNode = node.Children[1];
                     // RefIds vector's child is the Array.
@@ -236,7 +236,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
 
         if (m_ChildrenCacheObject.TryGetValue(name, out var nodeReader))
             return nodeReader;
-            
+
         if (m_TypeTreeNode.IsManagedReferenceRegistry)
         {
             // ManagedReferenceRegistry are handled differently. The children

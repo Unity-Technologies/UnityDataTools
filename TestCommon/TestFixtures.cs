@@ -9,7 +9,7 @@ public class BaseTestFixture
     protected Context Context { get; }
 
     private static Dictionary<string, List<Context>> m_Cache = new();
-    
+
     public BaseTestFixture(Context context)
     {
         Context = context;
@@ -25,7 +25,7 @@ public class BaseTestFixture
         OnLoadExpectedData(Context);
         Context.ExpectedData.Load(Context.ExpectedDataFolder);
     }
-    
+
     protected static IEnumerable<Context> GetContexts(string dataFolder)
     {
         if (m_Cache.TryGetValue(dataFolder, out var cases))
@@ -35,9 +35,9 @@ public class BaseTestFixture
 
         cases = new List<Context>();
         m_Cache[TestContext.CurrentContext.TestDirectory] = cases;
-        
+
         var subfolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", dataFolder);
-        
+
         foreach (var folder in Directory.EnumerateDirectories(subfolder))
         {
             cases.Add(new Context(folder));
@@ -53,7 +53,7 @@ public class AssetBundleTestFixture : BaseTestFixture
     public AssetBundleTestFixture(Context context) : base(context)
     {
     }
-    
+
     public static IEnumerable<Context> GetContexts()
     {
         return BaseTestFixture.GetContexts("AssetBundles");
@@ -66,7 +66,7 @@ public class PlayerDataTestFixture : BaseTestFixture
     public PlayerDataTestFixture(Context context) : base(context)
     {
     }
-    
+
     public static IEnumerable<Context> GetContexts()
     {
         return BaseTestFixture.GetContexts("PlayerData");

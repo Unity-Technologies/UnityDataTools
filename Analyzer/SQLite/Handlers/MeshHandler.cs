@@ -54,7 +54,7 @@ public class MeshHandler : ISQLiteHandler
             channels.Append(channel.Dimension);
             channels.AppendLine("]");
         }
-        
+
         m_InsertCommand.Parameters["@channels"].Value = channels.ToString();
 
         m_InsertCommand.ExecuteNonQuery();

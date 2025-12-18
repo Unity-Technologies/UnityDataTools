@@ -13,7 +13,7 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
         private SqliteConnection m_Database;
         public SqliteConnection Connection => m_Database;
         private string m_DatabaseName;
-        
+
 
         public SQLiteWriter(string databaseName)
         {

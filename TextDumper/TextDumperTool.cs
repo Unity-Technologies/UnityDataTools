@@ -234,7 +234,7 @@ public class TextDumperTool
             int i = 0;
 
             while (DumpManagedReferenceData(refTypeNode, refObjData, ref offset, level, i++))
-            {}
+            { }
         }
         else if (version == 2)
         {
