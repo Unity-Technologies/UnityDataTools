@@ -42,18 +42,10 @@ public class AddressablesBuildLayoutTests
         // Addressables test project.
         // The test confirms some expected content in the database
         var path = Path.Combine(m_TestDataFolder, "AddressableBuildLayouts");
-
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", path, "-p", "*.json" }));
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         // Sanity check some expected content in the output SQLite database
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM addressables_builds", 2,

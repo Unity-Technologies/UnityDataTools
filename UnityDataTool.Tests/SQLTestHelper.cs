@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
 
@@ -8,6 +9,39 @@ namespace UnityDataTools.UnityDataTool.Tests;
 /// </summary>
 public static class SQLTestHelper
 {
+    /// <summary>
+    /// Default database filename used in tests.
+    /// </summary>
+    public const string DefaultDatabaseName = "database.db";
+
+    /// <summary>
+    /// Creates and opens a SQLite database connection with standard test settings.
+    /// </summary>
+    /// <param name="databasePath">The path to the database file.</param>
+    /// <returns>An opened SqliteConnection. Caller is responsible for disposing.</returns>
+    public static SqliteConnection OpenDatabase(string databasePath)
+    {
+        var db = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Pooling = false,
+            ForeignKeys = false,
+        }.ConnectionString);
+        db.Open();
+        return db;
+    }
+
+    /// <summary>
+    /// Gets the standard database path for tests (testOutputFolder/database.db).
+    /// </summary>
+    /// <param name="testOutputFolder">The test output folder path.</param>
+    /// <returns>The full path to the database file.</returns>
+    public static string GetDatabasePath(string testOutputFolder)
+    {
+        return Path.Combine(testOutputFolder, DefaultDatabaseName);
+    }
+
     /// <summary>
     /// Executes a SQL query and asserts the result equals the expected integer value.
     /// </summary>
