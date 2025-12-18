@@ -28,6 +28,9 @@
 **/.idea/
 **/launchSettings.json
 **/PublishProfiles/
+**/*.args.json
+
+.claude
 
 UnityFileSystemTestData/AssetBundles/
 UnityFileSystemTestData/**/*.csproj
