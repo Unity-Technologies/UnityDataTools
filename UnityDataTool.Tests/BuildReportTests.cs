@@ -53,8 +53,6 @@ public class BuildReportTests
         }.ConnectionString);
         db.Open();
 
-        using var cmd = db.CreateCommand();
-
         // Sanity check the Unity objects found in this Build report file
         // Tip: The names for the hardcoded type ids in the query can be found
         // at https://docs.unity3d.com/6000.3/Documentation/Manual/ClassIDReference.html
@@ -63,27 +61,27 @@ public class BuildReportTests
         // And PackedAssets objects are present for each output serialized file, .resS and .resource.
         // Other obscure objects can also be present like PluginBuildInfo,
         // and BuiltAssetBundleInfoSet (these are internal, and subject to change)
-        cmd.CommandText =
-            @"SELECT
-                (SELECT COUNT(*) FROM objects),
-                (SELECT COUNT(*) FROM objects WHERE type = 1125),
-                (SELECT COUNT(*) FROM objects WHERE type = 1126),
-                (SELECT COUNT(*) FROM objects WHERE type = 382020655),
-                (SELECT COUNT(*) FROM objects WHERE type = 668709126),
-                (SELECT COUNT(*) FROM objects WHERE type = 641289076),
-                (SELECT COUNT(*) FROM objects WHERE type = 1521398425),
-                (SELECT COUNT(*) FROM asset_bundles)";
 
-        using var reader = cmd.ExecuteReader();
-        reader.Read();
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects", 12,
+            "Unexpected number of objects");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects WHERE type = 1125", 1,
+            "Unexpected number of BuildReport objects (type 1125)");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects WHERE type = 1126", 7,
+            "Unexpected number of PackedAssets objects");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects WHERE type = 382020655", 1,
+            "Unexpected number of PluginBuildInfo objects");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects WHERE type = 668709126", 1,
+            "Unexpected number of BuiltAssetBundleInfoSet objects");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects WHERE type = 641289076", 1,
+            "Unexpected number of AudioBuildInfo objects");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects WHERE type = 1521398425", 1,
+            "Unexpected number of VideoBuildInfo objects");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM asset_bundles", 0,
+            "Expected no AssetBundles found in reference folder");
 
-        Assert.AreEqual(12, reader.GetInt32(0), "Unexpected number of objects");
-        Assert.AreEqual(1, reader.GetInt32(1), "Unexpected number of BuildReport objects (type 1125)");
-        Assert.AreEqual(7, reader.GetInt32(2), "Unexpected number of PackedAssets objects");
-        Assert.AreEqual(1, reader.GetInt32(3), "Unexpected number of PluginBuildInfo objects");
-        Assert.AreEqual(1, reader.GetInt32(4), "Unexpected number of BuiltAssetBundleInfoSet objects");
-        Assert.AreEqual(1, reader.GetInt32(5), "Unexpected number of AudioBuildInfo objects");
-        Assert.AreEqual(1, reader.GetInt32(6), "Unexpected number of VideoBuildInfo objects");
-        Assert.AreEqual(0, reader.GetInt32(7), "Expected no AssetBundles found in reference folder");
+        // Can check name on BuildReport object ("Build AssetBundles")
+        // Use object_view to avoid the hardcoded ids.
+        // Can test references (BuildReport m_Appendices[] fields)
+        // Can also check view_breakdown_by_type as sanity check
     }
 }
