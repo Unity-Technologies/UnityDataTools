@@ -36,12 +36,13 @@ public static class ExpectedDataGenerator
         using (var cmd = db.CreateCommand())
         {
             cmd.CommandText =
-                @"SELECT 
+                @"SELECT
                     (SELECT COUNT(*) FROM animation_clips),
                     (SELECT COUNT(*) FROM asset_bundles),
                     (SELECT COUNT(*) FROM assets),
                     (SELECT COUNT(*) FROM audio_clips),
                     (SELECT COUNT(*) FROM meshes),
+                    (SELECT COUNT(*) FROM monoscripts),
                     (SELECT COUNT(*) FROM objects),
                     (SELECT COUNT(*) FROM refs),
                     (SELECT COUNT(*) FROM serialized_files),
@@ -61,15 +62,16 @@ public static class ExpectedDataGenerator
             expectedData.Add("assets_count", reader.GetInt32(2));
             expectedData.Add("audio_clips_count", reader.GetInt32(3));
             expectedData.Add("meshes_count", reader.GetInt32(4));
-            expectedData.Add("objects_count", reader.GetInt32(5));
-            expectedData.Add("refs_count", reader.GetInt32(6));
-            expectedData.Add("serialized_files_count", reader.GetInt32(7));
-            expectedData.Add("shader_subprograms_count", reader.GetInt32(8));
-            expectedData.Add("shaders_count", reader.GetInt32(9));
-            expectedData.Add("shader_keywords_count", reader.GetInt32(10));
-            expectedData.Add("shader_subprogram_keywords_count", reader.GetInt32(11));
-            expectedData.Add("textures_count", reader.GetInt32(12));
-            expectedData.Add("types_count", reader.GetInt32(13));
+            expectedData.Add("monoscripts_count", reader.GetInt32(5));
+            expectedData.Add("objects_count", reader.GetInt32(6));
+            expectedData.Add("refs_count", reader.GetInt32(7));
+            expectedData.Add("serialized_files_count", reader.GetInt32(8));
+            expectedData.Add("shader_subprograms_count", reader.GetInt32(9));
+            expectedData.Add("shaders_count", reader.GetInt32(10));
+            expectedData.Add("shader_keywords_count", reader.GetInt32(11));
+            expectedData.Add("shader_subprogram_keywords_count", reader.GetInt32(12));
+            expectedData.Add("textures_count", reader.GetInt32(13));
+            expectedData.Add("types_count", reader.GetInt32(14));
         }
 
         var csprojFolder = Directory.GetParent(context.TestDataFolder).Parent.Parent.Parent.FullName;

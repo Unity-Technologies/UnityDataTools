@@ -37,6 +37,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         { "AnimationClip", new AnimationClipHandler() },
         { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
+        { "MonoScript", new MonoScriptHandler() },
     };
 
     // serialized files
