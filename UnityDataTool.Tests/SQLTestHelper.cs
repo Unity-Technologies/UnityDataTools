@@ -4,8 +4,11 @@ using NUnit.Framework;
 
 namespace UnityDataTools.UnityDataTool.Tests;
 
+#pragma warning disable NUnit2005, NUnit2006
+
 /// <summary>
-/// Helper methods for executing SQL queries and validating results in tests.
+/// Helper methods for executing SQL queries against a DB created by "Analyze"
+/// and validating results in tests.
 /// </summary>
 public static class SQLTestHelper
 {
@@ -40,6 +43,36 @@ public static class SQLTestHelper
     public static string GetDatabasePath(string testOutputFolder)
     {
         return Path.Combine(testOutputFolder, DefaultDatabaseName);
+    }
+
+    /// <summary>
+    /// Executes a SQL query and returns the integer result.
+    /// </summary>
+    /// <param name="db">The database connection to use.</param>
+    /// <param name="sql">The SQL query to execute (should return a single integer value).</param>
+    /// <returns>The integer result of the query.</returns>
+    public static int QueryInt(SqliteConnection db, string sql)
+    {
+        using var cmd = db.CreateCommand();
+        cmd.CommandText = sql;
+        using var reader = cmd.ExecuteReader();
+        reader.Read();
+        return reader.GetInt32(0);
+    }
+
+    /// <summary>
+    /// Executes a SQL query and returns the string result.
+    /// </summary>
+    /// <param name="db">The database connection to use.</param>
+    /// <param name="sql">The SQL query to execute (should return a single string value).</param>
+    /// <returns>The string result of the query.</returns>
+    public static string QueryString(SqliteConnection db, string sql)
+    {
+        using var cmd = db.CreateCommand();
+        cmd.CommandText = sql;
+        using var reader = cmd.ExecuteReader();
+        reader.Read();
+        return reader.GetString(0);
     }
 
     /// <summary>
