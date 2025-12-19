@@ -103,5 +103,9 @@ PPtrs (Property Pointers) are Unity's mechanism for referencing objects:
 | `m_FileID` | Index into External References list (0 = same file) |
 | `m_PathID` | Object's Local File Identifier (LFID) in that file |
 
-Use external references to resolve cross-file references.
+A null reference will have value m_FileID = 0, m_PathID = 0
+
+The external reference table is used to resolve cross-file references. It always starts at index 1.  m_FileID 0 is used for references within the current file.
+
+
 

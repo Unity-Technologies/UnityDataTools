@@ -66,8 +66,8 @@ contents/BuildPlayer-Scene2
 
 | Command | Output | Use Case |
 |---------|--------|----------|
-| `archive extract` | Binary SerializedFiles | When you need the raw files |
-| `dump` | Human-readable text | When you need to inspect content |
+| `archive extract` | Binary SerializedFiles, .resS anything else inside the archive content | When you need all the raw files inside an archive |
+| `dump` | text | When you want to inspect object content |
 
 The `dump` command can directly process archives without extracting first.
 

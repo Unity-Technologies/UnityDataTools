@@ -24,7 +24,7 @@ Analyze all files in a directory:
 UnityDataTool analyze /path/to/asset/bundles
 ```
 
-Analyze only `.bundle` files and save to a custom database:
+Analyze only `.bundle` files and specify a custom database name:
 ```bash
 UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p "*.bundle"
 ```
@@ -33,6 +33,8 @@ Fast analysis (skip reference tracking):
 ```bash
 UnityDataTool analyze /path/to/bundles -s
 ```
+
+See also [Analyze Examples](../../Documentation/analyze-examples.md).
 
 ---
 
@@ -43,10 +45,12 @@ The analyze command works with the following types of directories:
 | Input Type | Description |
 |------------|-------------|
 | **AssetBundle build output** | The output path of an AssetBundle build |
-| **Addressables folder** | `StreamingAssets/aa` folder from a Player build |
+| **Addressables folder** | `StreamingAssets/aa` folder from a Player build, including BuildLayout files |
 | **Entities content** | `StreamingAssets/ContentArchives` folder for [Entities](https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/content-management-intro.html) projects |
 | **Player Data folder** | The `Data` folder of a Unity Player build |
 | **Compressed Player builds** | The `data.unity3d` file will be analyzed like AssetBundles |
+| **BuildReport files** | The build report is typically found at a path like `Library/LastBuild.buildreport`and is a binary serialized file |
+| **AssetDatabase Artifacts** | The tool will work to some extent with serialized files created in the AssetDatabase artifact storage, inside the Library folder |
 
 > **Note**: Some platforms require extracting content from platform-specific containers first (e.g., `.apk` files on Android).
 
@@ -56,9 +60,7 @@ The analyze command works with the following types of directories:
 
 The analysis creates a SQLite database that can be explored using tools like [DB Browser for SQLite](https://sqlitebrowser.org/) or the command line `sqlite3` tool.
 
-**Refer to the [Analyzer documentation](../../Analyzer/README.md) for complete database schema reference and usage examples.**
-
-See also: [Analyze Examples](../../Documentation/analyze-examples.md)
+**Refer to the [Analyzer documentation](../../Analyzer/README.md) for the database schema reference and information about extending this command.**
 
 ---
 

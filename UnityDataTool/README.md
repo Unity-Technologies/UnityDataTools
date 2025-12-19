@@ -4,12 +4,12 @@ A command-line tool for analyzing and inspecting Unity build output—AssetBundl
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| [`analyze`](#analyze) | Extract data from Unity files into a SQLite database | [Full docs →](Commands/analyze.md) |
-| [`dump`](#dump) | Convert SerializedFiles to human-readable text | [Full docs →](Commands/dump.md) |
-| [`archive`](#archive) | List or extract contents of Unity Archives | [Full docs →](Commands/archive.md) |
-| [`find-refs`](#find-refs) | Trace reference chains to objects *(experimental)* | [Full docs →](Commands/find-refs.md) |
+| Command | Description |
+|---------|-------------|
+| [`analyze`](Commands/analyze.md) | Extract data from Unity files into a SQLite database |
+| [`dump`](Commands/dump.md) | Convert SerializedFiles to human-readable text |
+| [`archive`](Commands/archive.md) | List or extract contents of Unity Archives |
+| [`find-refs`](Commands/find-refs.md) | Trace reference chains to objects *(experimental)* |
 
 ---
 
@@ -36,112 +36,6 @@ Use `--help` with any command for details: `UnityDataTool analyze --help`
 
 Use `--version` to print the tool version.
 
----
-
-## analyze
-
-Extract information from Unity Archives and SerializedFiles into a SQLite database.
-
-```bash
-UnityDataTool analyze <path> [options]
-```
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-o, --output-file` | Output database filename | `database.db` |
-| `-p, --search-pattern` | File filter pattern (`*.bundle`) | `*` |
-| `-s, --skip-references` | Skip CRC/reference extraction (faster) | — |
-| `-v, --verbose` | Show detailed progress | — |
-| `--no-recurse` | Don't recurse into subdirectories | — |
-
-**Example:**
-```bash
-UnityDataTool analyze /path/to/bundles -o my_database.db -p "*.bundle"
-```
-
-📖 [Full documentation](Commands/analyze.md) — Troubleshooting, database schema, example inputs
-
----
-
-## dump
-
-Convert SerializedFiles to human-readable text format.
-
-```bash
-UnityDataTool dump <path> [options]
-```
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-o, --output-path` | Output folder | Current folder |
-| `-f, --output-format` | Output format | `text` |
-| `-s, --skip-large-arrays` | Skip large array contents | — |
-| `-i, --objectid` | Only dump this object ID | All objects |
-
-**Example:**
-```bash
-UnityDataTool dump /path/to/file -o /output/path
-```
-
-📖 [Full documentation](Commands/dump.md) — Output format details, archive support
-
----
-
-## archive
-
-Work with Unity Archives (AssetBundles, `.data` files).
-
-### list
-
-```bash
-UnityDataTool archive list <archive-path>
-```
-
-### extract
-
-```bash
-UnityDataTool archive extract <archive-path> [options]
-```
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-o, --output-path` | Output directory | `archive` |
-
-**Example:**
-```bash
-UnityDataTool archive extract scenes.bundle -o contents/
-```
-
-📖 [Full documentation](Commands/archive.md) — Sub-command details, comparison with dump
-
----
-
-## find-refs
-
-> ⚠️ Experimental
-
-Find reference chains leading to specific objects. Requires a database from `analyze` (without `--skip-references`).
-
-```bash
-UnityDataTool find-refs <database> [options]
-```
-
-| Option | Description |
-|--------|-------------|
-| `-i, --object-id` | Object ID to trace |
-| `-n, --object-name` | Object name to trace |
-| `-t, --object-type` | Type filter (with `-n`) |
-| `-o, --output-file` | Output filename |
-| `-a, --find-all` | Find all chains (slower) |
-
-**Example:**
-```bash
-UnityDataTool find-refs my_database.db -n "MyTexture" -t "Texture2D" -o refs.txt
-```
-
-📖 [Full documentation](Commands/find-refs.md) — Use cases, output format
-
----
 
 ## Installation
 
