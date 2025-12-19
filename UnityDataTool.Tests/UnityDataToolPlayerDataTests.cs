@@ -40,18 +40,11 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     [Test]
     public async Task Analyze_PlayerData_DatabaseCorrect()
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-p", "*." }));
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         using var cmd = db.CreateCommand();
 

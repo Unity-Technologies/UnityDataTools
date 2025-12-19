@@ -147,7 +147,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     [Test]
     public async Task Analyze_DefaultArgs_DatabaseCorrect()
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }));
@@ -159,7 +159,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     public async Task Analyze_WithoutRefs_DatabaseCorrect(
         [Values("-s", "--skip-references")] string options)
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
@@ -171,7 +171,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     public async Task Analyze_WithPattern_DatabaseCorrect(
         [Values("-p *.", "--search-pattern *.")] string options)
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
@@ -183,19 +183,12 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     public async Task Analyze_WithPatternNoMatch_DatabaseEmpty(
         [Values("-p *.x", "--search-pattern *.x")] string options)
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         using (var cmd = db.CreateCommand())
         {
@@ -219,15 +212,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
 
     private void ValidateDatabase(string databasePath, bool withRefs)
     {
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         using (var cmd = db.CreateCommand())
         {
