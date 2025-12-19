@@ -112,3 +112,25 @@ These errors occur when the same serialized file name appears in multiple source
 
 See [Comparing Builds](../../Documentation/comparing-builds.md) for strategies to compare different versions of builds.
 
+### Slow Analyze times, large output database
+
+Consider using the `--skip-references` argument.
+
+A real life analyze of a big Addressables build shows how large a difference this can make:
+
+* 208 seconds and producted a 500MB database (not specifying --skip-reference)
+* 9 seconds and produced a 68 MB file (with --skip-reference)
+
+The references are not needed for core asset inventory and size information. 
+
+Note: When specifying `--skip-reference` some functionality is lost:
+
+* the `find-refs` command will not work
+* `view_material_shader_refs` and `view_material_texture_refs` will be empty
+* Queries that look at the relationship between objects will not work.  For example the refs table is required to link between a `MonoBehaviour` and its `MonoScript`.
+* The `objects.crc32` column will be NULL/0 for all objects. This means:
+  * No detection of identical objects by content hash (See [Comparing Builds](../../Documentation/comparing-builds.md))
+  * The `view_potential_duplicates` view relies partially on CRC32 to distinguish true duplicates
+
+Future work: The refs table contains a lot of repeated strings and could be made smaller and more efficient.  It might also be prudent to control the CRC32 calculation using an independent flag.
+
