@@ -68,6 +68,11 @@ public class WebBundleSupportTests
             Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path }));
 
             var actualOutput = sw.ToString();
+
+            // the expectedOutput has "lf" line endings but running on Windows
+            // the console output will have "crlr"
+            actualOutput = actualOutput.Replace("\r\n", "\n");
+
             var expectedOutput = (
 @"data.unity3d
   Size: 253044
