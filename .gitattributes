@@ -1,4 +1,4 @@
-* text=auto
+* text=auto eol=lf
 
 assetbundle binary
 scenes binary
@@ -10,3 +10,14 @@ level* binary
 *.fbx binary
 *.tif binary
 *.jpg binary
+
+
+# vs can handle these as lf, but really wants them as crlf
+*.vcproj eol=crlf
+*.vcxproj eol=crlf
+*.vcxproj.filters eol=crlf
+*.csproj eol=crlf
+*.props eol=crlf
+*.targets eol=crlf
+*.sln eol=crlf
+*.sln.template eol=crlf
