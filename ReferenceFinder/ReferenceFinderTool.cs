@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using Microsoft.Data.Sqlite;
 using System.IO;
+using Microsoft.Data.Sqlite;
 
 namespace UnityDataTools.ReferenceFinder;
 

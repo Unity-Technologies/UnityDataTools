@@ -1,9 +1,9 @@
 using System;
-using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using NUnit.Framework;
 using UnityDataTools.FileSystem;
 using UnityDataTools.TestCommon;

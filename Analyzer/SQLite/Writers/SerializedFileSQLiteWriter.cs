@@ -1,8 +1,8 @@
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.Util;

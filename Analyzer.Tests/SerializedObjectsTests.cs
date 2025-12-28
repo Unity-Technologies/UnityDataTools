@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
-using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.TestCommon;
 using UnityDataTools.UnityDataTool.Tests;
 

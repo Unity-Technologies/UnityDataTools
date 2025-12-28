@@ -1,5 +1,5 @@
-using Microsoft.Data.Sqlite;
 using System.IO;
+using Microsoft.Data.Sqlite;
 using UnityDataTools.FileSystem;
 using UnityDataTools.TestCommon;
 

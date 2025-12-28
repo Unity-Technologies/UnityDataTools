@@ -1,6 +1,6 @@
-using UnityDataTools.Analyzer.SQLite.Commands;
-using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
+using Microsoft.Data.Sqlite;
+using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {

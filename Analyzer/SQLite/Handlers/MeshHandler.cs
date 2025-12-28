@@ -1,6 +1,6 @@
 using System;
-using Microsoft.Data.Sqlite;
 using System.Text;
+using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using UnityDataTools.FileSystem;
 using Force.Crc32;
+using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
 

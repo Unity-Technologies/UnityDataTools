@@ -1,8 +1,8 @@
+using System;
+using System.IO;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.IO;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Writers;

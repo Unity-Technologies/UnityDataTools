@@ -1,7 +1,7 @@
-using Microsoft.Data.Sqlite;
-using Newtonsoft.Json;
 using System;
 using System.IO;
+using Microsoft.Data.Sqlite;
+using Newtonsoft.Json;
 using UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport;
 using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 

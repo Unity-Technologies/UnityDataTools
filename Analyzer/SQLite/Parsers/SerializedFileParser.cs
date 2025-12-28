@@ -1,7 +1,7 @@
-using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Writers;
 using UnityDataTools.FileSystem;
