@@ -12,11 +12,11 @@ namespace UnityDataTools.UnityDataTool.Tests;
 
 #pragma warning disable NUnit2005, NUnit2006
 
-public class UnityDataToolTests : AssetBundleTestFixture
+public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
 {
     private string m_TestOutputFolder;
 
-    public UnityDataToolTests(Context context) : base(context)
+    public UnityDataToolAssetBundleTests(Context context) : base(context)
     {
     }
 
@@ -59,20 +59,6 @@ public class UnityDataToolTests : AssetBundleTestFixture
         Assert.AreNotEqual(0, await Program.Main(command.ToArray()));
     }
 
-    public void IsWebBundle_True()
-    {
-
-        var webBundlePath = Path.Combine(Context.TestDataFolder, "WebBundles", "HelloWorld.data");
-        Assert.IsTrue(Archive.IsWebBundle(new FileInfo(webBundlePath)));
-    }
-
-    [Test]
-    public void IsWebBundle_False()
-    {
-        var nonWebBundlePath = Path.Combine(Context.TestDataFolder, "WebBundles", "NotAWebBundle.txt");
-        Assert.IsFalse(Archive.IsWebBundle(new FileInfo(nonWebBundlePath)));
-    }
-
     [Test]
     public async Task ArchiveExtract_AssetBundle_FilesExtractedSuccessfully(
         [Values("", "-o archive", "--output-path archive")] string options)
@@ -83,27 +69,6 @@ public class UnityDataToolTests : AssetBundleTestFixture
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994")));
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS")));
         Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource")));
-    }
-
-    [Test]
-    public async Task ArchiveExtract_WebBundle_FileExtractedSuccessfully(
-        [Values("", "-o archive", "--output-path archive")] string options,
-        [Values("HelloWorld.data", "HelloWorld.data.gz", "HelloWorld.data.br")] string bundlePath)
-    {
-        var path = Path.Combine(Context.TestDataFolder, "WebBundles", bundlePath);
-        string[] expectedFiles = {
-            "boot.config",
-            "data.unity3d",
-            "RuntimeInitializeOnLoads.json",
-            "ScriptingAssemblies.json",
-            Path.Combine("Il2CppData", "Metadata", "global-metadata.dat"),
-            Path.Combine("Resources", "unity_default_resources"),
-        };
-        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
-        foreach (var file in expectedFiles)
-        {
-            Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", file)));
-        }
     }
 
     [Test]
@@ -132,54 +97,6 @@ public class UnityDataToolTests : AssetBundleTestFixture
             Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Size")}", lines[9]);
             Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Flags")}", lines[10]);
 
-        }
-        finally
-        {
-            Console.SetOut(currentOut);
-        }
-    }
-
-    [Test]
-    public async Task ArchiveList_WebBundle_ListFilesCorrectly(
-         [Values(
-            "HelloWorld.data",
-            "HelloWorld.data.gz",
-            "HelloWorld.data.br"
-        )] string bundlePath)
-    {
-        var path = Path.Combine(Context.TestDataFolder, "WebBundles", bundlePath);
-        using var sw = new StringWriter();
-        var currentOut = Console.Out;
-        try
-        {
-            Console.SetOut(sw);
-
-            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path }));
-
-            var actualOutput = sw.ToString();
-            var expectedOutput = (
-@"data.unity3d
-  Size: 253044
-
-RuntimeInitializeOnLoads.json
-  Size: 700
-
-ScriptingAssemblies.json
-  Size: 3060
-
-boot.config
-  Size: 93
-
-Il2CppData/Metadata/global-metadata.dat
-  Size: 1641180
-
-Resources/unity_default_resources
-  Size: 607376
-
-"
-            );
-
-            Assert.AreEqual(expectedOutput, actualOutput);
         }
         finally
         {
@@ -230,7 +147,7 @@ Resources/unity_default_resources
     [Test]
     public async Task Analyze_DefaultArgs_DatabaseCorrect()
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }));
@@ -242,7 +159,7 @@ Resources/unity_default_resources
     public async Task Analyze_WithoutRefs_DatabaseCorrect(
         [Values("-s", "--skip-references")] string options)
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
@@ -254,7 +171,7 @@ Resources/unity_default_resources
     public async Task Analyze_WithPattern_DatabaseCorrect(
         [Values("-p *.", "--search-pattern *.")] string options)
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
@@ -266,19 +183,12 @@ Resources/unity_default_resources
     public async Task Analyze_WithPatternNoMatch_DatabaseEmpty(
         [Values("-p *.x", "--search-pattern *.x")] string options)
     {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         using (var cmd = db.CreateCommand())
         {
@@ -302,15 +212,7 @@ Resources/unity_default_resources
 
     private void ValidateDatabase(string databasePath, bool withRefs)
     {
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         using (var cmd = db.CreateCommand())
         {
@@ -350,89 +252,5 @@ Resources/unity_default_resources
             Assert.AreEqual(Context.ExpectedData.Get("textures_count"), reader.GetInt32(12));
             Assert.AreEqual(Context.ExpectedData.Get("types_count"), reader.GetInt32(13));
         }
-    }
-}
-
-public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
-{
-    private string m_TestOutputFolder;
-
-    public UnityDataToolPlayerDataTests(Context context) : base(context)
-    {
-    }
-
-    [OneTimeSetUp]
-    public void OneTimeSetup()
-    {
-        m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "test_folder");
-        Directory.CreateDirectory(m_TestOutputFolder);
-        Directory.SetCurrentDirectory(m_TestOutputFolder);
-    }
-
-    [TearDown]
-    public void Teardown()
-    {
-        SqliteConnection.ClearAllPools();
-
-        foreach (var file in new DirectoryInfo(m_TestOutputFolder).EnumerateFiles())
-        {
-            file.Delete();
-        }
-    }
-
-    [Test]
-    public async Task Analyze_PlayerData_DatabaseCorrect()
-    {
-        var databasePath = Path.Combine(m_TestOutputFolder, "database.db");
-        var analyzePath = Path.Combine(Context.UnityDataFolder);
-
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-p", "*." }));
-        using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            ForeignKeys = false,
-        }.ConnectionString);
-        db.Open();
-
-        using var cmd = db.CreateCommand();
-
-        cmd.CommandText =
-            @"SELECT
-                (SELECT COUNT(*) FROM asset_bundles),
-                (SELECT COUNT(*) FROM assets),
-                (SELECT COUNT(*) FROM objects),
-                (SELECT COUNT(*) FROM refs),
-                (SELECT COUNT(*) FROM serialized_files)";
-
-        using var reader = cmd.ExecuteReader();
-
-        reader.Read();
-
-        Assert.AreEqual(0, reader.GetInt32(0));
-        Assert.AreEqual(0, reader.GetInt32(1));
-        Assert.Greater(reader.GetInt32(2), 0);
-        Assert.Greater(reader.GetInt32(3), 0);
-        Assert.AreEqual(1, reader.GetInt32(4));
-    }
-
-    [Test]
-    public async Task DumpText_PlayerData_TextFileCreatedCorrectly()
-    {
-        var path = Path.Combine(Context.UnityDataFolder, "level0");
-        var outputFile = Path.Combine(m_TestOutputFolder, "level0.txt");
-
-        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path }));
-        Assert.IsTrue(File.Exists(outputFile));
-
-        var content = File.ReadAllText(outputFile);
-        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "level0.txt"));
-
-        // Normalize  line endings.
-        content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");
-        expected = Regex.Replace(expected, @"\r\n|\n\r|\r", "\n");
-
-        Assert.AreEqual(expected, content);
     }
 }

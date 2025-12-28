@@ -4,6 +4,9 @@ using NUnit.Framework;
 
 namespace UnityDataTools.TestCommon;
 
+// Base class that facilitates iterating through sub-sub-folders
+// inside the Data location.  E.g. GetContexts("AssetBundles")
+// finds "TestCommon/Data/AssetBundles/2019.4.0f1", "TestCommon/Data/AssetBundles/2020.3.0f1" etc.
 public class BaseTestFixture
 {
     protected Context Context { get; }
@@ -15,6 +18,8 @@ public class BaseTestFixture
         Context = context;
     }
 
+    // Tests that have files that record the expected results for each version
+    // of Unity can override this method to regenerate those expected results.
     protected virtual void OnLoadExpectedData(Context context)
     {
     }
@@ -23,6 +28,9 @@ public class BaseTestFixture
     public void LoadExpectedData()
     {
         OnLoadExpectedData(Context);
+
+        // Load json file with the expected results for a test based on
+        // folder structure convention (e.g. ExpectedData/<UnityVersion>/ExpectedVersions.json)
         Context.ExpectedData.Load(Context.ExpectedDataFolder);
     }
 
@@ -47,6 +55,9 @@ public class BaseTestFixture
     }
 }
 
+// Test fixture that repeats the tests for each folder inside TestCommon/Data/AssetBundles.
+// Each sub-folder is expected to have results of an AssetBundle build repeated with a
+// different version of Unity.
 [TestFixtureSource(typeof(AssetBundleTestFixture), nameof(GetContexts))]
 public class AssetBundleTestFixture : BaseTestFixture
 {
