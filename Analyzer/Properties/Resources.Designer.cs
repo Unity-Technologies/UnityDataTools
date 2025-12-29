@@ -662,6 +662,7 @@ namespace UnityDataTools.Analyzer.Properties {
         ///
         ///CREATE VIEW build_report_files_view AS
         ///SELECT
+        ///    o.serialized_file,
         ///    br.id AS build_report_id,
         ///    br.build_type,
         ///    br.platform_name,
@@ -670,7 +671,8 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    brf.role,
         ///    brf.size
         ///FROM build_report_files brf
-        ///INNER JOIN build_reports br ON brf.build_report_id = br.id;
+        ///INNER JOIN build_reports br ON brf.build_report_id = br.id
+        ///INNER JOIN object_view o ON br.id = o.id;
         ///.
         /// </summary>
         internal static string BuildReport {

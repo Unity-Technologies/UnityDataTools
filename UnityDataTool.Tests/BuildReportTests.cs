@@ -343,4 +343,82 @@ public class BuildReportTests
             "CAB-6b49068aebcf9d3b05692c8efd933167",
             "Unexpected path in build_report_packed_assets_view");
     }
+
+    [Test]
+    public async Task Analyze_BuildReports_BothReports_ContainsBuildReportFilesData()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        // Analyze multiple BuildReports into the same database
+        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "*.buildreport" };
+
+        Assert.AreEqual(0, await Program.Main(args.ToArray()));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // Verify we have 2 BuildReports
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports", 2,
+            "Expected exactly 2 BuildReports");
+
+        // Verify we have files from both BuildReports
+        var totalFiles = SQLTestHelper.QueryInt(db, "SELECT COUNT(*) FROM build_report_files");
+        Assert.That(totalFiles, Is.GreaterThan(0), "Expected at least some files in build_report_files");
+
+        // Verify that an expected file from AssetBundle.buildreport is present
+        var assetBundleFileCount = SQLTestHelper.QueryInt(db,
+            @"SELECT COUNT(*) FROM build_report_files
+              WHERE path = 'audio.bundle/CAB-76a378bdc9304bd3c3a82de8dd97981a.resource'");
+        Assert.AreEqual(1, assetBundleFileCount,
+            "Expected to find one file with 'CAB-76a378bdc9304bd3c3a82de8dd97981a.resource' in path from AssetBundle.buildreport");
+
+        // Verify that an expected file from Player.buildreport is present
+        var playerFileCount = SQLTestHelper.QueryInt(db,
+            @"SELECT COUNT(*) FROM build_report_files
+              WHERE path = 'TestProject_Data/sharedassets0.assets.resS'");
+        Assert.AreEqual(1, playerFileCount,
+            "Expected to find one file with 'sharedassets0.assets.resS' in path from Player.buildreport");
+
+        // Verify that each BuildReport has its own set of files with the correct build_report_id
+        var assetBundleReportId = SQLTestHelper.QueryInt(db,
+            "SELECT id FROM build_reports WHERE build_type = 'AssetBundle'");
+        var playerReportId = SQLTestHelper.QueryInt(db,
+            "SELECT id FROM build_reports WHERE build_type = 'Player'");
+
+        var assetBundleFileCountByReportId = SQLTestHelper.QueryInt(db,
+            $"SELECT COUNT(*) FROM build_report_files WHERE build_report_id = {assetBundleReportId}");
+        Assert.That(assetBundleFileCountByReportId, Is.GreaterThan(0),
+            "Expected AssetBundle BuildReport to have files");
+
+        var playerFileCountByReportId = SQLTestHelper.QueryInt(db,
+            $"SELECT COUNT(*) FROM build_report_files WHERE build_report_id = {playerReportId}");
+        Assert.That(playerFileCountByReportId, Is.GreaterThan(0),
+            "Expected Player BuildReport to have files");
+
+        // Verify the view includes serialized_file and can filter by it
+        var playerFilesInView = SQLTestHelper.QueryInt(db,
+            @"SELECT COUNT(*) FROM build_report_files_view 
+              WHERE serialized_file = 'Player.buildreport'");
+        Assert.That(playerFilesInView, Is.GreaterThan(0),
+            "Expected to find files from Player.buildreport in the view using serialized_file");
+
+        // Verify we can find the specific Player.buildreport file in the view
+        var specificPlayerFile = SQLTestHelper.QueryInt(db,
+            @"SELECT COUNT(*) FROM build_report_files_view 
+              WHERE serialized_file = 'Player.buildreport'
+              AND path = 'TestProject_Data/sharedassets0.assets.resS'");
+        Assert.AreEqual(1, specificPlayerFile,
+            "Expected to find exactly one row with path='TestProject_Data/sharedassets0.assets.resS' from Player.buildreport in view");
+
+        // Verify the serialized_file column correctly identifies the source BuildReport
+        var assetBundleSerializedFile = SQLTestHelper.QueryString(db,
+            @"SELECT DISTINCT serialized_file FROM build_report_files_view 
+              WHERE path = 'audio.bundle/CAB-76a378bdc9304bd3c3a82de8dd97981a.resource'");
+        Assert.AreEqual("AssetBundle.buildreport", assetBundleSerializedFile,
+            "Expected serialized_file to be 'AssetBundle.buildreport' for AssetBundle files");
+
+        var playerSerializedFile = SQLTestHelper.QueryString(db,
+            @"SELECT DISTINCT serialized_file FROM build_report_files_view 
+              WHERE path = 'TestProject_Data/sharedassets0.assets.resS'");
+        Assert.AreEqual("Player.buildreport", playerSerializedFile,
+            "Expected serialized_file to be 'Player.buildreport' for Player files");
+    }
 }

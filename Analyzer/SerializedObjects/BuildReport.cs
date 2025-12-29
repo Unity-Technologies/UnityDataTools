@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -63,6 +64,8 @@ public class BuildReport
             });
         }
 
+        TrimCommonPathPrefix(filesList);
+
         return new BuildReport()
         {
             Name = reader["m_Name"].GetValue<string>(),
@@ -83,6 +86,30 @@ public class BuildReport
             BuildResult = GetBuildResultString(summary["buildResult"].GetValue<int>()),
             Files = filesList
         };
+    }
+
+    // Currently the file list has the absolute paths of the build output, but what we really want is the relative path.
+    // This code reuses the approach taken in the build report inspector of automatically stripping off whatever part of the path
+    // is repeated as the prefix on each file, which effectively finds the relative output path.
+    static void TrimCommonPathPrefix(List<BuildFile> files)
+    {
+        if (files.Count == 0)
+            return;
+        string longestCommonRoot = files[0].Path;
+        foreach (var file in files)
+        {
+            for (var i = 0; i < longestCommonRoot.Length && i < file.Path.Length; i++)
+            {
+                if (longestCommonRoot[i] == file.Path[i])
+                    continue;
+                longestCommonRoot = longestCommonRoot.Substring(0, i);
+            }
+        }
+
+        foreach (var file in files)
+        {
+            file.Path = file.Path.Substring(longestCommonRoot.Length);
+        }
     }
 
     public static string GetBuildTypeString(int buildType)
@@ -113,7 +140,7 @@ public class BuildReport
 public class BuildFile
 {
     public uint Id { get; init; }
-    public string Path { get; init; }
+    public string Path { get; set; }
     public string Role { get; init; }
     public ulong Size { get; init; }
 }
