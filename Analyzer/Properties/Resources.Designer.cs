@@ -924,16 +924,16 @@ namespace UnityDataTools.Analyzer.Properties {
         ///
         ///CREATE VIEW build_report_packed_assets_view AS
         ///SELECT
-        ///    o.id,
+        ///    pa.id,
         ///    o.object_id,
-        ///    o.serialized_file,
+        ///    brac.assetbundle,
+        ///    sf.name as build_report,
         ///    pa.path,
-        ///    pa.file_header_size,
-        ///    brac.assetbundle
-        ///FROM object_view o
-        ///INNER JOIN build_report_packed_assets pa ON o.id = pa.id
-        ///INNER JOIN objects o_raw ON o.id = o_raw.id
-        ///LEFT JOIN objects br_obj ON o_raw.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
+        ///    pa.file_header_size
+        ///FROM build_report_packed_assets pa
+        ///INNER JOIN objects o ON pa.id = o.id
+        ///INNER JOIN serialized_files sf ON o.serialized_file = sf.id
+        ///LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
         ///LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
         ///
         ///CREATE VIEW build_report_packed_asset_contents_view AS
