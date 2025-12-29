@@ -123,7 +123,7 @@ UnityDataTool (CLI executable)
 **Entry Points**:
 - `UnityDataTool/Program.cs` - CLI using System.CommandLine
 - `UnityDataTool/Commands/` - Command handlers (Analyze.cs, Dump.cs, Archive.cs, FindReferences.cs)
-- `Documentation/` - Command documentation (analyze.md, dump.md, archive.md, find-refs.md)
+- `Documentation/` - Command documentation (command-analyze.md, command-dump.md, command-archive.md, command-find-refs.md)
 
 **Core Libraries**:
 - `UnityFileSystem/UnityFileSystem.cs` - Init(), MountArchive(), OpenSerializedFile()

@@ -23,7 +23,7 @@ UnityDataTool find-refs <database> [options]
 
 ## Prerequisites
 
-This command requires a database created by the [`analyze`](analyze.md) command **without** the `--skip-references` option.
+This command requires a database created by the [`analyze`](command-analyze.md) command **without** the `--skip-references` option.
 
 ---
 
