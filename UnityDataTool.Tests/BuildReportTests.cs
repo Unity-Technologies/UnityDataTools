@@ -212,4 +212,59 @@ public class BuildReportTests
         Assert.AreEqual(0, duplicateRefs,
             "No object should be referenced more than once");
     }
+
+    // Test the BuildReport-specific table and view
+    [Test]
+    public async Task Analyze_BuildReport_ContainsBuildReportData()
+    {
+        var path = Path.Combine(m_TestDataFolder, "BuildReport1");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var args = new List<string> { "analyze", path, "-p", "*.buildreport" };
+
+        Assert.AreEqual(0, await Program.Main(args.ToArray()));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // Verify build_reports table has one row
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports", 1,
+            "Expected exactly one row in build_reports table");
+
+        // Verify build_report_view has one row
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_view", 1,
+            "Expected exactly one row in build_report_view");
+
+        // Verify specific fields from m_Summary
+        SQLTestHelper.AssertQueryString(db, "SELECT platform_name FROM build_report_view", "Win64",
+            "Unexpected platform_name");
+
+        SQLTestHelper.AssertQueryString(db, "SELECT build_type FROM build_report_view", "AssetBundle",
+            "Unexpected build_type - should be 'AssetBundle' not the numeric value");
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT subtarget FROM build_report_view", 2,
+            "Unexpected subtarget");
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT total_errors FROM build_report_view", 0,
+            "Unexpected total_errors");
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT total_warnings FROM build_report_view", 0,
+            "Unexpected total_warnings");
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT build_result FROM build_report_view", 1,
+            "Unexpected build_result");
+
+        // Verify output_path is present
+        var outputPath = SQLTestHelper.QueryString(db, "SELECT output_path FROM build_report_view");
+        Assert.That(outputPath, Does.Contain("AssetBundles"), "Output path should contain 'AssetBundles'");
+
+        // Verify total_size is greater than 0
+        var totalSize = SQLTestHelper.QueryInt(db, "SELECT total_size FROM build_report_view");
+        Assert.That(totalSize, Is.GreaterThan(0), "total_size should be greater than 0");
+
+        // Verify the view joins correctly with object_view data
+        SQLTestHelper.AssertQueryString(db, "SELECT name FROM build_report_view", "Build AssetBundles",
+            "name from object_view should be accessible in build_report_view");
+
+        SQLTestHelper.AssertQueryString(db, "SELECT type FROM build_report_view", "BuildReport",
+            "type from object_view should be accessible in build_report_view");
+    }
 }
