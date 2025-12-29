@@ -1,3 +1,4 @@
+using System;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SerializedObjects;
@@ -8,12 +9,13 @@ public class BuildReport
     public string BuildGuid { get; init; }
     public string PlatformName { get; init; }
     public int Subtarget { get; init; }
+    public string StartTime { get; init; }
     public int Options { get; init; }
     public int AssetBundleOptions { get; init; }
     public string OutputPath { get; init; }
     public uint Crc { get; init; }
     public ulong TotalSize { get; init; }
-    public ulong TotalTimeTicks { get; init; }
+    public int TotalTimeSeconds { get; init; }
     public int TotalErrors { get; init; }
     public int TotalWarnings { get; init; }
     public int BuildType { get; init; }
@@ -34,18 +36,27 @@ public class BuildReport
         var guid3 = guidData["data[3]"].GetValue<uint>();
         var guidString = FormatUnityGuid(guid0, guid1, guid2, guid3);
 
+        // Convert build start time from ticks to ISO 8601 UTC format
+        var startTimeTicks = summary["buildStartTime"]["ticks"].GetValue<long>();
+        var startTime = new DateTime(startTimeTicks, DateTimeKind.Utc).ToString("o");
+
+        // Convert ticks to seconds (TimeSpan.TicksPerSecond = 10,000,000)
+        var totalTimeTicks = summary["totalTimeTicks"].GetValue<ulong>();
+        var totalTimeSeconds = (int)Math.Round(totalTimeTicks / 10000000.0);
+
         return new BuildReport()
         {
             Name = reader["m_Name"].GetValue<string>(),
             BuildGuid = guidString,
             PlatformName = summary["platformName"].GetValue<string>(),
             Subtarget = summary["subtarget"].GetValue<int>(),
+            StartTime = startTime,
             Options = summary["options"].GetValue<int>(),
             AssetBundleOptions = summary["assetBundleOptions"].GetValue<int>(),
             OutputPath = summary["outputPath"].GetValue<string>(),
             Crc = summary["crc"].GetValue<uint>(),
             TotalSize = summary["totalSize"].GetValue<ulong>(),
-            TotalTimeTicks = summary["totalTimeTicks"].GetValue<ulong>(),
+            TotalTimeSeconds = totalTimeSeconds,
             TotalErrors = summary["totalErrors"].GetValue<int>(),
             TotalWarnings = summary["totalWarnings"].GetValue<int>(),
             BuildType = summary["buildType"].GetValue<int>(),

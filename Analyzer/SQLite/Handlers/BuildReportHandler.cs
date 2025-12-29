@@ -17,11 +17,11 @@ public class BuildReportHandler : ISQLiteHandler
 
         m_InsertCommand = db.CreateCommand();
         m_InsertCommand.CommandText = @"INSERT INTO build_reports(
-            id, build_type, build_result, platform_name, subtarget, total_time_ticks,
+            id, build_type, build_result, platform_name, subtarget, start_time, total_time_seconds,
             total_size, build_guid, total_errors, total_warnings, options, asset_bundle_options,
             output_path, crc
         ) VALUES(
-            @id, @build_type, @build_result, @platform_name, @subtarget, @total_time_ticks,
+            @id, @build_type, @build_result, @platform_name, @subtarget, @start_time, @total_time_seconds,
             @total_size, @build_guid, @total_errors, @total_warnings, @options, @asset_bundle_options,
             @output_path, @crc
         )";
@@ -31,7 +31,8 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@build_result", SqliteType.Text);
         m_InsertCommand.Parameters.Add("@platform_name", SqliteType.Text);
         m_InsertCommand.Parameters.Add("@subtarget", SqliteType.Integer);
-        m_InsertCommand.Parameters.Add("@total_time_ticks", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@start_time", SqliteType.Text);
+        m_InsertCommand.Parameters.Add("@total_time_seconds", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@total_size", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@build_guid", SqliteType.Text);
         m_InsertCommand.Parameters.Add("@total_errors", SqliteType.Integer);
@@ -51,7 +52,8 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.Parameters["@build_result"].Value = buildReport.BuildResult;
         m_InsertCommand.Parameters["@platform_name"].Value = buildReport.PlatformName;
         m_InsertCommand.Parameters["@subtarget"].Value = buildReport.Subtarget;
-        m_InsertCommand.Parameters["@total_time_ticks"].Value = (long)buildReport.TotalTimeTicks;
+        m_InsertCommand.Parameters["@start_time"].Value = buildReport.StartTime;
+        m_InsertCommand.Parameters["@total_time_seconds"].Value = buildReport.TotalTimeSeconds;
         m_InsertCommand.Parameters["@total_size"].Value = (long)buildReport.TotalSize;
         m_InsertCommand.Parameters["@build_guid"].Value = buildReport.BuildGuid;
         m_InsertCommand.Parameters["@total_errors"].Value = buildReport.TotalErrors;
