@@ -6,10 +6,10 @@ A command-line tool for analyzing and inspecting Unity build output—AssetBundl
 
 | Command | Description |
 |---------|-------------|
-| [`analyze`](Commands/analyze.md) | Extract data from Unity files into a SQLite database |
-| [`dump`](Commands/dump.md) | Convert SerializedFiles to human-readable text |
-| [`archive`](Commands/archive.md) | List or extract contents of Unity Archives |
-| [`find-refs`](Commands/find-refs.md) | Trace reference chains to objects *(experimental)* |
+| [`analyze`](../Documentation/analyze.md) | Extract data from Unity files into a SQLite database |
+| [`dump`](../Documentation/dump.md) | Convert SerializedFiles to human-readable text |
+| [`archive`](../Documentation/archive.md) | List or extract contents of Unity Archives |
+| [`find-refs`](../Documentation/find-refs.md) | Trace reference chains to objects *(experimental)* |
 
 ---
 
