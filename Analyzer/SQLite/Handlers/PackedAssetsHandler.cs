@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
@@ -8,7 +9,10 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 public class PackedAssetsHandler : ISQLiteHandler
 {
     private SqliteCommand m_InsertPackedAssetsCommand;
+    private SqliteCommand m_InsertSourceAssetCommand;
+    private SqliteCommand m_GetSourceAssetIdCommand;
     private SqliteCommand m_InsertContentsCommand;
+    private Dictionary<(string guid, string path), long> m_SourceAssetCache = new();
 
     public void Init(SqliteConnection db)
     {
@@ -27,11 +31,26 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_InsertPackedAssetsCommand.Parameters.Add("@path", SqliteType.Text);
         m_InsertPackedAssetsCommand.Parameters.Add("@file_header_size", SqliteType.Integer);
 
+        m_InsertSourceAssetCommand = db.CreateCommand();
+        m_InsertSourceAssetCommand.CommandText = @"INSERT OR IGNORE INTO build_report_source_assets(
+            source_asset_guid, build_time_asset_path
+        ) VALUES(
+            @source_asset_guid, @build_time_asset_path
+        )";
+        m_InsertSourceAssetCommand.Parameters.Add("@source_asset_guid", SqliteType.Text);
+        m_InsertSourceAssetCommand.Parameters.Add("@build_time_asset_path", SqliteType.Text);
+
+        m_GetSourceAssetIdCommand = db.CreateCommand();
+        m_GetSourceAssetIdCommand.CommandText = @"SELECT id FROM build_report_source_assets 
+            WHERE source_asset_guid = @source_asset_guid AND build_time_asset_path = @build_time_asset_path";
+        m_GetSourceAssetIdCommand.Parameters.Add("@source_asset_guid", SqliteType.Text);
+        m_GetSourceAssetIdCommand.Parameters.Add("@build_time_asset_path", SqliteType.Text);
+
         m_InsertContentsCommand = db.CreateCommand();
         m_InsertContentsCommand.CommandText = @"INSERT INTO build_report_packed_asset_info(
-            packed_assets_id, object_id, type, size, offset, source_asset_guid, build_time_asset_path
+            packed_assets_id, object_id, type, size, offset, source_asset_id
         ) VALUES(
-            @packed_assets_id, @object_id, @type, @size, @offset, @source_asset_guid, @build_time_asset_path
+            @packed_assets_id, @object_id, @type, @size, @offset, @source_asset_id
         )";
 
         m_InsertContentsCommand.Parameters.Add("@packed_assets_id", SqliteType.Integer);
@@ -39,8 +58,7 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_InsertContentsCommand.Parameters.Add("@type", SqliteType.Integer);
         m_InsertContentsCommand.Parameters.Add("@size", SqliteType.Integer);
         m_InsertContentsCommand.Parameters.Add("@offset", SqliteType.Integer);
-        m_InsertContentsCommand.Parameters.Add("@source_asset_guid", SqliteType.Text);
-        m_InsertContentsCommand.Parameters.Add("@build_time_asset_path", SqliteType.Text);
+        m_InsertContentsCommand.Parameters.Add("@source_asset_id", SqliteType.Integer);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
@@ -56,14 +74,32 @@ public class PackedAssetsHandler : ISQLiteHandler
         // Insert contents
         foreach (var content in packedAssets.Contents)
         {
+            // Get or create source asset ID
+            var cacheKey = (content.SourceAssetGUID, content.BuildTimeAssetPath);
+            if (!m_SourceAssetCache.TryGetValue(cacheKey, out long sourceAssetId))
+            {
+                // Insert the source asset (will be ignored if it already exists)
+                m_InsertSourceAssetCommand.Transaction = ctx.Transaction;
+                m_InsertSourceAssetCommand.Parameters["@source_asset_guid"].Value = content.SourceAssetGUID;
+                m_InsertSourceAssetCommand.Parameters["@build_time_asset_path"].Value = content.BuildTimeAssetPath;
+                m_InsertSourceAssetCommand.ExecuteNonQuery();
+
+                // Get the ID (whether just inserted or already existing)
+                m_GetSourceAssetIdCommand.Transaction = ctx.Transaction;
+                m_GetSourceAssetIdCommand.Parameters["@source_asset_guid"].Value = content.SourceAssetGUID;
+                m_GetSourceAssetIdCommand.Parameters["@build_time_asset_path"].Value = content.BuildTimeAssetPath;
+                sourceAssetId = (long)m_GetSourceAssetIdCommand.ExecuteScalar();
+
+                m_SourceAssetCache[cacheKey] = sourceAssetId;
+            }
+
             m_InsertContentsCommand.Transaction = ctx.Transaction;
             m_InsertContentsCommand.Parameters["@packed_assets_id"].Value = objectId;
             m_InsertContentsCommand.Parameters["@object_id"].Value = content.ObjectID;
             m_InsertContentsCommand.Parameters["@type"].Value = content.Type;
             m_InsertContentsCommand.Parameters["@size"].Value = (long)content.Size;
             m_InsertContentsCommand.Parameters["@offset"].Value = (long)content.Offset;
-            m_InsertContentsCommand.Parameters["@source_asset_guid"].Value = content.SourceAssetGUID;
-            m_InsertContentsCommand.Parameters["@build_time_asset_path"].Value = content.BuildTimeAssetPath;
+            m_InsertContentsCommand.Parameters["@source_asset_id"].Value = sourceAssetId;
             m_InsertContentsCommand.ExecuteNonQuery();
         }
 
@@ -78,6 +114,8 @@ public class PackedAssetsHandler : ISQLiteHandler
     void IDisposable.Dispose()
     {
         m_InsertPackedAssetsCommand?.Dispose();
+        m_InsertSourceAssetCommand?.Dispose();
+        m_GetSourceAssetIdCommand?.Dispose();
         m_InsertContentsCommand?.Dispose();
     }
 }

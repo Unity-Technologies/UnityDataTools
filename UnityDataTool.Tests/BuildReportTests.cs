@@ -311,7 +311,7 @@ public class BuildReportTests
         // Verify the specific content row (data[3] from the dump)
         const long objectId = -1350043613627603771;
         var contentRow = SQLTestHelper.QueryInt(db,
-            $@"SELECT COUNT(*) FROM build_report_packed_asset_info 
+            $@"SELECT COUNT(*) FROM build_report_packed_asset_contents_view 
                WHERE packed_assets_id = {packedAssetId} 
                AND object_id = {objectId}
                AND type = 28
