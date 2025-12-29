@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
 using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -25,6 +25,7 @@ public class BuildReport
     public int BuildType { get; init; }
     public string BuildResult { get; init; }
     public List<BuildFile> Files { get; init; }
+    public FileListAssetBundleHelper fileListAssetBundleHelper { get; init; }
 
     private BuildReport() { }
 
@@ -84,7 +85,8 @@ public class BuildReport
             TotalWarnings = summary["totalWarnings"].GetValue<int>(),
             BuildType = summary["buildType"].GetValue<int>(),
             BuildResult = GetBuildResultString(summary["buildResult"].GetValue<int>()),
-            Files = filesList
+            Files = filesList,
+            fileListAssetBundleHelper = new FileListAssetBundleHelper(filesList)
         };
     }
 
@@ -143,4 +145,69 @@ public class BuildFile
     public string Path { get; set; }
     public string Role { get; init; }
     public ulong Size { get; init; }
+}
+
+
+/// Helper for matching files that are inside an Unity Archive file to the file containing it.
+// Currently this only applies to AssetBundle builds, which can have many output files and which use hard to understand internal file names
+// like "CAB-76a378bdc9304bd3c3a82de8dd97981a".
+// For compressed Player builds the PackedAssets reports the internal files, but the file list does not report the unity3d content,
+// so this code will not pick up the mapping.  However because there is only a single unity3d file on most platforms this is less important
+public class FileListAssetBundleHelper
+{
+    public Dictionary<string, string> internalNameToArchiveMapping = new Dictionary<string, string>();
+
+    public FileListAssetBundleHelper(List<BuildFile> files)
+    {
+        CalculateAssetBundleMapping(files);
+    }
+
+    /// <summary>
+    // Map between the internal file names inside Archive files back to the Archive filename.
+
+    /*
+    Example input:
+
+    - path: C:/Src/TestProject/Build/AssetBundles/audio.bundle/CAB-76a378bdc9304bd3c3a82de8dd97981a.resource
+      role: StreamingResourceFile
+    ...
+    - path: C:/Src/TestProject/Build/AssetBundles/audio.bundle
+      role: AssetBundle
+    ...
+
+    Result:
+    CAB-76a378bdc9304bd3c3a82de8dd97981a.resource -> audio.bundle
+    */
+    /// </summary>
+    private void CalculateAssetBundleMapping(List<BuildFile> files)
+    {
+        internalNameToArchiveMapping.Clear();
+
+        // Track archive paths and their base filenames for AssetBundle or manifest files
+        var archivePathToFileName = new Dictionary<string, string>();
+        foreach (var file in files)
+        {
+            if (file.Role == "AssetBundle" || file.Role == "ManifestAssetBundle")
+            {
+                var justFileName = Path.GetFileName(file.Path);
+                archivePathToFileName[file.Path] = justFileName;
+            }
+        }
+
+        if (archivePathToFileName.Count == 0)
+            return;
+
+        // Map internal file names to their corresponding archive filenames
+        foreach (var file in files)
+        {
+            // Assumes internal files are not in subdirectories inside the archive
+            var justPath = Path.GetDirectoryName(file.Path)?.Replace('\\', '/');
+            var justFileName = Path.GetFileName(file.Path);
+
+            if (!string.IsNullOrEmpty(justPath) && archivePathToFileName.ContainsKey(justPath))
+            {
+                internalNameToArchiveMapping[justFileName] = archivePathToFileName[justPath];
+            }
+        }
+    }
 }

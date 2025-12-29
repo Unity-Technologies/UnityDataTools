@@ -9,6 +9,7 @@ public class BuildReportHandler : ISQLiteHandler
 {
     private SqliteCommand m_InsertCommand;
     private SqliteCommand m_InsertFileCommand;
+    private SqliteCommand m_InsertArchiveContentCommand;
 
     public void Init(SqliteConnection db)
     {
@@ -56,6 +57,17 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertFileCommand.Parameters.Add("@path", SqliteType.Text);
         m_InsertFileCommand.Parameters.Add("@role", SqliteType.Text);
         m_InsertFileCommand.Parameters.Add("@size", SqliteType.Integer);
+
+        m_InsertArchiveContentCommand = db.CreateCommand();
+        m_InsertArchiveContentCommand.CommandText = @"INSERT INTO build_report_archive_contents(
+            build_report_id, assetbundle, assetbundle_content
+        ) VALUES(
+            @build_report_id, @assetbundle, @assetbundle_content
+        )";
+
+        m_InsertArchiveContentCommand.Parameters.Add("@build_report_id", SqliteType.Integer);
+        m_InsertArchiveContentCommand.Parameters.Add("@assetbundle", SqliteType.Text);
+        m_InsertArchiveContentCommand.Parameters.Add("@assetbundle_content", SqliteType.Text);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
@@ -93,6 +105,16 @@ public class BuildReportHandler : ISQLiteHandler
             m_InsertFileCommand.ExecuteNonQuery();
         }
 
+        // Insert archive contents mapping
+        foreach (var mapping in buildReport.fileListAssetBundleHelper.internalNameToArchiveMapping)
+        {
+            m_InsertArchiveContentCommand.Transaction = ctx.Transaction;
+            m_InsertArchiveContentCommand.Parameters["@build_report_id"].Value = objectId;
+            m_InsertArchiveContentCommand.Parameters["@assetbundle"].Value = mapping.Value;
+            m_InsertArchiveContentCommand.Parameters["@assetbundle_content"].Value = mapping.Key;
+            m_InsertArchiveContentCommand.ExecuteNonQuery();
+        }
+
         streamDataSize = 0;
         name = buildReport.Name;
     }
@@ -105,5 +127,6 @@ public class BuildReportHandler : ISQLiteHandler
     {
         m_InsertCommand?.Dispose();
         m_InsertFileCommand?.Dispose();
+        m_InsertArchiveContentCommand?.Dispose();
     }
 }

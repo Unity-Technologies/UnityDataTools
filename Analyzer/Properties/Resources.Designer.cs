@@ -660,6 +660,14 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
         ///);
         ///
+        ///CREATE TABLE IF NOT EXISTS build_report_archive_contents(
+        ///    build_report_id INTEGER NOT NULL,
+        ///    assetbundle TEXT NOT NULL,
+        ///    assetbundle_content TEXT NOT NULL,
+        ///    PRIMARY KEY (build_report_id, assetbundle_content),
+        ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
+        ///);
+        ///
         ///CREATE VIEW build_report_files_view AS
         ///SELECT
         ///    o.serialized_file,
@@ -920,9 +928,13 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    o.object_id,
         ///    o.serialized_file,
         ///    pa.path,
-        ///    pa.file_header_size
+        ///    pa.file_header_size,
+        ///    brac.assetbundle
         ///FROM object_view o
-        ///INNER JOIN build_report_packed_assets pa ON o.id = pa.id;
+        ///INNER JOIN build_report_packed_assets pa ON o.id = pa.id
+        ///INNER JOIN objects o_raw ON o.id = o_raw.id
+        ///LEFT JOIN objects br_obj ON o_raw.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
+        ///LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
         ///
         ///CREATE VIEW build_report_packed_asset_contents_view AS
         ///SELECT
