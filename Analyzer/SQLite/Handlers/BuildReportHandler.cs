@@ -8,6 +8,7 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 public class BuildReportHandler : ISQLiteHandler
 {
     private SqliteCommand m_InsertCommand;
+    private SqliteCommand m_InsertFileCommand;
 
     public void Init(SqliteConnection db)
     {
@@ -42,6 +43,19 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@asset_bundle_options", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@output_path", SqliteType.Text);
         m_InsertCommand.Parameters.Add("@crc", SqliteType.Integer);
+
+        m_InsertFileCommand = db.CreateCommand();
+        m_InsertFileCommand.CommandText = @"INSERT INTO build_report_files(
+            build_report_id, file_index, path, role, size
+        ) VALUES(
+            @build_report_id, @file_index, @path, @role, @size
+        )";
+
+        m_InsertFileCommand.Parameters.Add("@build_report_id", SqliteType.Integer);
+        m_InsertFileCommand.Parameters.Add("@file_index", SqliteType.Integer);
+        m_InsertFileCommand.Parameters.Add("@path", SqliteType.Text);
+        m_InsertFileCommand.Parameters.Add("@role", SqliteType.Text);
+        m_InsertFileCommand.Parameters.Add("@size", SqliteType.Integer);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
@@ -67,6 +81,18 @@ public class BuildReportHandler : ISQLiteHandler
 
         m_InsertCommand.ExecuteNonQuery();
 
+        // Insert files
+        foreach (var file in buildReport.Files)
+        {
+            m_InsertFileCommand.Transaction = ctx.Transaction;
+            m_InsertFileCommand.Parameters["@build_report_id"].Value = objectId;
+            m_InsertFileCommand.Parameters["@file_index"].Value = file.Id;
+            m_InsertFileCommand.Parameters["@path"].Value = file.Path;
+            m_InsertFileCommand.Parameters["@role"].Value = file.Role;
+            m_InsertFileCommand.Parameters["@size"].Value = (long)file.Size;
+            m_InsertFileCommand.ExecuteNonQuery();
+        }
+
         streamDataSize = 0;
         name = buildReport.Name;
     }
@@ -78,5 +104,6 @@ public class BuildReportHandler : ISQLiteHandler
     void IDisposable.Dispose()
     {
         m_InsertCommand?.Dispose();
+        m_InsertFileCommand?.Dispose();
     }
 }

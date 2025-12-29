@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -22,6 +23,7 @@ public class BuildReport
     public int TotalWarnings { get; init; }
     public int BuildType { get; init; }
     public string BuildResult { get; init; }
+    public List<BuildFile> Files { get; init; }
 
     private BuildReport() { }
 
@@ -48,6 +50,19 @@ public class BuildReport
 
         var endTime = new DateTime(startTimeTicks + (long)totalTimeTicks, DateTimeKind.Utc).ToString("o");
 
+        // Read the files array
+        var filesList = new List<BuildFile>(reader["m_Files"].GetArraySize());
+        foreach (var fileElement in reader["m_Files"])
+        {
+            filesList.Add(new BuildFile
+            {
+                Id = fileElement["id"].GetValue<uint>(),
+                Path = fileElement["path"].GetValue<string>(),
+                Role = fileElement["role"].GetValue<string>(),
+                Size = fileElement["totalSize"].GetValue<ulong>()
+            });
+        }
+
         return new BuildReport()
         {
             Name = reader["m_Name"].GetValue<string>(),
@@ -65,7 +80,8 @@ public class BuildReport
             TotalErrors = summary["totalErrors"].GetValue<int>(),
             TotalWarnings = summary["totalWarnings"].GetValue<int>(),
             BuildType = summary["buildType"].GetValue<int>(),
-            BuildResult = GetBuildResultString(summary["buildResult"].GetValue<int>())
+            BuildResult = GetBuildResultString(summary["buildResult"].GetValue<int>()),
+            Files = filesList
         };
     }
 
@@ -92,4 +108,12 @@ public class BuildReport
             _ => buildResult.ToString()
         };
     }
+}
+
+public class BuildFile
+{
+    public uint Id { get; init; }
+    public string Path { get; init; }
+    public string Role { get; init; }
+    public ulong Size { get; init; }
 }

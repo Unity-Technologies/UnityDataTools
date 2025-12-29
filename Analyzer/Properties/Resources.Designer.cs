@@ -632,40 +632,45 @@ namespace UnityDataTools.Analyzer.Properties {
         /// <summary>
         ///   Looks up a localized string similar to CREATE TABLE IF NOT EXISTS build_reports(
         ///    id INTEGER,
-        ///    build_guid TEXT,
+        ///    build_type TEXT,
+        ///    build_result TEXT,
         ///    platform_name TEXT,
         ///    subtarget INTEGER,
+        ///    start_time TEXT,
+        ///    end_time TEXT,
+        ///    total_time_seconds INTEGER,
+        ///    total_size INTEGER,
+        ///    build_guid TEXT,
+        ///    total_errors INTEGER,
+        ///    total_warnings INTEGER,
         ///    options INTEGER,
         ///    asset_bundle_options INTEGER,
         ///    output_path TEXT,
         ///    crc INTEGER,
-        ///    total_size INTEGER,
-        ///    total_time_ticks INTEGER,
-        ///    total_errors INTEGER,
-        ///    total_warnings INTEGER,
-        ///    build_type TEXT,
-        ///    build_result INTEGER,
         ///    PRIMARY KEY (id)
         ///);
         ///
-        ///CREATE VIEW build_report_view AS
+        ///CREATE TABLE IF NOT EXISTS build_report_files(
+        ///    build_report_id INTEGER NOT NULL,
+        ///    file_index INTEGER NOT NULL,
+        ///    path TEXT NOT NULL,
+        ///    role TEXT NOT NULL,
+        ///    size INTEGER NOT NULL,
+        ///    PRIMARY KEY (build_report_id, file_index),
+        ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
+        ///);
+        ///
+        ///CREATE VIEW build_report_files_view AS
         ///SELECT
-        ///    o.*,
-        ///    br.build_guid,
-        ///    br.platform_name,
-        ///    br.subtarget,
-        ///    br.options,
-        ///    br.asset_bundle_options,
-        ///    br.output_path,
-        ///    br.crc,
-        ///    br.total_size,
-        ///    br.total_time_ticks,
-        ///    br.total_errors,
-        ///    br.total_warnings,
+        ///    br.id AS build_report_id,
         ///    br.build_type,
-        ///    br.build_result
-        ///FROM object_view o
-        ///INNER JOIN build_reports br ON o.id = br.id;
+        ///    br.platform_name,
+        ///    brf.file_index,
+        ///    brf.path,
+        ///    brf.role,
+        ///    brf.size
+        ///FROM build_report_files brf
+        ///INNER JOIN build_reports br ON brf.build_report_id = br.id;
         ///.
         /// </summary>
         internal static string BuildReport {
