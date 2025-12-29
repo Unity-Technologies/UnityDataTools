@@ -17,7 +17,7 @@ public class BuildReport
     public int TotalErrors { get; init; }
     public int TotalWarnings { get; init; }
     public int BuildType { get; init; }
-    public int BuildResult { get; init; }
+    public string BuildResult { get; init; }
 
     private BuildReport() { }
 
@@ -49,7 +49,7 @@ public class BuildReport
             TotalErrors = summary["totalErrors"].GetValue<int>(),
             TotalWarnings = summary["totalWarnings"].GetValue<int>(),
             BuildType = summary["buildType"].GetValue<int>(),
-            BuildResult = summary["buildResult"].GetValue<int>()
+            BuildResult = GetBuildResultString(summary["buildResult"].GetValue<int>())
         };
     }
 
@@ -90,6 +90,19 @@ public class BuildReport
             2 => "AssetBundle",
             3 => "Player, AssetBundle",
             _ => buildType.ToString()
+        };
+    }
+
+    public static string GetBuildResultString(int buildResult)
+    {
+        return buildResult switch
+        {
+            0 => "Unknown",
+            1 => "Succeeded",
+            2 => "Failed",
+            3 => "Cancelled",
+            4 => "Pending",
+            _ => buildResult.ToString()
         };
     }
 }

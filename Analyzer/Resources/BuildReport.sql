@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS build_reports(
     total_errors INTEGER,
     total_warnings INTEGER,
     build_type TEXT,
-    build_result INTEGER,
+    build_result TEXT,
     PRIMARY KEY (id)
 );
 

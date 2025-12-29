@@ -239,7 +239,7 @@ public class BuildReportTests
             "Unexpected total_errors");
         SQLTestHelper.AssertQueryInt(db, "SELECT total_warnings FROM build_reports", 0,
             "Unexpected total_warnings");
-        SQLTestHelper.AssertQueryInt(db, "SELECT build_result FROM build_reports", 1,
+        SQLTestHelper.AssertQueryString(db, "SELECT build_result FROM build_reports", "Succeeded",
             "Unexpected build_result");
 
         var outputPath = SQLTestHelper.QueryString(db, "SELECT output_path FROM build_reports");
@@ -273,7 +273,7 @@ public class BuildReportTests
             "Unexpected subtarget");
         SQLTestHelper.AssertQueryInt(db, "SELECT options FROM build_reports", 9,
             "Unexpected options");
-        SQLTestHelper.AssertQueryInt(db, "SELECT build_result FROM build_reports", 1,
+        SQLTestHelper.AssertQueryString(db, "SELECT build_result FROM build_reports", "Succeeded",
             "Unexpected build_result");
 
         var totalSize = SQLTestHelper.QueryInt(db, "SELECT total_size FROM build_reports");

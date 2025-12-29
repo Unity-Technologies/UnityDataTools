@@ -39,7 +39,7 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@total_errors", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@total_warnings", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@build_type", SqliteType.Text);
-        m_InsertCommand.Parameters.Add("@build_result", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@build_result", SqliteType.Text);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
