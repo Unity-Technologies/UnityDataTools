@@ -267,4 +267,59 @@ public class BuildReportTests
         SQLTestHelper.AssertQueryString(db, "SELECT type FROM build_report_view", "BuildReport",
             "type from object_view should be accessible in build_report_view");
     }
+
+    // Test the BuildReport-specific table with a Player build (not AssetBundle build)
+    [Test]
+    public async Task Analyze_BuildReport_Player_ContainsBuildReportData()
+    {
+        var path = Path.Combine(m_TestDataFolder, "BuildReport-Player");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var args = new List<string> { "analyze", path, "-p", "*.buildreport" };
+
+        Assert.AreEqual(0, await Program.Main(args.ToArray()));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // Verify build_reports table has one row
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports", 1,
+            "Expected exactly one row in build_reports table");
+
+        // Verify build_report_view has one row
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_view", 1,
+            "Expected exactly one row in build_report_view");
+
+        // Verify build_type is "Player" not "AssetBundle"
+        SQLTestHelper.AssertQueryString(db, "SELECT build_type FROM build_report_view", "Player",
+            "Unexpected build_type - should be 'Player' for player builds");
+
+        // Verify buildGUID was correctly parsed
+        // Expected: data[0]=3856716653, data[1]=3821322382, data[2]=1211319241, data[3]=2950543120
+        // Unity's GUID format reverses nibbles within each uint32 (see GUIDToString in Unity C++)
+        SQLTestHelper.AssertQueryString(db, "SELECT build_guid FROM build_report_view", "d63d0e5ee80c4c3e9c343384017bddfa",
+            "Unexpected build_guid");
+
+        // Verify subtarget
+        SQLTestHelper.AssertQueryInt(db, "SELECT subtarget FROM build_report_view", 2,
+            "Unexpected subtarget");
+
+        // Verify options (should be 9 for this Player build)
+        SQLTestHelper.AssertQueryInt(db, "SELECT options FROM build_report_view", 9,
+            "Unexpected options value");
+
+        // Verify build_result (1 = Success)
+        SQLTestHelper.AssertQueryInt(db, "SELECT build_result FROM build_report_view", 1,
+            "Unexpected build_result");
+
+        // Verify name
+        SQLTestHelper.AssertQueryString(db, "SELECT name FROM build_report_view", "New Report",
+            "Unexpected BuildReport name");
+
+        // Verify total_size is greater than 0
+        var totalSize = SQLTestHelper.QueryInt(db, "SELECT total_size FROM build_report_view");
+        Assert.That(totalSize, Is.GreaterThan(0), "total_size should be greater than 0");
+
+        // Verify output_path contains expected path
+        var outputPath = SQLTestHelper.QueryString(db, "SELECT output_path FROM build_report_view");
+        Assert.That(outputPath, Does.Contain("TestProject.exe"), "Output path should contain 'TestProject.exe' for player build");
+    }
 }
