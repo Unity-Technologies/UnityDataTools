@@ -10,6 +10,7 @@ public class BuildReport
     public string PlatformName { get; init; }
     public int Subtarget { get; init; }
     public string StartTime { get; init; }
+    public string EndTime { get; init; }
     public int Options { get; init; }
     public int AssetBundleOptions { get; init; }
     public string OutputPath { get; init; }
@@ -44,6 +45,8 @@ public class BuildReport
         var totalTimeTicks = summary["totalTimeTicks"].GetValue<ulong>();
         var totalTimeSeconds = (int)Math.Round(totalTimeTicks / 10000000.0);
 
+        var endTime = new DateTime(startTimeTicks + (long)totalTimeTicks, DateTimeKind.Utc).ToString("o");
+
         return new BuildReport()
         {
             Name = reader["m_Name"].GetValue<string>(),
@@ -51,6 +54,7 @@ public class BuildReport
             PlatformName = summary["platformName"].GetValue<string>(),
             Subtarget = summary["subtarget"].GetValue<int>(),
             StartTime = startTime,
+            EndTime = endTime,
             Options = summary["options"].GetValue<int>(),
             AssetBundleOptions = summary["assetBundleOptions"].GetValue<int>(),
             OutputPath = summary["outputPath"].GetValue<string>(),

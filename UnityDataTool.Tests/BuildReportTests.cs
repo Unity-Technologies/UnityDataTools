@@ -214,7 +214,7 @@ public class BuildReportTests
     }
 
     [Test]
-    public async Task Analyze_BuildReport_ContainsBuildReportData()
+    public async Task Analyze_BuildReport_AssetBundle_ContainsBuildReportData()
     {
         var path = Path.Combine(m_TestDataFolder, "BuildReport1");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
@@ -223,9 +223,6 @@ public class BuildReportTests
 
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
-
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_view", 1,
-            "Expected exactly one row in build_report_view");
 
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports", 1,
             "Expected exactly one row in build_reports table");
@@ -260,9 +257,6 @@ public class BuildReportTests
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_view", 1,
-            "Expected exactly one row in build_report_view");
-
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports", 1,
             "Expected exactly one row in build_reports table");
         SQLTestHelper.AssertQueryString(db, "SELECT build_type FROM build_reports", "Player",
@@ -275,6 +269,10 @@ public class BuildReportTests
             "Unexpected options");
         SQLTestHelper.AssertQueryString(db, "SELECT build_result FROM build_reports", "Succeeded",
             "Unexpected build_result");
+        SQLTestHelper.AssertQueryString(db, "SELECT start_time FROM build_reports", "2025-12-29T01:23:36.7748043Z",
+            "Unexpected start time");
+        SQLTestHelper.AssertQueryString(db, "SELECT end_time FROM build_reports", "2025-12-29T01:23:41.0547073Z",
+            "Unexpected end time");
 
         var totalSize = SQLTestHelper.QueryInt(db, "SELECT total_size FROM build_reports");
         Assert.That(totalSize, Is.GreaterThan(0), "total_size should be greater than 0");

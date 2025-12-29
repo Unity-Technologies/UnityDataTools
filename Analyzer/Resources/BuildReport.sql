@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS build_reports(
     platform_name TEXT,
     subtarget INTEGER,
     start_time TEXT,
+    end_time TEXT,
     total_time_seconds INTEGER,
     total_size INTEGER,
     build_guid TEXT,
@@ -17,22 +18,3 @@ CREATE TABLE IF NOT EXISTS build_reports(
     PRIMARY KEY (id)
 );
 
-CREATE VIEW build_report_view AS
-SELECT
-    o.*,
-    br.build_type,
-    br.build_result,
-    br.platform_name,
-    br.subtarget,
-    br.start_time,
-    br.total_time_seconds,
-    br.total_size,
-    br.build_guid,
-    br.total_errors,
-    br.total_warnings,
-    br.options,
-    br.asset_bundle_options,
-    br.output_path,
-    br.crc
-FROM object_view o
-INNER JOIN build_reports br ON o.id = br.id;
