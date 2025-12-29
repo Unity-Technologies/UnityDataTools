@@ -17,7 +17,7 @@ public class PackedAssetsHandler : ISQLiteHandler
         command.ExecuteNonQuery();
 
         m_InsertPackedAssetsCommand = db.CreateCommand();
-        m_InsertPackedAssetsCommand.CommandText = @"INSERT INTO packed_assets(
+        m_InsertPackedAssetsCommand.CommandText = @"INSERT INTO build_report_packed_assets(
             id, path, file_header_size
         ) VALUES(
             @id, @path, @file_header_size
@@ -28,7 +28,7 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_InsertPackedAssetsCommand.Parameters.Add("@file_header_size", SqliteType.Integer);
 
         m_InsertContentsCommand = db.CreateCommand();
-        m_InsertContentsCommand.CommandText = @"INSERT INTO packed_asset_contents(
+        m_InsertContentsCommand.CommandText = @"INSERT INTO build_report_packed_asset_info(
             packed_assets_id, object_id, type, size, offset, source_asset_guid, build_time_asset_path
         ) VALUES(
             @packed_assets_id, @object_id, @type, @size, @offset, @source_asset_guid, @build_time_asset_path

@@ -16,7 +16,7 @@ public class PackedAssets
     {
         var path = reader["m_ShortPath"].GetValue<string>();
         var fileHeaderSize = reader["m_Overhead"].GetValue<ulong>();
-        
+
         var contentsList = new List<PackedAssetInfo>(reader["m_Contents"].GetArraySize());
 
         foreach (var element in reader["m_Contents"])

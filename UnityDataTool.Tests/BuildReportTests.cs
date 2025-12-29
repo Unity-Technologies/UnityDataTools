@@ -255,18 +255,22 @@ public class BuildReportTests
             "Expected exactly one row in build_reports table");
         SQLTestHelper.AssertQueryString(db, "SELECT build_type FROM build_reports", "Player",
             "Unexpected build_type");
-        SQLTestHelper.AssertQueryString(db, "SELECT build_guid FROM build_reports", "d63d0e5ee80c4c3e9c343384017bddfa",
+
+        // These checks are based on knowledge what the specific values in this test build report
+        SQLTestHelper.AssertQueryString(db, "SELECT build_guid FROM build_reports", "c743e3c6c0a541a69eae606c7991234e",
             "Unexpected build_guid");
         SQLTestHelper.AssertQueryInt(db, "SELECT subtarget FROM build_reports", 2,
             "Unexpected subtarget");
-        SQLTestHelper.AssertQueryInt(db, "SELECT options FROM build_reports", 9,
+        SQLTestHelper.AssertQueryInt(db, "SELECT options FROM build_reports", 137,
             "Unexpected options");
         SQLTestHelper.AssertQueryString(db, "SELECT build_result FROM build_reports", "Succeeded",
             "Unexpected build_result");
-        SQLTestHelper.AssertQueryString(db, "SELECT start_time FROM build_reports", "2025-12-29T01:23:36.7748043Z",
+        SQLTestHelper.AssertQueryString(db, "SELECT start_time FROM build_reports", "2025-12-29T13:03:00.5010432Z",
             "Unexpected start time");
-        SQLTestHelper.AssertQueryString(db, "SELECT end_time FROM build_reports", "2025-12-29T01:23:41.0547073Z",
+        SQLTestHelper.AssertQueryString(db, "SELECT end_time FROM build_reports", "2025-12-29T13:03:06.3987171Z",
             "Unexpected end time");
+        SQLTestHelper.AssertQueryInt(db, "SELECT total_time_seconds FROM build_reports", 6,
+            "Unexpected total_time_seconds");
 
         var totalSize = SQLTestHelper.QueryInt(db, "SELECT total_size FROM build_reports");
         Assert.That(totalSize, Is.GreaterThan(0), "total_size should be greater than 0");
@@ -285,29 +289,29 @@ public class BuildReportTests
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
-        // Verify the packed_assets table has the expected number of rows
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM packed_assets", 7,
-            "Expected exactly 7 rows in packed_assets table");
+        // Verify the build_report_packed_assets table has the expected number of rows
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_packed_assets", 7,
+            "Expected exactly 7 rows in build_report_packed_assets table");
 
         // Verify the specific PackedAssets object (corresponds to raw object ID -2699881322159949766 in the file)
         const string path = "CAB-6b49068aebcf9d3b05692c8efd933167";
-        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) FROM packed_assets WHERE path = '{path}'", 1,
+        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) FROM build_report_packed_assets WHERE path = '{path}'", 1,
             $"Expected exactly one PackedAssets with path = {path}");
 
-        SQLTestHelper.AssertQueryInt(db, $"SELECT file_header_size FROM packed_assets WHERE path = '{path}'", 10720,
+        SQLTestHelper.AssertQueryInt(db, $"SELECT file_header_size FROM build_report_packed_assets WHERE path = '{path}'", 10720,
             "Unexpected file_header_size for PackedAssets");
 
         // Get the database ID for this PackedAssets
-        var packedAssetId = SQLTestHelper.QueryInt(db, $"SELECT id FROM packed_assets WHERE path = '{path}'");
+        var packedAssetId = SQLTestHelper.QueryInt(db, $"SELECT id FROM build_report_packed_assets WHERE path = '{path}'");
 
         // Verify there are 7 content rows for this PackedAssets
-        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) FROM packed_asset_contents WHERE packed_assets_id = {packedAssetId}", 7,
-            "Expected exactly 7 rows in packed_asset_contents for this PackedAssets");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) FROM build_report_packed_asset_info WHERE packed_assets_id = {packedAssetId}", 7,
+            "Expected exactly 7 rows in build_report_packed_asset_info for this PackedAssets");
 
         // Verify the specific content row (data[3] from the dump)
         const long objectId = -1350043613627603771;
         var contentRow = SQLTestHelper.QueryInt(db,
-            $@"SELECT COUNT(*) FROM packed_asset_contents 
+            $@"SELECT COUNT(*) FROM build_report_packed_asset_info 
                WHERE packed_assets_id = {packedAssetId} 
                AND object_id = {objectId}
                AND type = 28
@@ -321,23 +325,22 @@ public class BuildReportTests
 
         // Verify the view works correctly for this content row
         SQLTestHelper.AssertQueryString(db,
-            $@"SELECT source_asset_guid FROM packed_asset_contents_view 
+            $@"SELECT source_asset_guid FROM build_report_packed_asset_contents_view 
                WHERE packed_assets_id = {packedAssetId} 
                AND object_id = {objectId}",
             "8826f464101b93c4bb006e15a9aff317",
-            "Unexpected source_asset_guid in packed_asset_contents_view");
+            "Unexpected source_asset_guid in build_report_packed_asset_contents_view");
 
         SQLTestHelper.AssertQueryString(db,
-            $@"SELECT build_time_asset_path FROM packed_asset_contents_view 
+            $@"SELECT build_time_asset_path FROM build_report_packed_asset_contents_view 
                WHERE packed_assets_id = {packedAssetId} 
                AND object_id = {objectId}",
             "Assets/Sprites/Snow.jpg",
-            "Unexpected build_time_asset_path in packed_asset_contents_view");
+            "Unexpected build_time_asset_path in build_report_packed_asset_contents_view");
 
-        // Verify the packed_assets_view works correctly
         SQLTestHelper.AssertQueryString(db,
-            $"SELECT path FROM packed_assets_view WHERE id = {packedAssetId}",
+            $"SELECT path FROM build_report_packed_assets_view WHERE id = {packedAssetId}",
             "CAB-6b49068aebcf9d3b05692c8efd933167",
-            "Unexpected path in packed_assets_view");
+            "Unexpected path in build_report_packed_assets_view");
     }
 }
