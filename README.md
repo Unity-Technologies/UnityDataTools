@@ -4,7 +4,7 @@ The UnityDataTool is a command line tool and showcase of the UnityFileSystemApi 
 The main purpose is for analysis of the content of Unity data files, for example AssetBundles and
 Player content.
 
-The [command line tool](./UnityDataTool/README.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers most functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content. See [examples](./Documentation/analyze-examples.md) and [comparing builds](./Documentation/comparing-builds.md) for examples of how to use the command line tool.
+The [command line tool](./Documentation/unitydatatool.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers most functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content. See [examples](./Documentation/analyze-examples.md) and [comparing builds](./Documentation/comparing-builds.md) for examples of how to use the command line tool.
 
 It is designed to scale for large build outputs and has been used to fine-tune big Unity-based games.
 
@@ -15,12 +15,12 @@ The command line tool uses the UnityFileSystemApi library to access the content 
 ## Repository content
 
 The repository contains the following items:
-* [UnityDataTool](UnityDataTool/README.md): a command-line tool providing access to the Analyzer, TextDumper and other class libraries.
-* [Analyzer](Analyzer/README.md): a class library that can be used to extract key information
+* [UnityDataTool](Documentation/unitydatatool.md): a command-line tool providing access to the Analyzer, TextDumper and other class libraries.
+* [Analyzer](Documentation/analyzer.md): a class library that can be used to extract key information
   from Unity data files and output it into a SQLite database.
-* [TextDumper](TextDumper/README.md): a class library that can be used to dump SerializedFiles into
+* [TextDumper](Documentation/textdumper.md): a class library that can be used to dump SerializedFiles into
   a human-readable format (similar to binary2text).
-* [ReferenceFinder](ReferenceFinder/README.md): a class library that can be used to find
+* [ReferenceFinder](Documentation/referencefinder.md): a class library that can be used to find
   reference chains from objects to other objects using a database created by the Analyzer
 * UnityFileSystem: source code and binaries of a .NET class library exposing the functionalities or the
   UnityFileSystemApi native library.
@@ -61,7 +61,7 @@ The file name is as follows:
 
 On Windows, the executable is written to `UnityDataTool\bin\Release\net9.0`. Add this location to your system PATH for convenient access.
 
-See the [command-line tool documentation](./UnityDataTool/README.md) for usage instructions.
+See the [command-line tool documentation](./Documentation/unitydatatool.md) for usage instructions.
 
 ## Purpose of UnityFileSystemApi
 

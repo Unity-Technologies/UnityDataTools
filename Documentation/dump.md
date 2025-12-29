@@ -90,7 +90,7 @@ ID: -8138362113332287275 (ClassID: 135) SphereCollider
     z float 0
 ```
 
-**Refer to the [TextDumper documentation](../../TextDumper/README.md) for detailed output format explanation.**
+**Refer to the [TextDumper documentation](textdumper.md) for detailed output format explanation.**
 
 ---
 

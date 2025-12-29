@@ -60,7 +60,7 @@ The analyze command works with the following types of directories:
 
 The analysis creates a SQLite database that can be explored using tools like [DB Browser for SQLite](https://sqlitebrowser.org/) or the command line `sqlite3` tool.
 
-**Refer to the [Analyzer documentation](../../Analyzer/README.md) for the database schema reference and information about extending this command.**
+**Refer to the [Analyzer documentation](analyzer.md) for the database schema reference and information about extending this command.**
 
 ---
 

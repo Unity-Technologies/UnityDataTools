@@ -93,5 +93,5 @@ Found 1 reference chain(s).
 | `[Component of X (id=Y)]` | Shows the GameObject for Components |
 | `[Script = X]` | Shows the script name for MonoBehaviours |
 
-**Refer to the [ReferenceFinder documentation](../../ReferenceFinder/README.md) for more details.**
+**Refer to the [ReferenceFinder documentation](referencefinder.md) for more details.**
 

@@ -208,7 +208,7 @@ The SQLite output uses views extensively to join base `objects` table with type-
 - `asset_view` - Explicitly assigned assets only
 - `shader_keyword_ratios` - Keyword variant analysis
 
-See `Analyzer/README.md` and `Documentation/addressables-build-reports.md` for complete database schema documentation.
+See `Documentation/analyzer.md` and `Documentation/addressables-build-reports.md` for complete database schema documentation.
 
 ### Common Issues
 
