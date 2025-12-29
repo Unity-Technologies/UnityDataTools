@@ -274,4 +274,70 @@ public class BuildReportTests
         var outputPath = SQLTestHelper.QueryString(db, "SELECT output_path FROM build_reports");
         Assert.That(outputPath, Does.Contain("TestProject.exe"), "Output path should contain 'TestProject.exe'");
     }
+
+    [Test]
+    public async Task Analyze_BuildReport_AssetBundle_ContainsPackedAssetsData()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "AssetBundle.buildreport" };
+
+        Assert.AreEqual(0, await Program.Main(args.ToArray()));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // Verify the packed_assets table has the expected number of rows
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM packed_assets", 7,
+            "Expected exactly 7 rows in packed_assets table");
+
+        // Verify the specific PackedAssets object (corresponds to raw object ID -2699881322159949766 in the file)
+        const string path = "CAB-6b49068aebcf9d3b05692c8efd933167";
+        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) FROM packed_assets WHERE path = '{path}'", 1,
+            $"Expected exactly one PackedAssets with path = {path}");
+
+        SQLTestHelper.AssertQueryInt(db, $"SELECT file_header_size FROM packed_assets WHERE path = '{path}'", 10720,
+            "Unexpected file_header_size for PackedAssets");
+
+        // Get the database ID for this PackedAssets
+        var packedAssetId = SQLTestHelper.QueryInt(db, $"SELECT id FROM packed_assets WHERE path = '{path}'");
+
+        // Verify there are 7 content rows for this PackedAssets
+        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) FROM packed_asset_contents WHERE packed_assets_id = {packedAssetId}", 7,
+            "Expected exactly 7 rows in packed_asset_contents for this PackedAssets");
+
+        // Verify the specific content row (data[3] from the dump)
+        const long objectId = -1350043613627603771;
+        var contentRow = SQLTestHelper.QueryInt(db,
+            $@"SELECT COUNT(*) FROM packed_asset_contents 
+               WHERE packed_assets_id = {packedAssetId} 
+               AND object_id = {objectId}
+               AND type = 28
+               AND size = 204
+               AND offset = 11840
+               AND source_asset_guid = '8826f464101b93c4bb006e15a9aff317'
+               AND build_time_asset_path = 'Assets/Sprites/Snow.jpg'");
+
+        Assert.AreEqual(1, contentRow,
+            "Expected exactly one packed_asset_contents row matching the specified criteria");
+
+        // Verify the view works correctly for this content row
+        SQLTestHelper.AssertQueryString(db,
+            $@"SELECT source_asset_guid FROM packed_asset_contents_view 
+               WHERE packed_assets_id = {packedAssetId} 
+               AND object_id = {objectId}",
+            "8826f464101b93c4bb006e15a9aff317",
+            "Unexpected source_asset_guid in packed_asset_contents_view");
+
+        SQLTestHelper.AssertQueryString(db,
+            $@"SELECT build_time_asset_path FROM packed_asset_contents_view 
+               WHERE packed_assets_id = {packedAssetId} 
+               AND object_id = {objectId}",
+            "Assets/Sprites/Snow.jpg",
+            "Unexpected build_time_asset_path in packed_asset_contents_view");
+
+        // Verify the packed_assets_view works correctly
+        SQLTestHelper.AssertQueryString(db,
+            $"SELECT path FROM packed_assets_view WHERE id = {packedAssetId}",
+            "CAB-6b49068aebcf9d3b05692c8efd933167",
+            "Unexpected path in packed_assets_view");
+    }
 }
