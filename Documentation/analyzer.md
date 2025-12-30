@@ -63,6 +63,20 @@ This view lists the dependencies of all the assets. You can filter by id or asse
 the dependencies of an asset. Conversely, filtering by dep_id will return all the assets that
 depend on this object. This can be useful to figure out why an asset was included in a build.
 
+## monoscripts
+
+Show the class information for all the C# types of MonoBehaviour objects in the build output (including ScriptableObjects).
+
+This includes the assembly name, C# namespace and class name.
+
+## monoscripts_view
+
+This view is a convenient view for seeing which AssetBundle / SerializedFile contains each MonoScript object.
+
+## script_object_view
+
+This view lists all the MonoBehaviour and ScriptableObject objects in the build output, with their location, size and precise C# type (using the `monoscripts` and `refs` tables).   This view is not populated if analyze is run with the `--skip-references` option.
+
 ## animation_view (AnimationClipProcessor)
 
 This provides additional information about AnimationClips. The columns are the same as those in
@@ -161,6 +175,10 @@ stripping it won't make a big difference.
 This view lists all the shaders aggregated by name. The *instances* column indicates how many time
 the shader was found in the data files. It also provides the total size per shader and the list of
 AssetBundles in which they were found.
+
+## BuildReport
+
+See [BuildReport.md](buildreport.md) for details of the tables and views related to analyzing BuildReport files.
 
 # Advanced
 

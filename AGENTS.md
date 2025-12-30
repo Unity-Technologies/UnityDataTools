@@ -47,6 +47,23 @@ dotnet test --filter "FullyQualifiedName~SerializedFile"
 
 Test projects: UnityFileSystem.Tests, Analyzer.Tests, UnityDataTool.Tests, TestCommon (helper library)
 
+### Code Style
+
+#### Comments
+
+* Write comments that explain "why".  A few high level comments explaining the purpose of classes or methods is very helpful.  Comments explaining tricky code are also helpful.
+* Avoid comments that are redundant with the code.  Do not comment before each line of code explaining what it does unless there is something that is not obvious going on.
+* Do not use formal C# XML format when commenting methods, unless it is in an important interface class like UnityFileSystem.
+
+#### Formatting
+
+To repair white space or style issues, run:
+
+```
+dotnet format whitespace . --folder
+dotnet format style
+```
+
 ### Running the Tool
 ```bash
 # Show all commands

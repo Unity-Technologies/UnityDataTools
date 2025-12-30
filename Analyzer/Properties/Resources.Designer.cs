@@ -628,7 +628,67 @@ namespace UnityDataTools.Analyzer.Properties {
                 return ResourceManager.GetString("AudioClip", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TABLE IF NOT EXISTS build_reports(
+        ///    id INTEGER,
+        ///    build_type TEXT,
+        ///    build_result TEXT,
+        ///    platform_name TEXT,
+        ///    subtarget INTEGER,
+        ///    start_time TEXT,
+        ///    end_time TEXT,
+        ///    total_time_seconds INTEGER,
+        ///    total_size INTEGER,
+        ///    build_guid TEXT,
+        ///    total_errors INTEGER,
+        ///    total_warnings INTEGER,
+        ///    options INTEGER,
+        ///    asset_bundle_options INTEGER,
+        ///    output_path TEXT,
+        ///    crc INTEGER,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_files(
+        ///    build_report_id INTEGER NOT NULL,
+        ///    file_index INTEGER NOT NULL,
+        ///    path TEXT NOT NULL,
+        ///    role TEXT NOT NULL,
+        ///    size INTEGER NOT NULL,
+        ///    PRIMARY KEY (build_report_id, file_index),
+        ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_archive_contents(
+        ///    build_report_id INTEGER NOT NULL,
+        ///    assetbundle TEXT NOT NULL,
+        ///    assetbundle_content TEXT NOT NULL,
+        ///    PRIMARY KEY (build_report_id, assetbundle_content),
+        ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
+        ///);
+        ///
+        ///CREATE VIEW build_report_files_view AS
+        ///SELECT
+        ///    o.serialized_file,
+        ///    br.id AS build_report_id,
+        ///    br.build_type,
+        ///    br.platform_name,
+        ///    brf.file_index,
+        ///    brf.path,
+        ///    brf.role,
+        ///    brf.size
+        ///FROM build_report_files brf
+        ///INNER JOIN build_reports br ON brf.build_report_id = br.id
+        ///INNER JOIN object_view o ON br.id = o.id;
+        ///.
+        /// </summary>
+        internal static string BuildReport {
+            get {
+                return ResourceManager.GetString("BuildReport", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to CREATE INDEX refs_object_index ON refs(object);
         ///CREATE INDEX refs_referenced_object_index ON refs(referenced_object);
@@ -833,6 +893,69 @@ namespace UnityDataTools.Analyzer.Properties {
         internal static string MonoScript {
             get {
                 return ResourceManager.GetString("MonoScript", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TABLE IF NOT EXISTS build_report_packed_assets(
+        ///    id INTEGER,
+        ///    path TEXT,
+        ///    file_header_size INTEGER,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_source_assets(
+        ///    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ///    source_asset_guid TEXT NOT NULL,
+        ///    build_time_asset_path TEXT NOT NULL,
+        ///    UNIQUE(source_asset_guid, build_time_asset_path)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_packed_asset_info(
+        ///    packed_assets_id INTEGER,
+        ///    object_id INTEGER,
+        ///    type INTEGER,
+        ///    size INTEGER,
+        ///    offset INTEGER,
+        ///    source_asset_id INTEGER NOT NULL,
+        ///    FOREIGN KEY (packed_assets_id) REFERENCES build_report_packed_assets(id),
+        ///    FOREIGN KEY (source_asset_id) REFERENCES build_report_source_assets(id)
+        ///);
+        ///
+        ///CREATE VIEW build_report_packed_assets_view AS
+        ///SELECT
+        ///    pa.id,
+        ///    o.object_id,
+        ///    brac.assetbundle,
+        ///    sf.name as build_report,
+        ///    pa.path,
+        ///    pa.file_header_size
+        ///FROM build_report_packed_assets pa
+        ///INNER JOIN objects o ON pa.id = o.id
+        ///INNER JOIN serialized_files sf ON o.serialized_file = sf.id
+        ///LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
+        ///LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
+        ///
+        ///CREATE VIEW build_report_packed_asset_contents_view AS
+        ///SELECT
+        ///    o.serialized_file,
+        ///    pa.path,
+        ///    pac.packed_assets_id,
+        ///    pac.object_id,
+        ///    pac.type,
+        ///    pac.size,
+        ///    pac.offset,
+        ///    sa.source_asset_guid,
+        ///    sa.build_time_asset_path
+        ///FROM build_report_packed_asset_info pac
+        ///LEFT JOIN build_report_packed_assets pa ON pac.packed_assets_id = pa.id
+        ///LEFT JOIN object_view o ON o.id = pa.id
+        ///LEFT JOIN build_report_source_assets sa ON pac.source_asset_id = sa.id;
+        ///.
+        /// </summary>
+        internal static string PackedAssets {
+            get {
+                return ResourceManager.GetString("PackedAssets", resourceCulture);
             }
         }
     }

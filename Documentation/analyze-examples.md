@@ -64,6 +64,9 @@ Universal Render Pipeline/Lit               115.5 KB     1b2fdfe013c58ffd57d7663
 Shader Graphs/CustomLightingBuildingsB      113.4 KB     1b2fdfe013c58ffd57d7663eb8db3e60
 ```
 
+## BuildReport support
+
+See [buildreport.md](buildreport.md) for information about using analyze to look at BuildReport files.
 
 ## Example: Using AI tools to help write queries
 
