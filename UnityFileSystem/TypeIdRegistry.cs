@@ -130,46 +130,29 @@ public static class TypeIdRegistry
         { 258, "AudioMixerSnapshotController" },
         { 259, "AudioMixerSnapshot" },
         { 290, "AssetBundleManifest" },
-        { 1001, "PrefabInstance" },
-        { 1006, "TextureImporter" },
-        { 1007, "ShaderImporter" },
         { 1020, "DefaultAsset" },
-        { 1026, "IHVImageFormatImporter" },
         { 1028, "AnimatorStateTransition" },
         { 1029, "AnimatorState" },
         { 1030, "HumanTemplate" },
-        { 1031, "TextScriptImporter" },
         { 1032, "SceneAsset" },
-        { 1034, "NativeFormatImporter" },
-        { 1035, "MonoImporter" },
-        { 1040, "AudioImporter" },
         { 1041, "HierarchyState" },
         { 1045, "AssetMetaData" },
-        { 1048, "DefaultImporter" },
-        { 1049, "DefaultImporter" },
-        { 1050, "PluginImporter" },
         { 1101, "AnimatorTransition" },
         { 1102, "AnimatorTransitionBase" },
         { 1105, "AnimatorStateMachine" },
         { 1107, "AnimatorLayer" },
         { 1113, "Prefab" },
         { 1120, "LightmapParameters" },
-        { 1124, "SketchUpImporter" },
         { 1125, "BuildReport" },
         { 1126, "PackedAssets" },
-        { 1127, "VideoClipImporter" },
     };
 
-    /// <summary>
-    /// Gets the type name for a given TypeId.
-    /// Returns the type name if known, otherwise returns the TypeId as a string.
-    /// </summary>
     /// <param name="typeId">The Unity TypeId</param>
     /// <returns>The type name or TypeId as string if unknown</returns>
     public static string GetTypeName(int typeId)
     {
-        return s_KnownTypes.TryGetValue(typeId, out var name) 
-            ? name 
+        return s_KnownTypes.TryGetValue(typeId, out var name)
+            ? name
             : typeId.ToString();
     }
 }
