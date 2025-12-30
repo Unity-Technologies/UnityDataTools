@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS addressables_builds
     name TEXT,
     build_target INTEGER,
     start_time TEXT,
-    end_time TEXT,
     duration REAL,
     error TEXT,
     package_version TEXT,

@@ -459,15 +459,14 @@ public class BuildReportTests
         // Verify PackedAssets from Player build have NULL assetbundle
         var playerPackedAssetsWithNullBundle = SQLTestHelper.QueryInt(db,
             @"SELECT COUNT(*) FROM build_report_packed_assets_view 
-              WHERE build_report = 'Player.buildreport' AND assetbundle IS NULL");
+              WHERE build_report_filename = 'Player.buildreport' AND assetbundle IS NULL");
         Assert.That(playerPackedAssetsWithNullBundle, Is.GreaterThan(0),
             "Expected PackedAssets from Player.buildreport to have NULL assetbundle");
 
         var playerPackedAssetsWithNonNullBundle = SQLTestHelper.QueryInt(db,
             @"SELECT COUNT(*) FROM build_report_packed_assets_view 
-              WHERE build_report = 'Player.buildreport' AND assetbundle IS NOT NULL");
+              WHERE build_report_filename = 'Player.buildreport' AND assetbundle IS NOT NULL");
         Assert.AreEqual(0, playerPackedAssetsWithNonNullBundle,
             "Expected all PackedAssets from Player.buildreport have NULL assetbundle");
-
     }
 }
