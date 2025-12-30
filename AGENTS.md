@@ -78,6 +78,10 @@ UnityDataTool dump /path/to/file.bundle -o /output/path
 # Extract archive contents
 UnityDataTool archive extract file.bundle -o contents/
 
+# Quick inspect SerializedFile metadata
+UnityDataTool serialized-file objectlist level0
+UnityDataTool sf externalrefs sharedassets0.assets --format json
+
 # Find reference chains to an object
 UnityDataTool find-refs database.db -n "ObjectName" -t "Texture2D"
 ```
@@ -139,13 +143,15 @@ UnityDataTool (CLI executable)
 
 **Entry Points**:
 - `UnityDataTool/Program.cs` - CLI using System.CommandLine
-- `UnityDataTool/Commands/` - Command handlers (Analyze.cs, Dump.cs, Archive.cs, FindReferences.cs)
-- `Documentation/` - Command documentation (command-analyze.md, command-dump.md, command-archive.md, command-find-refs.md)
+- `UnityDataTool/SerializedFileCommands.cs` - SerializedFile inspection handlers
+- `UnityDataTool/Archive.cs` - Archive manipulation handlers
+- `Documentation/` - Command documentation (command-analyze.md, command-dump.md, command-archive.md, command-serialized-file.md, command-find-refs.md)
 
 **Core Libraries**:
 - `UnityFileSystem/UnityFileSystem.cs` - Init(), MountArchive(), OpenSerializedFile()
 - `UnityFileSystem/DllWrapper.cs` - P/Invoke bindings to native library
 - `UnityFileSystem/SerializedFile.cs` - Represents binary data files
+- `UnityFileSystem/TypeIdRegistry.cs` - Built-in TypeId to type name mappings
 - `UnityFileSystem/RandomAccessReader.cs` - TypeTree property navigation
 
 **Analyzer**:
