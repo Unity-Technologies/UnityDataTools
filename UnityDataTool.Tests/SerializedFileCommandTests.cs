@@ -479,7 +479,7 @@ public class SerializedFileCommandTests
     [Test]
     public async Task ErrorHandling_InvalidFile_ReturnsError()
     {
-        var path = Path.Combine(m_TestDataFolder, "REAMD.md"); // Text file, not a SerializedFile
+        var path = Path.Combine(m_TestDataFolder, "README.md"); // Text file, not a SerializedFile
 
         var result = await Program.Main(new string[] { "serialized-file", "objectlist", path });
         Assert.AreNotEqual(0, result, "Should return error code for invalid file");
