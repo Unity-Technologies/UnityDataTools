@@ -9,6 +9,7 @@ A command-line tool for analyzing and inspecting Unity build output—AssetBundl
 | [`analyze`](command-analyze.md) | Extract data from Unity files into a SQLite database |
 | [`dump`](command-dump.md) | Convert SerializedFiles to human-readable text |
 | [`archive`](command-archive.md) | List or extract contents of Unity Archives |
+| [`serialized-file`](command-serialized-file.md) | Quick inspection of SerializedFile metadata |
 | [`find-refs`](command-find-refs.md) | Trace reference chains to objects *(experimental)* |
 
 ---
@@ -27,6 +28,10 @@ UnityDataTool dump /path/to/file.bundle -o /output/path
 
 # Extract archive contents
 UnityDataTool archive extract file.bundle -o contents/
+
+# Quick inspect SerializedFile
+UnityDataTool serialized-file objectlist level0
+UnityDataTool sf externalrefs sharedassets0.assets --format json
 
 # Find reference chains to an object
 UnityDataTool find-refs database.db -n "ObjectName" -t "Texture2D"

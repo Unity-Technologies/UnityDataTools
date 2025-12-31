@@ -64,7 +64,7 @@ public class PackedAssetsHandler : ISQLiteHandler
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var packedAssets = PackedAssets.Read(reader);
-        
+
         m_InsertPackedAssetsCommand.Transaction = ctx.Transaction;
         m_InsertPackedAssetsCommand.Parameters["@id"].Value = objectId;
         m_InsertPackedAssetsCommand.Parameters["@path"].Value = packedAssets.Path;
@@ -96,6 +96,11 @@ public class PackedAssetsHandler : ISQLiteHandler
             m_InsertContentsCommand.Transaction = ctx.Transaction;
             m_InsertContentsCommand.Parameters["@packed_assets_id"].Value = objectId;
             m_InsertContentsCommand.Parameters["@object_id"].Value = content.ObjectID;
+
+            // TODO: Ideally we would also populate the type table if the content.Type is
+            // not already in that table, and if we have a string value for it in TypeIdRegistry. That would
+            // make it possible to view object types as strings, for the most common types, when importing a BuildReport
+            // without the associated built content.
             m_InsertContentsCommand.Parameters["@type"].Value = content.Type;
             m_InsertContentsCommand.Parameters["@size"].Value = (long)content.Size;
             m_InsertContentsCommand.Parameters["@offset"].Value = (long)content.Offset;

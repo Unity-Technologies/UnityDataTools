@@ -9,6 +9,12 @@ using UnityDataTools.TextDumper;
 
 namespace UnityDataTools.UnityDataTool;
 
+public enum OutputFormat
+{
+    Text,
+    Json
+}
+
 public static class Program
 {
     public static async Task<int> Main(string[] args)
@@ -122,6 +128,41 @@ public static class Program
             };
 
             rootCommand.AddCommand(archiveCommand);
+        }
+
+        {
+            var pathArg = new Argument<FileInfo>("filename", "The path of the SerializedFile").ExistingOnly();
+            var fOpt = new Option<OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => OutputFormat.Text);
+
+            var externalRefsCommand = new Command("externalrefs", "List external file references in a SerializedFile.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            externalRefsCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleExternalRefs(fi, f)),
+                pathArg, fOpt);
+
+            var objectListCommand = new Command("objectlist", "List all objects in a SerializedFile.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            objectListCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleObjectList(fi, f)),
+                pathArg, fOpt);
+
+            var serializedFileCommand = new Command("serialized-file", "Inspect a SerializedFile (scene, assets, etc.).")
+            {
+                externalRefsCommand,
+                objectListCommand,
+            };
+
+            serializedFileCommand.AddAlias("sf");
+
+            rootCommand.AddCommand(serializedFileCommand);
         }
 
         var r = await rootCommand.InvokeAsync(args);
