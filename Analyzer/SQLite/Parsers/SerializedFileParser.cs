@@ -64,7 +64,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
         private static readonly HashSet<string> IgnoredExtensions = new()
     {
         ".txt", ".resS", ".resource", ".json", ".dll", ".pdb", ".exe", ".manifest", ".entities", ".entityheader",
-        ".ini", ".config", ".hash"
+        ".ini", ".config", ".hash", ".md"
     };
 
         bool ProcessFile(string file, string rootDirectory)

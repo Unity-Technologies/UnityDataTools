@@ -120,7 +120,7 @@ public class BuildReport
         {
             1 => "Player",
             2 => "AssetBundle",
-            3 => "Player, AssetBundle",
+            3 => "ContentDirectory",
             _ => buildType.ToString()
         };
     }
