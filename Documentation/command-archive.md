@@ -58,7 +58,7 @@ contents/BuildPlayer-Scene2.sharedAssets
 contents/BuildPlayer-Scene2
 ```
 
-> **Note:** The extracted files are binary SerializedFiles, not text. Use the [`dump`](dump.md) command to convert them to readable text format.
+> **Note:** The extracted files are binary SerializedFiles, not text. Use the [`dump`](command-dump.md) command to convert them to readable text format.
 
 ---
 

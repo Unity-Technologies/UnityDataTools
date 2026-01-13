@@ -210,6 +210,40 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
         ValidateDatabase(databasePath, true);
     }
 
+    [Test]
+    public async Task Analyze_MonoScripts_DatabaseContainsExpectedContent()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }));
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // Verify MonoScript table and views exist
+        SQLTestHelper.AssertTableExists(db, "monoscripts");
+        SQLTestHelper.AssertViewExists(db, "monoscript_view");
+        SQLTestHelper.AssertViewExists(db, "script_object_view");
+
+        // Verify MonoScript table contains data
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM monoscripts",
+            1,
+            "Unexpected number of MonoScripts");
+
+        // Verify the specific MonoScript from the example
+        // Note: Assembly name format changed in Unity 2023.1 from 'Assembly-CSharp.dll' to 'Assembly-CSharp'
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM monoscript_view WHERE class_name = 'SerializeReferencePolymorphismExample' AND assembly_name LIKE 'Assembly-CSharp%'",
+            1,
+            "Expected to find SerializeReferencePolymorphismExample MonoScript");
+
+        // Verify script_object_view finds the SerializeReferencePolymorphismExample MonoBehaviour
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM script_object_view WHERE class_name = 'SerializeReferencePolymorphismExample'",
+            1,
+            "Expected to find exactly one MonoBehaviour instance of SerializeReferencePolymorphismExample");
+    }
+
     private void ValidateDatabase(string databasePath, bool withRefs)
     {
         using var db = SQLTestHelper.OpenDatabase(databasePath);

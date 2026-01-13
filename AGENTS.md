@@ -47,6 +47,23 @@ dotnet test --filter "FullyQualifiedName~SerializedFile"
 
 Test projects: UnityFileSystem.Tests, Analyzer.Tests, UnityDataTool.Tests, TestCommon (helper library)
 
+### Code Style
+
+#### Comments
+
+* Write comments that explain "why".  A few high level comments explaining the purpose of classes or methods is very helpful.  Comments explaining tricky code are also helpful.
+* Avoid comments that are redundant with the code.  Do not comment before each line of code explaining what it does unless there is something that is not obvious going on.
+* Do not use formal C# XML format when commenting methods, unless it is in an important interface class like UnityFileSystem.
+
+#### Formatting
+
+To repair white space or style issues, run:
+
+```
+dotnet format whitespace . --folder
+dotnet format style
+```
+
 ### Running the Tool
 ```bash
 # Show all commands
@@ -60,6 +77,10 @@ UnityDataTool dump /path/to/file.bundle -o /output/path
 
 # Extract archive contents
 UnityDataTool archive extract file.bundle -o contents/
+
+# Quick inspect SerializedFile metadata
+UnityDataTool serialized-file objectlist level0
+UnityDataTool sf externalrefs sharedassets0.assets --format json
 
 # Find reference chains to an object
 UnityDataTool find-refs database.db -n "ObjectName" -t "Texture2D"
@@ -122,12 +143,15 @@ UnityDataTool (CLI executable)
 
 **Entry Points**:
 - `UnityDataTool/Program.cs` - CLI using System.CommandLine
-- `UnityDataTool/Commands/` - Command handlers (Analyze.cs, Dump.cs, Archive.cs, FindReferences.cs)
+- `UnityDataTool/SerializedFileCommands.cs` - SerializedFile inspection handlers
+- `UnityDataTool/Archive.cs` - Archive manipulation handlers
+- `Documentation/` - Command documentation (command-analyze.md, command-dump.md, command-archive.md, command-serialized-file.md, command-find-refs.md)
 
 **Core Libraries**:
 - `UnityFileSystem/UnityFileSystem.cs` - Init(), MountArchive(), OpenSerializedFile()
 - `UnityFileSystem/DllWrapper.cs` - P/Invoke bindings to native library
 - `UnityFileSystem/SerializedFile.cs` - Represents binary data files
+- `UnityFileSystem/TypeIdRegistry.cs` - Built-in TypeId to type name mappings
 - `UnityFileSystem/RandomAccessReader.cs` - TypeTree property navigation
 
 **Analyzer**:
@@ -207,7 +231,7 @@ The SQLite output uses views extensively to join base `objects` table with type-
 - `asset_view` - Explicitly assigned assets only
 - `shader_keyword_ratios` - Keyword variant analysis
 
-See `Analyzer/README.md` and `Documentation/addressables-build-reports.md` for complete database schema documentation.
+See `Documentation/analyzer.md` and `Documentation/addressables-build-reports.md` for complete database schema documentation.
 
 ### Common Issues
 

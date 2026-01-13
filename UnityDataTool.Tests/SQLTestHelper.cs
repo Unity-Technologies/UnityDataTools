@@ -106,4 +106,30 @@ public static class SQLTestHelper
         reader.Read();
         Assert.AreEqual(expectedValue, reader.GetString(0), description);
     }
+
+    /// <summary>
+    /// Asserts that a table exists in the database.
+    /// </summary>
+    /// <param name="db">The database connection to use.</param>
+    /// <param name="tableName">The name of the table to check for.</param>
+    public static void AssertTableExists(SqliteConnection db, string tableName)
+    {
+        using var cmd = db.CreateCommand();
+        cmd.CommandText = $"SELECT name FROM sqlite_master WHERE type='table' AND name='{tableName}'";
+        using var reader = cmd.ExecuteReader();
+        Assert.IsTrue(reader.Read(), $"{tableName} table should exist");
+    }
+
+    /// <summary>
+    /// Asserts that a view exists in the database.
+    /// </summary>
+    /// <param name="db">The database connection to use.</param>
+    /// <param name="viewName">The name of the view to check for.</param>
+    public static void AssertViewExists(SqliteConnection db, string viewName)
+    {
+        using var cmd = db.CreateCommand();
+        cmd.CommandText = $"SELECT name FROM sqlite_master WHERE type='view' AND name='{viewName}'";
+        using var reader = cmd.ExecuteReader();
+        Assert.IsTrue(reader.Read(), $"{viewName} view should exist");
+    }
 }

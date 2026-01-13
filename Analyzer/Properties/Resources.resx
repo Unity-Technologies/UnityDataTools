@@ -127,6 +127,9 @@
   <data name="AudioClip" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AudioClip.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="BuildReport" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\BuildReport.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="Finalize" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Finalize.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
@@ -222,5 +225,11 @@
   </data>
   <data name="AddrBuildSchemaDataPairs" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AddrBuildSchemaDataPairs.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="MonoScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MonoScript.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="PackedAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PackedAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
 </root>

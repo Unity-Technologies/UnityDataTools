@@ -126,7 +126,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public AssetObject[] Objects; // Array of object data
         public ReferenceId[] ReferencingAssets;
 
-        // For BuildLayout/File  
+        // For BuildLayout/File
         public ReferenceId[] Assets;
         public BundleObjectInfo BundleObjectInfo; // Object with Size property
         public ReferenceId[] ExternalReferences;

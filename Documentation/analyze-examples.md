@@ -2,9 +2,9 @@
 
 This topic gives some examples of using the SQLite output of the UnityDataTools Analyze command.
 
-The command line arguments to invoke Analyze are documented [here](../UnityDataTool/README.md#analyzeanalyse).
+The command line arguments to invoke Analyze are documented [here](unitydatatool.md#analyzeanalyse).
 
-The definition of the views, and some internal details about how Analyze is implemented, can be found [here](../Analyzer/README.md).
+The definition of the views, and some internal details about how Analyze is implemented, can be found [here](analyzer.md).
 
 ## Running Queries from the Command line
 
@@ -64,6 +64,9 @@ Universal Render Pipeline/Lit               115.5 KB     1b2fdfe013c58ffd57d7663
 Shader Graphs/CustomLightingBuildingsB      113.4 KB     1b2fdfe013c58ffd57d7663eb8db3e60
 ```
 
+## BuildReport support
+
+See [buildreport.md](buildreport.md) for information about using analyze to look at BuildReport files.
 
 ## Example: Using AI tools to help write queries
 
@@ -100,41 +103,59 @@ Note: Both MonoBehaviours and ScriptableObjects have the same serialized type "M
 
 The previous example shows how to find all MonoBehaviours and ScriptableObjects.  But you may want to filter this based on the actual scripting class.  This is a bit more involved than the previous examples, so lets first breakdown the approach.
 
-The serialized data for scripting class does not directly sort the class name, instead it stores a reference to a MonoScript.  The MonoScript in turn records the assembly, namespace and classname.
+The serialized data for scripting class does not directly store the class name, instead it stores a reference to a MonoScript.  The MonoScript in turn records the assembly, namespace and classname.
 
 This is an example MonoScript from a `UnityDataTool dump` of a Serialized File:
 
 ```
 ID: -5763254701832525334 (ClassID: 115) MonoScript
-  m_Name (string) ReferencedUnityObjects
+  m_Name (string) SpriteSkin
   m_ExecutionOrder (int) 0
   m_PropertiesHash (Hash128)
   ...
-  m_ClassName (string) ReferencedUnityObjects
-  m_Namespace (string) Unity.Scenes
-  m_AssemblyName (string) Unity.Scenes
+  m_ClassName (string) SpriteSkin
+  m_Namespace (string) UnityEngine.U2D.Animation
+  m_AssemblyName (string) Unity.2D.Animation.Runtime
 ```
 
-Currently UnityDataTool does not implement custom handling for MonoScript objects, so the ClassName, Namespace and AssemblyName fields are not in the database.  However the main object table records the m_Name field of object, and for a MonoScript that should match the m_Classname.  For the common case, where the class name is itself unique in a project, it is possible to use the name field as the way to identify instances of the script.
-
-For example to list all distinct class names in the build you can run this query
+UnityDataTool extracts MonoScript information into the `monoscripts` table and `monoscript_view`, which provide the class name, namespace, and assembly name for each script. This makes it easy to list all scripting classes in the build:
 
 ```
-SELECT DISTINCT name FROM object_view WHERE type = 'MonoScript';
+SELECT class_name, namespace, assembly_name FROM monoscript_view;
 ```
 
 The actual scripting objects of that type may be spread all through your AssetBundles (or Player build).  To find them we need to make use of the `refs` table, which records the references from each object to other objects.  If we find each MonoBehaviour object that references the MonoScript with the desired class name then we have found all instances of that class.
 
-For example, to search for all instances of the class ReferencedUnityObjects we could run this query:
+The `script_object_view` provides a convenient way to query MonoBehaviour objects along with their associated script information. This view joins MonoBehaviour objects with their referenced MonoScript, bringing the class_name, namespace, and assembly_name into each row.
+
+For example, to search for all instances of the class SpriteSkin in the UnityEngine.U2D.Animation namespace, you can simply query:
+
+```
+SELECT asset_bundle, serialized_file, name, object_id, class_name, namespace, assembly_name
+FROM script_object_view
+WHERE class_name = 'SpriteSkin'
+  AND namespace = 'UnityEngine.U2D.Animation';
+```
+
+If the class name is unique in your project, you can simplify the query by omitting the namespace filter:
+
+```
+SELECT asset_bundle, serialized_file, name, object_id, class_name, namespace
+FROM script_object_view
+WHERE class_name = 'SpriteSkin';
+```
+
+Alternatively, you can write the query manually using the underlying tables:
 
 ```
 SELECT mb.asset_bundle, mb.serialized_file, mb.name, mb.object_id
 FROM object_view mb
 INNER JOIN refs r ON mb.id = r.object
-INNER JOIN objects ms ON r.referenced_object = ms.id
-WHERE mb.type = 'MonoBehaviour' 
+INNER JOIN monoscript_view ms ON r.referenced_object = ms.id
+WHERE mb.type = 'MonoBehaviour'
   AND r.property_type = 'MonoScript'
-  AND ms.name = 'ReferencedUnityObjects';
+  AND ms.class_name = 'SpriteSkin'
+  AND ms.namespace = 'UnityEngine.U2D.Animation';
 ```
 
 ## Example: Quick summary for individual AssetBundles
