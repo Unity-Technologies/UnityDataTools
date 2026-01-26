@@ -96,8 +96,8 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public ReferenceId[] InternalReferencedOtherAssets;
         public string[] Labels;
         public int MainAssetType;
-        public int StreamedSize;
-        public int SerializedSize;
+        public long StreamedSize;
+        public long SerializedSize;
         public string Name;
         public string CRC;
 
@@ -107,11 +107,11 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public ReferenceId[] BundleDependencies;
         public string Compression;
         public ReferenceId[] Dependencies;
-        public int DependencyFileSize;
+        public long DependencyFileSize;
         public ReferenceId[] DependentBundles;
         public ReferenceId[] ExpandedDependencies;
-        public int ExpandedDependencyFileSize;
-        public int FileSize;
+        public long ExpandedDependencyFileSize;
+        public long FileSize;
         public ReferenceId[] Files;
         public ReferenceId Group;
         public object Hash; // Complex object containing Hash and serializedVersion
@@ -131,9 +131,9 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public BundleObjectInfo BundleObjectInfo; // Object with Size property
         public ReferenceId[] ExternalReferences;
         public int MonoScriptCount;
-        public int MonoScriptSize;
+        public long MonoScriptSize;
         public ReferenceId[] OtherAssets;
-        public int PreloadInfoSize;
+        public long PreloadInfoSize;
         public ReferenceId[] SubFiles;
         public string WriteResultFilename;
 
@@ -148,7 +148,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
 
         // For BuildLayout/SubFile
         public bool IsSerializedFile;
-        public int Size;
+        public long Size;
     }
 
     public class ReferenceType
@@ -166,7 +166,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
 
     public class BundleObjectInfo
     {
-        public int Size;
+        public long Size;
     }
 
     public class AssetObject
@@ -175,7 +175,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
         public string ComponentName;
         public long LocalIdentifierInFile;
         public string ObjectName;
-        public int SerializedSize;
+        public long SerializedSize;
         public ObjectReference[] References; // Array of object references
         public int StreamedSize;
     }
