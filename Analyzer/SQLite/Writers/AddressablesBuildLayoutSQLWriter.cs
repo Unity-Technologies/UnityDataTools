@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
@@ -245,11 +246,16 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             m_AddressablesBuildBundle.SetValue("result_type", reference.data.ResultType);
             m_AddressablesBuildBundle.ExecuteNonQuery();
 
+            var visited = new Dictionary<string, bool>();
             // Insert bundle dependencies
             if (reference.data.BundleDependencies != null)
             {
                 foreach (var dep in reference.data.BundleDependencies)
                 {
+                    var key = $"{buildId}_{reference.rid}_{dep.rid}";
+                    if (visited.ContainsKey(key))
+                        continue;
+                    visited.Add(key, true);
                     m_AddressablesBuildBundleDependency.SetTransaction(transaction);
                     m_AddressablesBuildBundleDependency.SetValue("bundle_id", reference.rid);
                     m_AddressablesBuildBundleDependency.SetValue("build_id", buildId);
