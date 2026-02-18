@@ -98,9 +98,9 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                                     // or 'UNIQUE constraint failed: objects.id' which can happen
                                     // if AssetBundles from different builds are being processed by a single call to Analyze
                                     // or if there is a Unity Data Tool bug.
-                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
+                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {assetBundleName}");
                                     Console.Error.WriteLine(e.Message);
-                                    Console.WriteLine();
+                                    Console.Error.WriteLine();
 
                                     // It is possible some files inside an archive will pass and others will fail, to have a partial analyze.
                                     // Overall that is reported as a failure
