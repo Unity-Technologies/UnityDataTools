@@ -35,7 +35,11 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
         {
             // only init our writer if we are actually parsing a file
             m_Writer.Init();
-            ProcessFile(filename, Path.GetDirectoryName(filename));
+            bool successful = ProcessFile(filename, Path.GetDirectoryName(filename));
+            if (!successful)
+            {
+                throw new Exception($"Failed to process file: {filename}");
+            }
         }
 
         bool ShouldIgnoreFile(string file)
@@ -134,14 +138,10 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
                 successful = false;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine($"Error processing file: {file}");
-                Console.WriteLine($"{e.GetType()}: {e.Message}");
-                if (Verbose)
-                    Console.WriteLine(e.StackTrace);
-
+                // Don't log the error here - it will be logged by AnalyzerTool
+                // Just mark as unsuccessful and let the exception propagate up via Parse()
                 successful = false;
             }
 
