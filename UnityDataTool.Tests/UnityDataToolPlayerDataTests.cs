@@ -91,7 +91,6 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     {
         // Test for issue #48: Files that fail to process should be counted as failures, not successes
         var testDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerNoTypeTree");
-        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         using var swOut = new StringWriter();
         using var swErr = new StringWriter();
