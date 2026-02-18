@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.UnityDataTool;
@@ -9,44 +10,107 @@ public static class SerializedFileCommands
 {
     public static int HandleExternalRefs(FileInfo filename, OutputFormat format)
     {
+        if (!ValidateSerializedFile(filename.FullName, out _))
+            return 1;
+
         try
         {
             using var sf = UnityFileSystem.OpenSerializedFile(filename.FullName);
-
             if (format == OutputFormat.Json)
                 OutputExternalRefsJson(sf);
             else
                 OutputExternalRefsText(sf);
+            return 0;
         }
         catch (Exception err) when (err is NotSupportedException || err is FileFormatException)
         {
-            Console.Error.WriteLine($"Error opening serialized file: {filename.FullName}");
+            Console.Error.WriteLine($"Error opening SerializedFile: {filename.FullName}");
             Console.Error.WriteLine(err.Message);
             return 1;
         }
-
-        return 0;
     }
 
     public static int HandleObjectList(FileInfo filename, OutputFormat format)
     {
+        if (!ValidateSerializedFile(filename.FullName, out _))
+            return 1;
+
         try
         {
             using var sf = UnityFileSystem.OpenSerializedFile(filename.FullName);
-
             if (format == OutputFormat.Json)
                 OutputObjectListJson(sf);
             else
                 OutputObjectListText(sf);
+            return 0;
         }
         catch (Exception err) when (err is NotSupportedException || err is FileFormatException)
         {
-            Console.Error.WriteLine($"Error opening serialized file: {filename.FullName}");
+            Console.Error.WriteLine($"Error opening SerializedFile: {filename.FullName}");
             Console.Error.WriteLine(err.Message);
             return 1;
         }
+    }
+
+    public static int HandleHeader(FileInfo filename, OutputFormat format)
+    {
+        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
+            return 1;
+
+        if (format == OutputFormat.Json)
+            OutputHeaderJson(fileInfo);
+        else
+            OutputHeaderText(fileInfo);
 
         return 0;
+    }
+
+    /// <summary>
+    /// Validates that a file is a SerializedFile and provides helpful error messages if not.
+    /// </summary>
+    /// <param name="filePath">Path to the file to validate</param>
+    /// <param name="fileInfo">SerializedFile header information if valid, null otherwise</param>
+    /// <returns>True if valid SerializedFile, false otherwise</returns>
+    private static bool ValidateSerializedFile(string filePath, out SerializedFileInfo fileInfo)
+    {
+        fileInfo = null;
+
+        if (!File.Exists(filePath))
+        {
+            Console.Error.WriteLine($"Error: File not found: {filePath}");
+            return false;
+        }
+
+        if (ArchiveDetector.IsUnityArchive(filePath))
+        {
+            Console.Error.WriteLine($"Error: The file is an AssetBundle or other Unity Archive, not a SerializedFile.");
+            Console.Error.WriteLine($"File: {filePath}");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("Unity Archives contain SerializedFiles inside them.");
+            Console.Error.WriteLine("To access the SerializedFiles, first extract the archive using:");
+            Console.Error.WriteLine($"  UnityDataTool archive extract \"{filePath}\" -o <output-directory>");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("Then you can run serialized-file commands on the extracted files.");
+            return false;
+        }
+
+        if (YamlSerializedFileDetector.IsYamlSerializedFile(filePath))
+        {
+            Console.Error.WriteLine($"Error: The file is a YAML-format SerializedFile, which is not supported.");
+            Console.Error.WriteLine($"File: {filePath}");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
+            return false;
+        }
+
+        if (!SerializedFileDetector.TryDetectSerializedFile(filePath, out fileInfo))
+        {
+            Console.Error.WriteLine($"Error: The file does not appear to be a valid Unity SerializedFile.");
+            Console.Error.WriteLine($"File: {filePath}");
+            return false;
+        }
+
+        return true;
     }
 
     private static void OutputExternalRefsText(SerializedFile sf)
@@ -135,5 +199,30 @@ public static class SerializedFileCommands
             return TypeIdRegistry.GetTypeName(obj.TypeId);
         }
     }
-}
 
+    private static void OutputHeaderText(SerializedFileInfo info)
+    {
+        Console.WriteLine($"{"Version",-20} {info.Version}");
+        Console.WriteLine($"{"Format",-20} {(info.IsLegacyFormat ? "Legacy (32-bit)" : "Modern (64-bit)")}");
+        Console.WriteLine($"{"File Size",-20} {info.FileSize:N0} bytes");
+        Console.WriteLine($"{"Metadata Size",-20} {info.MetadataSize:N0} bytes");
+        Console.WriteLine($"{"Data Offset",-20} {info.DataOffset:N0}");
+        Console.WriteLine($"{"Endianness",-20} {(info.Endianness == 0 ? "Little Endian" : "Big Endian")}");
+    }
+
+    private static void OutputHeaderJson(SerializedFileInfo info)
+    {
+        var jsonObject = new
+        {
+            version = info.Version,
+            format = info.IsLegacyFormat ? "Legacy (32-bit)" : "Modern (64-bit)",
+            fileSize = info.FileSize,
+            metadataSize = info.MetadataSize,
+            dataOffset = info.DataOffset,
+            endianness = info.Endianness == 0 ? "Little Endian" : "Big Endian"
+        };
+
+        var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Console.WriteLine(json);
+    }
+}

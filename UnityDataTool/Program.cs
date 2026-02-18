@@ -154,10 +154,21 @@ public static class Program
                 (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleObjectList(fi, f)),
                 pathArg, fOpt);
 
+            var headerCommand = new Command("header", "Show SerializedFile header information.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            headerCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleHeader(fi, f)),
+                pathArg, fOpt);
+
             var serializedFileCommand = new Command("serialized-file", "Inspect a SerializedFile (scene, assets, etc.).")
             {
                 externalRefsCommand,
                 objectListCommand,
+                headerCommand,
             };
 
             serializedFileCommand.AddAlias("sf");
