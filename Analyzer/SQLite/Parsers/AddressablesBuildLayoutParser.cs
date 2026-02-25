@@ -32,32 +32,21 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             if (Path.GetExtension(filename) != ".json")
                 return false;
 
-            // Read the first line of the JSON file and check if it contains BuildResultHash
-            string firstLine = "";
+            // Read enough content to check if it contains BuildResultHash
+            // This handles both minified and pretty-printed JSON
             try
             {
                 using (StreamReader reader = new StreamReader(filename))
                 {
-                    firstLine = reader.ReadLine();
-                    if (firstLine != null)
+                    // Read first 4KB which should be enough to find BuildResultHash near the start
+                    char[] buffer = new char[4096];
+                    int charsRead = reader.Read(buffer, 0, buffer.Length);
+                    string content = new string(buffer, 0, charsRead);
+
+                    // Check if BuildResultHash appears in the content
+                    if (content.Contains("\"BuildResultHash\""))
                     {
-                        // Remove trailing comma if present and add closing brace to make it valid JSON
-                        if (firstLine.TrimEnd().EndsWith(","))
-                        {
-                            firstLine = firstLine.TrimEnd().TrimEnd(',') + "}";
-                        }
-
-                        using (JsonTextReader jsonReader = new JsonTextReader(new StringReader(firstLine)))
-                        {
-                            JsonSerializer serializer = new JsonSerializer();
-                            var jsonObject = serializer.Deserialize<JObject>(jsonReader);
-
-                            // If the file has BuildResultHash, process it as an Addressables build
-                            if (jsonObject != null && jsonObject["BuildResultHash"] != null)
-                            {
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
             }

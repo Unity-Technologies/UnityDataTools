@@ -85,4 +85,38 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
 
         Assert.AreEqual(expected, content);
     }
+
+    [Test]
+    public async Task Analyze_PlayerDataNoTypeTree_ReportsFailureCorrectly()
+    {
+        // Test for issue #48: Files that fail to process should be counted as failures, not successes
+        var testDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerNoTypeTree");
+
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+
+            // Analyze should return 0 even if files fail (non-zero would be a critical error)
+            Assert.AreEqual(0, await Program.Main(new string[] { "analyze", testDataFolder, "-p", "level0" }));
+
+            var output = swOut.ToString() + swErr.ToString();
+
+            // Check that the filename appears in the error output
+            Assert.That(output, Does.Contain("level0"), "Expected 'level0' to appear in error output");
+
+            // Check that the summary line correctly reports the failure
+            Assert.That(output, Does.Contain("Failed files: 1"), "Expected 'Failed files: 1' in summary");
+            Assert.That(output, Does.Contain("Successfully processed files: 0"), "Expected 'Successfully processed files: 0' in summary");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+    }
 }

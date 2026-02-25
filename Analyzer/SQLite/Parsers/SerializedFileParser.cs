@@ -67,85 +67,68 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
         ".ini", ".config", ".hash", ".md"
     };
 
-        bool ProcessFile(string file, string rootDirectory)
+        void ProcessFile(string file, string rootDirectory)
         {
-            bool successful = true;
-            try
+            if (IsUnityArchive(file))
             {
-                if (IsUnityArchive(file))
+                bool archiveHadErrors = false;
+                using (UnityArchive archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar))
                 {
-                    using (UnityArchive archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar))
+                    if (archive == null)
+                        throw new FileLoadException($"Failed to mount archive: {file}");
+
+                    try
                     {
-                        if (archive == null)
-                            throw new FileLoadException($"Failed to mount archive: {file}");
+                        var assetBundleName = Path.GetRelativePath(rootDirectory, file);
 
-                        try
+                        m_Writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
+
+                        foreach (var node in archive.Nodes)
                         {
-                            var assetBundleName = Path.GetRelativePath(rootDirectory, file);
-
-                            m_Writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
-
-                            foreach (var node in archive.Nodes)
+                            if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                             {
-                                if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
+                                try
                                 {
-                                    try
-                                    {
-                                        m_Writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        // the most likely exception here is Microsoft.Data.Sqlite.SqliteException,
-                                        // for example 'UNIQUE constraint failed: serialized_files.id'.
-                                        // or 'UNIQUE constraint failed: objects.id' which can happen
-                                        // if AssetBundles from different builds are being processed by a single call to Analyze
-                                        // or if there is a Unity Data Tool bug.
-                                        Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
-                                        Console.Error.WriteLine(e.Message);
-                                        Console.WriteLine();
+                                    m_Writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
+                                }
+                                catch (Exception e)
+                                {
+                                    // the most likely exception here is Microsoft.Data.Sqlite.SqliteException,
+                                    // for example 'UNIQUE constraint failed: serialized_files.id'.
+                                    // or 'UNIQUE constraint failed: objects.id' which can happen
+                                    // if AssetBundles from different builds are being processed by a single call to Analyze
+                                    // or if there is a Unity Data Tool bug.
+                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {assetBundleName}");
+                                    Console.Error.WriteLine(e.Message);
+                                    Console.Error.WriteLine();
 
-                                        // It is possible some files inside an archive will pass and others will fail, to have a partial analyze.
-                                        // Overall that is reported as a failure
-                                        successful = false;
-                                    }
+                                    // It is possible some files inside an archive will pass and others will fail, to have a partial analyze.
+                                    // Overall that is reported as a failure
+                                    archiveHadErrors = true;
                                 }
                             }
                         }
-                        finally
-                        {
-                            m_Writer.EndAssetBundle();
-                        }
+                    }
+                    finally
+                    {
+                        m_Writer.EndAssetBundle();
                     }
                 }
-                else
+
+                if (archiveHadErrors)
                 {
-                    // This isn't a Unity Archive file.  Try to open it as a SerializedFile.
-                    // Unfortunately there is no standard file extension, or clear signature at the start of the file,
-                    // to test if it truly is a SerializedFile.  So this will process files that are clearly not unity build files,
-                    // and there is a chance for crashes and freezes if the parser misinterprets the file content.
-                    var relativePath = Path.GetRelativePath(rootDirectory, file);
-                    m_Writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
+                    throw new Exception("One or more files in the archive failed to process");
                 }
             }
-            catch (NotSupportedException)
+            else
             {
-                Console.Error.WriteLine();
-                //A "failed to load" error will already be logged by the UnityFileSystem library
-
-                successful = false;
+                // This isn't a Unity Archive file.  Try to open it as a SerializedFile.
+                // Unfortunately there is no standard file extension, or clear signature at the start of the file,
+                // to test if it truly is a SerializedFile.  So this will process files that are clearly not unity build files,
+                // and there is a chance for crashes and freezes if the parser misinterprets the file content.
+                var relativePath = Path.GetRelativePath(rootDirectory, file);
+                m_Writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
             }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine($"Error processing file: {file}");
-                Console.WriteLine($"{e.GetType()}: {e.Message}");
-                if (Verbose)
-                    Console.WriteLine(e.StackTrace);
-
-                successful = false;
-            }
-
-            return successful;
         }
 
         private static bool IsUnityArchive(string filePath)

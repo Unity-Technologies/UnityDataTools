@@ -77,11 +77,15 @@ public class AnalyzerTool
                     catch (Exception e)
                     {
                         EraseProgressLine();
-                        Console.Error.WriteLine();
-                        Console.Error.WriteLine($"Error processing file: {file}");
-                        Console.WriteLine($"{e.GetType()}: {e.Message}");
+                        var relativePath = Path.GetRelativePath(path, file);
+                        Console.Error.WriteLine($"Failed to process: {relativePath}");
                         if (m_Verbose)
-                            Console.WriteLine(e.StackTrace);
+                        {
+                            Console.Error.WriteLine($"  Exception: {e.GetType().Name}: {e.Message}");
+                            if (e.InnerException != null)
+                                Console.Error.WriteLine($"  Inner: {e.InnerException.Message}");
+                            Console.Error.WriteLine(e.StackTrace);
+                        }
                         countFailures++;
                     }
                 }
