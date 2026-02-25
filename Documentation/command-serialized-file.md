@@ -2,12 +2,25 @@
 
 The `serialized-file` command (alias: `sf`) provides utilities for quickly inspecting SerializedFile metadata without performing a full analysis.
 
+This exposes information about the Binary SerializedFile format.  This format has evolved over time, but all recent versions have 
+* a small header section (exposed by the `header` subcommand)
+* a metadata section which contains summary of the data
+  * Unity Version and target platform
+  * typetree information
+  * the list of objects and offsets
+  * external references
+* the data section which contains the Unity objects in serialized form
+
+The 'externalrefs' and 'objectlist' sub-commands expose information from the metadata section.
+The `dump` command can be used to view the serialized objects.
+
 ## Sub-Commands
 
 | Sub-Command | Description |
 |-------------|-------------|
 | [`externalrefs`](#externalrefs) | List external file references |
 | [`objectlist`](#objectlist) | List all objects in the file |
+| [`header`](#header) | Show SerializedFile header information |
 
 ---
 
@@ -128,6 +141,69 @@ UnityDataTool serialized-file objectlist level0 --format json
 
 ---
 
+## header
+
+Shows the SerializedFile header information. This is useful for testing whether a file is a valid SerializedFile and for inspecting the version and structure.
+
+### Quick Reference
+
+```
+UnityDataTool serialized-file header <filename> [options]
+UnityDataTool sf header <filename> [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<filename>` | Path to the SerializedFile | *(required)* |
+| `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
+
+### Example - Text Output
+
+```bash
+UnityDataTool sf header sharedassets0.assets
+```
+
+**Output:**
+```
+Version              22
+Format               Modern (64-bit)
+File Size            1,234,567 bytes
+Metadata Size        45,678 bytes
+Data Offset          45,728
+Endianness           Little Endian
+```
+
+### Example - JSON Output
+
+```bash
+UnityDataTool serialized-file header level0 --format json
+```
+
+**Output:**
+```json
+{
+  "version": 22,
+  "format": "Modern (64-bit)",
+  "fileSize": 31988,
+  "metadataSize": 24580,
+  "dataOffset": 24640,
+  "endianness": "Little Endian"
+}
+```
+
+### Header Fields
+
+| Field | Description |
+|-------|-------------|
+| **Version** | SerializedFile format version. Modern Unity (2019+) uses version 22+. |
+| **Format** | Header format type: "Legacy (32-bit)" for versions < 22, or "Modern (64-bit)" for versions ≥ 22. Modern format supports files larger than 4GB. |
+| **File Size** | Total size of the SerializedFile in bytes. Padding might make the actual file size slightly larger. |
+| **Metadata Size** | Size of the metadata section containing type information and object indices. |
+| **Data Offset** | Byte offset where the object data section begins in the file. |
+| **Endianness** | Byte order of the data in the file: "Little Endian" (x86, most platforms) or "Big Endian" (older console platforms). |
+
+---
+
 ## Use Cases
 
 ### Quick File Inspection
@@ -135,6 +211,9 @@ UnityDataTool serialized-file objectlist level0 --format json
 Use `serialized-file` when you need quick information about a SerializedFile without generating a full SQLite database:
 
 ```bash
+# Check file format and version
+UnityDataTool sf header level0
+
 # Check what objects are in a file
 UnityDataTool sf objectlist sharedassets0.assets
 

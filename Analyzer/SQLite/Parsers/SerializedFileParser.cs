@@ -4,6 +4,7 @@ using System.IO;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers
@@ -17,7 +18,14 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public bool CanParse(string filename)
         {
-            return ShouldIgnoreFile(filename) == false;
+            // First check if the file is in the ignore list (by extension or filename)
+            if (ShouldIgnoreFile(filename))
+                return false;
+
+            // Then validate that it's actually a Unity file by checking its format
+            // This prevents ugly exceptions when processing non-Unity files
+            return ArchiveDetector.IsUnityArchive(filename)
+                || SerializedFileDetector.TryDetectSerializedFile(filename, out _);
         }
 
 
@@ -40,12 +48,12 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         bool ShouldIgnoreFile(string file)
         {
-            // Unfortunately there is no standard extension for AssetBundles, and SerializedFiles often have no extension at all.
-            // Also there is also no distinctive signature at the start of a SerializedFile to immediately recognize it based on its first bytes.
-            // This makes it difficult to use the "--search-pattern" argument to only pick those files.
-
-            // Hence to reduce noise in UnityDataTool output we filter out files that we have a high confidence are
-            // NOT SerializedFiles or Unity Archives.
+            // Filter out common non-Unity files by extension or filename.
+            // This is a fast initial filter before we perform format detection.
+            //
+            // Note: AssetBundles have no standard extension, and SerializedFiles often have no extension at all.
+            // Format detection (via ArchiveDetector and SerializedFileDetector) is performed after this filter
+            // to definitively identify Unity files.
 
             string fileName = Path.GetFileName(file);
             string extension = Path.GetExtension(file);
@@ -69,7 +77,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         void ProcessFile(string file, string rootDirectory)
         {
-            if (IsUnityArchive(file))
+            if (ArchiveDetector.IsUnityArchive(file))
             {
                 bool archiveHadErrors = false;
                 using (UnityArchive archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar))
@@ -122,44 +130,11 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             }
             else
             {
-                // This isn't a Unity Archive file.  Try to open it as a SerializedFile.
-                // Unfortunately there is no standard file extension, or clear signature at the start of the file,
-                // to test if it truly is a SerializedFile.  So this will process files that are clearly not unity build files,
-                // and there is a chance for crashes and freezes if the parser misinterprets the file content.
+                // This isn't a Unity Archive file, so process it as a SerializedFile.
+                // Note: The file has already been validated in CanParse() via SerializedFileDetector,
+                // so we're confident it's a valid SerializedFile at this point.
                 var relativePath = Path.GetRelativePath(rootDirectory, file);
                 m_Writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
-            }
-        }
-
-        private static bool IsUnityArchive(string filePath)
-        {
-            // Check whether a file is a Unity Archive (AssetBundle) by looking for known signatures at the start of the file.
-            // "UnifyFS" is the current signature, but some older formats of the file are still supported
-            string[] signatures = { "UnityFS", "UnityWeb", "UnityRaw", "UnityArchive" };
-            int maxLen = 12; // "UnityArchive".Length
-            byte[] buffer = new byte[maxLen];
-
-            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                int read = fs.Read(buffer, 0, buffer.Length);
-                foreach (var sig in signatures)
-                {
-                    if (read >= sig.Length)
-                    {
-                        bool match = true;
-                        for (int i = 0; i < sig.Length; ++i)
-                        {
-                            if (buffer[i] != sig[i])
-                            {
-                                match = false;
-                                break;
-                            }
-                        }
-                        if (match)
-                            return true;
-                    }
-                }
-                return false;
             }
         }
     }

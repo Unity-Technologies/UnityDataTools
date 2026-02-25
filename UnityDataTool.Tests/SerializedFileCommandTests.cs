@@ -295,6 +295,123 @@ public class SerializedFileCommandTests
 
     #endregion
 
+    #region Header Tests
+
+    [Test]
+    public async Task Header_TextFormat_OutputsCorrectly()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerNoTypeTree", "sharedassets0.assets");
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "serialized-file", "header", path }));
+
+            var output = sw.ToString();
+            var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Should have header information lines
+            Assert.Greater(lines.Length, 0, "Expected header information");
+
+            // Check for expected fields
+            StringAssert.Contains("Version", output);
+            StringAssert.Contains("Format", output);
+            StringAssert.Contains("File Size", output);
+            StringAssert.Contains("Metadata Size", output);
+            StringAssert.Contains("Data Offset", output);
+            StringAssert.Contains("Endianness", output);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task Header_JsonFormat_OutputsValidJson()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "BuildReports", "Player.buildreport");
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "serialized-file", "header", path, "-f", "json" }));
+
+            var output = sw.ToString();
+
+            // Parse JSON to verify it's valid
+            var jsonDoc = JsonDocument.Parse(output);
+            var root = jsonDoc.RootElement;
+
+            // Verify all expected properties are present
+            Assert.IsTrue(root.TryGetProperty("version", out _));
+            Assert.IsTrue(root.TryGetProperty("format", out _));
+            Assert.IsTrue(root.TryGetProperty("fileSize", out _));
+            Assert.IsTrue(root.TryGetProperty("metadataSize", out _));
+            Assert.IsTrue(root.TryGetProperty("dataOffset", out _));
+            Assert.IsTrue(root.TryGetProperty("endianness", out _));
+
+            // Verify version is a number
+            var version = root.GetProperty("version").GetUInt32();
+            Assert.Greater(version, 0u, "Version should be greater than 0");
+
+            // Verify format is a valid string
+            var format = root.GetProperty("format").GetString();
+            Assert.IsTrue(format == "Legacy (32-bit)" || format == "Modern (64-bit)",
+                $"Format should be either Legacy or Modern, got: {format}");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task Header_InvalidFile_ReturnsError()
+    {
+        var path = Path.Combine(m_TestDataFolder, "README.md");
+
+        var result = await Program.Main(new string[] { "serialized-file", "header", path });
+        Assert.AreNotEqual(0, result, "Should return error code for invalid file");
+    }
+
+    [Test]
+    public async Task Header_ArchiveFile_ReturnsError()
+    {
+        var legacyDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats");
+        var archivePath = Path.Combine(legacyDir, "alienprefab");
+
+        if (!File.Exists(archivePath))
+        {
+            Assert.Ignore("alienprefab test file not found");
+            return;
+        }
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "header", archivePath });
+
+            Assert.AreNotEqual(0, result, "Should return error code for archive file");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("Unity Archive", errorOutput, "Error message should mention Unity Archive");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    #endregion
+
     #region Cross-Validation with Analyze Command
 
     [Test]
@@ -493,6 +610,147 @@ public class SerializedFileCommandTests
         // System.CommandLine should catch this and return error
         var result = await Program.Main(new string[] { "serialized-file", "objectlist", path });
         Assert.AreNotEqual(0, result, "Should return error code for non-existent file");
+    }
+
+    [Test]
+    public async Task ErrorHandling_ArchiveFile_ReturnsHelpfulError()
+    {
+        // Use an AssetBundle from test data
+        var assetBundlesDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "AssetBundles", "2022.1.20f1");
+
+        // Skip if the test data doesn't exist (CI environments might not have all test data)
+        if (!Directory.Exists(assetBundlesDir))
+        {
+            Assert.Ignore("AssetBundle test data not found");
+            return;
+        }
+
+        var archiveFiles = Directory.GetFiles(assetBundlesDir, "*", SearchOption.TopDirectoryOnly);
+        if (archiveFiles.Length == 0)
+        {
+            Assert.Ignore("No AssetBundle test files found");
+            return;
+        }
+
+        var archivePath = archiveFiles[0]; // Use first archive file found
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "objectlist", archivePath });
+
+            Assert.AreNotEqual(0, result, "Should return error code for archive file");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("Unity Archive", errorOutput, "Error message should mention Unity Archive");
+            StringAssert.Contains("archive extract", errorOutput, "Error message should suggest using archive extract command");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task ErrorHandling_InvalidFile_ShowsHelpfulMessage()
+    {
+        var path = Path.Combine(m_TestDataFolder, "README.md");
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "objectlist", path });
+
+            Assert.AreNotEqual(0, result, "Should return error code for invalid file");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("not appear to be a valid Unity SerializedFile", errorOutput,
+                "Error message should explain that the file is not a valid SerializedFile");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task ErrorHandling_YamlFile_ReturnsHelpfulError()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "YamlFormat.asset");
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "header", path });
+
+            Assert.AreNotEqual(0, result, "Should return error code for YAML file");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("YAML-format SerializedFile", errorOutput, "Error message should mention YAML format");
+            StringAssert.Contains("not supported", errorOutput, "Error message should explain YAML is not supported");
+            StringAssert.Contains("binary-format", errorOutput, "Error message should mention binary format is supported");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task ErrorHandling_YamlFile_ExternalRefs_ReturnsHelpfulError()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "YamlFormat.asset");
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "externalrefs", path });
+
+            Assert.AreNotEqual(0, result, "Should return error code for YAML file");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("YAML-format SerializedFile", errorOutput, "Error message should mention YAML format");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task ErrorHandling_YamlFile_ObjectList_ReturnsHelpfulError()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "YamlFormat.asset");
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "sf", "objectlist", path });
+
+            Assert.AreNotEqual(0, result, "Should return error code for YAML file");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("YAML-format SerializedFile", errorOutput, "Error message should mention YAML format");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
     }
 
     #endregion
