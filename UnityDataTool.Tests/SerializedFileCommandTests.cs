@@ -412,6 +412,45 @@ public class SerializedFileCommandTests
 
     #endregion
 
+    #region Metadata Tests
+
+    [Test]
+    public async Task Metadata_LegacyVersion_ReturnsError()
+    {
+        // CAB-c5053efeda8860d7e7b7ce4b4c66705b is a version 17 SerializedFile.
+        // Version 17 is below the minimum supported version for metadata parsing (19),
+        // so the command should fail with an appropriate error message.
+        var cabPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats",
+            "CAB-c5053efeda8860d7e7b7ce4b4c66705b");
+
+        if (!File.Exists(cabPath))
+        {
+            Assert.Ignore("CAB test file not found");
+            return;
+        }
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "metadata", cabPath, "-f", "json" });
+
+            Assert.AreNotEqual(0, result, "Should return error code for version 17 file (too old for metadata parsing)");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("not supported", errorOutput, "Error should mention that the version is not supported");
+            StringAssert.Contains("17", errorOutput, "Error should mention the file's version number");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    #endregion
+
     #region Cross-Validation with Analyze Command
 
     [Test]

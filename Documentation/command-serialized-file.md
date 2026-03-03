@@ -21,6 +21,7 @@ The `dump` command can be used to view the serialized objects.
 | [`externalrefs`](#externalrefs) | List external file references |
 | [`objectlist`](#objectlist) | List all objects in the file |
 | [`header`](#header) | Show SerializedFile header information |
+| [`metadata`](#metadata) | Show SerializedFile metadata (Unity version, target platform, type tree flag) |
 
 ---
 
@@ -204,6 +205,68 @@ UnityDataTool serialized-file header level0 --format json
 
 ---
 
+## metadata
+
+Shows information from the metadata section of a SerializedFile. This includes the Unity version the file was built with, the target platform, and whether TypeTrees are embedded in the file.
+
+Requires SerializedFile version 19 (Unity 2019.1) or newer. Files older than version 19 are not supported by this subcommand.
+
+### Quick Reference
+
+```
+UnityDataTool serialized-file metadata <filename> [options]
+UnityDataTool sf metadata <filename> [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<filename>` | Path to the SerializedFile | *(required)* |
+| `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
+
+### Example - Text Output
+
+```bash
+UnityDataTool sf metadata level0
+```
+
+**Output:**
+```
+Unity Version        2022.1.20f1
+Target Platform      2
+Enable Type Tree     True
+```
+
+### Example - JSON Output
+
+```bash
+UnityDataTool serialized-file metadata level0 --format json
+```
+
+**Output:**
+```json
+{
+  "unityVersion": "2022.1.20f1",
+  "targetPlatform": 2,
+  "enableTypeTree": true
+}
+```
+
+### Metadata Fields
+
+| Field | Description |
+|-------|-------------|
+| **Unity Version** | The Unity version string used to build this file (e.g. `"2022.1.20f1"`, `"6000.0.65f1"`). |
+| **Target Platform** | Numeric platform identifier. Common values: `2` = OSX Standalone, `9` = iOS, `13` = Android, `19` = Windows Standalone x64. See [BuildTarget](https://docs.unity3d.com/ScriptReference/BuildTarget.html) for details. |
+| **Enable Type Tree** | Whether TypeTree data is embedded in the file. `true` in Editor and TypeTree-enabled builds. `false` in Player builds with TypeTrees stripped (the default). TypeTrees are required for the `objectlist` and `externalrefs` subcommands to show type names. |
+
+Notes: 
+
+* For SerializedFiles inside AssetBundles the Unity Version is frequently stripped ("0.0.0").  See [BuildAssetBundleOptions.AssetBundleStripUnityVersion](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.AssetBundleStripUnityVersion.html).
+* For AssetBundles the version string may take the form "<version>\n<assetbundle-format-version>".  The assetbundle-format-version rarely changes, and is currently 2.
+* The Unity Editor will attempt to load SerializedFiles regardless of the Platform.  But the Runtime will only load files built with the correct platform value.
+
+---
+
 ## Use Cases
 
 ### Quick File Inspection
@@ -213,6 +276,9 @@ Use `serialized-file` when you need quick information about a SerializedFile wit
 ```bash
 # Check file format and version
 UnityDataTool sf header level0
+
+# Check Unity version, target platform, and TypeTree flag
+UnityDataTool sf metadata level0
 
 # Check what objects are in a file
 UnityDataTool sf objectlist sharedassets0.assets

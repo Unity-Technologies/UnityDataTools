@@ -17,6 +17,16 @@ public class SerializedFileInfo
 }
 
 /// <summary>
+/// Information extracted from the beginning of a Unity SerializedFile metadata section.
+/// </summary>
+public class SerializedFileMetadata
+{
+    public string UnityVersion { get; set; }
+    public uint TargetPlatform { get; set; }
+    public bool EnableTypeTree { get; set; }
+}
+
+/// <summary>
 /// Utility for detecting Unity SerializedFile format by reading and validating the file header.
 ///
 /// Unity SerializedFiles have evolved through several format versions:
@@ -54,6 +64,10 @@ public static class SerializedFileDetector
     private const uint NewLayoutVersion = 9;           // Changed from [header][data][metadata] to [header][metadata][data]
 
     private const uint LargeFilesSupportVersion = 22;  // Changed to 64-bit header
+
+    // Minimum version for metadata section parsing (kTypeTreeNodeWithTypeFlags = 19, Unity 2019.1).
+    // Older files have format differences that we do not attempt to support.
+    private const uint MinMetadataParseVersion = 19;
 
     // Reasonable version range for SerializedFiles
     // Unity versions currently use values in the 20s-30s range
@@ -286,6 +300,137 @@ public static class SerializedFileDetector
         catch
         {
             // Any exception during reading/parsing means this isn't a valid SerializedFile
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Parses the beginning of the metadata section from a previously-validated SerializedFile.
+    ///
+    ///   1. Unity version string  (null-terminated ASCII, always present for version >= 7)
+    ///   2. Target platform       (uint32, always present for version >= 8)
+    ///   3. Enable type tree flag (bool serialized as 1 byte, always present for version >= 13)
+    ///
+    /// The metadata starts immediately after the file header:
+    ///   - Legacy format (version 9-21): header is 20 bytes (SerializedFileHeader32)
+    ///   - Modern format (version >= 22): header is 48 bytes (SerializedFileHeader)
+    ///
+    /// The metadata content is written in the platform's native byte order (without additional
+    /// byte swapping beyond the header swap). The headerInfo.Endianness field indicates whether byte-swapping is
+    /// needed for multi-byte integer fields when running on a little-endian host.
+    /// </summary>
+    /// <param name="filePath">Path to the SerializedFile (must already have passed TryDetectSerializedFile)</param>
+    /// <param name="headerInfo">Header info from a prior successful TryDetectSerializedFile call</param>
+    /// <param name="metadata">On success, the parsed metadata fields; null on failure</param>
+    /// <param name="errorMessage">On failure, a description of what went wrong; null on success</param>
+    /// <returns>True if the metadata beginning was successfully parsed</returns>
+    public static bool TryParseMetadata(string filePath, SerializedFileInfo headerInfo, out SerializedFileMetadata metadata, out string errorMessage)
+    {
+        metadata = null;
+        errorMessage = null;
+
+        // Only support version >= kTypeTreeNodeWithTypeFlags (19, Unity 2019.1).
+        // Older files have metadata format differences that would require additional logic
+        // we have not implemented.
+        if (headerInfo.Version < MinMetadataParseVersion)
+        {
+            errorMessage = $"Metadata parsing is not supported for SerializedFile version {headerInfo.Version}. " +
+                           $"Version {MinMetadataParseVersion} (Unity 2019.1) or newer is required.";
+            return false;
+        }
+
+        try
+        {
+            // Determine where the metadata section starts in the file.
+            // For version >= 9 (which covers all versions we support), the layout is:
+            //   [header][metadata][data]
+            // The metadata immediately follows the header.
+            int metadataOffset = headerInfo.IsLegacyFormat ? LegacyHeaderSize : ModernHeaderSize;
+
+            // We only need to read the first few bytes of the metadata to extract the three fields,
+            // so we cap the read at 256 bytes.
+            int readLength = (int)Math.Min(headerInfo.MetadataSize, 256);
+            if (readLength <= 0)
+            {
+                errorMessage = "Metadata section is empty.";
+                return false;
+            }
+
+            byte[] metadataBytes = new byte[readLength];
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                stream.Seek(metadataOffset, SeekOrigin.Begin);
+                int bytesRead = stream.Read(metadataBytes, 0, readLength);
+                if (bytesRead < readLength)
+                {
+                    errorMessage = "File is truncated; could not read the expected metadata bytes.";
+                    return false;
+                }
+            }
+
+            int pos = 0;
+
+            // --- Field 1: Unity version string (null-terminated ASCII) ---
+            // Present for version >= 7
+            int stringStart = pos;
+            while (pos < metadataBytes.Length && metadataBytes[pos] != 0)
+                pos++;
+
+            if (pos >= metadataBytes.Length)
+            {
+                // No null terminator found in the read window — the metadata is malformed.
+                errorMessage = "Failed to find null terminator for Unity version string in metadata.";
+                return false;
+            }
+
+            string unityVersion = System.Text.Encoding.ASCII.GetString(metadataBytes, stringStart, pos - stringStart);
+            pos++; // Skip the null terminator.
+
+            // Sanity-check: an empty or unusually long version string is suspicious.
+            // Even when the version is stripped this would be "0.0.0", not an empty string.
+            if (unityVersion.Length == 0 || unityVersion.Length > 64)
+            {
+                errorMessage = $"Unity version string has unexpected length ({unityVersion.Length}).";
+                return false;
+            }
+
+            // --- Field 2: Target platform (uint32) ---
+            // Present for version >= kUnknown_8 (8)
+            if (pos + 4 > metadataBytes.Length)
+            {
+                errorMessage = "File is truncated; could not read target platform field from metadata.";
+                return false;
+            }
+
+            uint targetPlatform = BitConverter.ToUInt32(metadataBytes, pos);
+            pos += 4;
+
+            // Swap bytes if the file was written on a big-endian platform.
+            if (headerInfo.Endianness == BigEndian)
+                targetPlatform = SwapUInt32(targetPlatform);
+
+            // --- Field 3: Enable type tree flag (C++ bool serialized as 1 byte) ---
+            // Present for version >= kHasTypeTreeHashes (13)
+            if (pos >= metadataBytes.Length)
+            {
+                errorMessage = "File is truncated; could not read enableTypeTree field from metadata.";
+                return false;
+            }
+
+            bool enableTypeTree = metadataBytes[pos] != 0;
+
+            metadata = new SerializedFileMetadata
+            {
+                UnityVersion = unityVersion,
+                TargetPlatform = targetPlatform,
+                EnableTypeTree = enableTypeTree,
+            };
+
+            return true;
+        }
+        catch
+        {
+            errorMessage = "An unexpected error occurred while parsing the metadata section.";
             return false;
         }
     }

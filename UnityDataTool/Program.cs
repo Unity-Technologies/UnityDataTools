@@ -164,11 +164,22 @@ public static class Program
                 (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleHeader(fi, f)),
                 pathArg, fOpt);
 
+            var metadataCommand = new Command("metadata", "Show SerializedFile metadata information (Unity version, target platform, type tree flag).")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            metadataCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleMetadata(fi, f)),
+                pathArg, fOpt);
+
             var serializedFileCommand = new Command("serialized-file", "Inspect a SerializedFile (scene, assets, etc.).")
             {
                 externalRefsCommand,
                 objectListCommand,
                 headerCommand,
+                metadataCommand,
             };
 
             serializedFileCommand.AddAlias("sf");

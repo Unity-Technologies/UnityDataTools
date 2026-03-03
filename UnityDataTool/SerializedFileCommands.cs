@@ -65,6 +65,26 @@ public static class SerializedFileCommands
         return 0;
     }
 
+    public static int HandleMetadata(FileInfo filename, OutputFormat format)
+    {
+        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
+            return 1;
+
+        if (!SerializedFileDetector.TryParseMetadata(filename.FullName, fileInfo, out var metadata, out var errorMessage))
+        {
+            Console.Error.WriteLine($"Error: Failed to parse metadata for: {filename.FullName}");
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        if (format == OutputFormat.Json)
+            OutputMetadataJson(metadata);
+        else
+            OutputMetadataText(metadata);
+
+        return 0;
+    }
+
     /// <summary>
     /// Validates that a file is a SerializedFile and provides helpful error messages if not.
     /// </summary>
@@ -220,6 +240,26 @@ public static class SerializedFileCommands
             metadataSize = info.MetadataSize,
             dataOffset = info.DataOffset,
             endianness = info.Endianness == 0 ? "Little Endian" : "Big Endian"
+        };
+
+        var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Console.WriteLine(json);
+    }
+
+    private static void OutputMetadataText(SerializedFileMetadata metadata)
+    {
+        Console.WriteLine($"{"Unity Version",-20} {metadata.UnityVersion}");
+        Console.WriteLine($"{"Target Platform",-20} {metadata.TargetPlatform}");
+        Console.WriteLine($"{"Enable Type Tree",-20} {metadata.EnableTypeTree}");
+    }
+
+    private static void OutputMetadataJson(SerializedFileMetadata metadata)
+    {
+        var jsonObject = new
+        {
+            unityVersion = metadata.UnityVersion,
+            targetPlatform = metadata.TargetPlatform,
+            enableTypeTree = metadata.EnableTypeTree
         };
 
         var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });

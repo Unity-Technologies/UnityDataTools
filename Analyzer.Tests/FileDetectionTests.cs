@@ -168,6 +168,52 @@ public class FileDetectionTests
 
     #endregion
 
+    #region SerializedFile Metadata Parsing Tests
+
+    [Test]
+    public void TryParseMetadata_PlayerDataLevel0_ReturnsExpectedValues()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "PlayerData", "2022.1.20f1", "level0");
+
+        bool headerResult = SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo);
+        Assert.IsTrue(headerResult, "level0 should be detected as a valid SerializedFile");
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+        Assert.IsNotNull(metadata);
+
+        // Verify exact values from the level0 metadata section.
+        // This file was built with Unity 2022.1.20f1 for Windows Standalone (platform 2),
+        // with TypeTrees enabled.
+        Assert.That(metadata.UnityVersion, Is.EqualTo("2022.1.20f1"), "Unity version should be 2022.1.20f1");
+        Assert.That(metadata.TargetPlatform, Is.EqualTo(2u), "Target platform should be 2 (Windows Standalone)");
+        Assert.IsTrue(metadata.EnableTypeTree, "EnableTypeTree should be true");
+    }
+
+    [Test]
+    public void TryParseMetadata_PlayerNoTypeTreeLevel1_ReturnsExpectedValues()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "PlayerNoTypeTree", "level1");
+
+        bool headerResult = SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo);
+        Assert.IsTrue(headerResult, "level1 should be detected as a valid SerializedFile");
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+        Assert.IsNotNull(metadata);
+
+        // Verify exact values from the level1 metadata section.
+        // This file was built with Unity 6000.0.65f1 for Windows Standalone (platform 19),
+        // with TypeTrees disabled (PlayerNoTypeTree build).
+        Assert.That(metadata.UnityVersion, Is.EqualTo("6000.0.65f1"), "Unity version should be 6000.0.65f1");
+        Assert.That(metadata.TargetPlatform, Is.EqualTo(19u), "Target platform should be 19 (Windows Standalone x64)");
+        Assert.IsFalse(metadata.EnableTypeTree, "EnableTypeTree should be false for a no-type-tree build");
+    }
+
+    #endregion
+
     #region YAML SerializedFile Detection Tests
 
     [Test]
