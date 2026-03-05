@@ -172,6 +172,35 @@ public class FileDetectionTests
     #region SerializedFile Metadata Parsing Tests
 
     [Test]
+    public void TryParseMetadata_VersionTooOld_ReturnsFalseWithMessage()
+    {
+        var headerInfo = new SerializedFileInfo { Version = 18 };
+
+        bool result = SerializedFileDetector.TryParseMetadata("irrelevant", headerInfo, out var metadata, out var errorMessage);
+
+        Assert.IsFalse(result);
+        Assert.IsNull(metadata);
+        Assert.IsNotNull(errorMessage);
+        Assert.That(errorMessage, Does.Contain("18"), "Error should mention the actual version");
+        Assert.That(errorMessage, Does.Contain("19"), "Error should mention the minimum supported version");
+    }
+
+    [Test]
+    public void TryParseMetadata_VersionTooNew_ReturnsFalseWithMessage()
+    {
+        var headerInfo = new SerializedFileInfo { Version = 24 };
+
+        bool result = SerializedFileDetector.TryParseMetadata("irrelevant", headerInfo, out var metadata, out var errorMessage);
+
+        Assert.IsFalse(result);
+        Assert.IsNull(metadata);
+        Assert.IsNotNull(errorMessage);
+        Assert.That(errorMessage, Does.Contain("24"), "Error should mention the actual version");
+        Assert.That(errorMessage, Does.Contain("23"), "Error should mention the maximum supported version");
+        Assert.That(errorMessage, Does.Contain("UnityDataTool"), "Error should mention UnityDataTool");
+    }
+
+    [Test]
     public void TryParseMetadata_PlayerDataLevel0_ReturnsExpectedValues()
     {
         var testFile = Path.Combine(m_TestDataPath, "PlayerData", "2022.1.20f1", "level0");
@@ -211,7 +240,7 @@ public class FileDetectionTests
                 $"TypeTreeSerializedSize should be non-zero (persistentTypeID={entry.PersistentTypeID})");
             Assert.Greater(entry.PersistentTypeID, 0,
                 $"PersistentTypeID should be positive for native types (got {entry.PersistentTypeID})");
-            Assert.AreNotEqual(114, entry.PersistentTypeID,
+            Assert.That(entry.PersistentTypeID, Is.Not.EqualTo(114),
                 "No MonoBehaviour types expected in this scene");
             Assert.That(entry.ScriptTypeIndex, Is.EqualTo((short)-1),
                 $"ScriptTypeIndex should be -1 for native types (persistentTypeID={entry.PersistentTypeID})");
@@ -342,6 +371,43 @@ public class FileDetectionTests
         Assert.That(refType.ClassName, Is.EqualTo("Data"));
         Assert.That(refType.Namespace, Is.EqualTo("MyScripts"));
         Assert.That(refType.AssemblyName, Is.EqualTo("Assembly-CSharp"));
+    }
+
+    [Test]
+    public void TryParseMetadata_V23ExtractedMonoscriptBundle_ReturnsExpectedTypeTreeData()
+    {
+        // This is a v23 (kExtractedTypeTreeSupport) file where the TypeTree blobs have been
+        // extracted to a shared external store. The metadata records a non-zero TypeTreeContentHash
+        // as a cache key, but typeTreeSerializedSize == 0 and InlineTypeTree == false for every entry.
+        var testFile = Path.Combine(m_TestDataPath, "AssetBundleTypeTreeVariations", "v23_extracted",
+            "monoscriptbundle.serializedfile");
+
+        bool headerResult = SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo);
+        Assert.IsTrue(headerResult, "File should be detected as a valid SerializedFile");
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+        Assert.IsNotNull(metadata);
+
+        // --- Initial metadata fields ---
+        Assert.IsTrue(metadata.EnableTypeTree, "EnableTypeTree should be true");
+
+        // --- Type counts ---
+        Assert.That(metadata.TypeTreeCount, Is.EqualTo(2), "Should have 2 regular type entries");
+        Assert.That(metadata.SerializedReferenceTypeTreeCount, Is.EqualTo(0), "Should have 0 SerializeReference type entries");
+        Assert.IsNotNull(metadata.TypeTrees, "TypeTrees array should be populated");
+        Assert.That(metadata.TypeTrees.Length, Is.EqualTo(2));
+
+        // --- All TypeTree blobs are extracted: non-zero content hash, zero size, not inline ---
+        foreach (var entry in metadata.TypeTrees)
+        {
+            Assert.IsFalse(entry.TypeTreeContentHash.IsZero,
+                $"TypeTreeContentHash should be non-zero for extracted v23 entry (persistentTypeID={entry.PersistentTypeID})");
+            Assert.That(entry.TypeTreeSerializedSize, Is.EqualTo(0u),
+                $"TypeTreeSerializedSize should be 0 for extracted entry (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsFalse(entry.InlineTypeTree,
+                $"InlineTypeTree should be false for extracted entry (persistentTypeID={entry.PersistentTypeID})");
+        }
     }
 
     #endregion

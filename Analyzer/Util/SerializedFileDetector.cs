@@ -211,6 +211,10 @@ public static class SerializedFileDetector
     // Older files have format differences that we do not attempt to support.
     private const uint MinMetadataParseVersion = 19;
 
+    // Maximum version for metadata section parsing (kExtractedTypeTreeSupport = 23, Unity 6000.4).
+    // Files newer than this version may have an unknown format and cannot be parsed safely.
+    private const uint MaxMetadataParseVersion = 23;
+
     // Reasonable version range for SerializedFiles
     // Unity versions currently use values in the 20s-30s range
     private const uint MinVersion = 1;
@@ -485,6 +489,17 @@ public static class SerializedFileDetector
             return false;
         }
 
+        // Reject versions beyond the highest known format. Future Unity versions may change the
+        // metadata layout in ways that would cause incorrect results or a parse failure.
+        // A newer version of UnityDataTool is required to read these files.
+        if (headerInfo.Version > MaxMetadataParseVersion)
+        {
+            errorMessage = $"SerializedFile version {headerInfo.Version} is not supported. " +
+                           $"UnityDataTool supports up to version {MaxMetadataParseVersion}. " +
+                           $"Please use a newer version of UnityDataTool to read this file.";
+            return false;
+        }
+
         try
         {
             long metadataOffset = headerInfo.IsLegacyFormat ? LegacyHeaderSize : ModernHeaderSize;
@@ -518,9 +533,9 @@ public static class SerializedFileDetector
                 EnableTypeTree = enableTypeTree,
             };
 
-            // Parse the TypeTree section. Protected by its own try/catch so that any
+            // Parse the rest of the metadata section. Protected by its own try/catch so that any
             // failure there still returns a partially-populated metadata struct.
-            ParseTypeTreeMetadata(reader, headerInfo, swap, metadataOffset, metadata);
+            ParseExtendedMetadata(reader, headerInfo, swap, metadataOffset, metadata);
 
             return true;
         }
@@ -532,19 +547,9 @@ public static class SerializedFileDetector
     }
 
     /// <summary>
-    /// Parses the TypeTree section of the metadata, populating the type-list fields of
-    /// <paramref name="metadata"/>. Any parse failure is silently caught so the caller
-    /// always receives at least the three initial metadata fields.
-    ///
-    /// Layout after the three initial fields:
-    ///   [int32  typeCount]
-    ///   [SerializedType * typeCount]   -- regular object types (m_Types)
-    ///
-    /// Then, after the object list, script type list, and externals list, for version >= 20:
-    ///   [int32  refTypeCount]
-    ///   [RefSerializedType * refTypeCount]  -- SerializeReference types (m_RefTypes)
+    /// Parses the TypeTree and other arrays that are stored in the metadata,
     /// </summary>
-    private static void ParseTypeTreeMetadata(BinaryReader reader, SerializedFileInfo headerInfo,
+    private static void ParseExtendedMetadata(BinaryReader reader, SerializedFileInfo headerInfo,
         bool swap, long metadataOffset, SerializedFileMetadata metadata)
     {
         try
