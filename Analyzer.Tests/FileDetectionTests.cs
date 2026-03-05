@@ -410,6 +410,44 @@ public class FileDetectionTests
         }
     }
 
+    [Test]
+    public void TryParseMetadata_V22PrefabWithSerializedReference_ReturnsExpectedObjectList()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "AssetBundleTypeTreeVariations", "v22",
+            "prefab_with_serializedreference.serializedfile");
+
+        bool headerResult = SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo);
+        Assert.IsTrue(headerResult, "File should be detected as a valid SerializedFile");
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+        Assert.IsNotNull(metadata);
+
+        Assert.IsNotNull(metadata.ObjectList, "ObjectList should be populated");
+        Assert.That(metadata.ObjectList.Length, Is.EqualTo(6), "Should have 6 objects");
+
+        // Verify exact values for each object entry.
+        // Expected data from the file's object table (fileID, typeID, offset, size):
+        var expected = new (long Id, int TypeId, long Offset, long Size)[]
+        {
+            (                   1L, 142,  5552L, 300L),  // AssetBundle
+            ( 674343093664966924L,   4,  5856L,  68L),  // Transform
+            (4902368549205534988L,   4,  5936L,  80L),  // Transform
+            (5206304541755795724L,   1,  6016L,  51L),  // GameObject
+            (6854740422901983500L,   1,  6080L,  35L),  // GameObject
+            (8430482813342345484L, 114,  6128L, 104L),  // MonoBehaviour
+        };
+
+        for (int i = 0; i < expected.Length; i++)
+        {
+            var obj = metadata.ObjectList[i];
+            Assert.That(obj.Id,     Is.EqualTo(expected[i].Id),     $"ObjectList[{i}].Id");
+            Assert.That(obj.TypeId, Is.EqualTo(expected[i].TypeId), $"ObjectList[{i}].TypeId");
+            Assert.That(obj.Offset, Is.EqualTo(expected[i].Offset), $"ObjectList[{i}].Offset");
+            Assert.That(obj.Size,   Is.EqualTo(expected[i].Size),   $"ObjectList[{i}].Size");
+        }
+    }
+
     #endregion
 
     #region YAML SerializedFile Detection Tests

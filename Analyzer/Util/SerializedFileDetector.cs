@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using ObjectInfo = UnityDataTools.FileSystem.ObjectInfo;
 
 namespace UnityDataTools.Analyzer.Util;
 
@@ -166,6 +167,12 @@ public class SerializedFileMetadata
     /// Empty array for files with version < 20.
     /// </summary>
     public TypeTreeInfo[] SerializedReferenceTypeTrees { get; set; }
+
+    /// <summary>
+    /// List of all objects recorded in the file's object table.
+    /// Null until the metadata section has been parsed.
+    /// </summary>
+    public ObjectInfo[] ObjectList { get; set; }
 }
 
 /// <summary>
@@ -567,13 +574,7 @@ public static class SerializedFileDetector
                 typeTrees[i] = ReadTypeEntry(reader, version, swap, isRefType: false, enableTypeTree);
             metadata.TypeTrees = typeTrees;
 
-            // m_RefTypes (version >= 20) is not located immediately after m_Types.
-            // It appears at the end of the metadata section, after the object list,
-            // script type list, and externals list. We must skip those three sections.
-            if (version < SupportsRefObjectVersion)
-                return;
-
-            // --- Skip the object list ---
+            // --- Object list ---
             // Per-object layout (version >= 19):
             //   [4-byte alignment relative to metadata start]
             //   [int64  fileID]
@@ -581,14 +582,33 @@ public static class SerializedFileDetector
             //   [uint32 byteSize]
             //   [uint32 typeID]
             int objectCount = BinaryFileHelper.ReadInt32(reader, swap);
+            var objectList = new ObjectInfo[objectCount];
             for (int i = 0; i < objectCount; i++)
             {
                 BinaryFileHelper.AlignTo4(stream, metadataOffset);
-                stream.Seek(8, SeekOrigin.Current); // int64 fileID
-                stream.Seek(version >= LargeFilesSupportVersion ? 8 : 4, SeekOrigin.Current); // byteStart
-                stream.Seek(4, SeekOrigin.Current); // uint32 byteSize
-                stream.Seek(4, SeekOrigin.Current); // uint32 typeID
+                long fileID = BinaryFileHelper.ReadInt64(reader, swap);
+                // byteStart is relative to the data section; add DataOffset to get the absolute file offset,
+                // matching the behaviour of the native DLL which returns the absolute offset in ObjectInfo.Offset.
+                long byteStart = version >= LargeFilesSupportVersion
+                    ? (long)BinaryFileHelper.ReadUInt64(reader, swap)
+                    : BinaryFileHelper.ReadUInt32(reader, swap);
+                byteStart += (long)headerInfo.DataOffset;
+                long byteSize = BinaryFileHelper.ReadUInt32(reader, swap);
+                // typeIndex is a 0-based index into the m_Types array, not the persistent type ID.
+                // Resolve it to the persistent type ID to match the behaviour of the native DLL.
+                int typeIndex = BinaryFileHelper.ReadInt32(reader, swap);
+                int persistentTypeID = (typeIndex >= 0 && typeIndex < typeTrees.Length)
+                    ? typeTrees[typeIndex].PersistentTypeID
+                    : typeIndex;
+                objectList[i] = new ObjectInfo(fileID, byteStart, byteSize, persistentTypeID);
             }
+            metadata.ObjectList = objectList;
+
+            // m_RefTypes (version >= 20) is not located immediately after m_Types.
+            // It appears at the end of the metadata section, after the object list,
+            // script type list, and externals list. We must skip those three sections.
+            if (version < SupportsRefObjectVersion)
+                return;
 
             // --- Skip the script type list ---
             // Per-entry layout (version >= 14, applies to all our versions):

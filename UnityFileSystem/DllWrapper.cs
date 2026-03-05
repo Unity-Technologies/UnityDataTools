@@ -119,6 +119,14 @@ public struct ObjectInfo
     public readonly long Offset;
     public readonly long Size;
     public readonly int TypeId;
+
+    public ObjectInfo(long id, long offset, long size, int typeId)
+    {
+        Id = id;
+        Offset = offset;
+        Size = size;
+        TypeId = typeId;
+    }
 }
 [Flags]
 public enum TypeTreeFlags

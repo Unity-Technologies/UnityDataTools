@@ -67,6 +67,18 @@ public static class BinaryFileHelper
         return swap ? SwapUInt32(raw) : raw;
     }
 
+    public static ulong ReadUInt64(BinaryReader reader, bool swap)
+    {
+        ulong raw = reader.ReadUInt64();
+        return swap ? SwapUInt64(raw) : raw;
+    }
+
+    public static long ReadInt64(BinaryReader reader, bool swap)
+    {
+        ulong raw = reader.ReadUInt64();
+        return (long)(swap ? SwapUInt64(raw) : raw);
+    }
+
     public static UnityHash128 ReadHash128(BinaryReader reader, bool swap)
     {
         return new UnityHash128
