@@ -17,28 +17,13 @@ public class SerializedFileInfo
 }
 
 /// <summary>
-/// A 128-bit hash stored as four 32-bit unsigned integers, matching Unity's Hash128 binary layout.
-/// </summary>
-public readonly struct TypeTreeHash128
-{
-    public uint Data0 { get; init; }
-    public uint Data1 { get; init; }
-    public uint Data2 { get; init; }
-    public uint Data3 { get; init; }
-
-    public bool IsZero => Data0 == 0 && Data1 == 0 && Data2 == 0 && Data3 == 0;
-
-    public override string ToString() => $"{Data0:x8}{Data1:x8}{Data2:x8}{Data3:x8}";
-}
-
-/// <summary>
 /// Summary information about a single TypeTree entry within a SerializedFile metadata section.
 /// Does not contain the full TypeTree node graph — only the per-entry header fields.
 ///
 /// Each entry corresponds to one element of either the regular type list (m_Types) or the
 /// SerializeReference type list (m_RefTypes, version >= 20). Fields that are not applicable
 /// for a given entry use well-defined sentinel values rather than null:
-///   - TypeTreeHash128 fields use IsZero == true to indicate "not present"
+///   - UnityHash128 fields use IsZero == true to indicate "not present"
 ///   - short ScriptTypeIndex uses -1 to indicate "not a script type"
 ///   - string fields (ClassName, Namespace, AssemblyName) use string.Empty for regular type entries
 ///   - TypeDependencies uses an empty array for ref type entries or version &lt; 21
@@ -78,13 +63,13 @@ public class TypeTreeInfo
     /// ScriptTypeIndex >= 0. IsZero == true indicates this field is not applicable for
     /// this entry (native type with no associated MonoScript).
     /// </summary>
-    public TypeTreeHash128 ScriptID { get; set; }
+    public UnityHash128 ScriptID { get; set; }
 
     /// <summary>
     /// Hash of the TypeTree content as originally written into the file.
     /// Used for compatibility checking at load time.
     /// </summary>
-    public TypeTreeHash128 OldTypeHash { get; set; }
+    public UnityHash128 OldTypeHash { get; set; }
 
     // -----------------------------------------------------------------------
     // TypeTree inline/extracted data (only when EnableTypeTree = true)
@@ -95,7 +80,7 @@ public class TypeTreeInfo
     /// version >= 23 (kExtractedTypeTreeSupport). IsZero == true indicates this field
     /// was not present in the metadata (version &lt; 23 or no inline TypeTree).
     /// </summary>
-    public TypeTreeHash128 TypeTreeContentHash { get; set; }
+    public UnityHash128 TypeTreeContentHash { get; set; }
 
     /// <summary>
     /// Actual size in bytes of the TypeTree blob for this entry.
@@ -288,7 +273,7 @@ public static class SerializedFileDetector
             //
             // We try both interpretations to determine if swapping is needed:
             uint versionLE = BitConverter.ToUInt32(headerBytes, 8);
-            uint versionBE = SwapUInt32(versionLE);
+            uint versionBE = BinaryFileHelper.SwapUInt32(versionLE);
 
             // Determine which interpretation gives us a valid version number
             uint version;
@@ -389,9 +374,9 @@ public static class SerializedFileDetector
                 // Note: For version < 9, m_Endianness is NOT in the header.
                 //       It's stored at the end of the file, just before metadata begins.
 
-                uint metadataSize32 = ReadUInt32(headerBytes, 0, needsSwap);
-                uint fileSize32 = ReadUInt32(headerBytes, 4, needsSwap);
-                uint dataOffset32 = ReadUInt32(headerBytes, 12, needsSwap);
+                uint metadataSize32 = BinaryFileHelper.ReadUInt32(headerBytes, 0, needsSwap);
+                uint fileSize32 = BinaryFileHelper.ReadUInt32(headerBytes, 4, needsSwap);
+                uint dataOffset32 = BinaryFileHelper.ReadUInt32(headerBytes, 12, needsSwap);
 
                 // Convert to 64-bit for consistency
                 metadataSize = metadataSize32;
@@ -416,9 +401,9 @@ public static class SerializedFileDetector
                 // Offset 40:    UInt8    m_Endianness
                 // Offset 41-47: UInt8[7] m_Reserved1
 
-                metadataSize = ReadUInt64(headerBytes, 16, needsSwap);
-                fileSize = ReadUInt64(headerBytes, 24, needsSwap);
-                dataOffset = ReadUInt64(headerBytes, 32, needsSwap);
+                metadataSize = BinaryFileHelper.ReadUInt64(headerBytes, 16, needsSwap);
+                fileSize = BinaryFileHelper.ReadUInt64(headerBytes, 24, needsSwap);
+                dataOffset = BinaryFileHelper.ReadUInt64(headerBytes, 32, needsSwap);
             }
 
             // ============================================================
@@ -508,7 +493,7 @@ public static class SerializedFileDetector
             using var reader = new BinaryReader(stream, System.Text.Encoding.ASCII, leaveOpen: true);
 
             // --- Field 1: Unity version string (null-terminated ASCII) ---
-            string unityVersion = ReadNullTermString(reader);
+            string unityVersion = BinaryFileHelper.ReadNullTermString(reader);
 
             // An empty or unusually long version string indicates a corrupt file.
             // Even a stripped version string would be "0.0.0", not empty.
@@ -519,7 +504,7 @@ public static class SerializedFileDetector
             }
 
             // --- Field 2: Target platform (uint32) ---
-            uint targetPlatform = ReadUInt32(reader, swap);
+            uint targetPlatform = BinaryFileHelper.ReadUInt32(reader, swap);
 
             // --- Field 3: Enable type tree flag (bool serialized as 1 byte) ---
             bool enableTypeTree = reader.ReadByte() != 0;
@@ -567,7 +552,7 @@ public static class SerializedFileDetector
             Stream stream = reader.BaseStream;
 
             // --- Regular type list (m_Types) ---
-            int typeCount = ReadInt32(reader, swap);
+            int typeCount = BinaryFileHelper.ReadInt32(reader, swap);
             metadata.TypeTreeCount = typeCount;
 
             var typeTrees = new TypeTreeInfo[typeCount];
@@ -588,10 +573,10 @@ public static class SerializedFileDetector
             //   [uint32 byteStart]  or  [uint64 byteStart]  (version >= 22)
             //   [uint32 byteSize]
             //   [uint32 typeID]
-            int objectCount = ReadInt32(reader, swap);
+            int objectCount = BinaryFileHelper.ReadInt32(reader, swap);
             for (int i = 0; i < objectCount; i++)
             {
-                AlignTo4(stream, metadataOffset);
+                BinaryFileHelper.AlignTo4(stream, metadataOffset);
                 stream.Seek(8, SeekOrigin.Current); // int64 fileID
                 stream.Seek(version >= LargeFilesSupportVersion ? 8 : 4, SeekOrigin.Current); // byteStart
                 stream.Seek(4, SeekOrigin.Current); // uint32 byteSize
@@ -603,11 +588,11 @@ public static class SerializedFileDetector
             //   [int32 localSerializedFileIndex]
             //   [4-byte alignment relative to metadata start]
             //   [int64 localIdentifierInFile]
-            int scriptTypeCount = ReadInt32(reader, swap);
+            int scriptTypeCount = BinaryFileHelper.ReadInt32(reader, swap);
             for (int i = 0; i < scriptTypeCount; i++)
             {
                 stream.Seek(4, SeekOrigin.Current); // int32 localSerializedFileIndex
-                AlignTo4(stream, metadataOffset);
+                BinaryFileHelper.AlignTo4(stream, metadataOffset);
                 stream.Seek(8, SeekOrigin.Current); // int64 localIdentifierInFile
             }
 
@@ -617,17 +602,17 @@ public static class SerializedFileDetector
             //   [uint32[4] guid]   (16 bytes)
             //   [int32 type]
             //   [null-terminated string pathName]
-            int externalsCount = ReadInt32(reader, swap);
+            int externalsCount = BinaryFileHelper.ReadInt32(reader, swap);
             for (int i = 0; i < externalsCount; i++)
             {
-                ReadNullTermString(reader);          // tempEmpty (empty in practice)
+                BinaryFileHelper.ReadNullTermString(reader);          // tempEmpty (empty in practice)
                 stream.Seek(16, SeekOrigin.Current); // Hash128 guid (4 * uint32)
                 stream.Seek(4, SeekOrigin.Current);  // int32 type
-                ReadNullTermString(reader);          // pathName
+                BinaryFileHelper.ReadNullTermString(reader);          // pathName
             }
 
             // --- SerializeReference type list (m_RefTypes, version >= 20) ---
-            int refTypeCount = ReadInt32(reader, swap);
+            int refTypeCount = BinaryFileHelper.ReadInt32(reader, swap);
             metadata.SerializedReferenceTypeTreeCount = refTypeCount;
 
             var refTypeTrees = new TypeTreeInfo[refTypeCount];
@@ -669,14 +654,14 @@ public static class SerializedFileDetector
 
         // persistentTypeID: the Unity ClassID. -1 (UndefinedPersistentTypeID) when the
         // class has no known built-in ClassID (e.g. an unresolved script type).
-        info.PersistentTypeID = ReadInt32(reader, swap);
+        info.PersistentTypeID = BinaryFileHelper.ReadInt32(reader, swap);
 
         // isStrippedType: true when the type definition was stripped from the build.
         // Objects of a stripped type cannot be fully deserialized without a matching runtime.
         info.IsStrippedType = reader.ReadByte() != 0;
 
         // scriptTypeIndex: index into the file's MonoScript reference list. -1 = not a script type.
-        info.ScriptTypeIndex = ReadInt16(reader, swap);
+        info.ScriptTypeIndex = BinaryFileHelper.ReadInt16(reader, swap);
 
         // scriptID is a 128-bit hash identifying a MonoScript (MD4 of assembly + namespace + class name).
         // It is present for:
@@ -691,10 +676,10 @@ public static class SerializedFileDetector
                         || info.PersistentTypeID == MonoBehaviourClassID
                         || info.ScriptTypeIndex >= 0;
         if (hasScriptID)
-            info.ScriptID = ReadHash128(reader, swap);
+            info.ScriptID = BinaryFileHelper.ReadHash128(reader, swap);
 
         // oldTypeHash: always present. Hash of the TypeTree content as originally written.
-        info.OldTypeHash = ReadHash128(reader, swap);
+        info.OldTypeHash = BinaryFileHelper.ReadHash128(reader, swap);
 
         if (!enableTypeTree)
             return info;
@@ -707,8 +692,8 @@ public static class SerializedFileDetector
             // Version >= 23: a 20-byte prefix precedes the blob.
             // typeTreeContentHash is used as a cache key for the TypeTree store.
             // typeTreeSize == 0 means the blob was extracted to an external archive.
-            info.TypeTreeContentHash = ReadHash128(reader, swap);
-            typeTreeSize = ReadUInt32(reader, swap);
+            info.TypeTreeContentHash = BinaryFileHelper.ReadHash128(reader, swap);
+            typeTreeSize = BinaryFileHelper.ReadUInt32(reader, swap);
             info.TypeTreeSerializedSize = typeTreeSize;
         }
 
@@ -719,8 +704,8 @@ public static class SerializedFileDetector
             {
                 // Versions 19-22: blob begins directly with [uint32 numberOfNodes][uint32 numberOfChars],
                 // followed by a flat array of 32-byte nodes and a packed string buffer.
-                uint numberOfNodes = ReadUInt32(reader, swap);
-                uint numberOfChars = ReadUInt32(reader, swap);
+                uint numberOfNodes = BinaryFileHelper.ReadUInt32(reader, swap);
+                uint numberOfChars = BinaryFileHelper.ReadUInt32(reader, swap);
                 uint dataBytes = numberOfNodes * TypeTreeNodeSize + numberOfChars;
                 stream.Seek(dataBytes, SeekOrigin.Current);
                 // Record the total blob size including the 8-byte count header.
@@ -741,18 +726,18 @@ public static class SerializedFileDetector
             if (isRefType)
             {
                 // SerializeReference entries carry their type identity strings here.
-                info.ClassName = ReadNullTermString(reader);
-                info.Namespace = ReadNullTermString(reader);
-                info.AssemblyName = ReadNullTermString(reader);
+                info.ClassName = BinaryFileHelper.ReadNullTermString(reader);
+                info.Namespace = BinaryFileHelper.ReadNullTermString(reader);
+                info.AssemblyName = BinaryFileHelper.ReadNullTermString(reader);
             }
             else
             {
                 // Regular type entries carry indices into the m_RefTypes pool, identifying
                 // which SerializeReference types objects of this type may hold.
-                int depCount = ReadInt32(reader, swap);
+                int depCount = BinaryFileHelper.ReadInt32(reader, swap);
                 var deps = new int[depCount];
                 for (int j = 0; j < depCount; j++)
-                    deps[j] = ReadInt32(reader, swap);
+                    deps[j] = BinaryFileHelper.ReadInt32(reader, swap);
                 info.TypeDependencies = deps;
             }
         }
@@ -760,98 +745,4 @@ public static class SerializedFileDetector
         return info;
     }
 
-    // -----------------------------------------------------------------------
-    // BinaryReader-based helpers (used by ParseTypeTreeMetadata and ReadTypeEntry)
-    // -----------------------------------------------------------------------
-
-    /// <summary>Advances the stream to the next 4-byte boundary measured from metadataOffset.</summary>
-    private static void AlignTo4(Stream stream, long metadataOffset)
-    {
-        long rel = stream.Position - metadataOffset;
-        long aligned = (rel + 3) & ~3L;
-        stream.Position = metadataOffset + aligned;
-    }
-
-    /// <summary>Reads a null-terminated ASCII string from the stream.</summary>
-    private static string ReadNullTermString(BinaryReader reader)
-    {
-        var sb = new System.Text.StringBuilder();
-        byte b;
-        while ((b = reader.ReadByte()) != 0)
-            sb.Append((char)b);
-        return sb.ToString();
-    }
-
-    private static int ReadInt32(BinaryReader reader, bool swap)
-    {
-        uint raw = reader.ReadUInt32();
-        return (int)(swap ? SwapUInt32(raw) : raw);
-    }
-
-    private static short ReadInt16(BinaryReader reader, bool swap)
-    {
-        ushort raw = reader.ReadUInt16();
-        if (swap)
-            raw = (ushort)((raw << 8) | (raw >> 8));
-        return (short)raw;
-    }
-
-    private static uint ReadUInt32(BinaryReader reader, bool swap)
-    {
-        uint raw = reader.ReadUInt32();
-        return swap ? SwapUInt32(raw) : raw;
-    }
-
-    private static TypeTreeHash128 ReadHash128(BinaryReader reader, bool swap)
-    {
-        return new TypeTreeHash128
-        {
-            Data0 = ReadUInt32(reader, swap),
-            Data1 = ReadUInt32(reader, swap),
-            Data2 = ReadUInt32(reader, swap),
-            Data3 = ReadUInt32(reader, swap),
-        };
-    }
-
-    // -----------------------------------------------------------------------
-    // Byte-array helpers (used by TryDetectSerializedFile)
-    // -----------------------------------------------------------------------
-
-    /// <summary>
-    /// Reads a UInt32 from a byte array at the specified offset, optionally swapping endianness.
-    /// </summary>
-    private static uint ReadUInt32(byte[] buffer, int offset, bool swap)
-    {
-        uint value = BitConverter.ToUInt32(buffer, offset);
-        return swap ? SwapUInt32(value) : value;
-    }
-
-    /// <summary>
-    /// Reads a UInt64 from a byte array at the specified offset, optionally swapping endianness.
-    /// </summary>
-    private static ulong ReadUInt64(byte[] buffer, int offset, bool swap)
-    {
-        ulong value = BitConverter.ToUInt64(buffer, offset);
-        return swap ? SwapUInt64(value) : value;
-    }
-
-    private static uint SwapUInt32(uint value)
-    {
-        return ((value & 0x000000FFU) << 24) |
-               ((value & 0x0000FF00U) << 8) |
-               ((value & 0x00FF0000U) >> 8) |
-               ((value & 0xFF000000U) >> 24);
-    }
-
-    private static ulong SwapUInt64(ulong value)
-    {
-        return ((value & 0x00000000000000FFUL) << 56) |
-               ((value & 0x000000000000FF00UL) << 40) |
-               ((value & 0x0000000000FF0000UL) << 24) |
-               ((value & 0x00000000FF000000UL) << 8) |
-               ((value & 0x000000FF00000000UL) >> 8) |
-               ((value & 0x0000FF0000000000UL) >> 24) |
-               ((value & 0x00FF000000000000UL) >> 40) |
-               ((value & 0xFF00000000000000UL) >> 56);
-    }
 }

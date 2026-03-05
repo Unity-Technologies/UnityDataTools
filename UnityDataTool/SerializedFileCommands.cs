@@ -249,9 +249,21 @@ public static class SerializedFileCommands
 
     private static void OutputMetadataText(SerializedFileMetadata metadata)
     {
+        string typeTreeDefinitions;
+        if (!metadata.EnableTypeTree)
+            typeTreeDefinitions = "No";
+        else if (metadata.TypeTrees == null || metadata.TypeTrees.Length == 0)
+            typeTreeDefinitions = "Unknown";
+        else if (metadata.TypeTrees[0].InlineTypeTree)
+            typeTreeDefinitions = "Inline";
+        else
+            typeTreeDefinitions = "External";
+
         Console.WriteLine($"{"Unity Version",-20} {metadata.UnityVersion}");
         Console.WriteLine($"{"Target Platform",-20} {metadata.TargetPlatform}");
-        Console.WriteLine($"{"Enable Type Tree",-20} {metadata.EnableTypeTree}");
+        Console.WriteLine($"{"TypeTree Definitions",-20} {typeTreeDefinitions}");
+        Console.WriteLine($"{"TypeTree Count",-20} {metadata.TypeTreeCount}");
+        Console.WriteLine($"{"RefType Count",-20} {metadata.SerializedReferenceTypeTreeCount}");
     }
 
     private static void OutputMetadataJson(SerializedFileMetadata metadata)
