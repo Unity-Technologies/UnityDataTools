@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem;
@@ -189,6 +190,42 @@ public class FileDetectionTests
         Assert.That(metadata.UnityVersion, Is.EqualTo("2022.1.20f1"), "Unity version should be 2022.1.20f1");
         Assert.That(metadata.TargetPlatform, Is.EqualTo(2u), "Target platform should be 2 (Windows Standalone)");
         Assert.IsTrue(metadata.EnableTypeTree, "EnableTypeTree should be true");
+
+        // --- TypeTree counts ---
+        Assert.That(metadata.TypeTreeCount, Is.EqualTo(10), "Should have 10 regular type entries");
+        Assert.That(metadata.SerializedReferenceTypeTreeCount, Is.EqualTo(0), "Should have 0 SerializeReference type entries");
+        Assert.IsNotNull(metadata.TypeTrees, "TypeTrees should be populated");
+        Assert.That(metadata.TypeTrees.Length, Is.EqualTo(10));
+
+        // --- Per-entry invariants for a player scene with no MonoBehaviours ---
+        // All types are native Unity types: inline TypeTrees, no script IDs, no ref-type fields.
+        foreach (var entry in metadata.TypeTrees)
+        {
+            Assert.IsTrue(entry.InlineTypeTree,
+                $"InlineTypeTree should be true (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsFalse(entry.OldTypeHash.IsZero,
+                $"OldTypeHash should not be zero (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsTrue(entry.TypeTreeContentHash.IsZero,
+                $"TypeTreeContentHash should be zero for version < 23 (persistentTypeID={entry.PersistentTypeID})");
+            Assert.Greater(entry.TypeTreeSerializedSize, 0u,
+                $"TypeTreeSerializedSize should be non-zero (persistentTypeID={entry.PersistentTypeID})");
+            Assert.Greater(entry.PersistentTypeID, 0,
+                $"PersistentTypeID should be positive for native types (got {entry.PersistentTypeID})");
+            Assert.AreNotEqual(114, entry.PersistentTypeID,
+                "No MonoBehaviour types expected in this scene");
+            Assert.That(entry.ScriptTypeIndex, Is.EqualTo((short)-1),
+                $"ScriptTypeIndex should be -1 for native types (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsTrue(entry.ScriptID.IsZero,
+                $"ScriptID should be zero for native types (persistentTypeID={entry.PersistentTypeID})");
+            Assert.That(entry.ClassName, Is.EqualTo(string.Empty),
+                $"ClassName should be empty for non-ref types (persistentTypeID={entry.PersistentTypeID})");
+            Assert.That(entry.Namespace, Is.EqualTo(string.Empty),
+                $"Namespace should be empty for non-ref types (persistentTypeID={entry.PersistentTypeID})");
+            Assert.That(entry.AssemblyName, Is.EqualTo(string.Empty),
+                $"AssemblyName should be empty for non-ref types (persistentTypeID={entry.PersistentTypeID})");
+            Assert.That(entry.TypeDependencies.Length, Is.EqualTo(0),
+                $"TypeDependencies should be empty (persistentTypeID={entry.PersistentTypeID})");
+        }
     }
 
     [Test]
@@ -210,6 +247,101 @@ public class FileDetectionTests
         Assert.That(metadata.UnityVersion, Is.EqualTo("6000.0.65f1"), "Unity version should be 6000.0.65f1");
         Assert.That(metadata.TargetPlatform, Is.EqualTo(19u), "Target platform should be 19 (Windows Standalone x64)");
         Assert.IsFalse(metadata.EnableTypeTree, "EnableTypeTree should be false for a no-type-tree build");
+
+        // Even when TypeTrees are not stored inline, the metadata still records the full list of
+        // types used in the file along with their oldTypeHash values. The hashes allow the runtime
+        // to verify type compatibility against its built-in type definitions at load time.
+        Assert.That(metadata.TypeTreeCount, Is.EqualTo(6), "Should have 6 type entries");
+        Assert.IsNotNull(metadata.TypeTrees, "TypeTrees should be populated");
+        Assert.That(metadata.TypeTrees.Length, Is.EqualTo(6));
+
+        foreach (var entry in metadata.TypeTrees)
+        {
+            Assert.Greater(entry.PersistentTypeID, 0,
+                $"PersistentTypeID should be positive (got {entry.PersistentTypeID})");
+            Assert.IsFalse(entry.OldTypeHash.IsZero,
+                $"OldTypeHash should not be zero (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsFalse(entry.InlineTypeTree,
+                $"InlineTypeTree should be false when EnableTypeTree=false (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsTrue(entry.TypeTreeContentHash.IsZero,
+                $"TypeTreeContentHash should be zero for this version < 23 file (persistentTypeID={entry.PersistentTypeID})");
+        }
+    }
+
+    [Test]
+    public void TryParseMetadata_V22PrefabWithSerializedReference_ReturnsExpectedTypeTreeData()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "AssetBundleTypeTreeVariations", "v22",
+            "prefab_with_serializedreference.serializedfile");
+
+        bool headerResult = SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo);
+        Assert.IsTrue(headerResult, "File should be detected as a valid SerializedFile");
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+        Assert.IsNotNull(metadata);
+
+        // --- Initial metadata fields ---
+        Assert.IsTrue(metadata.EnableTypeTree, "EnableTypeTree should be true");
+
+        // --- Type counts ---
+        Assert.That(metadata.TypeTreeCount, Is.EqualTo(4), "Should have 4 regular type entries");
+        Assert.That(metadata.SerializedReferenceTypeTreeCount, Is.EqualTo(1), "Should have 1 SerializeReference type entry");
+        Assert.IsNotNull(metadata.TypeTrees, "TypeTrees array should be populated");
+        Assert.IsNotNull(metadata.SerializedReferenceTypeTrees, "SerializedReferenceTypeTrees array should be populated");
+
+        // --- Regular type entries: persistentTypeIDs in order ---
+        int[] expectedTypeIDs = { 142, 4, 1, 114 };
+        Assert.That(metadata.TypeTrees.Length, Is.EqualTo(expectedTypeIDs.Length));
+        for (int i = 0; i < expectedTypeIDs.Length; i++)
+            Assert.That(metadata.TypeTrees[i].PersistentTypeID, Is.EqualTo(expectedTypeIDs[i]),
+                $"TypeTrees[{i}].PersistentTypeID");
+
+        // --- v22 files do not store TypeTreeContentHash (it is all-zeros) ---
+        foreach (var entry in metadata.TypeTrees)
+            Assert.IsTrue(entry.TypeTreeContentHash.IsZero,
+                $"TypeTreeContentHash should be zero for v22 (persistentTypeID={entry.PersistentTypeID})");
+        foreach (var entry in metadata.SerializedReferenceTypeTrees)
+            Assert.IsTrue(entry.TypeTreeContentHash.IsZero,
+                "SerializedReferenceTypeTrees TypeTreeContentHash should be zero for v22");
+
+        // --- All type trees are inline (non-zero size, InlineTypeTree=true) ---
+        foreach (var entry in metadata.TypeTrees)
+        {
+            Assert.IsTrue(entry.InlineTypeTree,
+                $"InlineTypeTree should be true (persistentTypeID={entry.PersistentTypeID})");
+            Assert.Greater(entry.TypeTreeSerializedSize, 0u,
+                $"TypeTreeSerializedSize should be non-zero (persistentTypeID={entry.PersistentTypeID})");
+        }
+        foreach (var entry in metadata.SerializedReferenceTypeTrees)
+        {
+            Assert.IsTrue(entry.InlineTypeTree, "SerializedReferenceTypeTrees[0].InlineTypeTree should be true");
+            Assert.Greater(entry.TypeTreeSerializedSize, 0u,
+                "SerializedReferenceTypeTrees[0].TypeTreeSerializedSize should be non-zero");
+        }
+
+        // --- MonoBehaviour (114) has special entries because it refers to a specific C# class ---
+        // Note: if multiple C# MonoBehaviour-derived types were used in this serialized files then we would have multiple entries.
+        var monoBehaviour = metadata.TypeTrees.First(t => t.PersistentTypeID == 114);
+        Assert.IsFalse(monoBehaviour.ScriptID.IsZero,
+            "MonoBehaviour type entry should carry a non-zero scriptID");
+
+        Assert.That(monoBehaviour.ScriptTypeIndex, Is.EqualTo(0),
+            "MonoBehaviour type entry should have a valid ScriptTypeIndex"); // -1 is used for non-script types, so 0 is the first valid index
+
+        Assert.That(monoBehaviour.TypeDependencies.Length, Is.EqualTo(1),
+            "MonoBehaviour should have TypeDependencies array because to record SerializedReference dependencies");
+
+        Assert.That(monoBehaviour.TypeDependencies[0], Is.EqualTo(0),
+            "MonoBehaviour should record dependency on SerializedReference");
+
+        // --- SerializedReference type entry ---
+        Assert.That(metadata.SerializedReferenceTypeTrees.Length, Is.EqualTo(1));
+        var refType = metadata.SerializedReferenceTypeTrees[0];
+        Assert.That(refType.PersistentTypeID, Is.EqualTo(-1));
+        Assert.That(refType.ClassName, Is.EqualTo("Data"));
+        Assert.That(refType.Namespace, Is.EqualTo("MyScripts"));
+        Assert.That(refType.AssemblyName, Is.EqualTo("Assembly-CSharp"));
     }
 
     #endregion
@@ -287,7 +419,7 @@ public class FileDetectionTests
     [Test]
     public void IsUnityArchive_OldFormatArchive_ReturnsTrue()
     {
-        var testFile = Path.Combine(m_TestDataPath, "LegacyFormats", "alienprefab");
+        var testFile = Path.Combine(m_TestDataPath, "LegacyFormats", "AssetBundles", "alienprefab");
 
         bool result = ArchiveDetector.IsUnityArchive(testFile);
 
