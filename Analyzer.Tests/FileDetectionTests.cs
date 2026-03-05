@@ -185,10 +185,10 @@ public class FileDetectionTests
         Assert.IsNotNull(metadata);
 
         // Verify exact values from the level0 metadata section.
-        // This file was built with Unity 2022.1.20f1 for Windows Standalone (platform 2),
+        // This file was built with Unity 2022.1.20f1 for StandaloneOSX (platform 2),
         // with TypeTrees enabled.
         Assert.That(metadata.UnityVersion, Is.EqualTo("2022.1.20f1"), "Unity version should be 2022.1.20f1");
-        Assert.That(metadata.TargetPlatform, Is.EqualTo(2u), "Target platform should be 2 (Windows Standalone)");
+        Assert.That(metadata.TargetPlatform, Is.EqualTo(2u), "Target platform should be 2 (StandaloneOSX)");
         Assert.IsTrue(metadata.EnableTypeTree, "EnableTypeTree should be true");
 
         // --- TypeTree counts ---

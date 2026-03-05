@@ -22,11 +22,11 @@ public class SerializedFileInfo
 ///
 /// Each entry corresponds to one element of either the regular type list (m_Types) or the
 /// SerializeReference type list (m_RefTypes, version >= 20). Fields that are not applicable
-/// for a given entry use well-defined sentinel values rather than null:
+/// for a given entry use well-defined sentinel values:
 ///   - UnityHash128 fields use IsZero == true to indicate "not present"
 ///   - short ScriptTypeIndex uses -1 to indicate "not a script type"
 ///   - string fields (ClassName, Namespace, AssemblyName) use string.Empty for regular type entries
-///   - TypeDependencies uses an empty array for ref type entries or version &lt; 21
+///   - TypeDependencies uses an empty array for ref type entries or version < 21
 /// </summary>
 public class TypeTreeInfo
 {
@@ -36,15 +36,16 @@ public class TypeTreeInfo
 
     /// <summary>
     /// Unity ClassID for this type (e.g. 114 = MonoBehaviour, 115 = MonoScript).
-    /// Corresponds to m_PersistentTypeID in the file. For ref type entries this is
-    /// typically 0 and less meaningful than ClassName/Namespace/AssemblyName.
+    /// Corresponds to m_PersistentTypeID in the file. For ref type entries this is -1
+    /// and the type is identified by the ClassName/Namespace/AssemblyName triple instead.
     /// </summary>
     public int PersistentTypeID { get; set; }
 
     /// <summary>
-    /// True if this type is stripped: no TypeTree blob is present and the object data
-    /// cannot be fully deserialized without a matching runtime.
+    /// True for types that represent Prefab-stripped objects. In text/YAML files this corresponds to the stripped keyword:
+    /// e.g. --- !u!123 &111 stripped.
     /// </summary>
+    /// <remarks>This field is not related to the presence of a TypeTree blob in the file.</remarks>
     public bool IsStrippedType { get; set; }
 
     /// <summary>
@@ -78,22 +79,23 @@ public class TypeTreeInfo
     /// <summary>
     /// XXH3 content hash of the TypeTree blob. Stored explicitly in the metadata for
     /// version >= 23 (kExtractedTypeTreeSupport). IsZero == true indicates this field
-    /// was not present in the metadata (version &lt; 23 or no inline TypeTree).
+    /// was not present in the metadata (version < 23 or no inline TypeTree).
     /// </summary>
     public UnityHash128 TypeTreeContentHash { get; set; }
 
     /// <summary>
     /// Actual size in bytes of the TypeTree blob for this entry.
     /// 0 when InlineTypeTree is false (stripped, EnableTypeTree=false, or extracted to
-    /// an external store in version >= 23). For version &lt; 23 where the size is not
+    /// an external store in version >= 23). For version < 23 where the size is not
     /// stored explicitly, this is computed by skipping over the blob during parsing.
     /// </summary>
     public uint TypeTreeSerializedSize { get; set; }
 
     /// <summary>
     /// True when the TypeTree blob is present inline in this file's metadata and can be
-    /// read without an external TypeTree store. False when stripped, EnableTypeTree is
-    /// false, or TypeTreeSerializedSize is 0 (extracted, version >= 23).
+    /// read without an external TypeTree store. False when EnableTypeTree is false, or
+    /// TypeTreeSerializedSize is 0 (blob extracted to an external store, version >= 23).
+    /// Note: IsStrippedType is orthogonal and does not affect TypeTree presence.
     /// </summary>
     public bool InlineTypeTree { get; set; }
 
@@ -128,7 +130,7 @@ public class TypeTreeInfo
     /// <summary>
     /// Indices into the SerializedReferenceTypeTrees array representing the
     /// SerializeReference types that objects of this type may reference.
-    /// Empty array for ref type entries or files with version &lt; 21.
+    /// Empty array for ref type entries or files with version < 21.
     /// </summary>
     public int[] TypeDependencies { get; set; } = Array.Empty<int>();
 }
@@ -150,7 +152,7 @@ public class SerializedFileMetadata
 
     /// <summary>
     /// Number of SerializeReference TypeTree entries (m_RefTypes).
-    /// Always 0 for files with version &lt; 20 (kSupportsRefObject).
+    /// Always 0 for files with version < 20 (kSupportsRefObject).
     /// </summary>
     public int SerializedReferenceTypeTreeCount { get; set; }
 
@@ -161,7 +163,7 @@ public class SerializedFileMetadata
 
     /// <summary>
     /// Summary of each SerializeReference type entry.
-    /// Empty array for files with version &lt; 20.
+    /// Empty array for files with version < 20.
     /// </summary>
     public TypeTreeInfo[] SerializedReferenceTypeTrees { get; set; }
 }
@@ -641,7 +643,7 @@ public static class SerializedFileDetector
     ///     if version >= 23:
     ///       [Hash128 typeTreeContentHash]
     ///       [uint32  typeTreeSize]      (0 = blob extracted to external store)
-    ///     [TypeTree blob]               (present when version &lt; 23 or typeTreeSize > 0)
+    ///     [TypeTree blob]               (present when version < 23 or typeTreeSize > 0)
     ///     if version >= 21:
     ///       if isRefType:  [string className] [string nameSpace] [string asmName]
     ///       else:          [int32 depCount] [int32 * depCount]

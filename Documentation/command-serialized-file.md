@@ -261,13 +261,36 @@ Each element of `typeTrees` and `serializedReferenceTypeTrees` contains per-type
 
 ### Metadata Fields
 
-| Field | Description |
-|-------|-------------|
-| **Unity Version** | The Unity version string used to build this file (e.g. `"2022.1.20f1"`, `"6000.0.65f1"`). |
-| **Target Platform** | Numeric platform identifier. Common values: `2` = OSX Standalone, `9` = iOS, `13` = Android, `19` = Windows Standalone x64. See [BuildTarget](https://docs.unity3d.com/ScriptReference/BuildTarget.html) for details. |
-| **TypeTree Definitions** | Whether the definition of the types are embedded in the file. `Inline` in Editor and TypeTree-enabled builds. `No` in Player builds with TypeTrees stripped (the default). TypeTrees are required for the `objectlist` and `externalrefs` subcommands to show type names. `External` when the TypeTrees are in an external shared file. |
-| **TypeTree Count** | Number of TypeTrees defined in the file. Each TypeTree corresponds to a unique type used by objects in the file. This array is present even when TypeTree definitions are not stored inline. |
-| **RefType Count** | Number of TypeTrees for SerializeReference classes saved in the file. |
+The text and JSON outputs use different field names and representations for some fields.
+
+| Text Field | JSON Field | Description |
+|------------|------------|-------------|
+| **Unity Version** | `unityVersion` | The Unity version string used to build this file (e.g. `"2022.1.20f1"`, `"6000.0.65f1"`). |
+| **Target Platform** | `targetPlatform` | Numeric platform identifier. Common values: `2` = OSX Standalone, `9` = iOS, `13` = Android, `19` = Windows Standalone x64. See [BuildTarget](https://docs.unity3d.com/ScriptReference/BuildTarget.html) for details. |
+| **TypeTree Definitions** | `enableTypeTree` | Whether TypeTree blobs are stored in this file. The text output derives a descriptive string from the raw boolean and the parsed type entries; the JSON output exposes the raw boolean directly. Text values: `No` — TypeTrees absent (default Player build); `Inline` — all TypeTree blobs are embedded in the file (Editor and TypeTree-enabled builds); `External` — TypeTree blobs were extracted to a separate store (version ≥ 23); `Mixed` — entries disagree (unexpected; indicates a parser or file anomaly); `Unknown` — `enableTypeTree` is true but no type entries were parsed. TypeTrees are required for the `objectlist` and `externalrefs` subcommands to show type names. |
+| **TypeTree Count** | `typeTreeCount` | Number of regular (object) type entries recorded in the file. Present even when TypeTree definitions are not stored inline. |
+| **RefType Count** | `serializedReferenceTypeTreeCount` | Number of type entries for `[SerializeReference]` types recorded in the file. Always `0` for files with version < 20. |
+| *(JSON only)* | `typeTrees` | Array of per-type detail objects for the regular type entries. `null` when parsing failed or was not attempted. See **Per-Type Entry Fields** below. |
+| *(JSON only)* | `serializedReferenceTypeTrees` | Array of per-type detail objects for the `[SerializeReference]` type entries. Empty array for files with version < 20. See **Per-Type Entry Fields** below. |
+
+### Per-Type Entry Fields
+
+Each element of `typeTrees` and `serializedReferenceTypeTrees` in the JSON output contains the following fields:
+
+| JSON Field | Description |
+|------------|-------------|
+| `persistentTypeID` | Unity ClassID (e.g. `114` = MonoBehaviour). `-1` for `[SerializeReference]` entries whose type has no built-in ClassID. |
+| `isStrippedType` | `true` for types representing prefab-stripped objects (the `stripped` keyword in YAML). Orthogonal to TypeTree presence. |
+| `scriptTypeIndex` | Index into the file's MonoScript reference list. `-1` for native Unity types. |
+| `scriptID` | 128-bit hash (MD4 of assembly + namespace + class name) identifying the MonoScript. All-zeros when not applicable. |
+| `oldTypeHash` | Hash of the TypeTree content as originally written; used for compatibility checking at load time. |
+| `typeTreeContentHash` | XXH3 hash of the TypeTree blob. All-zeros for files with version < 23. |
+| `typeTreeSerializedSize` | Byte size of the TypeTree blob for this entry. `0` when `inlineTypeTree` is false. |
+| `inlineTypeTree` | `true` when the TypeTree blob is present inline in the file's metadata. |
+| `className` | C# class name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
+| `namespaceName` | C# namespace; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
+| `assemblyName` | Assembly name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
+| `typeDependencies` | Array of indices into `serializedReferenceTypeTrees` listing which `[SerializeReference]` types objects of this type may hold. Empty for `[SerializeReference]` entries or files with version < 21. |
 
 Notes:
 

@@ -254,8 +254,10 @@ public static class SerializedFileCommands
             typeTreeDefinitions = "No";
         else if (metadata.TypeTrees == null || metadata.TypeTrees.Length == 0)
             typeTreeDefinitions = "Unknown";
-        else if (metadata.TypeTrees[0].InlineTypeTree)
+        else if (metadata.TypeTrees.All(t => t.InlineTypeTree))
             typeTreeDefinitions = "Inline";
+        else if (metadata.TypeTrees.Any(t => t.InlineTypeTree))
+            typeTreeDefinitions = "Mixed";  // unexpected: entries disagree on inline vs external
         else
             typeTreeDefinitions = "External";
 
