@@ -448,6 +448,28 @@ public class FileDetectionTests
         }
     }
 
+    [Test]
+    public void TryParseMetadata_V22PrefabWithSerializedReference_ReturnsExpectedExternalReferences()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "AssetBundleTypeTreeVariations", "v22",
+            "prefab_with_serializedreference.serializedfile");
+
+        bool headerResult = SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo);
+        Assert.IsTrue(headerResult, "File should be detected as a valid SerializedFile");
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+        Assert.IsNotNull(metadata);
+
+        Assert.IsNotNull(metadata.ExternalReferences, "ExternalReferences should be populated");
+        Assert.That(metadata.ExternalReferences.Length, Is.EqualTo(1), "Should have 1 external reference");
+
+        var extRef = metadata.ExternalReferences[0];
+        Assert.That(extRef.Path, Is.EqualTo("archive:/CAB-d57a1d89ac0708bf030936c59479c685/CAB-d57a1d89ac0708bf030936c59479c685"));
+        Assert.That(extRef.Guid, Is.EqualTo("00000000000000000000000000000000"));
+        Assert.That(extRef.Type, Is.EqualTo(ExternalReferenceType.NonAssetType));
+    }
+
     #endregion
 
     #region YAML SerializedFile Detection Tests

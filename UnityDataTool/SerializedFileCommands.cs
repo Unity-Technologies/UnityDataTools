@@ -11,39 +11,43 @@ public static class SerializedFileCommands
 {
     public static int HandleExternalRefs(FileInfo filename, OutputFormat format)
     {
-        if (!ValidateSerializedFile(filename.FullName, out _))
+        // External references are read directly from the parsed metadata rather than via UnityFileSystemApi.
+        //
+        // Advantages: works for any modern SerializedFile (version >= 19), including Player builds
+        // that were compiled without TypeTrees — files that UnityFileSystemApi cannot open at all.
+        //
+        // Trade-offs: Files older than version 19 (Unity 2019.1) are not supported by the metadata parser.
+        //
+        // These trade-offs are minor compared to the benefit of handling the common no-TypeTree case,
+        // so there is no need to keep the UnityFileSystemApi code path.
+        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
             return 1;
 
-        try
+        if (!SerializedFileDetector.TryParseMetadata(filename.FullName, fileInfo, out var metadata, out var errorMessage))
         {
-            using var sf = UnityFileSystem.OpenSerializedFile(filename.FullName);
-            if (format == OutputFormat.Json)
-                OutputExternalRefsJson(sf);
-            else
-                OutputExternalRefsText(sf);
-            return 0;
-        }
-        catch (Exception err) when (err is NotSupportedException || err is FileFormatException)
-        {
-            Console.Error.WriteLine($"Error opening SerializedFile: {filename.FullName}");
-            Console.Error.WriteLine(err.Message);
+            Console.Error.WriteLine($"Error: Failed to parse external references for: {filename.FullName}");
+            Console.Error.WriteLine(errorMessage);
             return 1;
         }
+
+        if (metadata.ExternalReferences == null)
+        {
+            Console.Error.WriteLine($"Error: External references could not be parsed for: {filename.FullName}");
+            return 1;
+        }
+
+        if (format == OutputFormat.Json)
+            OutputExternalRefsJson(metadata.ExternalReferences);
+        else
+            OutputExternalRefsText(metadata.ExternalReferences);
+
+        return 0;
     }
 
     public static int HandleObjectList(FileInfo filename, OutputFormat format)
     {
         // The object list is read directly from the parsed metadata rather than via UnityFileSystemApi.
-        //
-        // Advantages: works for any modern SerializedFile (version >= 19), including Player builds
-        // that were compiled without TypeTrees — files that UnityFileSystemApi cannot open at all.
-        //
-        // Trade-offs: type names come from TypeIdRegistry rather than the file's embedded TypeTree,
-        // so uncommon types not covered by the registry are displayed as a numeric TypeId. Files
-        // older than version 19 (Unity 2019.1) are not supported by the metadata parser.
-        //
-        // These trade-offs are minor compared to the benefit of handling the common no-TypeTree case,
-        // so there is no need to keep the UnityFileSystemApi code path.
+        // (See comment in HandleExternalRefs() for the reasons for doing it that way)
         if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
             return 1;
 
@@ -149,11 +153,9 @@ public static class SerializedFileCommands
         return true;
     }
 
-    private static void OutputExternalRefsText(SerializedFile sf)
+    private static void OutputExternalRefsText(ExternalReference[] refs)
     {
-        var refs = sf.ExternalReferences;
-
-        for (int i = 0; i < refs.Count; i++)
+        for (int i = 0; i < refs.Length; i++)
         {
             var extRef = refs[i];
             var displayValue = !string.IsNullOrEmpty(extRef.Path) ? extRef.Path : extRef.Guid;
@@ -161,12 +163,11 @@ public static class SerializedFileCommands
         }
     }
 
-    private static void OutputExternalRefsJson(SerializedFile sf)
+    private static void OutputExternalRefsJson(ExternalReference[] refs)
     {
-        var refs = sf.ExternalReferences;
-        var jsonArray = new object[refs.Count];
+        var jsonArray = new object[refs.Length];
 
-        for (int i = 0; i < refs.Count; i++)
+        for (int i = 0; i < refs.Length; i++)
         {
             var extRef = refs[i];
             jsonArray[i] = new

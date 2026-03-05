@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using ExternalReference = UnityDataTools.FileSystem.ExternalReference;
+using ExternalReferenceType = UnityDataTools.FileSystem.ExternalReferenceType;
 using ObjectInfo = UnityDataTools.FileSystem.ObjectInfo;
 
 namespace UnityDataTools.Analyzer.Util;
@@ -173,6 +175,12 @@ public class SerializedFileMetadata
     /// Null until the metadata section has been parsed.
     /// </summary>
     public ObjectInfo[] ObjectList { get; set; }
+
+    /// <summary>
+    /// List of external file references recorded in the file's externals table.
+    /// Null until the metadata section has been parsed.
+    /// </summary>
+    public ExternalReference[] ExternalReferences { get; set; }
 }
 
 /// <summary>
@@ -617,20 +625,28 @@ public static class SerializedFileDetector
                 stream.Seek(8, SeekOrigin.Current); // int64 localIdentifierInFile
             }
 
-            // --- Skip the externals list ---
+            // --- External references list ---
             // Per-entry layout:
             //   [null-terminated string tempEmpty]
             //   [uint32[4] guid]   (16 bytes)
             //   [int32 type]
             //   [null-terminated string pathName]
             int externalsCount = BinaryFileHelper.ReadInt32(reader, swap);
+            var externalRefs = new ExternalReference[externalsCount];
             for (int i = 0; i < externalsCount; i++)
             {
-                BinaryFileHelper.ReadNullTermString(reader);          // tempEmpty (empty in practice)
-                stream.Seek(16, SeekOrigin.Current); // Hash128 guid (4 * uint32)
-                stream.Seek(4, SeekOrigin.Current);  // int32 type
-                BinaryFileHelper.ReadNullTermString(reader);          // pathName
+                BinaryFileHelper.ReadNullTermString(reader);  // tempEmpty (empty in practice)
+                var guid = BinaryFileHelper.ReadHash128(reader, swap);
+                int typeInt = BinaryFileHelper.ReadInt32(reader, swap);
+                string pathName = BinaryFileHelper.ReadNullTermString(reader);
+                externalRefs[i] = new ExternalReference
+                {
+                    Path = pathName,
+                    Guid = guid.ToString(),
+                    Type = (ExternalReferenceType)typeInt,
+                };
             }
+            metadata.ExternalReferences = externalRefs;
 
             // m_RefTypes (version >= 20) is not located immediately after m_Types.
             // It appears at the end of the metadata section
