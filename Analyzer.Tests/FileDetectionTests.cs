@@ -232,8 +232,8 @@ public class FileDetectionTests
         {
             Assert.IsTrue(entry.InlineTypeTree,
                 $"InlineTypeTree should be true (persistentTypeID={entry.PersistentTypeID})");
-            Assert.IsFalse(entry.OldTypeHash.IsZero,
-                $"OldTypeHash should not be zero (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsFalse(entry.TypeTreeStructureHash.IsZero,
+                $"TypeTreeStructureHash should not be zero (persistentTypeID={entry.PersistentTypeID})");
             Assert.IsTrue(entry.TypeTreeContentHash.IsZero,
                 $"TypeTreeContentHash should be zero for version < 23 (persistentTypeID={entry.PersistentTypeID})");
             Assert.Greater(entry.TypeTreeSerializedSize, 0u,
@@ -288,8 +288,8 @@ public class FileDetectionTests
         {
             Assert.Greater(entry.PersistentTypeID, 0,
                 $"PersistentTypeID should be positive (got {entry.PersistentTypeID})");
-            Assert.IsFalse(entry.OldTypeHash.IsZero,
-                $"OldTypeHash should not be zero (persistentTypeID={entry.PersistentTypeID})");
+            Assert.IsFalse(entry.TypeTreeStructureHash.IsZero,
+                $"TypeTreeStructureHash should not be zero (persistentTypeID={entry.PersistentTypeID})");
             Assert.IsFalse(entry.InlineTypeTree,
                 $"InlineTypeTree should be false when EnableTypeTree=false (persistentTypeID={entry.PersistentTypeID})");
             Assert.IsTrue(entry.TypeTreeContentHash.IsZero,

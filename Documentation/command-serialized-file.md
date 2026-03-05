@@ -285,7 +285,7 @@ Each element of `typeTrees` and `serializedReferenceTypeTrees` in the JSON outpu
 | `isStrippedType` | `true` for types representing prefab-stripped objects (the `stripped` keyword in YAML). Orthogonal to TypeTree presence. |
 | `scriptTypeIndex` | Index into the file's MonoScript reference list. `-1` for native Unity types. |
 | `scriptID` | 128-bit hash (MD4 of assembly + namespace + class name) identifying the MonoScript. All-zeros when not applicable. |
-| `oldTypeHash` | Hash of the TypeTree content as originally written; used for compatibility checking at load time. |
+| `typeTreeStructureHash` | MD4 hash of the TypeTree structure as originally written; used for compatibility checking at load time. |
 | `typeTreeContentHash` | XXH3 hash of the TypeTree blob. All-zeros for files with version < 23. |
 | `typeTreeSerializedSize` | Byte size of the TypeTree blob for this entry. `0` when `inlineTypeTree` is false. |
 | `inlineTypeTree` | `true` when the TypeTree blob is present inline in the file's metadata. |

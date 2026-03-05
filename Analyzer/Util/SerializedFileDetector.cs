@@ -70,19 +70,26 @@ public class TypeTreeInfo
     public UnityHash128 ScriptID { get; set; }
 
     /// <summary>
-    /// Hash of the TypeTree content as originally written into the file.
+    /// Hash of the TypeTree structure (field names, types, byte sizes, alignment flags),
+    /// computed via MD4 over the node graph. Used to detect type schema changes between
+    /// the version stored in the file and the current runtime type, and to deduplicate
+    /// type entries when writing serialized files.  Sometimes referred to as the "OldTypeHash"
+    /// because it refers to the type at the time it was serialized, which might be older than
+    /// the current type.
     /// Used for compatibility checking at load time.
     /// </summary>
-    public UnityHash128 OldTypeHash { get; set; }
+    public UnityHash128 TypeTreeStructureHash { get; set; }
 
     // -----------------------------------------------------------------------
     // TypeTree inline/extracted data (only when EnableTypeTree = true)
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// XXH3 content hash of the TypeTree blob. Stored explicitly in the metadata for
+    /// XXH3 content hash of the TypeTree blob, e.g. hash of the raw binary encoding
+    /// of the TypeTree definition. Stored explicitly in the metadata for
     /// version >= 23 (kExtractedTypeTreeSupport). IsZero == true indicates this field
     /// was not present in the metadata (version < 23 or no inline TypeTree).
+    /// This is used for TypeTree deduplication and caching.
     /// </summary>
     public UnityHash128 TypeTreeContentHash { get; set; }
 
@@ -751,7 +758,7 @@ public static class SerializedFileDetector
             info.ScriptID = BinaryFileHelper.ReadHash128(reader, swap);
 
         // oldTypeHash: always present. Hash of the TypeTree content as originally written.
-        info.OldTypeHash = BinaryFileHelper.ReadHash128(reader, swap);
+        info.TypeTreeStructureHash = BinaryFileHelper.ReadHash128(reader, swap);
 
         if (!enableTypeTree)
             return info;
