@@ -139,6 +139,24 @@ public class TypeTreeInfo
 }
 
 /// <summary>
+/// A reference to a MonoScript object that backs a C# MonoBehaviour type recorded in this file.
+/// Corresponds to one entry in the file's m_ScriptTypes list.
+/// </summary>
+public class ScriptType
+{
+    /// <summary>
+    /// Index into the file's external references list, identifying which SerializedFile contains
+    /// the MonoScript object. 0 = this file itself; 1+ = 1-based index into the externals list.
+    /// </summary>
+    public int FileID { get; set; }
+
+    /// <summary>
+    /// The object ID (localIdentifierInFile) of the MonoScript within the identified file.
+    /// </summary>
+    public long PathID { get; set; }
+}
+
+/// <summary>
 /// Information extracted from the beginning of a Unity SerializedFile metadata section.
 /// </summary>
 public class SerializedFileMetadata
@@ -169,6 +187,14 @@ public class SerializedFileMetadata
     /// Empty array for files with version < 20.
     /// </summary>
     public TypeTreeInfo[] SerializedReferenceTypeTrees { get; set; }
+
+    /// <summary>
+    /// List of MonoScript references for the C# types used in this file.
+    /// Each entry points to the MonoScript object (in this file or an external file) that backs
+    /// a C# MonoBehaviour-derived type whose ScriptTypeIndex is the index of that entry here.
+    /// Null until the metadata section has been parsed.
+    /// </summary>
+    public ScriptType[] ScriptTypes { get; set; }
 
     /// <summary>
     /// List of all objects recorded in the file's object table.
@@ -612,18 +638,22 @@ public static class SerializedFileDetector
             }
             metadata.ObjectList = objectList;
 
-            // --- Skip the script type list ---
+            // --- Script type list ---
+            // Each entry points to the MonoScript object that backs a C# MonoBehaviour-derived type.
             // Per-entry layout (version >= 14, applies to all our versions):
-            //   [int32 localSerializedFileIndex]
+            //   [int32 localSerializedFileIndex]   (FileID: 0 = this file, 1+ = external ref index)
             //   [4-byte alignment relative to metadata start]
-            //   [int64 localIdentifierInFile]
+            //   [int64 localIdentifierInFile]      (PathID: object ID within the identified file)
             int scriptTypeCount = BinaryFileHelper.ReadInt32(reader, swap);
+            var scriptTypes = new ScriptType[scriptTypeCount];
             for (int i = 0; i < scriptTypeCount; i++)
             {
-                stream.Seek(4, SeekOrigin.Current); // int32 localSerializedFileIndex
+                int fileID = BinaryFileHelper.ReadInt32(reader, swap);
                 BinaryFileHelper.AlignTo4(stream, metadataOffset);
-                stream.Seek(8, SeekOrigin.Current); // int64 localIdentifierInFile
+                long pathID = BinaryFileHelper.ReadInt64(reader, swap);
+                scriptTypes[i] = new ScriptType { FileID = fileID, PathID = pathID };
             }
+            metadata.ScriptTypes = scriptTypes;
 
             // --- External references list ---
             // Per-entry layout:

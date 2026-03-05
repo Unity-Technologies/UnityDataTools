@@ -271,6 +271,7 @@ public static class SerializedFileCommands
             serializedReferenceTypeTreeCount = metadata.SerializedReferenceTypeTreeCount,
             typeTrees = metadata.TypeTrees?.Select(TypeTreeInfoToJson).ToArray(),
             serializedReferenceTypeTrees = metadata.SerializedReferenceTypeTrees?.Select(TypeTreeInfoToJson).ToArray(),
+            scriptTypes = metadata.ScriptTypes?.Select(s => new { fileID = s.FileID, pathID = s.PathID }).ToArray(),
         };
 
         var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });

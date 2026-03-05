@@ -364,6 +364,16 @@ public class FileDetectionTests
         Assert.That(monoBehaviour.TypeDependencies[0], Is.EqualTo(0),
             "MonoBehaviour should record dependency on SerializedReference");
 
+        // --- Script types ---
+        // ScriptTypeIndex=0 on the MonoBehaviour entry above means it is backed by ScriptTypes[0].
+        // The MonoScript lives in external file #1 (the companion monoscriptbundle).
+        Assert.IsNotNull(metadata.ScriptTypes, "ScriptTypes should be populated");
+        Assert.That(metadata.ScriptTypes.Length, Is.EqualTo(1), "Should have 1 script type entry");
+        Assert.That(metadata.ScriptTypes[0].FileID, Is.EqualTo(1),
+            "ScriptTypes[0].FileID should be 1 (first external reference)");
+        Assert.That(metadata.ScriptTypes[0].PathID, Is.EqualTo(3225487681952536265L),
+            "ScriptTypes[0].PathID should match the MonoScript object ID in monoscriptbundle");
+
         // --- SerializedReference type entry ---
         Assert.That(metadata.SerializedReferenceTypeTrees.Length, Is.EqualTo(1));
         var refType = metadata.SerializedReferenceTypeTrees[0];

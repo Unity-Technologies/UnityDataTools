@@ -253,11 +253,12 @@ UnityDataTool serialized-file metadata level0 --format json
   "typeTreeCount": 6,
   "serializedReferenceTypeTreeCount": 0,
   "typeTrees": [ ... ],
-  "serializedReferenceTypeTrees": [ ... ]
+  "serializedReferenceTypeTrees": [ ... ],
+  "scriptTypes": [ ... ]
 }
 ```
 
-Each element of `typeTrees` and `serializedReferenceTypeTrees` contains per-type details including hash values, TypeTree blob size, inline/external flag, and (for SerializeReference types) the C# class identity.
+Each element of `typeTrees` and `serializedReferenceTypeTrees` contains per-type details including hash values, TypeTree blob size, inline/external flag, and (for SerializeReference types) the C# class identity. Each element of `scriptTypes` contains the file and object ID of the backing MonoScript asset.
 
 ### Metadata Fields
 
@@ -272,6 +273,7 @@ The text and JSON outputs use different field names and representations for some
 | **RefType Count** | `serializedReferenceTypeTreeCount` | Number of type entries for `[SerializeReference]` types recorded in the file. Always `0` for files with version < 20. |
 | *(JSON only)* | `typeTrees` | Array of per-type detail objects for the regular type entries. `null` when parsing failed or was not attempted. See **Per-Type Entry Fields** below. |
 | *(JSON only)* | `serializedReferenceTypeTrees` | Array of per-type detail objects for the `[SerializeReference]` type entries. Empty array for files with version < 20. See **Per-Type Entry Fields** below. |
+| *(JSON only)* | `scriptTypes` | Array of MonoScript references for the C# types used in this file. Each entry's index corresponds to the `scriptTypeIndex` field of a type entry in `typeTrees`. See **Script Type Entry Fields** below. |
 
 ### Per-Type Entry Fields
 
@@ -291,6 +293,15 @@ Each element of `typeTrees` and `serializedReferenceTypeTrees` in the JSON outpu
 | `namespaceName` | C# namespace; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
 | `assemblyName` | Assembly name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
 | `typeDependencies` | Array of indices into `serializedReferenceTypeTrees` listing which `[SerializeReference]` types objects of this type may hold. Empty for `[SerializeReference]` entries or files with version < 21. |
+
+### Script Type Entry Fields
+
+Each element of `scriptTypes` in the JSON output contains:
+
+| JSON Field | Description |
+|------------|-------------|
+| `fileID` | Index into the file's external references list identifying which SerializedFile contains the MonoScript asset. `0` = this file itself; `1`+ = 1-based index into the `externalrefs` list. |
+| `pathID` | The object ID (`localIdentifierInFile`) of the MonoScript within the identified file. Corresponds to the `id` field shown by `sf objectlist` on that file. |
 
 Notes:
 
