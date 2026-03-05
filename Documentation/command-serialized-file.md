@@ -21,7 +21,7 @@ The `dump` command can be used to view the serialized objects.
 | [`externalrefs`](#externalrefs) | List external file references |
 | [`objectlist`](#objectlist) | List all objects in the file |
 | [`header`](#header) | Show SerializedFile header information |
-| [`metadata`](#metadata) | Show SerializedFile metadata (Unity version, target platform, type tree flag) |
+| [`metadata`](#metadata) | Show SerializedFile metadata (Unity version, platform, TypeTree summary) |
 
 ---
 
@@ -207,7 +207,7 @@ UnityDataTool serialized-file header level0 --format json
 
 ## metadata
 
-Shows information from the metadata section of a SerializedFile. This includes the Unity version the file was built with, the target platform, and whether TypeTrees are embedded in the file.
+Shows information from the metadata section of a SerializedFile. This includes the Unity version, target platform, TypeTree storage mode (inline, external, or absent), and counts of the type entries recorded in the file. The JSON output includes additional per-type details; see the notes below.
 
 Requires SerializedFile version 19 (Unity 2019.1) or newer. Files older than version 19 are not supported by this subcommand.
 
@@ -231,9 +231,11 @@ UnityDataTool sf metadata level0
 
 **Output:**
 ```
-Unity Version        2022.1.20f1
-Target Platform      2
-Enable Type Tree     True
+Unity Version        6000.0.65f1
+Target Platform      19
+TypeTree Definitions No
+TypeTree Count       6
+RefType Count        0
 ```
 
 ### Example - JSON Output
@@ -242,14 +244,20 @@ Enable Type Tree     True
 UnityDataTool serialized-file metadata level0 --format json
 ```
 
-**Output:**
+**Output (top-level fields shown; per-type arrays omitted for brevity):**
 ```json
 {
-  "unityVersion": "2022.1.20f1",
-  "targetPlatform": 2,
-  "enableTypeTree": true
+  "unityVersion": "6000.0.65f1",
+  "targetPlatform": 19,
+  "enableTypeTree": false,
+  "typeTreeCount": 6,
+  "serializedReferenceTypeTreeCount": 0,
+  "typeTrees": [ ... ],
+  "serializedReferenceTypeTrees": [ ... ]
 }
 ```
+
+Each element of `typeTrees` and `serializedReferenceTypeTrees` contains per-type details including hash values, TypeTree blob size, inline/external flag, and (for SerializeReference types) the C# class identity.
 
 ### Metadata Fields
 
@@ -257,9 +265,11 @@ UnityDataTool serialized-file metadata level0 --format json
 |-------|-------------|
 | **Unity Version** | The Unity version string used to build this file (e.g. `"2022.1.20f1"`, `"6000.0.65f1"`). |
 | **Target Platform** | Numeric platform identifier. Common values: `2` = OSX Standalone, `9` = iOS, `13` = Android, `19` = Windows Standalone x64. See [BuildTarget](https://docs.unity3d.com/ScriptReference/BuildTarget.html) for details. |
-| **Enable Type Tree** | Whether TypeTree data is embedded in the file. `true` in Editor and TypeTree-enabled builds. `false` in Player builds with TypeTrees stripped (the default). TypeTrees are required for the `objectlist` and `externalrefs` subcommands to show type names. |
+| **TypeTree Definitions** | Whether the definition of the types are embedded in the file. `Inline` in Editor and TypeTree-enabled builds. `No` in Player builds with TypeTrees stripped (the default). TypeTrees are required for the `objectlist` and `externalrefs` subcommands to show type names. `External` when the TypeTrees are in an external shared file. |
+| **TypeTree Count** | Number of TypeTrees defined in the file. Each TypeTree corresponds to a unique type used by objects in the file. This array is present even when TypeTree definitions are not stored inline. |
+| **RefType Count** | Number of TypeTrees for SerializeReference classes saved in the file. |
 
-Notes: 
+Notes:
 
 * For SerializedFiles inside AssetBundles the Unity Version is frequently stripped ("0.0.0").  See [BuildAssetBundleOptions.AssetBundleStripUnityVersion](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.AssetBundleStripUnityVersion.html).
 * For AssetBundles the version string may take the form "<version>\n<assetbundle-format-version>".  The assetbundle-format-version rarely changes, and is currently 2.
