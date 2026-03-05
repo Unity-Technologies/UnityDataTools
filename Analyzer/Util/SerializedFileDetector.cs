@@ -17,6 +17,138 @@ public class SerializedFileInfo
 }
 
 /// <summary>
+/// A 128-bit hash stored as four 32-bit unsigned integers, matching Unity's Hash128 binary layout.
+/// </summary>
+public readonly struct TypeTreeHash128
+{
+    public uint Data0 { get; init; }
+    public uint Data1 { get; init; }
+    public uint Data2 { get; init; }
+    public uint Data3 { get; init; }
+
+    public bool IsZero => Data0 == 0 && Data1 == 0 && Data2 == 0 && Data3 == 0;
+
+    public override string ToString() => $"{Data0:x8}{Data1:x8}{Data2:x8}{Data3:x8}";
+}
+
+/// <summary>
+/// Summary information about a single TypeTree entry within a SerializedFile metadata section.
+/// Does not contain the full TypeTree node graph — only the per-entry header fields.
+///
+/// Each entry corresponds to one element of either the regular type list (m_Types) or the
+/// SerializeReference type list (m_RefTypes, version >= 20). Fields that are not applicable
+/// for a given entry use well-defined sentinel values rather than null:
+///   - TypeTreeHash128 fields use IsZero == true to indicate "not present"
+///   - short ScriptTypeIndex uses -1 to indicate "not a script type"
+///   - string fields (ClassName, Namespace, AssemblyName) use string.Empty for regular type entries
+///   - TypeDependencies uses an empty array for ref type entries or version &lt; 21
+/// </summary>
+public class TypeTreeInfo
+{
+    // -----------------------------------------------------------------------
+    // Fields present for all versions >= 16 (kRefactoredClassId)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Unity ClassID for this type (e.g. 114 = MonoBehaviour, 115 = MonoScript).
+    /// Corresponds to m_PersistentTypeID in the file. For ref type entries this is
+    /// typically 0 and less meaningful than ClassName/Namespace/AssemblyName.
+    /// </summary>
+    public int PersistentTypeID { get; set; }
+
+    /// <summary>
+    /// True if this type is stripped: no TypeTree blob is present and the object data
+    /// cannot be fully deserialized without a matching runtime.
+    /// </summary>
+    public bool IsStrippedType { get; set; }
+
+    /// <summary>
+    /// Index into the file's script type list (m_ScriptTypes).
+    /// -1 (sentinel) means this entry is not backed by a MonoScript (i.e. a native Unity type).
+    /// </summary>
+    public short ScriptTypeIndex { get; set; } = -1;
+
+    // -----------------------------------------------------------------------
+    // Hash fields (version >= 13, kHasTypeTreeHashes)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// MD4 hash of (assembly name + namespace + class name) identifying the script.
+    /// Written for MonoBehaviour (ClassID 114), unknown script types, and entries where
+    /// ScriptTypeIndex >= 0. IsZero == true indicates this field is not applicable for
+    /// this entry (native type with no associated MonoScript).
+    /// </summary>
+    public TypeTreeHash128 ScriptID { get; set; }
+
+    /// <summary>
+    /// Hash of the TypeTree content as originally written into the file.
+    /// Used for compatibility checking at load time.
+    /// </summary>
+    public TypeTreeHash128 OldTypeHash { get; set; }
+
+    // -----------------------------------------------------------------------
+    // TypeTree inline/extracted data (only when EnableTypeTree = true)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// XXH3 content hash of the TypeTree blob. Stored explicitly in the metadata for
+    /// version >= 23 (kExtractedTypeTreeSupport). IsZero == true indicates this field
+    /// was not present in the metadata (version &lt; 23 or no inline TypeTree).
+    /// </summary>
+    public TypeTreeHash128 TypeTreeContentHash { get; set; }
+
+    /// <summary>
+    /// Actual size in bytes of the TypeTree blob for this entry.
+    /// 0 when InlineTypeTree is false (stripped, EnableTypeTree=false, or extracted to
+    /// an external store in version >= 23). For version &lt; 23 where the size is not
+    /// stored explicitly, this is computed by skipping over the blob during parsing.
+    /// </summary>
+    public uint TypeTreeSerializedSize { get; set; }
+
+    /// <summary>
+    /// True when the TypeTree blob is present inline in this file's metadata and can be
+    /// read without an external TypeTree store. False when stripped, EnableTypeTree is
+    /// false, or TypeTreeSerializedSize is 0 (extracted, version >= 23).
+    /// </summary>
+    public bool InlineTypeTree { get; set; }
+
+    // -----------------------------------------------------------------------
+    // Ref-type identification (only for entries in SerializedReferenceTypeTrees,
+    // version >= 20)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// C# class name of the SerializeReference type.
+    /// string.Empty for regular (non-ref) type entries.
+    /// </summary>
+    public string ClassName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// C# namespace of the SerializeReference type.
+    /// string.Empty for regular (non-ref) type entries.
+    /// </summary>
+    public string Namespace { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Assembly name of the SerializeReference type.
+    /// string.Empty for regular (non-ref) type entries.
+    /// </summary>
+    public string AssemblyName { get; set; } = string.Empty;
+
+    // -----------------------------------------------------------------------
+    // Non-ref type dependency list (only for entries in TypeTrees,
+    // version >= 21, kStoresTypeDependencies)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Indices into the SerializedReferenceTypeTrees array representing the
+    /// SerializeReference types that objects of this type may reference.
+    /// Empty array for ref type entries or files with version &lt; 21.
+    /// </summary>
+    public int[] TypeDependencies { get; set; } = Array.Empty<int>();
+}
+
+/// <summary>
 /// Information extracted from the beginning of a Unity SerializedFile metadata section.
 /// </summary>
 public class SerializedFileMetadata
@@ -24,6 +156,29 @@ public class SerializedFileMetadata
     public string UnityVersion { get; set; }
     public uint TargetPlatform { get; set; }
     public bool EnableTypeTree { get; set; }
+
+    /// <summary>
+    /// Number of regular (object) TypeTree entries (m_Types).
+    /// Populated even when TypeTrees is null.
+    /// </summary>
+    public int TypeTreeCount { get; set; }
+
+    /// <summary>
+    /// Number of SerializeReference TypeTree entries (m_RefTypes).
+    /// Always 0 for files with version &lt; 20 (kSupportsRefObject).
+    /// </summary>
+    public int SerializedReferenceTypeTreeCount { get; set; }
+
+    /// <summary>
+    /// Summary of each regular type entry. Null until the TypeTree section has been parsed.
+    /// </summary>
+    public TypeTreeInfo[] TypeTrees { get; set; }
+
+    /// <summary>
+    /// Summary of each SerializeReference type entry.
+    /// Empty array for files with version &lt; 20.
+    /// </summary>
+    public TypeTreeInfo[] SerializedReferenceTypeTrees { get; set; }
 }
 
 /// <summary>
@@ -81,6 +236,16 @@ public static class SerializedFileDetector
     // Header sizes
     private const int LegacyHeaderSize = 20;  // SerializedFileHeader32
     private const int ModernHeaderSize = 48;  // SerializedFileHeader
+
+    // TypeTree section version boundaries
+    private const uint SupportsRefObjectVersion = 20;        // m_RefTypes list (appears after externals)
+    private const uint StoresTypeDependenciesVersion = 21;   // Per-type dependency list added
+    private const uint ExtractedTypeTreeSupportVersion = 23; // TypeTree blob may be extracted externally
+
+    // Per-type-entry constants
+    private const int MonoBehaviourClassID = 114;    // persistentTypeID for MonoBehaviour
+    private const int UndefinedPersistentTypeID = -1; // persistentTypeID for types with no known ClassID
+    private const uint TypeTreeNodeSize = 32;         // Bytes per node in the blob (version >= 18)
 
     /// <summary>
     /// Attempts to detect if a file is a Unity SerializedFile by reading and validating its header.
@@ -305,33 +470,27 @@ public static class SerializedFileDetector
     }
 
     /// <summary>
-    /// Parses the beginning of the metadata section from a previously-validated SerializedFile.
-    ///
-    ///   1. Unity version string  (null-terminated ASCII, always present for version >= 7)
-    ///   2. Target platform       (uint32, always present for version >= 8)
-    ///   3. Enable type tree flag (bool serialized as 1 byte, always present for version >= 13)
+    /// Parses the metadata section from a previously-validated SerializedFile.
     ///
     /// The metadata starts immediately after the file header:
-    ///   - Legacy format (version 9-21): header is 20 bytes (SerializedFileHeader32)
-    ///   - Modern format (version >= 22): header is 48 bytes (SerializedFileHeader)
+    ///   - Legacy format (version 9-21): header is 20 bytes
+    ///   - Modern format (version >= 22): header is 48 bytes
     ///
-    /// The metadata content is written in the platform's native byte order (without additional
-    /// byte swapping beyond the header swap). The headerInfo.Endianness field indicates whether byte-swapping is
-    /// needed for multi-byte integer fields when running on a little-endian host.
+    /// The metadata content is written in the endianness indicated by headerInfo.Endianness.
+    /// All multi-byte integer fields are byte-swapped when that value is BigEndian (1).
     /// </summary>
     /// <param name="filePath">Path to the SerializedFile (must already have passed TryDetectSerializedFile)</param>
     /// <param name="headerInfo">Header info from a prior successful TryDetectSerializedFile call</param>
-    /// <param name="metadata">On success, the parsed metadata fields; null on failure</param>
+    /// <param name="metadata">On success, the parsed metadata; null on failure</param>
     /// <param name="errorMessage">On failure, a description of what went wrong; null on success</param>
-    /// <returns>True if the metadata beginning was successfully parsed</returns>
+    /// <returns>True if at least the initial metadata fields were successfully parsed</returns>
     public static bool TryParseMetadata(string filePath, SerializedFileInfo headerInfo, out SerializedFileMetadata metadata, out string errorMessage)
     {
         metadata = null;
         errorMessage = null;
 
-        // Only support version >= kTypeTreeNodeWithTypeFlags (19, Unity 2019.1).
-        // Older files have metadata format differences that would require additional logic
-        // we have not implemented.
+        // Only support version >= 19 (Unity 2019.1). Older files have metadata format
+        // differences we have not implemented.
         if (headerInfo.Version < MinMetadataParseVersion)
         {
             errorMessage = $"Metadata parsing is not supported for SerializedFile version {headerInfo.Version}. " +
@@ -341,53 +500,18 @@ public static class SerializedFileDetector
 
         try
         {
-            // Determine where the metadata section starts in the file.
-            // For version >= 9 (which covers all versions we support), the layout is:
-            //   [header][metadata][data]
-            // The metadata immediately follows the header.
-            int metadataOffset = headerInfo.IsLegacyFormat ? LegacyHeaderSize : ModernHeaderSize;
+            long metadataOffset = headerInfo.IsLegacyFormat ? LegacyHeaderSize : ModernHeaderSize;
+            bool swap = headerInfo.Endianness == BigEndian;
 
-            // We only need to read the first few bytes of the metadata to extract the three fields,
-            // so we cap the read at 256 bytes.
-            int readLength = (int)Math.Min(headerInfo.MetadataSize, 256);
-            if (readLength <= 0)
-            {
-                errorMessage = "Metadata section is empty.";
-                return false;
-            }
-
-            byte[] metadataBytes = new byte[readLength];
-            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                stream.Seek(metadataOffset, SeekOrigin.Begin);
-                int bytesRead = stream.Read(metadataBytes, 0, readLength);
-                if (bytesRead < readLength)
-                {
-                    errorMessage = "File is truncated; could not read the expected metadata bytes.";
-                    return false;
-                }
-            }
-
-            int pos = 0;
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            stream.Seek(metadataOffset, SeekOrigin.Begin);
+            using var reader = new BinaryReader(stream, System.Text.Encoding.ASCII, leaveOpen: true);
 
             // --- Field 1: Unity version string (null-terminated ASCII) ---
-            // Present for version >= 7
-            int stringStart = pos;
-            while (pos < metadataBytes.Length && metadataBytes[pos] != 0)
-                pos++;
+            string unityVersion = ReadNullTermString(reader);
 
-            if (pos >= metadataBytes.Length)
-            {
-                // No null terminator found in the read window — the metadata is malformed.
-                errorMessage = "Failed to find null terminator for Unity version string in metadata.";
-                return false;
-            }
-
-            string unityVersion = System.Text.Encoding.ASCII.GetString(metadataBytes, stringStart, pos - stringStart);
-            pos++; // Skip the null terminator.
-
-            // Sanity-check: an empty or unusually long version string is suspicious.
-            // Even when the version is stripped this would be "0.0.0", not an empty string.
+            // An empty or unusually long version string indicates a corrupt file.
+            // Even a stripped version string would be "0.0.0", not empty.
             if (unityVersion.Length == 0 || unityVersion.Length > 64)
             {
                 errorMessage = $"Unity version string has unexpected length ({unityVersion.Length}).";
@@ -395,29 +519,10 @@ public static class SerializedFileDetector
             }
 
             // --- Field 2: Target platform (uint32) ---
-            // Present for version >= kUnknown_8 (8)
-            if (pos + 4 > metadataBytes.Length)
-            {
-                errorMessage = "File is truncated; could not read target platform field from metadata.";
-                return false;
-            }
+            uint targetPlatform = ReadUInt32(reader, swap);
 
-            uint targetPlatform = BitConverter.ToUInt32(metadataBytes, pos);
-            pos += 4;
-
-            // Swap bytes if the file was written on a big-endian platform.
-            if (headerInfo.Endianness == BigEndian)
-                targetPlatform = SwapUInt32(targetPlatform);
-
-            // --- Field 3: Enable type tree flag (C++ bool serialized as 1 byte) ---
-            // Present for version >= kHasTypeTreeHashes (13)
-            if (pos >= metadataBytes.Length)
-            {
-                errorMessage = "File is truncated; could not read enableTypeTree field from metadata.";
-                return false;
-            }
-
-            bool enableTypeTree = metadataBytes[pos] != 0;
+            // --- Field 3: Enable type tree flag (bool serialized as 1 byte) ---
+            bool enableTypeTree = reader.ReadByte() != 0;
 
             metadata = new SerializedFileMetadata
             {
@@ -425,6 +530,10 @@ public static class SerializedFileDetector
                 TargetPlatform = targetPlatform,
                 EnableTypeTree = enableTypeTree,
             };
+
+            // Parse the TypeTree section. Protected by its own try/catch so that any
+            // failure there still returns a partially-populated metadata struct.
+            ParseTypeTreeMetadata(reader, headerInfo, swap, metadataOffset, metadata);
 
             return true;
         }
@@ -434,6 +543,279 @@ public static class SerializedFileDetector
             return false;
         }
     }
+
+    /// <summary>
+    /// Parses the TypeTree section of the metadata, populating the type-list fields of
+    /// <paramref name="metadata"/>. Any parse failure is silently caught so the caller
+    /// always receives at least the three initial metadata fields.
+    ///
+    /// Layout after the three initial fields:
+    ///   [int32  typeCount]
+    ///   [SerializedType * typeCount]   -- regular object types (m_Types)
+    ///
+    /// Then, after the object list, script type list, and externals list, for version >= 20:
+    ///   [int32  refTypeCount]
+    ///   [RefSerializedType * refTypeCount]  -- SerializeReference types (m_RefTypes)
+    /// </summary>
+    private static void ParseTypeTreeMetadata(BinaryReader reader, SerializedFileInfo headerInfo,
+        bool swap, long metadataOffset, SerializedFileMetadata metadata)
+    {
+        try
+        {
+            uint version = headerInfo.Version;
+            bool enableTypeTree = metadata.EnableTypeTree;
+            Stream stream = reader.BaseStream;
+
+            // --- Regular type list (m_Types) ---
+            int typeCount = ReadInt32(reader, swap);
+            metadata.TypeTreeCount = typeCount;
+
+            var typeTrees = new TypeTreeInfo[typeCount];
+            for (int i = 0; i < typeCount; i++)
+                typeTrees[i] = ReadTypeEntry(reader, version, swap, isRefType: false, enableTypeTree);
+            metadata.TypeTrees = typeTrees;
+
+            // m_RefTypes (version >= 20) is not located immediately after m_Types.
+            // It appears at the end of the metadata section, after the object list,
+            // script type list, and externals list. We must skip those three sections.
+            if (version < SupportsRefObjectVersion)
+                return;
+
+            // --- Skip the object list ---
+            // Per-object layout (version >= 19):
+            //   [4-byte alignment relative to metadata start]
+            //   [int64  fileID]
+            //   [uint32 byteStart]  or  [uint64 byteStart]  (version >= 22)
+            //   [uint32 byteSize]
+            //   [uint32 typeID]
+            int objectCount = ReadInt32(reader, swap);
+            for (int i = 0; i < objectCount; i++)
+            {
+                AlignTo4(stream, metadataOffset);
+                stream.Seek(8, SeekOrigin.Current); // int64 fileID
+                stream.Seek(version >= LargeFilesSupportVersion ? 8 : 4, SeekOrigin.Current); // byteStart
+                stream.Seek(4, SeekOrigin.Current); // uint32 byteSize
+                stream.Seek(4, SeekOrigin.Current); // uint32 typeID
+            }
+
+            // --- Skip the script type list ---
+            // Per-entry layout (version >= 14, applies to all our versions):
+            //   [int32 localSerializedFileIndex]
+            //   [4-byte alignment relative to metadata start]
+            //   [int64 localIdentifierInFile]
+            int scriptTypeCount = ReadInt32(reader, swap);
+            for (int i = 0; i < scriptTypeCount; i++)
+            {
+                stream.Seek(4, SeekOrigin.Current); // int32 localSerializedFileIndex
+                AlignTo4(stream, metadataOffset);
+                stream.Seek(8, SeekOrigin.Current); // int64 localIdentifierInFile
+            }
+
+            // --- Skip the externals list ---
+            // Per-entry layout:
+            //   [null-terminated string tempEmpty]
+            //   [uint32[4] guid]   (16 bytes)
+            //   [int32 type]
+            //   [null-terminated string pathName]
+            int externalsCount = ReadInt32(reader, swap);
+            for (int i = 0; i < externalsCount; i++)
+            {
+                ReadNullTermString(reader);          // tempEmpty (empty in practice)
+                stream.Seek(16, SeekOrigin.Current); // Hash128 guid (4 * uint32)
+                stream.Seek(4, SeekOrigin.Current);  // int32 type
+                ReadNullTermString(reader);          // pathName
+            }
+
+            // --- SerializeReference type list (m_RefTypes, version >= 20) ---
+            int refTypeCount = ReadInt32(reader, swap);
+            metadata.SerializedReferenceTypeTreeCount = refTypeCount;
+
+            var refTypeTrees = new TypeTreeInfo[refTypeCount];
+            for (int i = 0; i < refTypeCount; i++)
+                refTypeTrees[i] = ReadTypeEntry(reader, version, swap, isRefType: true, enableTypeTree);
+            metadata.SerializedReferenceTypeTrees = refTypeTrees;
+        }
+        catch
+        {
+            // Best-effort: leave metadata partially populated with whatever was parsed
+            // successfully before the failure.
+        }
+    }
+
+    /// <summary>
+    /// Reads one type entry from the metadata stream into a <see cref="TypeTreeInfo"/>.
+    /// Advances the stream past all fields, including the TypeTree blob when present.
+    ///
+    /// Per-entry layout:
+    ///   [int32  persistentTypeID]
+    ///   [uint8  isStrippedType]
+    ///   [int16  scriptTypeIndex]
+    ///   [Hash128 scriptID]        (conditional — see below)
+    ///   [Hash128 oldTypeHash]
+    ///   if enableTypeTree:
+    ///     if version >= 23:
+    ///       [Hash128 typeTreeContentHash]
+    ///       [uint32  typeTreeSize]      (0 = blob extracted to external store)
+    ///     [TypeTree blob]               (present when version &lt; 23 or typeTreeSize > 0)
+    ///     if version >= 21:
+    ///       if isRefType:  [string className] [string nameSpace] [string asmName]
+    ///       else:          [int32 depCount] [int32 * depCount]
+    /// </summary>
+    private static TypeTreeInfo ReadTypeEntry(BinaryReader reader, uint version, bool swap,
+        bool isRefType, bool enableTypeTree)
+    {
+        var info = new TypeTreeInfo();
+        Stream stream = reader.BaseStream;
+
+        // persistentTypeID: the Unity ClassID. -1 (UndefinedPersistentTypeID) when the
+        // class has no known built-in ClassID (e.g. an unresolved script type).
+        info.PersistentTypeID = ReadInt32(reader, swap);
+
+        // isStrippedType: true when the type definition was stripped from the build.
+        // Objects of a stripped type cannot be fully deserialized without a matching runtime.
+        info.IsStrippedType = reader.ReadByte() != 0;
+
+        // scriptTypeIndex: index into the file's MonoScript reference list. -1 = not a script type.
+        info.ScriptTypeIndex = ReadInt16(reader, swap);
+
+        // scriptID is a 128-bit hash identifying a MonoScript (MD4 of assembly + namespace + class name).
+        // It is present for:
+        //   - Types with no known ClassID  (persistentTypeID == UndefinedPersistentTypeID)
+        //   - MonoBehaviour types          (persistentTypeID == 114)
+        //   - Script-backed types          (scriptTypeIndex >= 0)
+        //
+        // Historical note: files written before Unity 2018.3.0a1 omitted scriptID when
+        // scriptTypeIndex >= 0. All files this parser supports are version >= 19 (Unity 2019.1+),
+        // so that historical case never applies here.
+        bool hasScriptID = info.PersistentTypeID == UndefinedPersistentTypeID
+                        || info.PersistentTypeID == MonoBehaviourClassID
+                        || info.ScriptTypeIndex >= 0;
+        if (hasScriptID)
+            info.ScriptID = ReadHash128(reader, swap);
+
+        // oldTypeHash: always present. Hash of the TypeTree content as originally written.
+        info.OldTypeHash = ReadHash128(reader, swap);
+
+        if (!enableTypeTree)
+            return info;
+
+        // --- TypeTree blob ---
+
+        uint typeTreeSize = 0;
+        if (version >= ExtractedTypeTreeSupportVersion)
+        {
+            // Version >= 23: a 20-byte prefix precedes the blob.
+            // typeTreeContentHash is used as a cache key for the TypeTree store.
+            // typeTreeSize == 0 means the blob was extracted to an external archive.
+            info.TypeTreeContentHash = ReadHash128(reader, swap);
+            typeTreeSize = ReadUInt32(reader, swap);
+            info.TypeTreeSerializedSize = typeTreeSize;
+        }
+
+        bool blobPresent = version < ExtractedTypeTreeSupportVersion || typeTreeSize > 0;
+        if (blobPresent)
+        {
+            if (version < ExtractedTypeTreeSupportVersion)
+            {
+                // Versions 19-22: blob begins directly with [uint32 numberOfNodes][uint32 numberOfChars],
+                // followed by a flat array of 32-byte nodes and a packed string buffer.
+                uint numberOfNodes = ReadUInt32(reader, swap);
+                uint numberOfChars = ReadUInt32(reader, swap);
+                uint dataBytes = numberOfNodes * TypeTreeNodeSize + numberOfChars;
+                stream.Seek(dataBytes, SeekOrigin.Current);
+                // Record the total blob size including the 8-byte count header.
+                info.TypeTreeSerializedSize = 8 + dataBytes;
+            }
+            else
+            {
+                // Version >= 23 with inline blob: skip exactly typeTreeSize bytes.
+                // The blob starts with its own 8-byte magic+version prefix, followed by
+                // node count, char count, node array, and string buffer.
+                stream.Seek(typeTreeSize, SeekOrigin.Current);
+            }
+            info.InlineTypeTree = true;
+        }
+
+        if (version >= StoresTypeDependenciesVersion)
+        {
+            if (isRefType)
+            {
+                // SerializeReference entries carry their type identity strings here.
+                info.ClassName = ReadNullTermString(reader);
+                info.Namespace = ReadNullTermString(reader);
+                info.AssemblyName = ReadNullTermString(reader);
+            }
+            else
+            {
+                // Regular type entries carry indices into the m_RefTypes pool, identifying
+                // which SerializeReference types objects of this type may hold.
+                int depCount = ReadInt32(reader, swap);
+                var deps = new int[depCount];
+                for (int j = 0; j < depCount; j++)
+                    deps[j] = ReadInt32(reader, swap);
+                info.TypeDependencies = deps;
+            }
+        }
+
+        return info;
+    }
+
+    // -----------------------------------------------------------------------
+    // BinaryReader-based helpers (used by ParseTypeTreeMetadata and ReadTypeEntry)
+    // -----------------------------------------------------------------------
+
+    /// <summary>Advances the stream to the next 4-byte boundary measured from metadataOffset.</summary>
+    private static void AlignTo4(Stream stream, long metadataOffset)
+    {
+        long rel = stream.Position - metadataOffset;
+        long aligned = (rel + 3) & ~3L;
+        stream.Position = metadataOffset + aligned;
+    }
+
+    /// <summary>Reads a null-terminated ASCII string from the stream.</summary>
+    private static string ReadNullTermString(BinaryReader reader)
+    {
+        var sb = new System.Text.StringBuilder();
+        byte b;
+        while ((b = reader.ReadByte()) != 0)
+            sb.Append((char)b);
+        return sb.ToString();
+    }
+
+    private static int ReadInt32(BinaryReader reader, bool swap)
+    {
+        uint raw = reader.ReadUInt32();
+        return (int)(swap ? SwapUInt32(raw) : raw);
+    }
+
+    private static short ReadInt16(BinaryReader reader, bool swap)
+    {
+        ushort raw = reader.ReadUInt16();
+        if (swap)
+            raw = (ushort)((raw << 8) | (raw >> 8));
+        return (short)raw;
+    }
+
+    private static uint ReadUInt32(BinaryReader reader, bool swap)
+    {
+        uint raw = reader.ReadUInt32();
+        return swap ? SwapUInt32(raw) : raw;
+    }
+
+    private static TypeTreeHash128 ReadHash128(BinaryReader reader, bool swap)
+    {
+        return new TypeTreeHash128
+        {
+            Data0 = ReadUInt32(reader, swap),
+            Data1 = ReadUInt32(reader, swap),
+            Data2 = ReadUInt32(reader, swap),
+            Data3 = ReadUInt32(reader, swap),
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // Byte-array helpers (used by TryDetectSerializedFile)
+    // -----------------------------------------------------------------------
 
     /// <summary>
     /// Reads a UInt32 from a byte array at the specified offset, optionally swapping endianness.

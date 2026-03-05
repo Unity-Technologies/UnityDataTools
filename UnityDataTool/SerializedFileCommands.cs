@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem;
@@ -259,10 +260,33 @@ public static class SerializedFileCommands
         {
             unityVersion = metadata.UnityVersion,
             targetPlatform = metadata.TargetPlatform,
-            enableTypeTree = metadata.EnableTypeTree
+            enableTypeTree = metadata.EnableTypeTree,
+            typeTreeCount = metadata.TypeTreeCount,
+            serializedReferenceTypeTreeCount = metadata.SerializedReferenceTypeTreeCount,
+            typeTrees = metadata.TypeTrees?.Select(TypeTreeInfoToJson).ToArray(),
+            serializedReferenceTypeTrees = metadata.SerializedReferenceTypeTrees?.Select(TypeTreeInfoToJson).ToArray(),
         };
 
         var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
         Console.WriteLine(json);
+    }
+
+    private static object TypeTreeInfoToJson(TypeTreeInfo info)
+    {
+        return new
+        {
+            persistentTypeID = info.PersistentTypeID,
+            isStrippedType = info.IsStrippedType,
+            scriptTypeIndex = info.ScriptTypeIndex,
+            scriptID = info.ScriptID.ToString(),
+            oldTypeHash = info.OldTypeHash.ToString(),
+            typeTreeContentHash = info.TypeTreeContentHash.ToString(),
+            typeTreeSerializedSize = info.TypeTreeSerializedSize,
+            inlineTypeTree = info.InlineTypeTree,
+            className = info.ClassName,
+            namespaceName = info.Namespace,
+            assemblyName = info.AssemblyName,
+            typeDependencies = info.TypeDependencies,
+        };
     }
 }
