@@ -604,12 +604,6 @@ public static class SerializedFileDetector
             }
             metadata.ObjectList = objectList;
 
-            // m_RefTypes (version >= 20) is not located immediately after m_Types.
-            // It appears at the end of the metadata section, after the object list,
-            // script type list, and externals list. We must skip those three sections.
-            if (version < SupportsRefObjectVersion)
-                return;
-
             // --- Skip the script type list ---
             // Per-entry layout (version >= 14, applies to all our versions):
             //   [int32 localSerializedFileIndex]
@@ -637,6 +631,11 @@ public static class SerializedFileDetector
                 stream.Seek(4, SeekOrigin.Current);  // int32 type
                 BinaryFileHelper.ReadNullTermString(reader);          // pathName
             }
+
+            // m_RefTypes (version >= 20) is not located immediately after m_Types.
+            // It appears at the end of the metadata section
+            if (version < SupportsRefObjectVersion)
+                return;
 
             // --- SerializeReference type list (m_RefTypes, version >= 20) ---
             int refTypeCount = BinaryFileHelper.ReadInt32(reader, swap);
