@@ -17,6 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Analyzer\Analyzer.csproj" />
     <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
   </ItemGroup>
 

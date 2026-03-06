@@ -286,7 +286,7 @@ public static class SerializedFileCommands
             isStrippedType = info.IsStrippedType,
             scriptTypeIndex = info.ScriptTypeIndex,
             scriptID = info.ScriptID.ToString(),
-            oldTypeHash = info.OldTypeHash.ToString(),
+            typeTreeStructureHash = info.TypeTreeStructureHash.ToString(),
             typeTreeContentHash = info.TypeTreeContentHash.ToString(),
             typeTreeSerializedSize = info.TypeTreeSerializedSize,
             inlineTypeTree = info.InlineTypeTree,
