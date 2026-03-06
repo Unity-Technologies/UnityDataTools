@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace UnityDataTools.Analyzer.Util;
+namespace UnityDataTools.BinaryFormat;
 
 /// <summary>
 /// A 128-bit hash stored as four 32-bit unsigned integers, matching Unity's Hash128 binary layout.

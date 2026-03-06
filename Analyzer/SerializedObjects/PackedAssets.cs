@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using UnityDataTools.Analyzer.Util;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SerializedObjects;

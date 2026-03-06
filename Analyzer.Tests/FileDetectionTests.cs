@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using UnityDataTools.Analyzer.Util;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer.Tests;

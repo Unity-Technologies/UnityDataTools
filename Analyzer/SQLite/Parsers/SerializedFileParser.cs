@@ -4,7 +4,7 @@ using System.IO;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Writers;
-using UnityDataTools.Analyzer.Util;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers

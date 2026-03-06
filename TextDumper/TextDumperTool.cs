@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
-using UnityDataTools.Analyzer.Util;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.TextDumper;

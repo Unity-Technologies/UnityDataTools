@@ -4,7 +4,7 @@ using ExternalReference = UnityDataTools.FileSystem.ExternalReference;
 using ExternalReferenceType = UnityDataTools.FileSystem.ExternalReferenceType;
 using ObjectInfo = UnityDataTools.FileSystem.ObjectInfo;
 
-namespace UnityDataTools.Analyzer.Util;
+namespace UnityDataTools.BinaryFormat;
 
 /// <summary>
 /// Information extracted from a Unity SerializedFile header.

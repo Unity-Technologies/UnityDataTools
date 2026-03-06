@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using UnityDataTools.Analyzer.Util;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.UnityDataTool;

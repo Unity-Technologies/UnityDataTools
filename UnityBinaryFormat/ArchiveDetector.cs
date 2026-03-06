@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace UnityDataTools.Analyzer.Util;
+namespace UnityDataTools.BinaryFormat;
 
 /// <summary>
 /// Utility for detecting Unity Archive (AssetBundle) files by reading their signature.

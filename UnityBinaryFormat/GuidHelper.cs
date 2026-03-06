@@ -1,4 +1,4 @@
-namespace UnityDataTools.Analyzer.Util;
+namespace UnityDataTools.BinaryFormat;
 
 /// <summary>
 /// Helper class for converting Unity GUID data to string format.
@@ -42,4 +42,3 @@ public static class GuidHelper
         }
     }
 }
-

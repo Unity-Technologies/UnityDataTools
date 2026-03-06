@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace UnityDataTools.Analyzer.Util;
+namespace UnityDataTools.BinaryFormat;
 
 /// <summary>
 /// Utility for detecting YAML-format Unity SerializedFiles.

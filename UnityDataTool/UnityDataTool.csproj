@@ -27,6 +27,7 @@
     <ProjectReference Include="..\ReferenceFinder\ReferenceFinder.csproj" />
     <ProjectReference Include="..\TextDumper\TextDumper.csproj" />
     <ProjectReference Include="..\Analyzer\Analyzer.csproj" />
+    <ProjectReference Include="..\UnityBinaryFormat\UnityBinaryFormat.csproj" />
     <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
   </ItemGroup>
 
