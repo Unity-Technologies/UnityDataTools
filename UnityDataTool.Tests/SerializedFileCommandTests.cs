@@ -293,6 +293,49 @@ public class SerializedFileCommandTests
         }
     }
 
+    [Test]
+    public async Task ObjectList_NoTypeTree_JsonFormat_OutputsExpectedValues()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerNoTypeTree", "level0");
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "sf", "objectlist", path, "-f", "json" }));
+
+            var output = sw.ToString();
+            var jsonArray = JsonDocument.Parse(output).RootElement;
+            Assert.AreEqual(7, jsonArray.GetArrayLength());
+
+            // Spot-check a few entries by index
+            var first = jsonArray[0];
+            Assert.AreEqual(1,            first.GetProperty("id").GetInt64());
+            Assert.AreEqual(1,            first.GetProperty("typeId").GetInt32());
+            Assert.AreEqual("GameObject", first.GetProperty("typeName").GetString());
+            Assert.AreEqual(576,          first.GetProperty("offset").GetInt64());
+            Assert.AreEqual(63,           first.GetProperty("size").GetInt64());
+
+            var third = jsonArray[2];
+            Assert.AreEqual(3,                third.GetProperty("id").GetInt64());
+            Assert.AreEqual(104,              third.GetProperty("typeId").GetInt32());
+            Assert.AreEqual("RenderSettings", third.GetProperty("typeName").GetString());
+            Assert.AreEqual(720,              third.GetProperty("offset").GetInt64());
+
+            var last = jsonArray[6];
+            Assert.AreEqual(7,               last.GetProperty("id").GetInt64());
+            Assert.AreEqual(114,             last.GetProperty("typeId").GetInt32());
+            Assert.AreEqual("MonoBehaviour", last.GetProperty("typeName").GetString());
+            Assert.AreEqual(1200,            last.GetProperty("offset").GetInt64());
+            Assert.AreEqual(44,              last.GetProperty("size").GetInt64());
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
     #endregion
 
     #region Header Tests
@@ -410,6 +453,173 @@ public class SerializedFileCommandTests
         }
     }
 
+    #endregion
+
+    #region Metadata Tests
+
+    [Test]
+    public async Task Metadata_LegacyVersion_ReturnsError()
+    {
+        // CAB-c5053efeda8860d7e7b7ce4b4c66705b is a version 17 SerializedFile.
+        // Version 17 is below the minimum supported version for metadata parsing (19),
+        // so the command should fail with an appropriate error message.
+        var cabPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats",
+            "CAB-c5053efeda8860d7e7b7ce4b4c66705b");
+
+        if (!File.Exists(cabPath))
+        {
+            Assert.Ignore("CAB test file not found");
+            return;
+        }
+
+        using var sw = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(sw);
+
+            var result = await Program.Main(new string[] { "serialized-file", "metadata", cabPath, "-f", "json" });
+
+            Assert.AreNotEqual(0, result, "Should return error code for version 17 file (too old for metadata parsing)");
+
+            var errorOutput = sw.ToString();
+            StringAssert.Contains("not supported", errorOutput, "Error should mention that the version is not supported");
+            StringAssert.Contains("17", errorOutput, "Error should mention the file's version number");
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task Metadata_TextOutput_SucceedsAndContainsExpectedFields()
+    {
+        // Use PlayerWithTypeTrees test data, which is known to be a supported SerializedFile
+        // with TypeTrees enabled.
+        var dataDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerWithTypeTrees");
+        var serializedFilePath = Path.Combine(dataDir, "globalgamemanagers");
+
+        if (!File.Exists(serializedFilePath))
+        {
+            Assert.Ignore("PlayerWithTypeTrees serialized file not found");
+            return;
+        }
+
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            var result = await Program.Main(new string[]
+            {
+                "serialized-file",
+                "metadata",
+                serializedFilePath
+            });
+
+            Assert.AreEqual(0, result, "Metadata command should succeed for supported file");
+
+            var output = sw.ToString();
+
+            // Basic sanity checks on text output; exact formatting is left flexible,
+            // but the output should mention metadata and TypeTree-related information.
+            StringAssert.Contains("Metadata", output, "Text output should mention metadata");
+            StringAssert.Contains("Type", output, "Text output should mention type information");
+            StringAssert.Contains("Tree", output, "Text output should mention TypeTree information");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task Metadata_JsonOutput_SucceedsAndContainsTypeTreeInfo()
+    {
+        // Use PlayerWithTypeTrees test data to validate JSON metadata output,
+        // including TypeTree-related properties.
+        var dataDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerWithTypeTrees");
+        var serializedFilePath = Path.Combine(dataDir, "globalgamemanagers");
+
+        if (!File.Exists(serializedFilePath))
+        {
+            Assert.Ignore("PlayerWithTypeTrees serialized file not found");
+            return;
+        }
+
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            var result = await Program.Main(new string[]
+            {
+                "serialized-file",
+                "metadata",
+                serializedFilePath,
+                "-f",
+                "json"
+            });
+
+            Assert.AreEqual(0, result, "Metadata command should succeed for supported file in JSON mode");
+
+            var output = sw.ToString();
+            Assert.IsNotEmpty(output, "JSON output should not be empty");
+
+            using var doc = JsonDocument.Parse(output);
+            var root = doc.RootElement;
+
+            Assert.AreEqual(JsonValueKind.Object, root.ValueKind, "Root JSON element should be an object");
+
+            // Validate the presence of some core metadata properties.
+            Assert.IsTrue(root.TryGetProperty("filePath", out _)
+                          || root.TryGetProperty("path", out _),
+                "JSON metadata should contain a file path property");
+
+            Assert.IsTrue(root.TryGetProperty("unityVersion", out _)
+                          || root.TryGetProperty("version", out _),
+                "JSON metadata should contain a Unity version property");
+
+            // Validate TypeTree-related information: either a count or an array of TypeTrees.
+            JsonElement typeTreesElement;
+            bool hasTypeTrees =
+                root.TryGetProperty("typeTrees", out typeTreesElement) ||
+                root.TryGetProperty("typeTree", out typeTreesElement) ||
+                root.TryGetProperty("typeTreeInfos", out typeTreesElement);
+
+            Assert.IsTrue(hasTypeTrees, "JSON metadata should contain TypeTree information");
+
+            if (typeTreesElement.ValueKind == JsonValueKind.Array)
+            {
+                Assert.Greater(typeTreesElement.GetArrayLength(), 0, "TypeTree array should contain at least one entry");
+
+                var first = typeTreesElement[0];
+                Assert.AreEqual(JsonValueKind.Object, first.ValueKind, "Each TypeTree entry should be an object");
+
+                // Check for some typical fields on a TypeTree entry (IDs/counts/arrays).
+                Assert.IsTrue(first.TryGetProperty("typeId", out _)
+                              || first.TryGetProperty("classId", out _),
+                    "TypeTree entry should contain a type or class ID");
+
+                Assert.IsTrue(first.TryGetProperty("nodes", out var nodesElement)
+                              ? nodesElement.ValueKind == JsonValueKind.Array
+                              : true,
+                    "If present, TypeTree nodes should be an array");
+            }
+            else if (typeTreesElement.ValueKind == JsonValueKind.Number)
+            {
+                // Some formats may expose only a count.
+                Assert.Greater(typeTreesElement.GetInt32(), 0, "TypeTree count should be greater than zero");
+            }
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
     #endregion
 
     #region Cross-Validation with Analyze Command

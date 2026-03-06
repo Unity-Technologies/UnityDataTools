@@ -28,6 +28,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Analyzer\Analyzer.csproj" />
+      <ProjectReference Include="..\UnityBinaryFormat\UnityBinaryFormat.csproj" />
       <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
       <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
     </ItemGroup>

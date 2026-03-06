@@ -60,6 +60,35 @@ BuildPlayer-Scene2.txt
 
 ---
 
+## TypeTree Requirement
+
+Unity's binary SerializedFile format stores objects as raw binary blobs. TypeTrees are schema metadata embedded in the file that describe the layout of each type — field names, data sizes, and alignment. The `dump` command requires TypeTrees to interpret those blobs and produce readable output.
+
+**When are TypeTrees absent?**
+
+TypeTrees are included by default. They are stripped in two common situations:
+
+- **Player builds** with *Strip Engine Code* or similar size-reduction options enabled.
+- **AssetBundles** built with the *Disable Write TypeTree* build option.
+
+**Error when TypeTrees are missing:**
+
+Various errors can be caused by missing TypeTrees, including:
+
+```
+ArgumentException: Invalid object id
+```
+
+**Tip:** Use `serialized-file metadata` to confirm whether a file has TypeTrees:
+
+```bash
+UnityDataTool serialized-file metadata /path/to/file
+```
+
+The `TypeTree Definitions` field will show `No` when TypeTrees are absent.
+
+---
+
 ## Output Format
 
 The output is similar to Unity's `binary2text` tool. Each file begins with external references:

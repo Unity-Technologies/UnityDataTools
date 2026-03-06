@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.UnityDataTool;
@@ -16,13 +17,19 @@ public static class Archive
     {
         try
         {
-            if (IsWebBundle(filename))
+            var path = filename.ToString();
+            if (IsWebBundle(path))
             {
                 ExtractWebBundle(filename, outputFolder);
             }
-            else
+            else if (ArchiveDetector.IsUnityArchive(path))
             {
                 ExtractAssetBundle(filename, outputFolder);
+            }
+            else
+            {
+                Console.Error.WriteLine("File is not a supported archive type.");
+                return 1;
             }
         }
         catch (Exception err) when (
@@ -40,13 +47,19 @@ public static class Archive
     {
         try
         {
-            if (IsWebBundle(filename))
+            var path = filename.ToString();
+            if (IsWebBundle(path))
             {
                 ListWebBundle(filename);
             }
-            else
+            else if (ArchiveDetector.IsUnityArchive(path))
             {
                 ListAssetBundle(filename);
+            }
+            else
+            {
+                Console.Error.WriteLine("File is not a supported archive type.");
+                return 1;
             }
         }
         catch (Exception err) when (
@@ -62,9 +75,8 @@ public static class Archive
     }
 
 
-    public static bool IsWebBundle(FileInfo filename)
+    public static bool IsWebBundle(string path)
     {
-        var path = filename.ToString();
         return (
             path.EndsWith(".data")
             || path.EndsWith(".data.gz")

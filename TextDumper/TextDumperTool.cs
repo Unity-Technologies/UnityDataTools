@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.TextDumper;
@@ -19,10 +20,15 @@ public class TextDumperTool
 
         try
         {
-            try
+            if (!File.Exists(path))
             {
-                // Try the input as an unity archive, e.g. an AssetBundle
-                // In that case we dump each serialized file contained inside it.
+                Console.WriteLine($"Error: File not found: {path}");
+                return 1;
+            }
+
+            if (ArchiveDetector.IsUnityArchive(path))
+            {
+                // The input is a Unity archive (e.g. AssetBundle); dump each serialized file inside it.
                 using var archive = UnityFileSystem.MountArchive(path, "/");
                 foreach (var node in archive.Nodes)
                 {
@@ -37,26 +43,56 @@ public class TextDumperTool
                     }
                 }
             }
-            catch (NotSupportedException)
+            else if (YamlSerializedFileDetector.IsYamlSerializedFile(path))
             {
-                // Try as SerializedFile
-                using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
+                Console.WriteLine("Error: The file is a YAML-format SerializedFile, which is not supported.");
+                Console.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
+                return 1;
+            }
+            else if (SerializedFileDetector.TryDetectSerializedFile(path, out _))
+            {
+                // The input is a binary SerializedFile; dump it directly.
+                try
                 {
-                    OutputSerializedFile(path, objectId);
+                    using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
+                    {
+                        OutputSerializedFile(path, objectId);
+                    }
                 }
+                catch (SerializedFileOpenException)
+                {
+                    var hint = SerializedFileDetector.GetOpenFailureHint(path);
+                    if (hint != null)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine(hint);
+                    }
+                    return 1;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.GetType()}: {e.Message}");
+                    Console.WriteLine(e.StackTrace);
+                    return 1;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error: The file does not appear to be a valid Unity SerializedFile or Unity Archive.");
+                Console.WriteLine($"File: {path}");
+                return 1;
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error!");
-            Console.Write($"{e.GetType()}: ");
-            Console.WriteLine(e.Message);
+            Console.WriteLine($"Error: {e.GetType()}: {e.Message}");
             Console.WriteLine(e.StackTrace);
             return 1;
         }
 
         return 0;
     }
+
 
     void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1)
     {

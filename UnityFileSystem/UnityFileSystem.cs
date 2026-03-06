@@ -47,6 +47,10 @@ public static class UnityFileSystem
     public static SerializedFile OpenSerializedFile(string path)
     {
         var r = DllWrapper.OpenSerializedFile(path, out var handle);
+
+        if (r == ReturnCode.UnknownError)
+            throw new SerializedFileOpenException(path);
+
         UnityFileSystem.HandleErrors(r, path);
 
         return new SerializedFile() { m_Handle = handle };

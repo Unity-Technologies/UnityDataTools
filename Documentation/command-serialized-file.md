@@ -21,6 +21,7 @@ The `dump` command can be used to view the serialized objects.
 | [`externalrefs`](#externalrefs) | List external file references |
 | [`objectlist`](#objectlist) | List all objects in the file |
 | [`header`](#header) | Show SerializedFile header information |
+| [`metadata`](#metadata) | Show SerializedFile metadata (Unity version, platform, TypeTree summary) |
 
 ---
 
@@ -204,6 +205,112 @@ UnityDataTool serialized-file header level0 --format json
 
 ---
 
+## metadata
+
+Shows information from the metadata section of a SerializedFile. This includes the Unity version, target platform, TypeTree storage mode (inline, external, or absent), and counts of the type entries recorded in the file. The JSON output includes additional per-type details; see the notes below.
+
+Requires SerializedFile version 19 (Unity 2019.1) or newer. Files older than version 19 are not supported by this subcommand.
+
+### Quick Reference
+
+```
+UnityDataTool serialized-file metadata <filename> [options]
+UnityDataTool sf metadata <filename> [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<filename>` | Path to the SerializedFile | *(required)* |
+| `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
+
+### Example - Text Output
+
+```bash
+UnityDataTool sf metadata level0
+```
+
+**Output:**
+```
+Unity Version        6000.0.65f1
+Target Platform      19
+TypeTree Definitions No
+TypeTree Count       6
+RefType Count        0
+```
+
+### Example - JSON Output
+
+```bash
+UnityDataTool serialized-file metadata level0 --format json
+```
+
+**Output (top-level fields shown; per-type arrays omitted for brevity):**
+```json
+{
+  "unityVersion": "6000.0.65f1",
+  "targetPlatform": 19,
+  "enableTypeTree": false,
+  "typeTreeCount": 6,
+  "serializedReferenceTypeTreeCount": 0,
+  "typeTrees": [ ... ],
+  "serializedReferenceTypeTrees": [ ... ],
+  "scriptTypes": [ ... ]
+}
+```
+
+Each element of `typeTrees` and `serializedReferenceTypeTrees` contains per-type details including hash values, TypeTree blob size, inline/external flag, and (for SerializeReference types) the C# class identity. Each element of `scriptTypes` contains the file and object ID of the backing MonoScript asset.
+
+### Metadata Fields
+
+The text and JSON outputs use different field names and representations for some fields.
+
+| Text Field | JSON Field | Description |
+|------------|------------|-------------|
+| **Unity Version** | `unityVersion` | The Unity version string used to build this file (e.g. `"2022.1.20f1"`, `"6000.0.65f1"`). |
+| **Target Platform** | `targetPlatform` | Numeric platform identifier. Common values: `2` = OSX Standalone, `9` = iOS, `13` = Android, `19` = Windows Standalone x64. See [BuildTarget](https://docs.unity3d.com/ScriptReference/BuildTarget.html) for details. |
+| **TypeTree Definitions** | `enableTypeTree` | Whether TypeTree blobs are stored in this file. The text output derives a descriptive string from the raw boolean and the parsed type entries; the JSON output exposes the raw boolean directly. Text values: `No` — TypeTrees absent (default Player build); `Inline` — all TypeTree blobs are embedded in the file (Editor and TypeTree-enabled builds); `External` — TypeTree blobs were extracted to a separate store (version ≥ 23); `Mixed` — entries disagree (unexpected; indicates a parser or file anomaly); `Unknown` — `enableTypeTree` is true but no type entries were parsed. TypeTrees are required for the `objectlist` and `externalrefs` subcommands to show type names. |
+| **TypeTree Count** | `typeTreeCount` | Number of regular (object) type entries recorded in the file. Present even when TypeTree definitions are not stored inline. |
+| **RefType Count** | `serializedReferenceTypeTreeCount` | Number of type entries for `[SerializeReference]` types recorded in the file. Always `0` for files with version < 20. |
+| *(JSON only)* | `typeTrees` | Array of per-type detail objects for the regular type entries. `null` when parsing failed or was not attempted. See **Per-Type Entry Fields** below. |
+| *(JSON only)* | `serializedReferenceTypeTrees` | Array of per-type detail objects for the `[SerializeReference]` type entries. Empty array for files with version < 20. See **Per-Type Entry Fields** below. |
+| *(JSON only)* | `scriptTypes` | Array of MonoScript references for the C# types used in this file. Each entry's index corresponds to the `scriptTypeIndex` field of a type entry in `typeTrees`. See **Script Type Entry Fields** below. |
+
+### Per-Type Entry Fields
+
+Each element of `typeTrees` and `serializedReferenceTypeTrees` in the JSON output contains the following fields:
+
+| JSON Field | Description |
+|------------|-------------|
+| `persistentTypeID` | Unity ClassID (e.g. `114` = MonoBehaviour). `-1` for `[SerializeReference]` entries whose type has no built-in ClassID. |
+| `isStrippedType` | `true` for types representing prefab-stripped objects (the `stripped` keyword in YAML). Orthogonal to TypeTree presence. |
+| `scriptTypeIndex` | Index into the file's MonoScript reference list. `-1` for native Unity types. |
+| `scriptID` | 128-bit hash (MD4 of assembly + namespace + class name) identifying the MonoScript. All-zeros when not applicable. |
+| `typeTreeStructureHash` | MD4 hash of the TypeTree structure as originally written; used for compatibility checking at load time. |
+| `typeTreeContentHash` | XXH3 hash of the TypeTree blob. All-zeros for files with version < 23. |
+| `typeTreeSerializedSize` | Byte size of the TypeTree blob for this entry. `0` when `inlineTypeTree` is false. |
+| `inlineTypeTree` | `true` when the TypeTree blob is present inline in the file's metadata. |
+| `className` | C# class name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
+| `namespaceName` | C# namespace; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
+| `assemblyName` | Assembly name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
+| `typeDependencies` | Array of indices into `serializedReferenceTypeTrees` listing which `[SerializeReference]` types objects of this type may hold. Empty for `[SerializeReference]` entries or files with version < 21. |
+
+### Script Type Entry Fields
+
+Each element of `scriptTypes` in the JSON output contains:
+
+| JSON Field | Description |
+|------------|-------------|
+| `fileID` | Index into the file's external references list identifying which SerializedFile contains the MonoScript asset. `0` = this file itself; `1`+ = 1-based index into the `externalrefs` list. |
+| `pathID` | The object ID (`localIdentifierInFile`) of the MonoScript within the identified file. Corresponds to the `id` field shown by `sf objectlist` on that file. |
+
+Notes:
+
+* For SerializedFiles inside AssetBundles the Unity Version is frequently stripped ("0.0.0").  See [BuildAssetBundleOptions.AssetBundleStripUnityVersion](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.AssetBundleStripUnityVersion.html).
+* For AssetBundles the version string may take the form "<version>\n<assetbundle-format-version>".  The assetbundle-format-version rarely changes, and is currently 2.
+* The Unity Editor will attempt to load SerializedFiles regardless of the Platform.  But the Runtime will only load files built with the correct platform value.
+
+---
+
 ## Use Cases
 
 ### Quick File Inspection
@@ -213,6 +320,9 @@ Use `serialized-file` when you need quick information about a SerializedFile wit
 ```bash
 # Check file format and version
 UnityDataTool sf header level0
+
+# Check Unity version, target platform, and TypeTree flag
+UnityDataTool sf metadata level0
 
 # Check what objects are in a file
 UnityDataTool sf objectlist sharedassets0.assets
