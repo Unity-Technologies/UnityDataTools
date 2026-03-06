@@ -595,6 +595,25 @@ public static class SerializedFileDetector
     }
 
     /// <summary>
+    /// Returns a diagnostic hint explaining why a SerializedFile may have failed to open,
+    /// or null if no specific diagnosis is available.
+    /// Currently detects the common case of missing TypeTrees (player builds compiled
+    /// without type information, which the DLL reports as a generic unknown error).
+    /// </summary>
+    /// <param name="path">Real filesystem path to the file that failed to open.</param>
+    public static string GetOpenFailureHint(string path)
+    {
+        if (TryDetectSerializedFile(path, out var fileInfo) &&
+            TryParseMetadata(path, fileInfo, out var metadata, out _) &&
+            !metadata.EnableTypeTree)
+        {
+            return "Note: This file does not have TypeTrees and can only be opened if all the " +
+                   "types it uses exactly match the types in the build of UnityFileSystemApi being used.";
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Parses the TypeTree and other arrays that are stored in the metadata,
     /// </summary>
     private static void ParseExtendedMetadata(BinaryReader reader, SerializedFileInfo headerInfo,

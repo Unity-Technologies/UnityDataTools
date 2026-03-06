@@ -6,6 +6,8 @@ using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
 using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.BinaryFormat;
+using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
 
@@ -74,8 +76,21 @@ public class AnalyzerTool
                         ReportProgress(Path.GetRelativePath(path, file), i, files.Length);
                         countSuccess++;
                     }
+                    catch (SerializedFileOpenException e)
+                    {
+                        // Expected failure — the file content could not be parsed.
+                        // Don't print a stack trace; it adds no value for this known failure mode.
+                        EraseProgressLine();
+                        var relativePath = Path.GetRelativePath(path, file);
+                        Console.Error.WriteLine($"Failed to open: {relativePath}");
+                        var hint = SerializedFileDetector.GetOpenFailureHint(e.FilePath);
+                        if (hint != null)
+                            Console.Error.WriteLine(hint);
+                        countFailures++;
+                    }
                     catch (Exception e)
                     {
+                        // Unexpected failure (SQL error, I/O error, bug, etc.) — print full details.
                         EraseProgressLine();
                         var relativePath = Path.GetRelativePath(path, file);
                         Console.Error.WriteLine($"Failed to process: {relativePath}");

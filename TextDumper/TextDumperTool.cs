@@ -49,7 +49,7 @@ public class TextDumperTool
                 Console.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
                 return 1;
             }
-            else if (SerializedFileDetector.TryDetectSerializedFile(path, out var fileInfo))
+            else if (SerializedFileDetector.TryDetectSerializedFile(path, out _))
             {
                 // The input is a binary SerializedFile; dump it directly.
                 try
@@ -59,21 +59,20 @@ public class TextDumperTool
                         OutputSerializedFile(path, objectId);
                     }
                 }
+                catch (SerializedFileOpenException)
+                {
+                    var hint = SerializedFileDetector.GetOpenFailureHint(path);
+                    if (hint != null)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine(hint);
+                    }
+                    return 1;
+                }
                 catch (Exception e)
                 {
-                    PrintExceptionIfUseful(e);
-
-                    // Post-analysis: check if the failure is due to missing TypeTrees.
-                    if (SerializedFileDetector.TryParseMetadata(path, fileInfo, out var metadata, out _))
-                    {
-                        if (!metadata.EnableTypeTree)
-                        {
-                            Console.WriteLine();
-                            Console.WriteLine("Note: This file does not have TypeTrees and can only be opened if all the types it");
-                            Console.WriteLine("uses exactly match the types available inside the build of UnityFileSystemApi being used.");
-                        }
-                    }
-
+                    Console.WriteLine($"Error: {e.GetType()}: {e.Message}");
+                    Console.WriteLine(e.StackTrace);
                     return 1;
                 }
             }
@@ -86,24 +85,12 @@ public class TextDumperTool
         }
         catch (Exception e)
         {
-            PrintExceptionIfUseful(e);
+            Console.WriteLine($"Error: {e.GetType()}: {e.Message}");
+            Console.WriteLine(e.StackTrace);
             return 1;
         }
 
         return 0;
-    }
-
-    static void PrintExceptionIfUseful(Exception e)
-    {
-        // Avoid printing noisy messages if it is just the generic "we don't know why it failed"
-        // fallback in UnityFileSystem.HandleErrors
-        if (e.GetType().ToString() != "System.Exception")
-            Console.Write($"Error: {e.GetType()}: ");
-        if (!e.Message.Contains("Unknown error"))
-            Console.WriteLine(e.Message);
-        var stackTrace = e.StackTrace;
-        if (!stackTrace.Contains("UnityFileSystem.HandleErrors"))
-            Console.WriteLine(e.StackTrace);
     }
 
 
