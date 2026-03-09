@@ -104,106 +104,36 @@ UnityDataTool (CLI executable)
 
 **TypeTree Navigation**: Unity binary files contain TypeTrees that describe object serialization. The `RandomAccessReader` class navigates these trees like property accessors: `reader["m_Name"].GetValue<string>()`. This enables the tool to interpret objects without hardcoded type knowledge.
 
+
+#### Analyze Architecture Patterns
+
 **Parser Pattern**: `ISQLiteFileParser` interface allows multiple parsers to handle different file formats:
 - `SerializedFileParser` - Unity binary files (AssetBundles, Player data)
 - `AddressablesBuildLayoutParser` - JSON build reports
 
-**Handler Registry**: Type-specific handlers extract specialized properties for Unity object types. Handlers implement `ISQLiteHandler` and are registered in `SerializedFileSQLiteWriter.m_Handlers`:
-- `MeshHandler` - vertices, indices, bones, blend shapes
-- `Texture2DHandler` - width, height, format, mipmaps
-- `ShaderHandler` - variants, keywords, subprograms
-- `AudioClipHandler` - compression, channels, frequency
-- `AnimationClipHandler` - legacy flag, events
-- `AssetBundleHandler` - dependencies, preload data
-- `PreloadDataHandler` - preloaded assets
+**Core Data**: Tables are populated with the core information about analyzed serialized files, e.g. objects and serialized_files.
 
-**SQL Schema Resources**: Each handler has an embedded `.sql` resource file defining its tables and views (e.g., `Analyzer/SQLite/Resources/Mesh.sql`). Views join type-specific tables with the base `objects` table.
+**Handlers**: Type-specific handlers extract specialized properties for Unity object types and populate additional tables. For example Mesh, AnimationClip, Shader, BuildReport, MonoScript.
 
-**Command Pattern**: SQL operations are encapsulated in classes derived from `AbstractCommand` with `CreateCommand()`, `SetValue()`, `ExecuteNonQuery()` methods.
+**Views**: The database schema includes convenient views for seeing the data in useful ways, e.g. `object_view`. See `Documentation/analyzer.md` and `Documentation/addressables-build-reports.md` for schema details.
 
-### Data Flow (Analyze Command)
+CLI entry point is `UnityDataTool/Program.cs` using System.CommandLine. Per-command documentation is in `Documentation/`.
 
-1. `Program.cs` → `HandleAnalyze()` → `AnalyzerTool.Analyze()`
-2. AnalyzerTool finds files matching search pattern
-3. For each file, parsers are tried in order (JSON first, then SerializedFile)
-4. `SerializedFileParser.ProcessFile()`:
-   - Checks for Unity Archive signature → calls `MountArchive()`
-   - Otherwise treats as SerializedFile → calls `OpenSerializedFile()`
-5. `SerializedFileSQLiteWriter.WriteSerializedFile()`:
-   - Iterates through `sf.Objects`
-   - Gets TypeTree via `sf.GetTypeTreeRoot(objectId)`
-   - Creates `RandomAccessReader` to navigate properties
-   - Looks up type-specific handler in `m_Handlers` dictionary
-   - Handler extracts specialized properties (e.g., MeshHandler reads vertex count)
-   - Writes to `objects` table + type-specific table (e.g., `meshes`)
-   - Optionally processes PPtrs (references) and calculates CRC32
-6. SQLiteWriter finalizes database with indexes and views
+## Extending UnityDataTools
 
-### Important Files
+### Extending Analyze
 
-**Entry Points**:
-- `UnityDataTool/Program.cs` - CLI using System.CommandLine
-- `UnityDataTool/SerializedFileCommands.cs` - SerializedFile inspection handlers
-- `UnityDataTool/Archive.cs` - Archive manipulation handlers
-- `Documentation/` - Command documentation (command-analyze.md, command-dump.md, command-archive.md, command-serialized-file.md, command-find-refs.md)
+* New Unity types can be added by following the same pattern as the existing types, for example MonoScripts.
+* Analysis of additional file formats could be added, for example AssetBundle manifest files by following the pattern of Addressables build layout files are handled.
 
-**Core Libraries**:
-- `UnityFileSystem/UnityFileSystem.cs` - Init(), MountArchive(), OpenSerializedFile()
-- `UnityFileSystem/DllWrapper.cs` - P/Invoke bindings to native library
-- `UnityFileSystem/SerializedFile.cs` - Represents binary data files
-- `UnityFileSystem/TypeIdRegistry.cs` - Built-in TypeId to type name mappings
-- `UnityFileSystem/RandomAccessReader.cs` - TypeTree property navigation
+### Other Extensions
 
-**Analyzer**:
-- `Analyzer/AnalyzerTool.cs` - Main API entry point
-- `Analyzer/SQLite/SQLiteWriter.cs` - Base class for database writers
-- `Analyzer/SQLite/Writers/SerializedFileSQLiteWriter.cs` - Handler registration
-- `Analyzer/SQLite/Writers/AddressablesBuildLayoutSQLWriter.cs` - JSON report processing
-- `Analyzer/SQLite/Handlers/` - Type-specific extractors
-- `Analyzer/SerializedObjects/` - RandomAccessReader-based property readers
-- `Analyzer/SQLite/Resources/` - SQL DDL schema files
+The UnityFileSystem API and UnityBinaryFormat parsing can be useful for other analysis.  The "dump", "analyze" and "serialized-file" commands can be considered reference examples of how to use those lower level tools.
 
-**TextDumper**:
-- `TextDumper/TextDumperTool.cs` - Converts binary to YAML-like text
-
-**ReferenceFinder**:
-- `ReferenceFinder/ReferenceFinderTool.cs` - Traces object dependency chains
-
-## Extending the Tool
-
-### Adding New Unity Type Support
-
-1. Create handler class implementing `ISQLiteHandler`:
-   ```
-   Analyzer/SQLite/Handlers/FooHandler.cs
-   ```
-
-2. Create reader class using RandomAccessReader:
-   ```
-   Analyzer/SerializedObjects/Foo.cs
-   ```
-
-3. Register handler in `SerializedFileSQLiteWriter.cs`:
-   ```csharp
-   m_Handlers["Foo"] = new FooHandler();
-   ```
-
-4. Create SQL schema resource:
-   ```
-   Analyzer/SQLite/Resources/Foo.sql
-   ```
-   Define tables (e.g., `foos`) and views (e.g., `foo_view` joining `objects` and `foos`)
-
-5. Reference the schema in handler's GetResourceName() method
-
-### Adding New File Format Support
-
-1. Create parser implementing `ISQLiteFileParser`
-2. Create writer derived from `SQLiteWriter`
-3. Add parser to `AnalyzerTool.parsers` list
-4. Create SQL schema and Command classes as needed
-
-Example: Addressables support uses `AddressablesBuildLayoutParser` + `AddressablesBuildLayoutSQLWriter` to parse JSON build reports.
+For example:
+* Showing file content in a GUI
+* Populating a database with a different sqlite schema, for other types of analysis
+* Producing reports in Json format.
 
 ## Important Concepts
 
@@ -220,26 +150,11 @@ TypeTrees describe how Unity objects are serialized (property names, types, offs
 - **SerializedFile** - Binary format storing Unity objects with TypeTree metadata.
 - **Addressables BuildLayout** - JSON build report (buildlogreport.json, AddressablesReport.json)
 
-### Database Views
-The SQLite output uses views extensively to join base `objects` table with type-specific tables:
-- `object_view` - All objects with basic properties
-- `mesh_view` - Objects + mesh-specific columns
-- `texture_view` - Objects + texture-specific columns
-- `shader_view` - Objects + shader-specific columns
-- `view_breakdown_by_type` - Aggregated size by type
-- `view_potential_duplicates` - Assets included multiple times
-- `asset_view` - Explicitly assigned assets only
-- `shader_keyword_ratios` - Keyword variant analysis
-
-See `Documentation/analyzer.md` and `Documentation/addressables-build-reports.md` for complete database schema documentation.
-
 ### Common Issues
 
 **TypeTree Errors**: "Invalid object id" during analyze means SerializedFile lacks TypeTrees. Enable ForceAlwaysWriteTypeTrees or use files built with TypeTrees.
 
-**File Loading Warnings**: "Failed to load... File may be corrupted" is normal for non-Unity files in analyzed directories. Use `-p` search pattern to filter (e.g., `-p "*.bundle"`).
-
-**SQL UNIQUE Constraint Errors**: Occurs when same SerializedFile name appears in multiple archives. This happens when analyzing multiple builds in same directory or using AssetBundle variants. See `Documentation/comparing-builds.md` for solutions.
+**SQL UNIQUE Constraint Errors**: Occurs when same SerializedFile name appears in multiple archives. This happens when trying to run analyzing on the output from multiple builds, or from AssetBundle variants. See `Documentation/comparing-builds.md` for solutions.
 
 **Mac Security**: "UnityFileSystemApi.dylib cannot be opened" - Open System Preferences → Security & Privacy and allow the library.
 
@@ -257,4 +172,6 @@ To use a specific Unity version's library:
 
 ## Testing Data
 
-UnityFileSystemTestData is a Unity project that generates test data for the test suites. TestCommon provides shared test utilities.
+* TestCommon/Data contains small reference files extracted from Unity builds (player and AssetBundles). These are used by the automated tests and also useful for manual testing.
+
+* UnityFileSystemTestData is a Unity project that generates test data for the test suites.
