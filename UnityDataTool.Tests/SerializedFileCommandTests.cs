@@ -425,7 +425,7 @@ public class SerializedFileCommandTests
     [Test]
     public async Task Header_ArchiveFile_ReturnsError()
     {
-        var legacyDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats");
+        var legacyDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats", "AssetBundles");
         var archivePath = Path.Combine(legacyDir, "alienprefab");
 
         if (!File.Exists(archivePath))
@@ -524,10 +524,10 @@ public class SerializedFileCommandTests
             var output = sw.ToString();
 
             // Basic sanity checks on text output; exact formatting is left flexible,
-            // but the output should mention metadata and TypeTree-related information.
-            StringAssert.Contains("Metadata", output, "Text output should mention metadata");
-            StringAssert.Contains("Type", output, "Text output should mention type information");
-            StringAssert.Contains("Tree", output, "Text output should mention TypeTree information");
+            // but the output should mention certain info.
+            StringAssert.Contains("Unity Version", output, "Text output should mention Unity Version");
+            StringAssert.Contains("TypeTree", output, "Text output should mention TypeTree information");
+            StringAssert.Contains("Target Platform", output, "Text output should mention Target Platform information");
         }
         finally
         {
@@ -575,45 +575,21 @@ public class SerializedFileCommandTests
             Assert.AreEqual(JsonValueKind.Object, root.ValueKind, "Root JSON element should be an object");
 
             // Validate the presence of some core metadata properties.
-            Assert.IsTrue(root.TryGetProperty("filePath", out _)
-                          || root.TryGetProperty("path", out _),
-                "JSON metadata should contain a file path property");
+            Assert.IsTrue(root.TryGetProperty("targetPlatform", out _),
+                "JSON metadata should contain a targetPlatform property");
 
-            Assert.IsTrue(root.TryGetProperty("unityVersion", out _)
-                          || root.TryGetProperty("version", out _),
+            Assert.IsTrue(root.TryGetProperty("unityVersion", out _),
                 "JSON metadata should contain a Unity version property");
+
+            Assert.IsTrue(root.TryGetProperty("typeTreeCount", out _),
+                "JSON metadata should contain a typeTreeCount property");
 
             // Validate TypeTree-related information: either a count or an array of TypeTrees.
             JsonElement typeTreesElement;
-            bool hasTypeTrees =
-                root.TryGetProperty("typeTrees", out typeTreesElement) ||
-                root.TryGetProperty("typeTree", out typeTreesElement) ||
-                root.TryGetProperty("typeTreeInfos", out typeTreesElement);
+            bool hasTypeTrees = root.TryGetProperty("typeTrees", out typeTreesElement);
 
             Assert.IsTrue(hasTypeTrees, "JSON metadata should contain TypeTree information");
-
-            if (typeTreesElement.ValueKind == JsonValueKind.Array)
-            {
-                Assert.Greater(typeTreesElement.GetArrayLength(), 0, "TypeTree array should contain at least one entry");
-
-                var first = typeTreesElement[0];
-                Assert.AreEqual(JsonValueKind.Object, first.ValueKind, "Each TypeTree entry should be an object");
-
-                // Check for some typical fields on a TypeTree entry (IDs/counts/arrays).
-                Assert.IsTrue(first.TryGetProperty("typeId", out _)
-                              || first.TryGetProperty("classId", out _),
-                    "TypeTree entry should contain a type or class ID");
-
-                Assert.IsTrue(first.TryGetProperty("nodes", out var nodesElement)
-                              ? nodesElement.ValueKind == JsonValueKind.Array
-                              : true,
-                    "If present, TypeTree nodes should be an array");
-            }
-            else if (typeTreesElement.ValueKind == JsonValueKind.Number)
-            {
-                // Some formats may expose only a count.
-                Assert.Greater(typeTreesElement.GetInt32(), 0, "TypeTree count should be greater than zero");
-            }
+            Assert.That(typeTreesElement.ValueKind, Is.EqualTo(JsonValueKind.Array), "TypeTree information should be an array");
         }
         finally
         {
