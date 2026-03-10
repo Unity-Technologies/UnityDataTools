@@ -23,6 +23,12 @@ public static class Program
 
         var rootCommand = new RootCommand();
 
+        var typeTreeDataOpt = new Option<FileInfo>(
+            aliases: new[] { "--typetree-data", "-d" },
+            description: "Path to an external TypeTree data file to load before processing bundles");
+        typeTreeDataOpt.ExistingOnly();
+        rootCommand.AddGlobalOption(typeTreeDataOpt);
+
         {
             var pathArg = new Argument<DirectoryInfo>("path", "The path to the directory containing the files to analyze").ExistingOnly();
             var oOpt = new Option<string>(aliases: new[] { "--output-file", "-o" }, description: "Filename of the output database", getDefaultValue: () => "database.db");
@@ -185,6 +191,32 @@ public static class Program
             serializedFileCommand.AddAlias("sf");
 
             rootCommand.AddCommand(serializedFileCommand);
+        }
+
+        // Load external TypeTree data file before any command executes.
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] == "--typetree-data" || args[i] == "-d")
+            {
+                var typeTreeFile = args[i + 1];
+                if (!File.Exists(typeTreeFile))
+                {
+                    Console.Error.WriteLine($"TypeTree data file not found: {typeTreeFile}");
+                    UnityFileSystem.Cleanup();
+                    return 1;
+                }
+                try
+                {
+                    UnityFileSystem.AddTypeTreeSourceFromFile(typeTreeFile);
+                }
+                catch (EntryPointNotFoundException)
+                {
+                    Console.Error.WriteLine("Error: The loaded UnityFileSystemApi does not support external TypeTree data files. Please update to Unity 6.5 or newer.");
+                    UnityFileSystem.Cleanup();
+                    return 1;
+                }
+                break;
+            }
         }
 
         var r = await rootCommand.InvokeAsync(args);

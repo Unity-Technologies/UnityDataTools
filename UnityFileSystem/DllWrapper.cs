@@ -253,6 +253,11 @@ public static class DllWrapper
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_AddTypeTreeSourceFromFile")]
+    public static extern ReturnCode AddTypeTreeSourceFromFile([MarshalAs(UnmanagedType.LPStr)] string path, out long handle);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_GetTypeTreeNodeInfo")]
     public static extern ReturnCode GetTypeTreeNodeInfo(TypeTreeHandle handle, int node, StringBuilder type, int typeLen,
         StringBuilder name, int nameLen, out int offset, out int size, [MarshalAs(UnmanagedType.U4)] out TypeTreeFlags flags,
