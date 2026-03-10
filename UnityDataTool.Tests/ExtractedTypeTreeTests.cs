@@ -98,6 +98,11 @@ public class ExtractedTypeTreeTests
 
         var outputFiles = Directory.GetFiles(m_TestOutputFolder, "*.txt");
         Assert.IsNotEmpty(outputFiles, "Expected dump output files when TypeTree data file is provided");
+        foreach (var f in outputFiles)
+        {
+            var txt = File.ReadAllText(f);
+            Assert.IsTrue(txt.Contains("m_GameObject (PPtr<GameObject>)"));
+        }
     }
 
     [Test]
