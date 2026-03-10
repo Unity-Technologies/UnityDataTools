@@ -23,11 +23,7 @@ public static class Program
 
         var rootCommand = new RootCommand();
 
-        var typeTreeDataOpt = new Option<FileInfo>(
-            aliases: new[] { "--typetree-data", "-d" },
-            description: "Path to an external TypeTree data file to load before processing bundles");
-        typeTreeDataOpt.ExistingOnly();
-        rootCommand.AddGlobalOption(typeTreeDataOpt);
+        var typeTreeDataDescription = "Path to an external TypeTree data file to load before processing bundles";
 
         {
             var pathArg = new Argument<DirectoryInfo>("path", "The path to the directory containing the files to analyze").ExistingOnly();
@@ -38,6 +34,8 @@ public static class Program
             var vOpt = new Option<bool>(aliases: new[] { "--verbose", "-v" }, description: "Verbose output");
             var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside path");
 
+            var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: typeTreeDataDescription);
+
             var analyzeCommand = new Command("analyze", "Analyze AssetBundles or SerializedFiles.")
             {
                 pathArg,
@@ -46,13 +44,19 @@ public static class Program
                 rOpt,
                 pOpt,
                 vOpt,
-                recurseOpt
+                recurseOpt,
+                dOpt
             };
 
             analyzeCommand.AddAlias("analyse");
             analyzeCommand.SetHandler(
-                (DirectoryInfo di, string o, bool s, bool r, string p, bool v, bool recurseOpt) => Task.FromResult(HandleAnalyze(di, o, s, r, p, v, recurseOpt)),
-                pathArg, oOpt, sOpt, rOpt, pOpt, vOpt, recurseOpt);
+                (DirectoryInfo di, string o, bool s, bool r, string p, bool v, bool noRecurse, FileInfo d) =>
+                {
+                    var ttResult = LoadTypeTreeDataFile(d);
+                    if (ttResult != 0) return Task.FromResult(ttResult);
+                    return Task.FromResult(HandleAnalyze(di, o, s, r, p, v, noRecurse));
+                },
+                pathArg, oOpt, sOpt, rOpt, pOpt, vOpt, recurseOpt, dOpt);
 
             rootCommand.AddCommand(analyzeCommand);
         }
@@ -89,6 +93,8 @@ public static class Program
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
             var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
 
+            var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: typeTreeDataDescription);
+
             var dumpCommand = new Command("dump", "Dump the contents of an AssetBundle or SerializedFile.")
             {
                 pathArg,
@@ -96,10 +102,16 @@ public static class Program
                 sOpt,
                 oOpt,
                 objectIdOpt,
+                dOpt,
             };
             dumpCommand.SetHandler(
-                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId) => Task.FromResult(HandleDump(fi, f, s, o, objectId)),
-                pathArg, fOpt, sOpt, oOpt, objectIdOpt);
+                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId, FileInfo d) =>
+                {
+                    var ttResult = LoadTypeTreeDataFile(d);
+                    if (ttResult != 0) return Task.FromResult(ttResult);
+                    return Task.FromResult(HandleDump(fi, f, s, o, objectId));
+                },
+                pathArg, fOpt, sOpt, oOpt, objectIdOpt, dOpt);
 
             rootCommand.AddCommand(dumpCommand);
         }
@@ -193,32 +205,6 @@ public static class Program
             rootCommand.AddCommand(serializedFileCommand);
         }
 
-        // Load external TypeTree data file before any command executes.
-        for (int i = 0; i < args.Length - 1; i++)
-        {
-            if (args[i] == "--typetree-data" || args[i] == "-d")
-            {
-                var typeTreeFile = args[i + 1];
-                if (!File.Exists(typeTreeFile))
-                {
-                    Console.Error.WriteLine($"TypeTree data file not found: {typeTreeFile}");
-                    UnityFileSystem.Cleanup();
-                    return 1;
-                }
-                try
-                {
-                    UnityFileSystem.AddTypeTreeSourceFromFile(typeTreeFile);
-                }
-                catch (EntryPointNotFoundException)
-                {
-                    Console.Error.WriteLine("Error: The loaded UnityFileSystemApi does not support external TypeTree data files. Please update to Unity 6.5 or newer.");
-                    UnityFileSystem.Cleanup();
-                    return 1;
-                }
-                break;
-            }
-        }
-
         var r = await rootCommand.InvokeAsync(args);
 
         UnityFileSystem.Cleanup();
@@ -229,6 +215,24 @@ public static class Program
     enum DumpFormat
     {
         Text,
+    }
+
+    static int LoadTypeTreeDataFile(FileInfo typeTreeDataFile)
+    {
+        if (typeTreeDataFile == null)
+            return 0;
+
+        try
+        {
+            UnityFileSystem.AddTypeTreeSourceFromFile(typeTreeDataFile.FullName);
+        }
+        catch (EntryPointNotFoundException)
+        {
+            Console.Error.WriteLine("Error: The loaded UnityFileSystemApi does not support external TypeTree data files. Please update to Unity 6.5 or newer.");
+            return 1;
+        }
+
+        return 0;
     }
 
     static int HandleAnalyze(

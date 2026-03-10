@@ -41,6 +41,22 @@ Use `--help` with any command for details: `UnityDataTool analyze --help`
 
 Use `--version` to print the tool version.
 
+## External TypeTree Data
+
+Starting with Unity 6.5, asset bundles can be built with TypeTree data extracted into a separate file. When bundles are built this way, the TypeTree data file must be loaded before the bundles can be processed.
+
+The `--typetree-data` (`-d`) option is available on the [`analyze`](command-analyze.md) and [`dump`](command-dump.md) commands:
+
+```bash
+# Analyze bundles that use an external TypeTree data file
+UnityDataTool analyze /path/to/bundles --typetree-data /path/to/typetree.bin
+
+# Dump a bundle with external TypeTree data
+UnityDataTool dump /path/to/file.bundle -d /path/to/typetree.bin
+```
+
+> **Note:** This option requires a version of UnityFileSystemApi from Unity 6.5 or newer. Using it with an older version of the library will produce an error message.
+
 
 ## Installation
 
