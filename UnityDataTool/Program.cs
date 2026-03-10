@@ -228,7 +228,7 @@ public static class Program
         }
         catch (EntryPointNotFoundException)
         {
-            Console.Error.WriteLine("Error: The loaded UnityFileSystemApi does not support external TypeTree data files. Please update to Unity 6.5 or newer.");
+            Console.Error.WriteLine("Error: The version of UnityFileSystemApi does not support external TypeTree data files. Please use a version from Unity 6.5 or newer.");
             return 1;
         }
 
