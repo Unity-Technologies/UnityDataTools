@@ -15,6 +15,7 @@ UnityDataTool dump <path> [options]
 | `-f, --output-format <format>` | Output format | `text` |
 | `-s, --skip-large-arrays` | Skip dumping large arrays | `false` |
 | `-i, --objectid <id>` | Only dump object with this ID | All objects |
+| `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
 
 ## Examples
 
@@ -86,6 +87,14 @@ UnityDataTool serialized-file metadata /path/to/file
 ```
 
 The `TypeTree Definitions` field will show `No` when TypeTrees are absent.
+
+**External TypeTree data (Unity 6.5+):**
+
+If your bundles were built with TypeTree data extracted to a separate file, use the `--typetree-data` option to load it:
+
+```bash
+UnityDataTool dump /path/to/file.bundle --typetree-data /path/to/typetree.bin
+```
 
 ---
 

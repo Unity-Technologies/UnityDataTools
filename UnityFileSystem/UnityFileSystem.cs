@@ -44,6 +44,13 @@ public static class UnityFileSystem
         return new UnityFile() { m_Handle = handle };
     }
 
+    public static long AddTypeTreeSourceFromFile(string path)
+    {
+        var r = DllWrapper.AddTypeTreeSourceFromFile(path, out var handle);
+        HandleErrors(r, path);
+        return handle;
+    }
+
     public static SerializedFile OpenSerializedFile(string path)
     {
         var r = DllWrapper.OpenSerializedFile(path, out var handle);

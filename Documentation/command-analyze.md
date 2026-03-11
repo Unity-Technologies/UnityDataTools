@@ -16,6 +16,7 @@ UnityDataTool analyze <path> [options]
 | `-s, --skip-references` | Skip CRC and reference extraction (faster, smaller DB) | `false` |
 | `-v, --verbose` | Show more information during analysis | `false` |
 | `--no-recurse` | Do not recurse into sub-directories | `false` |
+| `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
 
 ## Examples
 
@@ -90,7 +91,13 @@ System.ArgumentException: Invalid object id.
 
 This error occurs when SerializedFiles are built without TypeTrees. The command will skip these files and continue.
 
-**Solution:** Enable **ForceAlwaysWriteTypeTrees** in your Unity build settings. See [Unity Content Format](../../Documentation/unity-content-format.md) for details.
+**Solutions:**
+- Enable **ForceAlwaysWriteTypeTrees** in your Unity build settings. See [Unity Content Format](../../Documentation/unity-content-format.md) for details.
+- If your bundles were built with external TypeTree data (Unity 6.5+), use the `--typetree-data` option to load the TypeTree data file before analysis:
+
+```bash
+UnityDataTool analyze /path/to/bundles --typetree-data /path/to/typetree.bin
+```
 
 ### SQL Constraint Errors
 

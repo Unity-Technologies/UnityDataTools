@@ -1,0 +1,23 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.65f1
+CRC: 728949141
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 59d745ce3c1a250c02ed018d24740e27
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 8fe56aa230288d26e5aa9f8e595de7aa
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 923313b95e26f50f9389a0be92d4feda
+HashAppended: 0
+ClassTypes:
+- Class: 114
+  Script: {fileID: 11500000, guid: 1eb29b0714ed25b4b9acbb23c6791a75, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Assets/BasicScriptableObject.asset
+Dependencies: []
