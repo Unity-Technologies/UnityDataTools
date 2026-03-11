@@ -305,8 +305,8 @@ Each element of `scriptTypes` in the JSON output contains:
 
 Notes:
 
-* For SerializedFiles inside AssetBundles the Unity Version is frequently stripped ("0.0.0").  See [BuildAssetBundleOptions.AssetBundleStripUnityVersion](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.AssetBundleStripUnityVersion.html).
-* For AssetBundles the version string may take the form "<version>\n<assetbundle-format-version>".  The assetbundle-format-version rarely changes, and is currently 2.
+* For SerializedFiles inside AssetBundles the Unity Version can be stripped, in which case the Unity Version value is "0.0.0".  See [BuildAssetBundleOptions.AssetBundleStripUnityVersion](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.AssetBundleStripUnityVersion.html).
+* For AssetBundles where the typetrees have been stripped out the version string takes the form `<unity-version>\n<assetbundle-format-version>`.  The assetbundle-format-version rarely changes, and is currently 2. Examples "6000.0.65f1\n2" and "0.0.0\n2".
 * The Unity Editor will attempt to load SerializedFiles regardless of the Platform.  But the Runtime will only load files built with the correct platform value.
 
 ---
