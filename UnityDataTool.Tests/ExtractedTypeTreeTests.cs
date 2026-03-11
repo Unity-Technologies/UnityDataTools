@@ -13,6 +13,7 @@ public class ExtractedTypeTreeTests
     private string m_TestOutputFolder;
     private string m_DataFolder;
     private string m_SerializedFile;
+    private string m_SerializedFilePath;
     private string m_TypeTreeDataFile;
 
     [OneTimeSetUp]
@@ -22,7 +23,8 @@ public class ExtractedTypeTreeTests
         Directory.CreateDirectory(m_TestOutputFolder);
 
         m_DataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "ExtractedTypeTree");
-        m_SerializedFile = Path.Combine(m_DataFolder, "sfwithextractedtypetrees1");
+        m_SerializedFile = "sfwithextractedtypetrees1";
+        m_SerializedFilePath = Path.Combine(m_DataFolder, m_SerializedFile);
         m_TypeTreeDataFile = Path.Combine(m_DataFolder, "sfwithextractedtypetrees1.typetreedata");
     }
 
@@ -94,21 +96,20 @@ public class ExtractedTypeTreeTests
     public async Task Dump_WithTypeTreeData_Succeeds(
         [Values("-d", "--typetree-data")] string option)
     {
-        Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializedFile, option, m_TypeTreeDataFile }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializedFilePath, "-o", m_TestOutputFolder, option, m_TypeTreeDataFile }));
+        var outputFile = Path.Combine(m_TestOutputFolder, m_SerializedFile + ".txt");
+        var txt = File.ReadAllText(outputFile);
 
-        var outputFiles = Directory.GetFiles(m_TestOutputFolder, "*.txt");
-        Assert.IsNotEmpty(outputFiles, "Expected dump output files when TypeTree data file is provided");
-        foreach (var f in outputFiles)
-        {
-            var txt = File.ReadAllText(f);
-            Assert.IsTrue(txt.Contains("m_GameObject (PPtr<GameObject>)"));
-        }
+        // Confirm that the file contains an expected line (based on the content of this file)
+        Assert.IsTrue(txt.Contains("m_GameObject (PPtr<GameObject>)"));
+
+        File.Delete(outputFile);
     }
 
     [Test]
     public async Task Dump_WithoutTypeTreeData_Fails()
     {
-        Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_SerializedFile }));
+        Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_SerializedFilePath }));
     }
 
     [Test]
