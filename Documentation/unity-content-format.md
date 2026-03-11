@@ -88,6 +88,14 @@ Player built content, unless the Player was built with TypeTrees enabled.
 >[!TIP]
 >The `binary2text` tool supports an optional argument `-typeinfo` to enable dumping out the TypeTrees in a SerializedFile header.  That is a useful way to learn more about TypeTrees and to see exactly how Unity data is represented in the binary format.
 
+#### Extracted Typetrees
+
+Starting with Unity 6.5 and Addressables 2.9 it is possible to extract the TypeTrees from all the SerializedFiles in an Addressable build into a shared file.  This can reduce the size of the build output, because the TypeTree information is no longer duplicated in each file.
+
+For details see [Addressable AssetBundle memory considerations](https://docs.unity3d.com/Packages/com.unity.addressables@2.9/manual/memory-assetbundles.html)
+
+UnityDataTools commands that open serialized files using the UnityFileSystem API require access to the TypeTrees.  For example `dump` and `analyze`.  Use the `--typetree-data` option to specify the `.typetreedata` file when examining a build that has extracted TypeTrees.
+
 ### Platform details for using UnityDataTool with Player Data
 
 The output structure and file formats for a Unity Player build are quite platform specific.
