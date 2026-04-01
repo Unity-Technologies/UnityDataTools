@@ -40,14 +40,14 @@ public class WebBundleSupportTests
     public void IsWebBundle_True()
     {
         var webBundlePath = Path.Combine(m_TestDataFolder, "WebBundles", "HelloWorld.data");
-        Assert.IsTrue(Archive.IsWebBundle(webBundlePath));
+        Assert.IsTrue(WebBundleHelper.IsWebBundle(webBundlePath));
     }
 
     [Test]
     public void IsWebBundle_False()
     {
         var nonWebBundlePath = Path.Combine(m_TestDataFolder, "WebBundles", "NotAWebBundle.txt");
-        Assert.IsFalse(Archive.IsWebBundle(nonWebBundlePath));
+        Assert.IsFalse(WebBundleHelper.IsWebBundle(nonWebBundlePath));
     }
 
     [Test]
