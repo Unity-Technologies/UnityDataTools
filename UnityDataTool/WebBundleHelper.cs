@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace UnityDataTools.UnityDataTool;
 
@@ -33,17 +34,32 @@ public static class WebBundleHelper
         }
     }
 
-    public static void List(FileInfo filename)
+    public static void List(FileInfo filename, OutputFormat format)
     {
         using var fileStream = File.Open(filename.ToString(), FileMode.Open);
         using var stream = GetStream(filename, fileStream);
         using var reader = new BinaryReader(stream, Encoding.UTF8);
         var fileDescriptions = ParseWebBundleHeader(reader);
-        foreach (var description in fileDescriptions)
+
+        if (format == OutputFormat.Json)
         {
-            Console.WriteLine($"{description.Path}");
-            Console.WriteLine($"  Size: {description.Size}");
-            Console.WriteLine();
+            var jsonArray = new object[fileDescriptions.Count];
+            for (int i = 0; i < fileDescriptions.Count; i++)
+            {
+                var desc = fileDescriptions[i];
+                jsonArray[i] = new { path = desc.Path, size = desc.Size };
+            }
+            var json = JsonSerializer.Serialize(jsonArray, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(json);
+        }
+        else
+        {
+            foreach (var description in fileDescriptions)
+            {
+                Console.WriteLine($"{description.Path}");
+                Console.WriteLine($"  Size: {description.Size}");
+                Console.WriteLine();
+            }
         }
     }
 

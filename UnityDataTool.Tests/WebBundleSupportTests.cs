@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
@@ -96,6 +97,43 @@ Resources/unity_default_resources
             );
 
             Assert.AreEqual(expectedOutput, actualOutput);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveList_WebBundle_JsonFormat(
+         [Values(
+            "HelloWorld.data",
+            "HelloWorld.data.gz",
+            "HelloWorld.data.br"
+        )] string bundlePath)
+    {
+        var path = Path.Combine(m_TestDataFolder, "WebBundles", bundlePath);
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", path, "-f", "Json" }));
+
+            var output = sw.ToString();
+            var jsonArray = JsonDocument.Parse(output).RootElement;
+            Assert.AreEqual(JsonValueKind.Array, jsonArray.ValueKind);
+            Assert.AreEqual(6, jsonArray.GetArrayLength());
+
+            foreach (var element in jsonArray.EnumerateArray())
+            {
+                Assert.IsTrue(element.TryGetProperty("path", out _));
+                Assert.IsTrue(element.TryGetProperty("size", out _));
+            }
+
+            Assert.AreEqual("data.unity3d", jsonArray[0].GetProperty("path").GetString());
+            Assert.AreEqual(253044u, jsonArray[0].GetProperty("size").GetUInt32());
         }
         finally
         {

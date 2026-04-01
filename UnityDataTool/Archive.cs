@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
@@ -37,18 +38,18 @@ public static class Archive
         return 0;
     }
 
-    public static int HandleList(FileInfo filename)
+    public static int HandleList(FileInfo filename, OutputFormat format)
     {
         try
         {
             var path = filename.ToString();
             if (WebBundleHelper.IsWebBundle(path))
             {
-                WebBundleHelper.List(filename);
+                WebBundleHelper.List(filename, format);
             }
             else if (ArchiveDetector.IsUnityArchive(path))
             {
-                ListAssetBundle(filename);
+                ListAssetBundle(filename, format);
             }
             else
             {
@@ -79,15 +80,30 @@ public static class Archive
         }
     }
 
-    static void ListAssetBundle(FileInfo filename)
+    static void ListAssetBundle(FileInfo filename, OutputFormat format)
     {
         using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
-        foreach (var node in archive.Nodes)
+
+        if (format == OutputFormat.Json)
         {
-            Console.WriteLine($"{node.Path}");
-            Console.WriteLine($"  Size: {node.Size}");
-            Console.WriteLine($"  Flags: {node.Flags}");
-            Console.WriteLine();
+            var jsonArray = new object[archive.Nodes.Count];
+            for (int i = 0; i < archive.Nodes.Count; i++)
+            {
+                var node = archive.Nodes[i];
+                jsonArray[i] = new { path = node.Path, size = node.Size, flags = node.Flags.ToString() };
+            }
+            var json = JsonSerializer.Serialize(jsonArray, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(json);
+        }
+        else
+        {
+            foreach (var node in archive.Nodes)
+            {
+                Console.WriteLine($"{node.Path}");
+                Console.WriteLine($"  Size: {node.Size}");
+                Console.WriteLine($"  Flags: {node.Flags}");
+                Console.WriteLine();
+            }
         }
     }
 

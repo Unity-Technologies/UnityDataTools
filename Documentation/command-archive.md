@@ -13,18 +13,24 @@ The `archive` command provides utilities for working with Unity Archives (AssetB
 
 ## list
 
-Lists the SerializedFiles contained within an archive.
+Lists the contents of an archive.
 
 ### Quick Reference
 
 ```
-UnityDataTool archive list <archive-path>
+UnityDataTool archive list <archive-path> [options]
 ```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<archive-path>` | Path to the archive file | *(required)* |
+| `-f, --format <Text\|Json>` | Output format | `Text` |
 
 ### Example
 
 ```bash
 UnityDataTool archive list scenes.bundle
+UnityDataTool archive list scenes.bundle -f Json
 ```
 
 ---

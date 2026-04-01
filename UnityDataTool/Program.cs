@@ -130,14 +130,17 @@ public static class Program
                 (FileInfo fi, DirectoryInfo o) => Task.FromResult(Archive.HandleExtract(fi, o)),
                 pathArg, oOpt);
 
+            var fOpt = new Option<OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => OutputFormat.Text);
+
             var listArchiveCommand = new Command("list", "List the contents of an AssetBundle or .data file.")
             {
                 pathArg,
+                fOpt,
             };
 
             listArchiveCommand.SetHandler(
-                (FileInfo fi) => Task.FromResult(Archive.HandleList(fi)),
-                pathArg);
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleList(fi, f)),
+                pathArg, fOpt);
 
             var archiveCommand = new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
             {
