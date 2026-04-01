@@ -146,6 +146,28 @@ public enum TypeTreeMetaFlags
     AnyChildUsesAlignBytes = 1 << 15,
 }
 
+public enum TypeTreeCategory
+{
+    ObjectType = 0,
+    RefType = 1,
+}
+
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+public struct TypeTreeInfo
+{
+    public readonly int TypeId;
+    public readonly int SerializedSize;
+    public readonly TypeTreeCategory Category;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+    public readonly uint[] Hash;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public readonly string ClassName;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public readonly string NamespaceName;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public readonly string AssemblyName;
+}
+
 public static class DllWrapper
 {
     [DllImport("UnityFileSystemApi",
@@ -263,4 +285,39 @@ public static class DllWrapper
         StringBuilder name, int nameLen, out int offset, out int size, [MarshalAs(UnmanagedType.U4)] out TypeTreeFlags flags,
         [MarshalAs(UnmanagedType.U4)] out TypeTreeMetaFlags metaFlags, out int firstChildNode,
         out int nextNode);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetDllVersion")]
+    public static extern ReturnCode GetDllVersion(out int version);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetUnityVersion")]
+    public static extern ReturnCode GetUnityVersion(StringBuilder version, int versionLen);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetSerializedFileVersion")]
+    public static extern ReturnCode GetSerializedFileVersion(SerializedFileHandle handle, out int version);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetTypeTreeCount")]
+    public static extern ReturnCode GetTypeTreeCount(SerializedFileHandle handle, out int count);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetTypeTreeInfo")]
+    public static extern ReturnCode GetTypeTreeInfo(SerializedFileHandle handle, int index, out TypeTreeInfo info);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetTypeTreeByIndex")]
+    public static extern ReturnCode GetTypeTreeByIndex(SerializedFileHandle handle, int index, out TypeTreeHandle typeTree);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_RemoveTypeTreeSource")]
+    public static extern ReturnCode RemoveTypeTreeSource(long handle);
 }

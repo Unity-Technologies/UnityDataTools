@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 
 namespace UnityDataTools.FileSystem;
 
@@ -49,6 +50,27 @@ public static class UnityFileSystem
         var r = DllWrapper.AddTypeTreeSourceFromFile(path, out var handle);
         HandleErrors(r, path);
         return handle;
+    }
+
+    public static void RemoveTypeTreeSource(long handle)
+    {
+        var r = DllWrapper.RemoveTypeTreeSource(handle);
+        HandleErrors(r);
+    }
+
+    public static int GetDllVersion()
+    {
+        var r = DllWrapper.GetDllVersion(out var version);
+        HandleErrors(r);
+        return version;
+    }
+
+    public static string GetUnityVersion()
+    {
+        var version = new StringBuilder(256);
+        var r = DllWrapper.GetUnityVersion(version, version.Capacity);
+        HandleErrors(r);
+        return version.ToString();
     }
 
     public static SerializedFile OpenSerializedFile(string path)
