@@ -54,18 +54,22 @@ public class ArchiveTests
 
             var expectedOutput =
 @"BuildPlayer-SampleScene.sharedAssets
+  Offset: 0
   Size: 90732
   Flags: SerializedFile
 
 BuildPlayer-SampleScene
+  Offset: 90732
   Size: 153352
   Flags: SerializedFile
 
 BuildPlayer-OtherScene.sharedAssets
+  Offset: 244084
   Size: 136744
   Flags: SerializedFile
 
 BuildPlayer-OtherScene
+  Offset: 380828
   Size: 158340
   Flags: SerializedFile
 
@@ -98,12 +102,14 @@ BuildPlayer-OtherScene
             foreach (var element in jsonArray.EnumerateArray())
             {
                 Assert.IsTrue(element.TryGetProperty("path", out _));
+                Assert.IsTrue(element.TryGetProperty("offset", out _));
                 Assert.IsTrue(element.TryGetProperty("size", out _));
                 Assert.IsTrue(element.TryGetProperty("flags", out _));
                 Assert.AreEqual("SerializedFile", element.GetProperty("flags").GetString());
             }
 
             Assert.AreEqual("BuildPlayer-SampleScene.sharedAssets", jsonArray[0].GetProperty("path").GetString());
+            Assert.AreEqual(0, jsonArray[0].GetProperty("offset").GetUInt64());
             Assert.AreEqual(90732, jsonArray[0].GetProperty("size").GetInt64());
         }
         finally
@@ -165,6 +171,64 @@ BuildPlayer-OtherScene
             Assert.AreEqual(2, flags.GetArrayLength());
             Assert.AreEqual("BlocksAndDirectoryInfoCombined", flags[0].GetString());
             Assert.AreEqual("BlockInfoNeedPaddingAtStart", flags[1].GetString());
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveBlocks_TextFormat()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "blocks", m_ArchivePath }));
+
+            var output = sw.ToString();
+            Assert.That(output, Does.Contain("Blocks: 1"));
+            Assert.That(output, Does.Contain("#0"));
+            Assert.That(output, Does.Contain("Offset: 192"));
+            Assert.That(output, Does.Contain("Uncompressed: 539,168"));
+            Assert.That(output, Does.Contain("Compressed: 92,883"));
+            Assert.That(output, Does.Contain("Compression: Lzma"));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveBlocks_JsonFormat()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "blocks", m_ArchivePath, "-f", "Json" }));
+
+            var output = sw.ToString();
+            var json = JsonDocument.Parse(output).RootElement;
+            Assert.AreEqual(JsonValueKind.Object, json.ValueKind);
+
+            var blocks = json.GetProperty("blocks");
+            Assert.AreEqual(JsonValueKind.Array, blocks.ValueKind);
+            Assert.AreEqual(1, blocks.GetArrayLength());
+
+            var block = blocks[0];
+            Assert.AreEqual(0, block.GetProperty("index").GetInt32());
+            Assert.AreEqual(192, block.GetProperty("offset").GetInt64());
+            Assert.AreEqual(539168u, block.GetProperty("uncompressedSize").GetUInt32());
+            Assert.AreEqual(92883u, block.GetProperty("compressedSize").GetUInt32());
+            Assert.AreEqual("Lzma", block.GetProperty("compression").GetString());
+            Assert.AreEqual(true, block.GetProperty("isStreamed").GetBoolean());
         }
         finally
         {

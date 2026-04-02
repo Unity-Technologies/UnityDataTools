@@ -1,10 +1,13 @@
 {
   "$type": "System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib],[System.Object, System.Private.CoreLib]], System.Private.CoreLib",
   "NodeCount": 3,
+  "CAB-5d40f7cad7c871cf2ad2af19ac542994-Offset": 0,
   "CAB-5d40f7cad7c871cf2ad2af19ac542994-Size": 1074083,
   "CAB-5d40f7cad7c871cf2ad2af19ac542994-Flags": 4,
+  "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Offset": 1074083,
   "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Size": 2833848,
   "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Flags": 0,
+  "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Offset": 3907931,
   "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Size": 5248,
   "CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Flags": 0,
   "animation_clips_count": 2,

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using K4os.Compression.LZ4;
 
 namespace UnityDataTools.BinaryFormat;
 
@@ -43,6 +44,40 @@ public class ArchiveHeaderInfo
     /// Archive flag bits (bits 6+ of Flags), with compression bits masked out.
     /// </summary>
     public uint ArchiveFlagBits => Flags & ~0x3Fu;
+}
+
+public class ArchiveStorageBlock
+{
+    public uint UncompressedSize { get; set; }
+    public uint CompressedSize { get; set; }
+    public ushort Flags { get; set; }
+    public int CompressionType => Flags & 0x3F;
+    public bool IsStreamed => (Flags & 0x40) != 0;
+}
+
+public class ArchiveBlocksInfo
+{
+    public byte[] UncompressedDataHash { get; set; } // Unused
+    public ArchiveStorageBlock[] Blocks { get; set; }
+}
+
+public class ArchiveDirectoryNode
+{
+    public ulong Offset { get; set; } // Offset within the virtual data section (e.g. all the blocks uncompressed and concatenated together
+    public ulong Size { get; set; } // Size of the file in bytse
+    public uint Flags { get; set; }
+    public string Path { get; set; }
+}
+
+public class ArchiveDirectoryInfo
+{
+    public ArchiveDirectoryNode[] Nodes { get; set; }
+}
+
+public class ArchiveMetadata
+{
+    public ArchiveBlocksInfo BlocksInfo { get; set; }
+    public ArchiveDirectoryInfo DirectoryInfo { get; set; }
 }
 
 /// <summary>
@@ -104,6 +139,25 @@ public static class ArchiveDetector
     }
 
     /// <summary>
+    /// Reads a null-terminated signature string, with a length limit to avoid reading
+    /// deep into non-archive files that don't contain an early null byte.
+    /// </summary>
+    static string ReadSignature(BinaryReader reader)
+    {
+        const int maxLength = 20; // Longest valid signature is "UnityArchive" (12 chars)
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < maxLength; i++)
+        {
+            byte b = reader.ReadByte(); // Throws EndOfStreamException on EOF
+            if (b == 0)
+                return sb.ToString();
+            sb.Append((char)b);
+        }
+        // No null terminator found within the limit — not a valid archive signature.
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Attempts to read and parse the header of a Unity Archive file.
     /// Only the "UnityFS" format is supported. Other archive signatures will produce
     /// an error message identifying the unsupported signature.
@@ -124,7 +178,16 @@ public static class ArchiveDetector
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             using var reader = new BinaryReader(stream);
 
-            var signature = BinaryFileHelper.ReadNullTermString(reader);
+            string signature;
+            try
+            {
+                signature = ReadSignature(reader);
+            }
+            catch (EndOfStreamException)
+            {
+                errorMessage = "File is not a Unity Archive.";
+                return false;
+            }
 
             if (signature != "UnityFS")
             {
@@ -170,5 +233,187 @@ public static class ArchiveDetector
             errorMessage = $"Error reading archive header: {ex.Message}";
             return false;
         }
+    }
+
+    /// <summary>
+    /// Reads and parses the metadata section (BlocksInfo and DirectoryInfo) from a Unity Archive.
+    /// The header must have been successfully read first via TryReadArchiveHeader.
+    /// Only the combined BlocksInfo+DirectoryInfo layout is supported.
+    /// </summary>
+    public static bool TryReadArchiveMetadata(string filePath, ArchiveHeaderInfo header, out ArchiveMetadata metadata, out string errorMessage)
+    {
+        metadata = null;
+        errorMessage = null;
+
+        const uint flagBlocksAndDirectoryInfoCombined = 0x40;
+        const uint flagBlocksInfoAtTheEnd = 0x80;
+
+        if ((header.ArchiveFlagBits & flagBlocksAndDirectoryInfoCombined) == 0)
+        {
+            errorMessage = "This archive does not use the combined BlocksInfo+DirectoryInfo layout. Only the combined layout is supported.";
+            return false;
+        }
+
+        try
+        {
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            // Calculate where the metadata section starts.
+            long metadataOffset;
+            if ((header.ArchiveFlagBits & flagBlocksInfoAtTheEnd) != 0)
+                metadataOffset = (long)(header.Size - header.CompressedMetadataSize);
+            else
+                metadataOffset = GetHeaderSize(header);
+
+            stream.Seek(metadataOffset, SeekOrigin.Begin);
+
+            // Read the metadata bytes (which may be compressed)
+            var compressedData = new byte[header.CompressedMetadataSize];
+            int bytesRead = stream.Read(compressedData, 0, compressedData.Length);
+            if (bytesRead != compressedData.Length)
+                throw new InvalidDataException("Could not read the full metadata section from the file.");
+
+            // Decompress if needed.
+            byte[] uncompressedData;
+            if (header.MetadataCompressionType == 0)
+            {
+                uncompressedData = compressedData;
+            }
+            else if (header.MetadataCompressionType == 2 || header.MetadataCompressionType == 3)
+            {
+                // LZ4 and LZ4HC use the same decompression algorithm.
+                uncompressedData = new byte[header.UncompressedMetadataSize];
+                int decoded = LZ4Codec.Decode(compressedData, 0, compressedData.Length,
+                    uncompressedData, 0, uncompressedData.Length);
+                if (decoded != header.UncompressedMetadataSize)
+                    throw new InvalidDataException($"LZ4 decompression produced {decoded} bytes, expected {header.UncompressedMetadataSize}.");
+            }
+            else if (header.MetadataCompressionType == 1)
+            {
+                errorMessage = "LZMA compression for archive metadata is not supported.";
+                return false;
+            }
+            else
+            {
+                errorMessage = $"Unknown metadata compression type: {header.MetadataCompressionType}.";
+                return false;
+            }
+
+            // Parse BlocksInfo and DirectoryInfo from the uncompressed buffer.
+            using var memStream = new MemoryStream(uncompressedData);
+            using var reader = new BinaryReader(memStream);
+
+            var blocksInfo = ParseBlocksInfo(reader);
+            var directoryInfo = ParseDirectoryInfo(reader);
+
+            metadata = new ArchiveMetadata
+            {
+                BlocksInfo = blocksInfo,
+                DirectoryInfo = directoryInfo,
+            };
+
+            return true;
+        }
+        catch (Exception ex) when (ex is EndOfStreamException || ex is InvalidDataException)
+        {
+            errorMessage = $"Error reading archive metadata: {ex.Message}";
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the data section offset from the start of the archive file.
+    /// This is the byte position where the first data block begins.
+    /// </summary>
+    public static long GetDataOffset(ArchiveHeaderInfo header)
+    {
+        const uint flagBlocksInfoAtTheEnd = 0x80;
+        const uint flagBlockInfoNeedPaddingAtStart = 0x200;
+
+        long offset = GetHeaderSize(header);
+
+        if ((header.ArchiveFlagBits & flagBlocksInfoAtTheEnd) == 0)
+        {
+            if ((header.ArchiveFlagBits & flagBlockInfoNeedPaddingAtStart) != 0)
+                offset += AlignTo16(header.CompressedMetadataSize);
+            else
+                offset += header.CompressedMetadataSize;
+        }
+
+        return offset;
+    }
+
+    static int GetHeaderSize(ArchiveHeaderInfo header)
+    {
+        const uint flagOldWebPluginCompatibility = 0x100;
+
+        int size;
+        if ((header.ArchiveFlagBits & flagOldWebPluginCompatibility) != 0)
+            size = 10; // Legacy web plugin signature portion
+        else
+            size = header.Signature.Length + 1;
+
+        size += 4; // version
+        size += header.Unused.Length + 1;
+        size += header.UnityVersion.Length + 1;
+        size += 8; // size (UInt64)
+        size += 4; // compressedMetadataSize
+        size += 4; // uncompressedMetadataSize
+        size += 4; // flags
+
+        if (header.Version >= 7)
+            size = (int)AlignTo16((uint)size);
+
+        return size;
+    }
+
+    static long AlignTo16(uint value)
+    {
+        return (value + 15) & ~15L;
+    }
+
+    static ArchiveBlocksInfo ParseBlocksInfo(BinaryReader reader)
+    {
+        var hash = reader.ReadBytes(16);
+        var blockCount = BinaryFileHelper.ReadUInt32(reader, true);
+
+        var blocks = new ArchiveStorageBlock[blockCount];
+        for (int i = 0; i < blockCount; i++)
+        {
+            blocks[i] = new ArchiveStorageBlock
+            {
+                UncompressedSize = BinaryFileHelper.ReadUInt32(reader, true),
+                CompressedSize = BinaryFileHelper.ReadUInt32(reader, true),
+                Flags = BinaryFileHelper.ReadUInt16(reader, true),
+            };
+        }
+
+        return new ArchiveBlocksInfo
+        {
+            UncompressedDataHash = hash,
+            Blocks = blocks,
+        };
+    }
+
+    static ArchiveDirectoryInfo ParseDirectoryInfo(BinaryReader reader)
+    {
+        var nodeCount = BinaryFileHelper.ReadUInt32(reader, true);
+
+        var nodes = new ArchiveDirectoryNode[nodeCount];
+        for (int i = 0; i < nodeCount; i++)
+        {
+            nodes[i] = new ArchiveDirectoryNode
+            {
+                Offset = BinaryFileHelper.ReadUInt64(reader, true),
+                Size = BinaryFileHelper.ReadUInt64(reader, true),
+                Flags = BinaryFileHelper.ReadUInt32(reader, true),
+                Path = BinaryFileHelper.ReadNullTermString(reader),
+            };
+        }
+
+        return new ArchiveDirectoryInfo
+        {
+            Nodes = nodes,
+        };
     }
 }
