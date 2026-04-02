@@ -237,6 +237,68 @@ BuildPlayer-OtherScene
     }
 
     [Test]
+    public async Task ArchiveInfo_TextFormat()
+    {
+        var infoPath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "info", infoPath }));
+
+            var output = sw.ToString();
+            Assert.That(output, Does.Contain("2021.3.20f1"));
+            Assert.That(output, Does.Contain("459,654"));
+            Assert.That(output, Does.Contain("459,382"));
+            Assert.That(output, Does.Contain("963,117"));
+            Assert.That(output, Does.Contain("2.10x"));
+            Assert.That(output, Does.Contain("Lz4"));
+            Assert.That(output, Does.Contain("Block Count"));
+            Assert.That(output, Does.Contain("8"));
+            Assert.That(output, Does.Contain("File Count"));
+            Assert.That(output, Does.Contain("Serialized File Count"));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveInfo_JsonFormat()
+    {
+        var infoPath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "info", infoPath, "-f", "Json" }));
+
+            var output = sw.ToString();
+            var json = JsonDocument.Parse(output).RootElement;
+            Assert.AreEqual(JsonValueKind.Object, json.ValueKind);
+
+            Assert.AreEqual("2021.3.20f1", json.GetProperty("unityVersion").GetString());
+            Assert.AreEqual(459654u, json.GetProperty("fileSize").GetUInt64());
+            Assert.AreEqual(459382, json.GetProperty("dataSize").GetInt64());
+            Assert.AreEqual(963117, json.GetProperty("uncompressedDataSize").GetInt64());
+            Assert.AreEqual(2.1, json.GetProperty("compressionRatio").GetDouble(), 0.01);
+            Assert.AreEqual("Lz4", json.GetProperty("compression").GetString());
+            Assert.AreEqual(8, json.GetProperty("blockCount").GetInt32());
+            Assert.AreEqual(5, json.GetProperty("fileCount").GetInt32());
+            Assert.AreEqual(5, json.GetProperty("serializedFileCount").GetInt32());
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
     public async Task ArchiveExtract_FilesExtractedSuccessfully()
     {
         Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_ArchivePath }));

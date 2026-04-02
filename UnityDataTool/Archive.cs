@@ -124,6 +124,95 @@ public static class Archive
         return 0;
     }
 
+    public static int HandleInfo(FileInfo filename, OutputFormat format)
+    {
+        var path = filename.ToString();
+
+        if (WebBundleHelper.IsWebBundle(path))
+        {
+            Console.Error.WriteLine("Web bundle files (.data, .data.gz, .data.br) use a different format. The info command is only supported for Unity Archive files.");
+            return 1;
+        }
+
+        if (!ArchiveDetector.TryReadArchiveHeader(filename.FullName, out var header, out var errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        if (!ArchiveDetector.TryReadArchiveMetadata(filename.FullName, header, out var metadata, out errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        var blocks = metadata.BlocksInfo.Blocks;
+        var nodes = metadata.DirectoryInfo.Nodes;
+
+        long dataSize = 0;
+        long uncompressedDataSize = 0;
+        foreach (var block in blocks)
+        {
+            dataSize += block.CompressedSize;
+            uncompressedDataSize += block.UncompressedSize;
+        }
+
+        // Determine the compression algorithm by finding the first block that uses compression.
+        // Individual blocks may be stored uncompressed even when compression is enabled, because
+        // compression is skipped when it provides no size reduction. So the first compressed block
+        // tells us what algorithm was used for the archive.
+        string compression = "Uncompressed";
+        foreach (var block in blocks)
+        {
+            if (block.CompressionType != 0)
+            {
+                compression = FormatCompressionType(block.CompressionType);
+                break;
+            }
+        }
+
+        double compressionRatio = dataSize > 0 ? (double)uncompressedDataSize / dataSize : 0;
+        int fileCount = nodes.Length;
+        int serializedFileCount = 0;
+        foreach (var node in nodes)
+        {
+            if ((node.Flags & 0x04) != 0)
+                serializedFileCount++;
+        }
+
+        if (format == OutputFormat.Json)
+        {
+            var jsonObject = new
+            {
+                unityVersion = header.UnityVersion,
+                fileSize = header.Size,
+                dataSize = dataSize,
+                uncompressedDataSize = uncompressedDataSize,
+                compressionRatio = Math.Round(compressionRatio, 2),
+                compression = compression,
+                blockCount = blocks.Length,
+                fileCount = fileCount,
+                serializedFileCount = serializedFileCount,
+            };
+            var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(json);
+        }
+        else
+        {
+            Console.WriteLine($"{"Unity Version",-30} {header.UnityVersion}");
+            Console.WriteLine($"{"File Size",-30} {header.Size:N0} bytes");
+            Console.WriteLine($"{"Data Size",-30} {dataSize:N0} bytes");
+            Console.WriteLine($"{"Uncompressed Data Size",-30} {uncompressedDataSize:N0} bytes");
+            Console.WriteLine($"{"Compression Ratio",-30} {compressionRatio:F2}x");
+            Console.WriteLine($"{"Compression",-30} {compression}");
+            Console.WriteLine($"{"Block Count",-30} {blocks.Length}");
+            Console.WriteLine($"{"File Count",-30} {fileCount}");
+            Console.WriteLine($"{"Serialized File Count",-30} {serializedFileCount}");
+        }
+
+        return 0;
+    }
+
     static void OutputHeaderText(ArchiveHeaderInfo info)
     {
         Console.WriteLine($"{"Signature",-30} {info.Signature}");
