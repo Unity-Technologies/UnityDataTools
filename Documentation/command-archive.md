@@ -6,8 +6,33 @@ The `archive` command provides utilities for working with Unity Archives (AssetB
 
 | Sub-Command | Description |
 |-------------|-------------|
+| [`header`](#header) | Display archive header information |
 | [`list`](#list) | List contents of an archive |
 | [`extract`](#extract) | Extract contents of an archive |
+
+---
+
+## header
+
+Displays the header information of a Unity Archive file, including format version, Unity version, file size, metadata compression, and archive flags. Only the `UnityFS` format is supported.
+
+### Quick Reference
+
+```
+UnityDataTool archive header <archive-path> [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<archive-path>` | Path to the archive file | *(required)* |
+| `-f, --format <Text\|Json>` | Output format | `Text` |
+
+### Example
+
+```bash
+UnityDataTool archive header scenes.bundle
+UnityDataTool archive header scenes.bundle -f Json
+```
 
 ---
 

@@ -142,10 +142,21 @@ public static class Program
                 (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleList(fi, f)),
                 pathArg, fOpt);
 
+            var headerArchiveCommand = new Command("header", "Display the header of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            headerArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleHeader(fi, f)),
+                pathArg, fOpt);
+
             var archiveCommand = new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
             {
                 extractArchiveCommand,
                 listArchiveCommand,
+                headerArchiveCommand,
             };
 
             rootCommand.AddCommand(archiveCommand);

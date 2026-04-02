@@ -113,6 +113,66 @@ BuildPlayer-OtherScene
     }
 
     [Test]
+    public async Task ArchiveHeader_TextFormat()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "header", m_ArchivePath }));
+
+            var output = sw.ToString();
+            Assert.That(output, Does.Contain("UnityFS"));
+            Assert.That(output, Does.Contain("2023.1.0a16"));
+            Assert.That(output, Does.Contain("93,075"));
+            Assert.That(output, Does.Contain("Lz4HC"));
+            Assert.That(output, Does.Contain("BlocksAndDirectoryInfoCombined"));
+            Assert.That(output, Does.Contain("BlockInfoNeedPaddingAtStart"));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveHeader_JsonFormat()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "header", m_ArchivePath, "-f", "Json" }));
+
+            var output = sw.ToString();
+            var json = JsonDocument.Parse(output).RootElement;
+            Assert.AreEqual(JsonValueKind.Object, json.ValueKind);
+
+            Assert.AreEqual("UnityFS", json.GetProperty("signature").GetString());
+            Assert.AreEqual(8u, json.GetProperty("version").GetUInt32());
+            Assert.AreEqual("2023.1.0a16", json.GetProperty("unityVersion").GetString());
+            Assert.AreEqual(93075u, json.GetProperty("fileSize").GetUInt64());
+            Assert.AreEqual(118u, json.GetProperty("compressedMetadataSize").GetUInt32());
+            Assert.AreEqual(234u, json.GetProperty("uncompressedMetadataSize").GetUInt32());
+            Assert.AreEqual("Lz4HC", json.GetProperty("metadataCompression").GetString());
+
+            var flags = json.GetProperty("flags");
+            Assert.AreEqual(JsonValueKind.Array, flags.ValueKind);
+            Assert.AreEqual(2, flags.GetArrayLength());
+            Assert.AreEqual("BlocksAndDirectoryInfoCombined", flags[0].GetString());
+            Assert.AreEqual("BlockInfoNeedPaddingAtStart", flags[1].GetString());
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
     public async Task ArchiveExtract_FilesExtractedSuccessfully()
     {
         Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_ArchivePath }));
