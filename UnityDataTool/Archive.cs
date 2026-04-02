@@ -9,18 +9,18 @@ namespace UnityDataTools.UnityDataTool;
 
 public static class Archive
 {
-    public static int HandleExtract(FileInfo filename, DirectoryInfo outputFolder)
+    public static int HandleExtract(FileInfo filename, DirectoryInfo outputFolder, string filter = null)
     {
         try
         {
             var path = filename.ToString();
             if (WebBundleHelper.IsWebBundle(path))
             {
-                WebBundleHelper.Extract(filename, outputFolder);
+                WebBundleHelper.Extract(filename, outputFolder, filter);
             }
             else if (ArchiveDetector.IsUnityArchive(path))
             {
-                ExtractAssetBundle(filename, outputFolder);
+                ExtractAssetBundle(filename, outputFolder, filter);
             }
             else
             {
@@ -268,15 +268,25 @@ public static class Archive
         return names.Count > 0 ? string.Join(", ", names) : "None";
     }
 
-    static void ExtractAssetBundle(FileInfo filename, DirectoryInfo outputFolder)
+    static void ExtractAssetBundle(FileInfo filename, DirectoryInfo outputFolder, string filter)
     {
-        Console.WriteLine($"Extracting asset bundle: {filename}");
+        Console.WriteLine($"Extracting files from archive: {filename}");
         using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
+
+        int total = archive.Nodes.Count;
+        int extracted = 0;
+
         foreach (var node in archive.Nodes)
         {
+            if (filter != null && !node.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             Console.WriteLine($"... Extracting {node.Path}");
             CopyFile("/" + node.Path, Path.Combine(outputFolder.FullName, node.Path));
+            extracted++;
         }
+
+        Console.WriteLine($"Extracted {extracted} out of {total} files.");
     }
 
     static void ListAssetBundle(FileInfo filename, OutputFormat format)

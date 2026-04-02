@@ -15,7 +15,9 @@ The `archive` command provides utilities for working with Unity Archives (AssetB
 
 ## header
 
-Displays the header information of a Unity Archive file, including format version, Unity version, file size, metadata compression, and archive flags. Only the `UnityFS` format is supported.
+Displays the header information of a Unity Archive file, including format version, Unity version, file size, metadata compression, and archive flags.
+
+Very old versions of the Unity Archive format are not supported.  But the files created by all currently supported Unity versions should be compatible (and it was tested with files as old as Unity 2017).
 
 ### Quick Reference
 
@@ -39,7 +41,9 @@ UnityDataTool archive header scenes.bundle -f Json
 
 ## blocks
 
-Displays the data block list of a Unity Archive file, showing the size, compression type, and file offset of each block. Only the `UnityFS` format is supported.
+Displays the data block list of a Unity Archive file, showing the size, compression type, and file offset of each block. 
+
+Very old versions of the Unity Archive format are not supported.
 
 ### Quick Reference
 
@@ -64,6 +68,8 @@ UnityDataTool archive blocks scenes.bundle -f Json
 ## list
 
 Lists the contents of an archive, including the offset, size, and flags of each file.
+
+Very old versions of the Unity Archive format are not supported.
 
 ### Quick Reference
 
@@ -99,11 +105,13 @@ UnityDataTool archive extract <archive-path> [options]
 |--------|-------------|---------|
 | `<archive-path>` | Path to the archive file | *(required)* |
 | `-o, --output-path <path>` | Output directory | `archive` |
+| `--filter <text>` | Case-insensitive substring filter on file paths inside the archive | *(none — extract all)* |
 
 ### Example
 
 ```bash
 UnityDataTool archive extract scenes.bundle -o contents
+UnityDataTool archive extract scenes.bundle --filter sharedAssets
 ```
 
 **Output files:**
@@ -114,7 +122,7 @@ contents/BuildPlayer-Scene2.sharedAssets
 contents/BuildPlayer-Scene2
 ```
 
-> **Note:** The extracted files are binary SerializedFiles, not text. Use the [`dump`](command-dump.md) command to convert them to readable text format.
+> **Note:** The extracted files are in binary formats, not text.  If they are SerializedFiles then use the [`dump`](command-dump.md) command to convert them to readable text format.  See also the [`serialized-file`](command-serialized-file.md) command.
 
 ---
 

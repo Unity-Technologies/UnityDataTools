@@ -21,17 +21,33 @@ public static class WebBundleHelper
         );
     }
 
-    public static void Extract(FileInfo filename, DirectoryInfo outputFolder)
+    public static void Extract(FileInfo filename, DirectoryInfo outputFolder, string filter = null)
     {
         Console.WriteLine($"Extracting web bundle: {filename}");
         using var fileStream = File.Open(filename.ToString(), FileMode.Open);
         using var stream = GetStream(filename, fileStream);
         using var reader = new BinaryReader(stream, Encoding.UTF8);
         var fileDescriptions = ParseWebBundleHeader(reader);
+
+        int total = fileDescriptions.Count;
+        int extracted = 0;
+
         foreach (var description in fileDescriptions)
         {
-            ExtractFile(description, reader, outputFolder);
+            // Always read the bytes to advance the stream position.
+            var data = ReadBytes(reader, (int)description.Size);
+
+            if (filter != null && !description.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            Console.WriteLine($"... Extracting {description.Path}");
+            var path = Path.Combine(outputFolder.ToString(), description.Path);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllBytes(path, data);
+            extracted++;
         }
+
+        Console.WriteLine($"Extracted {extracted} out of {total} files.");
     }
 
     public static void List(FileInfo filename, OutputFormat format)

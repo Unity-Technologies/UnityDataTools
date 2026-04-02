@@ -120,15 +120,18 @@ public static class Program
             var pathArg = new Argument<FileInfo>("filename", "The path of the archive file").ExistingOnly();
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output directory of the extracted archive", getDefaultValue: () => new DirectoryInfo("archive"));
 
+            var filterOpt = new Option<string>(aliases: new[] { "--filter" }, description: "Case-insensitive substring filter on file paths inside the archive");
+
             var extractArchiveCommand = new Command("extract", "Extract an AssetBundle or .data file.")
             {
                 pathArg,
                 oOpt,
+                filterOpt,
             };
 
             extractArchiveCommand.SetHandler(
-                (FileInfo fi, DirectoryInfo o) => Task.FromResult(Archive.HandleExtract(fi, o)),
-                pathArg, oOpt);
+                (FileInfo fi, DirectoryInfo o, string filter) => Task.FromResult(Archive.HandleExtract(fi, o, filter)),
+                pathArg, oOpt, filterOpt);
 
             var fOpt = new Option<OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => OutputFormat.Text);
 
