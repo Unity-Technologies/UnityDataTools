@@ -92,6 +92,7 @@ public static class Program
             var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
             var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
+            var typeOpt = new Option<string>(aliases: new[] { "--type", "-t" }, description: "Filter by object type (ClassID number or type name)");
 
             var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: typeTreeDataDescription);
 
@@ -102,16 +103,17 @@ public static class Program
                 sOpt,
                 oOpt,
                 objectIdOpt,
+                typeOpt,
                 dOpt,
             };
             dumpCommand.SetHandler(
-                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId, FileInfo d) =>
+                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId, string type, FileInfo d) =>
                 {
                     var ttResult = LoadTypeTreeDataFile(d);
                     if (ttResult != 0) return Task.FromResult(ttResult);
-                    return Task.FromResult(HandleDump(fi, f, s, o, objectId));
+                    return Task.FromResult(HandleDump(fi, f, s, o, objectId, type));
                 },
-                pathArg, fOpt, sOpt, oOpt, objectIdOpt, dOpt);
+                pathArg, fOpt, sOpt, oOpt, objectIdOpt, typeOpt, dOpt);
 
             rootCommand.AddCommand(dumpCommand);
         }
@@ -274,14 +276,14 @@ public static class Program
         }
     }
 
-    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder, long objectId = 0)
+    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder, long objectId = 0, string typeFilter = null)
     {
         switch (format)
         {
             case DumpFormat.Text:
             {
                 var textDumper = new TextDumperTool();
-                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId);
+                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId, typeFilter);
             }
         }
 

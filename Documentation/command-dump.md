@@ -15,6 +15,7 @@ UnityDataTool dump <path> [options]
 | `-f, --output-format <format>` | Output format | `text` |
 | `-s, --skip-large-arrays` | Skip dumping large arrays | `false` |
 | `-i, --objectid <id>` | Only dump object with this ID | All objects |
+| `-t, --type <type>` | Filter by object type (ClassID number or type name) | All objects |
 | `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
 
 ## Examples
@@ -38,6 +39,29 @@ Skip large arrays for cleaner output:
 ```bash
 UnityDataTool dump /path/to/file -s
 ```
+
+Dump only MonoBehaviour objects by type name:
+```bash
+UnityDataTool dump /path/to/file -t MonoBehaviour
+```
+
+Same thing using the numeric ClassID:
+```bash
+UnityDataTool dump /path/to/file -t 114
+```
+
+Dump the AssetBundle manifest object:
+```bash
+UnityDataTool dump mybundle -t AssetBundle
+```
+
+---
+
+## Filtering by Type
+
+The `-t` / `--type` option filters output to objects of a specific Unity type. It accepts either a numeric ClassID (e.g. `114`) or a type name (e.g. `MonoBehaviour`). Type name matching is case-insensitive.
+
+This is particularly useful for inspecting MonoBehaviour data in built AssetBundles. MonoBehaviour and ScriptableObject field values are serialized as binary, and a typical bundle contains many other object types (meshes, textures, materials, etc.). Using `-t MonoBehaviour` dumps only the scripting objects, showing the serialized C# field names, types, and values.
 
 ---
 
