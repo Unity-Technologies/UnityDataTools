@@ -16,6 +16,9 @@ public class TextDumperTool
 
     public int Dump(string path, string outputPath, bool skipLargeArrays, long objectId = 0, string typeFilter = null)
     {
+        if (string.IsNullOrWhiteSpace(typeFilter))
+            typeFilter = null;
+
         m_SkipLargeArrays = skipLargeArrays;
 
         try
@@ -402,6 +405,8 @@ public class TextDumperTool
                 if (objectId != 0 && obj.Id != objectId)
                     continue;
 
+                var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+
                 if (typeFilter != null)
                 {
                     if (filterByTypeId)
@@ -415,13 +420,12 @@ public class TextDumperTool
                         // GetTypeName returns the id as a string when the type is unknown;
                         // fall back to the TypeTree root node for script types.
                         if (typeName == obj.TypeId.ToString())
-                            typeName = m_SerializedFile.GetTypeTreeRoot(obj.Id).Type;
+                            typeName = root.Type;
                         if (!string.Equals(typeName, typeFilter, StringComparison.OrdinalIgnoreCase))
                             continue;
                     }
                 }
 
-                var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
                 var offset = obj.Offset;
 
                 m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
