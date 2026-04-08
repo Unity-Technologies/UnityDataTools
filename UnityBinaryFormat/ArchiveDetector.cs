@@ -15,6 +15,9 @@ namespace UnityDataTools.BinaryFormat;
 ///   its on-disk vs uncompressed size.
 /// - Data: One or more blocks of file content. Each block has its own compression type
 ///   recorded in its per-block flags. The metadata section is required to interpret the data.
+///   A single file can span multiple blocks, and a single block can contain data for multiple files.
+///   The blocks account for every byte of the data (there are no offsets stored - no overlapping or
+///   gaps can be expressed).  However the files could have padding between them.
 ///
 /// The metadata can appear directly after the header (default layout) or at the end of the
 /// file after the data (indicated by the BlocksInfoAtTheEnd flag).
@@ -71,6 +74,9 @@ public class ArchiveStorageBlock
 public class ArchiveBlocksInfo
 {
     public byte[] UncompressedDataHash { get; set; } // Unused
+
+    // Archives with no compression or LZMA will have a single block,
+    // except when the data exceeds 4GB (because the size fields in ArchiveStorageBlock are 32-bit).
     public ArchiveStorageBlock[] Blocks { get; set; }
 }
 
@@ -82,6 +88,12 @@ public class ArchiveDirectoryNode
     public ulong DataOffset { get; set; }
     public ulong Size { get; set; }
     public uint Flags { get; set; }
+
+    /// <summary>
+    /// Path of the file within the archive, using '/' as a separator.
+    /// Although Flags has a Directory flag, in practice nodes are only created for files,
+    /// and directories are implied by the paths.
+    /// </summary>
     public string Path { get; set; }
 }
 
@@ -336,6 +348,8 @@ public static class ArchiveDetector
                 dataOffset += block.UncompressedSize;
             }
 
+            ValidateMetadata(blocksInfo, directoryInfo);
+
             metadata = new ArchiveMetadata
             {
                 BlocksInfo = blocksInfo,
@@ -371,6 +385,47 @@ public static class ArchiveDetector
         }
 
         return offset;
+    }
+
+    /// <summary>
+    /// Validates consistency between BlocksInfo and DirectoryInfo.
+    ///
+    /// Directory nodes represent files laid out sequentially in the uncompressed data
+    /// (all blocks concatenated). Nodes must be in non-decreasing offset order and must
+    /// not overlap, though padding between them is permitted. Every file byte must be
+    /// covered by block data — the total uncompressed block size must reach at least
+    /// the end of the last file.
+    /// </summary>
+    static void ValidateMetadata(ArchiveBlocksInfo blocksInfo, ArchiveDirectoryInfo directoryInfo)
+    {
+        var nodes = directoryInfo.Nodes;
+        var blocks = blocksInfo.Blocks;
+
+        if (nodes.Length == 0 || blocks.Length == 0)
+            return;
+
+        // Verify directory nodes are in order and non-overlapping.
+        for (int i = 1; i < nodes.Length; i++)
+        {
+            ulong prevEnd = nodes[i - 1].DataOffset + nodes[i - 1].Size;
+            if (nodes[i].DataOffset < prevEnd)
+                throw new InvalidDataException(
+                    $"Directory node \"{nodes[i].Path}\" at data offset {nodes[i].DataOffset} overlaps with " +
+                    $"previous node \"{nodes[i - 1].Path}\" which ends at {prevEnd}. The file may be corrupt.");
+        }
+
+        // Verify that the blocks cover all file data. The last block's end must reach
+        // at least the end of the last file. (It may exceed it due to padding.)
+        var lastBlock = blocks[blocks.Length - 1];
+        long blocksEnd = lastBlock.DataOffset + lastBlock.UncompressedSize;
+
+        var lastNode = nodes[nodes.Length - 1];
+        ulong filesEnd = lastNode.DataOffset + lastNode.Size;
+
+        if ((ulong)blocksEnd < filesEnd)
+            throw new InvalidDataException(
+                $"Block data ends at offset {blocksEnd} but directory entries extend to {filesEnd}. " +
+                $"The file may be corrupt.");
     }
 
     static int GetHeaderSize(ArchiveHeaderInfo header)

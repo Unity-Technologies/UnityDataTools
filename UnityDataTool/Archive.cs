@@ -325,8 +325,8 @@ public static class Archive
 
     static readonly (uint bit, string name)[] KnownNodeFlags =
     {
-        (0x01, "Directory"),
-        (0x02, "Deleted"),
+        (0x01, "Directory"), // In practice this is not used
+        (0x02, "Deleted"),   // In practice this is not used
         (0x04, "SerializedFile"),
     };
 
