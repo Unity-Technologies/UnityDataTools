@@ -14,8 +14,11 @@ public class TextDumperTool
     SerializedFile m_SerializedFile;
     StreamWriter m_Writer;
 
-    public int Dump(string path, string outputPath, bool skipLargeArrays, long objectId = 0)
+    public int Dump(string path, string outputPath, bool skipLargeArrays, long objectId = 0, string typeFilter = null)
     {
+        if (string.IsNullOrWhiteSpace(typeFilter))
+            typeFilter = null;
+
         m_SkipLargeArrays = skipLargeArrays;
 
         try
@@ -38,7 +41,7 @@ public class TextDumperTool
                     {
                         using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false))
                         {
-                            OutputSerializedFile("/" + node.Path, objectId);
+                            OutputSerializedFile("/" + node.Path, objectId, typeFilter);
                         }
                     }
                 }
@@ -56,7 +59,7 @@ public class TextDumperTool
                 {
                     using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
                     {
-                        OutputSerializedFile(path, objectId);
+                        OutputSerializedFile(path, objectId, typeFilter);
                     }
                 }
                 catch (SerializedFileOpenException)
@@ -378,8 +381,11 @@ public class TextDumperTool
         return true;
     }
 
-    void OutputSerializedFile(string path, long objectId)
+    void OutputSerializedFile(string path, long objectId, string typeFilter)
     {
+        int filterTypeId = 0;
+        bool filterByTypeId = typeFilter != null && int.TryParse(typeFilter, out filterTypeId);
+
         using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
         using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
         {
@@ -400,6 +406,26 @@ public class TextDumperTool
                     continue;
 
                 var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+
+                if (typeFilter != null)
+                {
+                    if (filterByTypeId)
+                    {
+                        if (obj.TypeId != filterTypeId)
+                            continue;
+                    }
+                    else
+                    {
+                        var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
+                        // GetTypeName returns the id as a string when the type is unknown;
+                        // fall back to the TypeTree root node for script types.
+                        if (typeName == obj.TypeId.ToString())
+                            typeName = root.Type;
+                        if (!string.Equals(typeName, typeFilter, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                    }
+                }
+
                 var offset = obj.Offset;
 
                 m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
@@ -408,8 +434,13 @@ public class TextDumperTool
                 dumpedObject = true;
             }
 
-            if (objectId != 0 && !dumpedObject)
-                m_Writer.WriteLine($"Object with ID {objectId} not found.");
+            if ((objectId != 0 || typeFilter != null) && !dumpedObject)
+            {
+                if (objectId != 0)
+                    m_Writer.WriteLine($"Object with ID {objectId} not found.");
+                else
+                    m_Writer.WriteLine($"No objects found matching type \"{typeFilter}\".");
+            }
         }
     }
 

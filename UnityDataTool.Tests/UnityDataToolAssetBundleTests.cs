@@ -145,6 +145,47 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     }
 
     [Test]
+    public async Task DumpText_TypeFilterByName_OnlyMatchingObjectsDumped()
+    {
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
+        var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path, "-t", "MonoBehaviour" }));
+        Assert.IsTrue(File.Exists(outputFile));
+
+        var content = File.ReadAllText(outputFile);
+        Assert.That(content, Does.Contain("(ClassID: 114)"));
+        Assert.That(content, Does.Not.Contain("(ClassID: 1)"));
+    }
+
+    [Test]
+    public async Task DumpText_TypeFilterByClassID_OnlyMatchingObjectsDumped()
+    {
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
+        var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path, "-t", "114" }));
+        Assert.IsTrue(File.Exists(outputFile));
+
+        var content = File.ReadAllText(outputFile);
+        Assert.That(content, Does.Contain("(ClassID: 114)"));
+        Assert.That(content, Does.Not.Contain("(ClassID: 1)"));
+    }
+
+    [Test]
+    public async Task DumpText_TypeFilterNoMatch_ShowsNotFoundMessage()
+    {
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
+        var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path, "-t", "NonExistentType" }));
+        Assert.IsTrue(File.Exists(outputFile));
+
+        var content = File.ReadAllText(outputFile);
+        Assert.That(content, Does.Contain("No objects found matching type"));
+    }
+
+    [Test]
     public async Task Analyze_DefaultArgs_DatabaseCorrect()
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
