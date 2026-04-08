@@ -278,7 +278,7 @@ public static class SerializedFileCommands
         Console.WriteLine(json);
     }
 
-    private static object TypeTreeInfoToJson(TypeTreeInfo info)
+    private static object TypeTreeInfoToJson(BinaryFormat.TypeTreeInfo info)
     {
         return new
         {

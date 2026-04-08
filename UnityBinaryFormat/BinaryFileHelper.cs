@@ -61,6 +61,14 @@ public static class BinaryFileHelper
         return (short)raw;
     }
 
+    public static ushort ReadUInt16(BinaryReader reader, bool swap)
+    {
+        ushort raw = reader.ReadUInt16();
+        if (swap)
+            raw = (ushort)((raw << 8) | (raw >> 8));
+        return raw;
+    }
+
     public static uint ReadUInt32(BinaryReader reader, bool swap)
     {
         uint raw = reader.ReadUInt32();

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Text;
+using System.Text.Json;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
@@ -11,20 +9,18 @@ namespace UnityDataTools.UnityDataTool;
 
 public static class Archive
 {
-    private static readonly byte[] WebBundlePrefix = Encoding.UTF8.GetBytes("UnityWebData1.0\0");
-
-    public static int HandleExtract(FileInfo filename, DirectoryInfo outputFolder)
+    public static int HandleExtract(FileInfo filename, DirectoryInfo outputFolder, string filter = null)
     {
         try
         {
             var path = filename.ToString();
-            if (IsWebBundle(path))
+            if (WebBundleHelper.IsWebBundle(path))
             {
-                ExtractWebBundle(filename, outputFolder);
+                WebBundleHelper.Extract(filename, outputFolder, filter);
             }
             else if (ArchiveDetector.IsUnityArchive(path))
             {
-                ExtractAssetBundle(filename, outputFolder);
+                ExtractAssetBundle(filename, outputFolder, filter);
             }
             else
             {
@@ -43,18 +39,18 @@ public static class Archive
         return 0;
     }
 
-    public static int HandleList(FileInfo filename)
+    public static int HandleList(FileInfo filename, OutputFormat format)
     {
         try
         {
             var path = filename.ToString();
-            if (IsWebBundle(path))
+            if (WebBundleHelper.IsWebBundle(path))
             {
-                ListWebBundle(filename);
+                WebBundleHelper.List(filename, format);
             }
             else if (ArchiveDetector.IsUnityArchive(path))
             {
-                ListAssetBundle(filename);
+                ListAssetBundle(filename, format);
             }
             else
             {
@@ -74,142 +70,338 @@ public static class Archive
         return 0;
     }
 
-
-    public static bool IsWebBundle(string path)
+    public static int HandleHeader(FileInfo filename, OutputFormat format)
     {
-        return (
-            path.EndsWith(".data")
-            || path.EndsWith(".data.gz")
-            || path.EndsWith(".data.br")
-        );
-    }
+        var path = filename.ToString();
 
-    struct WebBundleFileDescription
-    {
-        public uint ByteOffset;
-        public uint Size;
-        public string Path;
-    }
-
-    static void ExtractWebBundle(FileInfo filename, DirectoryInfo outputFolder)
-    {
-        Console.WriteLine($"Extracting web bundle: {filename}");
-        using var fileStream = File.Open(filename.ToString(), FileMode.Open);
-        using var stream = GetStream(filename, fileStream);
-        using var reader = new BinaryReader(stream, Encoding.UTF8);
-        var fileDescriptions = ParseWebBundleHeader(reader);
-        foreach (var description in fileDescriptions)
+        if (WebBundleHelper.IsWebBundle(path))
         {
-            ExtractFileFromWebBundle(description, reader, outputFolder);
+            Console.Error.WriteLine("Web bundle files (.data, .data.gz, .data.br) use a different format. The header command is only supported for Unity Archive files.");
+            return 1;
         }
+
+        if (!ArchiveDetector.TryReadArchiveHeader(filename.FullName, out var info, out var errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        if (format == OutputFormat.Json)
+            OutputHeaderJson(info);
+        else
+            OutputHeaderText(info);
+
+        return 0;
     }
 
-    static Stream GetStream(FileInfo filename, FileStream fileStream)
+    public static int HandleBlocks(FileInfo filename, OutputFormat format)
     {
-        var fileExtension = Path.GetExtension(filename.ToString());
-        return fileExtension switch
+        var path = filename.ToString();
+
+        if (WebBundleHelper.IsWebBundle(path))
         {
-            ".data" => fileStream,
-            ".gz" => new GZipStream(fileStream, CompressionMode.Decompress),
-            ".br" => new BrotliStream(fileStream, CompressionMode.Decompress),
-            _ => throw new FileFormatException("Incorrect file extension for web bundle"),
+            Console.Error.WriteLine("Web bundle files (.data, .data.gz, .data.br) use a different format. The blocks command is only supported for Unity Archive files.");
+            return 1;
+        }
+
+        if (!ArchiveDetector.TryReadArchiveHeader(filename.FullName, out var header, out var errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        if (!ArchiveDetector.TryReadArchiveMetadata(filename.FullName, header, out var metadata, out errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        if (format == OutputFormat.Json)
+            OutputBlocksJson(metadata.BlocksInfo);
+        else
+            OutputBlocksText(metadata.BlocksInfo);
+
+        return 0;
+    }
+
+    public static int HandleInfo(FileInfo filename, OutputFormat format)
+    {
+        var path = filename.ToString();
+
+        if (WebBundleHelper.IsWebBundle(path))
+        {
+            Console.Error.WriteLine("Web bundle files (.data, .data.gz, .data.br) use a different format. The info command is only supported for Unity Archive files.");
+            return 1;
+        }
+
+        if (!ArchiveDetector.TryReadArchiveHeader(filename.FullName, out var header, out var errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        if (!ArchiveDetector.TryReadArchiveMetadata(filename.FullName, header, out var metadata, out errorMessage))
+        {
+            Console.Error.WriteLine(errorMessage);
+            return 1;
+        }
+
+        var blocks = metadata.BlocksInfo.Blocks;
+        var nodes = metadata.DirectoryInfo.Nodes;
+
+        long dataSize = 0;
+        long uncompressedDataSize = 0;
+        foreach (var block in blocks)
+        {
+            dataSize += block.CompressedSize;
+            uncompressedDataSize += block.UncompressedSize;
+        }
+
+        // Determine the compression algorithm by finding the first block that uses compression.
+        // Individual blocks may be stored uncompressed even when compression is enabled, because
+        // compression is skipped when it provides no size reduction. So the first compressed block
+        // tells us what algorithm was used for the archive.
+        string compression = "Uncompressed";
+        foreach (var block in blocks)
+        {
+            if (block.CompressionType != 0)
+            {
+                compression = FormatCompressionType(block.CompressionType);
+                break;
+            }
+        }
+
+        double compressionRatio = dataSize > 0 ? (double)uncompressedDataSize / dataSize : 0;
+        int fileCount = nodes.Length;
+        int serializedFileCount = 0;
+        foreach (var node in nodes)
+        {
+            if ((node.Flags & 0x04) != 0)
+                serializedFileCount++;
+        }
+
+        if (format == OutputFormat.Json)
+        {
+            var jsonObject = new
+            {
+                unityVersion = header.UnityVersion,
+                fileSize = header.Size,
+                dataSize = dataSize,
+                uncompressedDataSize = uncompressedDataSize,
+                compressionRatio = Math.Round(compressionRatio, 2),
+                compression = compression,
+                blockCount = blocks.Length,
+                fileCount = fileCount,
+                serializedFileCount = serializedFileCount,
+            };
+            var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(json);
+        }
+        else
+        {
+            Console.WriteLine($"{"Unity Version",-30} {header.UnityVersion}");
+            Console.WriteLine($"{"File Size",-30} {header.Size:N0} bytes");
+            Console.WriteLine($"{"Data Size",-30} {dataSize:N0} bytes");
+            Console.WriteLine($"{"Uncompressed Data Size",-30} {uncompressedDataSize:N0} bytes");
+            Console.WriteLine($"{"Compression Ratio",-30} {compressionRatio:F2}x");
+            Console.WriteLine($"{"Compression",-30} {compression}");
+            Console.WriteLine($"{"Block Count",-30} {blocks.Length}");
+            Console.WriteLine($"{"File Count",-30} {fileCount}");
+            Console.WriteLine($"{"Serialized File Count",-30} {serializedFileCount}");
+        }
+
+        return 0;
+    }
+
+    static void OutputHeaderText(ArchiveHeaderInfo info)
+    {
+        Console.WriteLine($"{"Signature",-30} {info.Signature}");
+        Console.WriteLine($"{"Version",-30} {info.Version}");
+        Console.WriteLine($"{"Unity Version",-30} {info.UnityVersion}");
+        Console.WriteLine($"{"File Size",-30} {info.Size:N0} bytes");
+        Console.WriteLine($"{"Compressed Metadata Size",-30} {info.CompressedMetadataSize:N0}");
+        Console.WriteLine($"{"Uncompressed Metadata Size",-30} {info.UncompressedMetadataSize:N0}");
+        Console.WriteLine($"{"Metadata Compression",-30} {FormatCompressionType(info.MetadataCompressionType)}");
+        Console.WriteLine($"{"Flags",-30} {FormatArchiveFlags(info.ArchiveFlagBits)}");
+    }
+
+    static void OutputHeaderJson(ArchiveHeaderInfo info)
+    {
+        var jsonObject = new
+        {
+            signature = info.Signature,
+            version = info.Version,
+            unityVersion = info.UnityVersion,
+            fileSize = info.Size,
+            compressedMetadataSize = info.CompressedMetadataSize,
+            uncompressedMetadataSize = info.UncompressedMetadataSize,
+            metadataCompression = FormatCompressionType(info.MetadataCompressionType),
+            flags = GetArchiveFlagNames(info.ArchiveFlagBits),
+        };
+
+        var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Console.WriteLine(json);
+    }
+
+    static string FormatCompressionType(int compressionType)
+    {
+        return compressionType switch
+        {
+            0 => "None",
+            1 => "Lzma",
+            2 => "Lz4",
+            3 => "Lz4HC",
+            _ => compressionType.ToString(),
         };
     }
 
-    static List<WebBundleFileDescription> ParseWebBundleHeader(BinaryReader reader)
+    static readonly (uint bit, string name)[] KnownArchiveFlags =
     {
-        var result = new List<WebBundleFileDescription>();
-        var prefix = ReadBytes(reader, WebBundlePrefix.Length);
-        if (!prefix.SequenceEqual(WebBundlePrefix))
+        (0x40,  "BlocksAndDirectoryInfoCombined"),
+        (0x80,  "BlocksInfoAtTheEnd"),
+        (0x100, "OldWebPluginCompatibility"),
+        (0x200, "BlockInfoNeedPaddingAtStart"),
+    };
+
+    static string[] GetArchiveFlagNames(uint flagBits)
+    {
+        var names = new List<string>();
+        uint remaining = flagBits;
+
+        foreach (var (bit, name) in KnownArchiveFlags)
         {
-            throw new FileFormatException("File is not a valid web bundle.");
-        }
-        uint headerSize = ReadUInt32(reader);
-        // Advance offset past prefix string and header size uint.
-        var currentByteOffset = WebBundlePrefix.Length + sizeof(uint);
-        while (currentByteOffset < headerSize)
-        {
-            var fileByteOffset = ReadUInt32(reader);
-            var fileSize = ReadUInt32(reader);
-            var filePathLength = ReadUInt32(reader);
-            var filePath = Encoding.UTF8.GetString(ReadBytes(reader, (int)filePathLength));
-            result.Add(new WebBundleFileDescription()
+            if ((remaining & bit) != 0)
             {
-                ByteOffset = fileByteOffset,
-                Size = fileSize,
-                Path = filePath,
-            });
-            // Advance byte offset, so we keep track of the position (to know when we're done reading the header).
-            currentByteOffset += 3 * sizeof(uint) + filePath.Length;
+                names.Add(name);
+                remaining &= ~bit;
+            }
         }
-        return result;
+
+        // Report any unrecognized bits by hex value.
+        if (remaining != 0)
+            names.Add($"0x{remaining:X}");
+
+        return names.ToArray();
     }
 
-    static void ExtractFileFromWebBundle(WebBundleFileDescription description, BinaryReader reader, DirectoryInfo outputFolder)
+    static string FormatArchiveFlags(uint flagBits)
     {
-        // This function assumes `reader` is at the start of the binary data representing the file contents.
-        Console.WriteLine($"... Extracting {description.Path}");
-        var path = Path.Combine(outputFolder.ToString(), description.Path);
-        Directory.CreateDirectory(Path.GetDirectoryName(path));
-        File.WriteAllBytes(path, ReadBytes(reader, (int)description.Size));
+        var names = GetArchiveFlagNames(flagBits);
+        return names.Length > 0 ? string.Join(", ", names) : "None";
     }
 
-    static uint ReadUInt32(BinaryReader reader)
+    static void OutputBlocksText(ArchiveBlocksInfo blocksInfo)
     {
-        try
+        Console.WriteLine($"Blocks: {blocksInfo.Blocks.Length}");
+        for (int i = 0; i < blocksInfo.Blocks.Length; i++)
         {
-            return reader.ReadUInt32();
-        }
-        catch (EndOfStreamException)
-        {
-            throw new FileFormatException("File data is corrupt.");
+            var block = blocksInfo.Blocks[i];
+            Console.WriteLine($"  #{i,-4} FileOffset: {block.FileOffset:N0}  DataOffset: {block.DataOffset:N0}  Uncompressed: {block.UncompressedSize:N0}  Compressed: {block.CompressedSize:N0}  Compression: {FormatCompressionType(block.CompressionType)}");
         }
     }
 
-    static byte[] ReadBytes(BinaryReader reader, int count)
+    static void OutputBlocksJson(ArchiveBlocksInfo blocksInfo)
     {
-        var result = reader.ReadBytes(count);
-        if (result.Length != count)
+        var jsonBlocks = new object[blocksInfo.Blocks.Length];
+        for (int i = 0; i < blocksInfo.Blocks.Length; i++)
         {
-            throw new FileFormatException("File data is corrupt.");
+            var block = blocksInfo.Blocks[i];
+            jsonBlocks[i] = new
+            {
+                index = i,
+                fileOffset = block.FileOffset,
+                dataOffset = block.DataOffset,
+                uncompressedSize = block.UncompressedSize,
+                compressedSize = block.CompressedSize,
+                compression = FormatCompressionType(block.CompressionType),
+                isStreamed = block.IsStreamed,
+            };
         }
-        return result;
+
+        var jsonObject = new { blocks = jsonBlocks };
+        var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Console.WriteLine(json);
     }
 
-    static void ExtractAssetBundle(FileInfo filename, DirectoryInfo outputFolder)
+    static readonly (uint bit, string name)[] KnownNodeFlags =
     {
-        Console.WriteLine($"Extracting asset bundle: {filename}");
+        (0x01, "Directory"), // In practice this is not used
+        (0x02, "Deleted"),   // In practice this is not used
+        (0x04, "SerializedFile"),
+    };
+
+    static string FormatNodeFlags(uint flags)
+    {
+        var names = new List<string>();
+        uint remaining = flags;
+
+        foreach (var (bit, name) in KnownNodeFlags)
+        {
+            if ((remaining & bit) != 0)
+            {
+                names.Add(name);
+                remaining &= ~bit;
+            }
+        }
+
+        if (remaining != 0)
+            names.Add($"0x{remaining:X}");
+
+        return names.Count > 0 ? string.Join(", ", names) : "None";
+    }
+
+    static void ExtractAssetBundle(FileInfo filename, DirectoryInfo outputFolder, string filter)
+    {
+        Console.WriteLine($"Extracting files from archive: {filename}");
         using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
+
+        int total = archive.Nodes.Count;
+        int extracted = 0;
+
         foreach (var node in archive.Nodes)
         {
+            if (filter != null && !node.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             Console.WriteLine($"... Extracting {node.Path}");
             CopyFile("/" + node.Path, Path.Combine(outputFolder.FullName, node.Path));
+            extracted++;
         }
+
+        Console.WriteLine($"Extracted {extracted} out of {total} files.");
     }
 
-    static void ListAssetBundle(FileInfo filename)
+    static void ListAssetBundle(FileInfo filename, OutputFormat format)
     {
-        using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
-        foreach (var node in archive.Nodes)
-        {
-            Console.WriteLine($"{node.Path}");
-            Console.WriteLine($"  Size: {node.Size}");
-            Console.WriteLine($"  Flags: {node.Flags}");
-            Console.WriteLine();
-        }
-    }
+        if (!ArchiveDetector.TryReadArchiveHeader(filename.FullName, out var header, out var errorMessage))
+            throw new NotSupportedException(errorMessage);
 
-    static void ListWebBundle(FileInfo filename)
-    {
-        using var fileStream = File.Open(filename.ToString(), FileMode.Open);
-        using var stream = GetStream(filename, fileStream);
-        using var reader = new BinaryReader(stream, Encoding.UTF8);
-        var fileDescriptions = ParseWebBundleHeader(reader);
-        foreach (var description in fileDescriptions)
+        if (!ArchiveDetector.TryReadArchiveMetadata(filename.FullName, header, out var metadata, out errorMessage))
+            throw new NotSupportedException(errorMessage);
+
+        var nodes = metadata.DirectoryInfo.Nodes;
+
+        if (format == OutputFormat.Json)
         {
-            Console.WriteLine($"{description.Path}");
-            Console.WriteLine($"  Size: {description.Size}");
-            Console.WriteLine();
+            var jsonArray = new object[nodes.Length];
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                var node = nodes[i];
+                jsonArray[i] = new { path = node.Path, dataOffset = node.DataOffset, size = node.Size, flags = FormatNodeFlags(node.Flags) };
+            }
+            var json = JsonSerializer.Serialize(jsonArray, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(json);
+        }
+        else
+        {
+            foreach (var node in nodes)
+            {
+                Console.WriteLine($"{node.Path}");
+                Console.WriteLine($"  Data Offset: {node.DataOffset}");
+                Console.WriteLine($"  Size: {node.Size}");
+                Console.WriteLine($"  Flags: {FormatNodeFlags(node.Flags)}");
+                Console.WriteLine();
+            }
         }
     }
 

@@ -122,29 +122,68 @@ public static class Program
             var pathArg = new Argument<FileInfo>("filename", "The path of the archive file").ExistingOnly();
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output directory of the extracted archive", getDefaultValue: () => new DirectoryInfo("archive"));
 
+            var filterOpt = new Option<string>(aliases: new[] { "--filter" }, description: "Case-insensitive substring filter on file paths inside the archive");
+
             var extractArchiveCommand = new Command("extract", "Extract an AssetBundle or .data file.")
             {
                 pathArg,
                 oOpt,
+                filterOpt,
             };
 
             extractArchiveCommand.SetHandler(
-                (FileInfo fi, DirectoryInfo o) => Task.FromResult(Archive.HandleExtract(fi, o)),
-                pathArg, oOpt);
+                (FileInfo fi, DirectoryInfo o, string filter) => Task.FromResult(Archive.HandleExtract(fi, o, filter)),
+                pathArg, oOpt, filterOpt);
+
+            var fOpt = new Option<OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => OutputFormat.Text);
 
             var listArchiveCommand = new Command("list", "List the contents of an AssetBundle or .data file.")
             {
                 pathArg,
+                fOpt,
             };
 
             listArchiveCommand.SetHandler(
-                (FileInfo fi) => Task.FromResult(Archive.HandleList(fi)),
-                pathArg);
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleList(fi, f)),
+                pathArg, fOpt);
+
+            var headerArchiveCommand = new Command("header", "Display the header of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            headerArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleHeader(fi, f)),
+                pathArg, fOpt);
+
+            var blocksArchiveCommand = new Command("blocks", "Display the block list of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            blocksArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleBlocks(fi, f)),
+                pathArg, fOpt);
+
+            var infoArchiveCommand = new Command("info", "Display a high-level summary of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            infoArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleInfo(fi, f)),
+                pathArg, fOpt);
 
             var archiveCommand = new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
             {
                 extractArchiveCommand,
                 listArchiveCommand,
+                headerArchiveCommand,
+                blocksArchiveCommand,
+                infoArchiveCommand,
             };
 
             rootCommand.AddCommand(archiveCommand);
