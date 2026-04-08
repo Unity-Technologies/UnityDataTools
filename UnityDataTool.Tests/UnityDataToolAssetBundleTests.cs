@@ -87,17 +87,17 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
 
             // Each entry: path, offset, size, flags, blank = 5 lines
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994", lines[0]);
-            Assert.AreEqual($"  Offset: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Offset")}", lines[1]);
+            Assert.AreEqual($"  Data Offset: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-DataOffset")}", lines[1]);
             Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Size")}", lines[2]);
             Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994-Flags")}", lines[3]);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS", lines[5]);
-            Assert.AreEqual($"  Offset: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Offset")}", lines[6]);
+            Assert.AreEqual($"  Data Offset: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-DataOffset")}", lines[6]);
             Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Size")}", lines[7]);
             Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resS-Flags")}", lines[8]);
 
             Assert.AreEqual("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource", lines[10]);
-            Assert.AreEqual($"  Offset: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Offset")}", lines[11]);
+            Assert.AreEqual($"  Data Offset: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-DataOffset")}", lines[11]);
             Assert.AreEqual($"  Size: {Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Size")}", lines[12]);
             Assert.AreEqual($"  Flags: {(ArchiveNodeFlags)(long)Context.ExpectedData.Get("CAB-5d40f7cad7c871cf2ad2af19ac542994.resource-Flags")}", lines[13]);
 

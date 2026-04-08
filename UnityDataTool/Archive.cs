@@ -117,9 +117,9 @@ public static class Archive
         }
 
         if (format == OutputFormat.Json)
-            OutputBlocksJson(header, metadata.BlocksInfo);
+            OutputBlocksJson(metadata.BlocksInfo);
         else
-            OutputBlocksText(header, metadata.BlocksInfo);
+            OutputBlocksText(metadata.BlocksInfo);
 
         return 0;
     }
@@ -290,25 +290,18 @@ public static class Archive
         return names.Length > 0 ? string.Join(", ", names) : "None";
     }
 
-    static void OutputBlocksText(ArchiveHeaderInfo header, ArchiveBlocksInfo blocksInfo)
+    static void OutputBlocksText(ArchiveBlocksInfo blocksInfo)
     {
-        long dataOffset = ArchiveDetector.GetDataOffset(header);
-        long blockOffset = dataOffset;
-
         Console.WriteLine($"Blocks: {blocksInfo.Blocks.Length}");
         for (int i = 0; i < blocksInfo.Blocks.Length; i++)
         {
             var block = blocksInfo.Blocks[i];
-            Console.WriteLine($"  #{i,-4} Offset: {blockOffset:N0}  Uncompressed: {block.UncompressedSize:N0}  Compressed: {block.CompressedSize:N0}  Compression: {FormatCompressionType(block.CompressionType)}");
-            blockOffset += block.CompressedSize;
+            Console.WriteLine($"  #{i,-4} FileOffset: {block.FileOffset:N0}  DataOffset: {block.DataOffset:N0}  Uncompressed: {block.UncompressedSize:N0}  Compressed: {block.CompressedSize:N0}  Compression: {FormatCompressionType(block.CompressionType)}");
         }
     }
 
-    static void OutputBlocksJson(ArchiveHeaderInfo header, ArchiveBlocksInfo blocksInfo)
+    static void OutputBlocksJson(ArchiveBlocksInfo blocksInfo)
     {
-        long dataOffset = ArchiveDetector.GetDataOffset(header);
-        long blockOffset = dataOffset;
-
         var jsonBlocks = new object[blocksInfo.Blocks.Length];
         for (int i = 0; i < blocksInfo.Blocks.Length; i++)
         {
@@ -316,13 +309,13 @@ public static class Archive
             jsonBlocks[i] = new
             {
                 index = i,
-                offset = blockOffset,
+                fileOffset = block.FileOffset,
+                dataOffset = block.DataOffset,
                 uncompressedSize = block.UncompressedSize,
                 compressedSize = block.CompressedSize,
                 compression = FormatCompressionType(block.CompressionType),
                 isStreamed = block.IsStreamed,
             };
-            blockOffset += block.CompressedSize;
         }
 
         var jsonObject = new { blocks = jsonBlocks };
@@ -394,7 +387,7 @@ public static class Archive
             for (int i = 0; i < nodes.Length; i++)
             {
                 var node = nodes[i];
-                jsonArray[i] = new { path = node.Path, offset = node.Offset, size = node.Size, flags = FormatNodeFlags(node.Flags) };
+                jsonArray[i] = new { path = node.Path, dataOffset = node.DataOffset, size = node.Size, flags = FormatNodeFlags(node.Flags) };
             }
             var json = JsonSerializer.Serialize(jsonArray, new JsonSerializerOptions { WriteIndented = true });
             Console.WriteLine(json);
@@ -404,7 +397,7 @@ public static class Archive
             foreach (var node in nodes)
             {
                 Console.WriteLine($"{node.Path}");
-                Console.WriteLine($"  Offset: {node.Offset}");
+                Console.WriteLine($"  Data Offset: {node.DataOffset}");
                 Console.WriteLine($"  Size: {node.Size}");
                 Console.WriteLine($"  Flags: {FormatNodeFlags(node.Flags)}");
                 Console.WriteLine();

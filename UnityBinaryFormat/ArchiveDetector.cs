@@ -53,6 +53,19 @@ public class ArchiveStorageBlock
     public ushort Flags { get; set; }
     public int CompressionType => Flags & 0x3F;
     public bool IsStreamed => (Flags & 0x40) != 0;
+
+    /// <summary>
+    /// Offset of this block from the start of the archive file.
+    /// Calculated after parsing — not stored in the serialized data.
+    /// </summary>
+    public long FileOffset { get; set; }
+
+    /// <summary>
+    /// Offset of this block's uncompressed data relative to the start of the
+    /// full uncompressed data (all blocks concatenated).
+    /// Calculated after parsing — not stored in the serialized data.
+    /// </summary>
+    public long DataOffset { get; set; }
 }
 
 public class ArchiveBlocksInfo
@@ -63,8 +76,11 @@ public class ArchiveBlocksInfo
 
 public class ArchiveDirectoryNode
 {
-    public ulong Offset { get; set; } // Offset within the virtual data section (e.g. all the blocks uncompressed and concatenated together
-    public ulong Size { get; set; } // Size of the file in bytse
+    /// <summary>
+    /// Offset within the uncompressed data (all blocks concatenated).
+    /// </summary>
+    public ulong DataOffset { get; set; }
+    public ulong Size { get; set; }
     public uint Flags { get; set; }
     public string Path { get; set; }
 }
@@ -142,6 +158,9 @@ public static class ArchiveDetector
     /// Reads a null-terminated signature string, with a length limit to avoid reading
     /// deep into non-archive files that don't contain an early null byte.
     /// </summary>
+    /// Note: this is used for a very similar purpose to IsUnityArchive(). But IsUnityArchive() is
+    /// optimized to quickly check a file whereas this one is used when we are actually parsing
+    /// the file.  The two could potentially be merged.
     static string ReadSignature(BinaryReader reader)
     {
         const int maxLength = 20; // Longest valid signature is "UnityArchive" (12 chars)
@@ -306,6 +325,17 @@ public static class ArchiveDetector
             var blocksInfo = ParseBlocksInfo(reader);
             var directoryInfo = ParseDirectoryInfo(reader);
 
+            // Populate calculated offsets on each block.
+            long fileOffset = GetDataOffset(header);
+            long dataOffset = 0;
+            foreach (var block in blocksInfo.Blocks)
+            {
+                block.FileOffset = fileOffset;
+                block.DataOffset = dataOffset;
+                fileOffset += block.CompressedSize;
+                dataOffset += block.UncompressedSize;
+            }
+
             metadata = new ArchiveMetadata
             {
                 BlocksInfo = blocksInfo,
@@ -404,7 +434,7 @@ public static class ArchiveDetector
         {
             nodes[i] = new ArchiveDirectoryNode
             {
-                Offset = BinaryFileHelper.ReadUInt64(reader, true),
+                DataOffset = BinaryFileHelper.ReadUInt64(reader, true),
                 Size = BinaryFileHelper.ReadUInt64(reader, true),
                 Flags = BinaryFileHelper.ReadUInt32(reader, true),
                 Path = BinaryFileHelper.ReadNullTermString(reader),

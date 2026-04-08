@@ -54,22 +54,22 @@ public class ArchiveTests
 
             var expectedOutput =
 @"BuildPlayer-SampleScene.sharedAssets
-  Offset: 0
+  Data Offset: 0
   Size: 90732
   Flags: SerializedFile
 
 BuildPlayer-SampleScene
-  Offset: 90732
+  Data Offset: 90732
   Size: 153352
   Flags: SerializedFile
 
 BuildPlayer-OtherScene.sharedAssets
-  Offset: 244084
+  Data Offset: 244084
   Size: 136744
   Flags: SerializedFile
 
 BuildPlayer-OtherScene
-  Offset: 380828
+  Data Offset: 380828
   Size: 158340
   Flags: SerializedFile
 
@@ -102,14 +102,14 @@ BuildPlayer-OtherScene
             foreach (var element in jsonArray.EnumerateArray())
             {
                 Assert.IsTrue(element.TryGetProperty("path", out _));
-                Assert.IsTrue(element.TryGetProperty("offset", out _));
+                Assert.IsTrue(element.TryGetProperty("dataOffset", out _));
                 Assert.IsTrue(element.TryGetProperty("size", out _));
                 Assert.IsTrue(element.TryGetProperty("flags", out _));
                 Assert.AreEqual("SerializedFile", element.GetProperty("flags").GetString());
             }
 
             Assert.AreEqual("BuildPlayer-SampleScene.sharedAssets", jsonArray[0].GetProperty("path").GetString());
-            Assert.AreEqual(0, jsonArray[0].GetProperty("offset").GetUInt64());
+            Assert.AreEqual(0, jsonArray[0].GetProperty("dataOffset").GetUInt64());
             Assert.AreEqual(90732, jsonArray[0].GetProperty("size").GetInt64());
         }
         finally
@@ -192,7 +192,8 @@ BuildPlayer-OtherScene
             var output = sw.ToString();
             Assert.That(output, Does.Contain("Blocks: 1"));
             Assert.That(output, Does.Contain("#0"));
-            Assert.That(output, Does.Contain("Offset: 192"));
+            Assert.That(output, Does.Contain("FileOffset: 192"));
+            Assert.That(output, Does.Contain("DataOffset: 0"));
             Assert.That(output, Does.Contain("Uncompressed: 539,168"));
             Assert.That(output, Does.Contain("Compressed: 92,883"));
             Assert.That(output, Does.Contain("Compression: Lzma"));
@@ -224,7 +225,8 @@ BuildPlayer-OtherScene
 
             var block = blocks[0];
             Assert.AreEqual(0, block.GetProperty("index").GetInt32());
-            Assert.AreEqual(192, block.GetProperty("offset").GetInt64());
+            Assert.AreEqual(192, block.GetProperty("fileOffset").GetInt64());
+            Assert.AreEqual(0, block.GetProperty("dataOffset").GetInt64());
             Assert.AreEqual(539168u, block.GetProperty("uncompressedSize").GetUInt32());
             Assert.AreEqual(92883u, block.GetProperty("compressedSize").GetUInt32());
             Assert.AreEqual("Lzma", block.GetProperty("compression").GetString());
