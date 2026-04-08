@@ -322,4 +322,34 @@ BuildPlayer-OtherScene
         var extractedFile = new FileInfo(Path.Combine(m_TestOutputFolder, "archive", "BuildPlayer-SampleScene.sharedAssets"));
         Assert.AreEqual(90732, extractedFile.Length);
     }
+
+    [Test]
+    public async Task ArchiveExtract_WithFilter_ExtractsOnlyMatchingFiles()
+    {
+        // "sampleSCENE" should match BuildPlayer-SampleScene.sharedAssets and BuildPlayer-SampleScene
+        // (case-insensitive) but not the OtherScene files.
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_ArchivePath, "--filter", "sampleSCENE" }));
+
+        string[] expectedFiles =
+        {
+            "BuildPlayer-SampleScene.sharedAssets",
+            "BuildPlayer-SampleScene",
+        };
+
+        string[] excludedFiles =
+        {
+            "BuildPlayer-OtherScene.sharedAssets",
+            "BuildPlayer-OtherScene",
+        };
+
+        foreach (var file in expectedFiles)
+        {
+            Assert.IsTrue(File.Exists(Path.Combine(m_TestOutputFolder, "archive", file)), $"Expected file not found: {file}");
+        }
+
+        foreach (var file in excludedFiles)
+        {
+            Assert.IsFalse(File.Exists(Path.Combine(m_TestOutputFolder, "archive", file)), $"File should not have been extracted: {file}");
+        }
+    }
 }

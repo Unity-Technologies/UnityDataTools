@@ -122,18 +122,9 @@ public static class WebBundleHelper
                 Path = filePath,
             });
             // Advance byte offset, so we keep track of the position (to know when we're done reading the header).
-            currentByteOffset += 3 * sizeof(uint) + filePath.Length;
+            currentByteOffset += 3 * sizeof(uint) + (int)filePathLength;
         }
         return result;
-    }
-
-    static void ExtractFile(FileDescription description, BinaryReader reader, DirectoryInfo outputFolder)
-    {
-        // This function assumes `reader` is at the start of the binary data representing the file contents.
-        Console.WriteLine($"... Extracting {description.Path}");
-        var path = Path.Combine(outputFolder.ToString(), description.Path);
-        Directory.CreateDirectory(Path.GetDirectoryName(path));
-        File.WriteAllBytes(path, ReadBytes(reader, (int)description.Size));
     }
 
     static uint ReadUInt32(BinaryReader reader)
