@@ -1,16 +1,18 @@
 # archive Command
 
-The `archive` command provides utilities for working with Unity Archives (AssetBundles and web platform `.data` files).
+The `archive` command provides utilities for working with [Unity Archives](unity-content-format.md#unity-archive) — container files used for AssetBundles and web platform `.data` files. Archives hold one or more files (typically SerializedFiles) and may apply compression to the content.
+
+To inspect the serialized objects *inside* an archive, use the [`dump`](command-dump.md#archive-support) command, which can open archives directly without extracting first.
 
 ## Sub-Commands
 
-| Sub-Command | Description |
-|-------------|-------------|
-| [`info`](#info) | Display a high-level summary |
-| [`header`](#header) | Display archive header information |
-| [`blocks`](#blocks) | Display the data block list |
-| [`list`](#list) | List contents of an archive |
-| [`extract`](#extract) | Extract contents of an archive |
+| Sub-Command | Description | Unity Archive | Web `.data` |
+|-------------|-------------|:---:|:---:|
+| [`info`](#info) | Display a high-level summary | Yes | — |
+| [`header`](#header) | Display archive header information | Yes | — |
+| [`blocks`](#blocks) | Display the data block list | Yes | — |
+| [`list`](#list) | List contents of an archive | Yes | Yes |
+| [`extract`](#extract) | Extract contents of an archive | Yes | Yes |
 
 ---
 
@@ -151,12 +153,11 @@ contents/BuildPlayer-Scene2
 
 ---
 
-## Comparison: extract vs dump
+## Related: inspecting objects inside an archive
+
+The `archive` command works at the container level — it shows the archive structure and can extract the raw files. To inspect the serialized objects inside those files, use the [`dump`](command-dump.md#archive-support) command, which can open an archive directly and dump all SerializedFiles inside it without extracting first.
 
 | Command | Output | Use Case |
 |---------|--------|----------|
-| `archive extract` | Binary SerializedFiles, .resS anything else inside the archive content | When you need all the raw files inside an archive |
-| `dump` | text | When you want to inspect object content |
-
-The `dump` command can directly process archives without extracting first.
-
+| `archive extract` | Raw binary files (SerializedFiles, .resS, .resource, etc.) | When you need the individual files on disk |
+| [`dump`](command-dump.md#archive-support) | Human-readable text representation of serialized objects | When you want to inspect object properties and values inside an archive |

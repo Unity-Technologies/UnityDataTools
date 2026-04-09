@@ -1,6 +1,6 @@
 # serialized-file Command
 
-The `serialized-file` command (alias: `sf`) provides utilities for quickly inspecting SerializedFile metadata without performing a full analysis.
+The `serialized-file` command (alias: `sf`) provides utilities for quickly inspecting [SerializedFile](unity-content-format.md#serializedfile) metadata without performing a full analysis.
 
 This exposes information about the Binary SerializedFile format.  This format has evolved over time, but all recent versions have 
 * a small header section (exposed by the `header` subcommand)
