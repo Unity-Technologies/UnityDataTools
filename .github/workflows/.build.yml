@@ -50,6 +50,22 @@ jobs:
           -p:UseAppHost=true
           -o publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}
 
+      - name: Remove platform-specific and debug files (Windows)
+        if: matrix.os == 'windows'
+        run: |
+          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.dylib" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.so" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb" -Force -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Remove platform-specific and debug files (macOS)
+        if: matrix.os == 'macos'
+        run: |
+          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/UnityFileSystemApi.dll
+          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.so
+          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
