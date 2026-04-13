@@ -34,13 +34,16 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             try
             {
                 m_Database.Open();
+
+                using var walCommand = m_Database.CreateCommand();
+                walCommand.CommandText = "PRAGMA journal_mode=WAL";
+                walCommand.ExecuteNonQuery();
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine($"Error creating database: {e.Message}");
             }
 
-            // this does all the legacy import of Init.sql
             using var command = m_Database.CreateCommand();
             command.CommandText = Resources.Init;
             command.ExecuteNonQuery();

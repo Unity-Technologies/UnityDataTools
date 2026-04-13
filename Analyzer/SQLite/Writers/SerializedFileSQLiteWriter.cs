@@ -116,7 +116,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     {
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
-        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, AddReference);
+        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, AddReference);
         int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLower());
         int sceneId = -1;
 

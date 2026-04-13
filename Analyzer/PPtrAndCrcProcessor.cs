@@ -1,14 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using Force.Crc32;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
 
-// This class is used to extract all the PPtrs in a serialized object. It executes a callback whenever a PPtr is found.
-// It provides a string representing the property path of the property (e.g. "m_MyObject.m_MyArray[2].m_PPtrProperty").
+/// <summary>
+/// Walks serialized object TypeTrees to extract PPtr references and compute a rolling CRC32.
+/// External stream segments (StreamingInfo / StreamedResource) extend the CRC using offset, size, and path only,
+/// avoiding full reads of large companion .resS data.
+/// </summary>
 public class PPtrAndCrcProcessor : IDisposable
 {
     public delegate int CallbackDelegate(long objectId, int fileId, long pathId, string propertyPath, string propertyType);
@@ -18,65 +19,31 @@ public class PPtrAndCrcProcessor : IDisposable
     private long m_Offset;
     private long m_ObjectId;
     private uint m_Crc32;
-    private string m_Folder;
     private StringBuilder m_StringBuilder = new();
     private byte[] m_pptrBytes = new byte[4];
 
     private CallbackDelegate m_Callback;
 
-    private Dictionary<string, UnityFileReader> m_resourceReaders = new();
-
-    public PPtrAndCrcProcessor(SerializedFile serializedFile, UnityFileReader reader, string folder,
-        CallbackDelegate callback)
+    public PPtrAndCrcProcessor(SerializedFile serializedFile, UnityFileReader reader, CallbackDelegate callback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
-        m_Folder = folder;
         m_Callback = callback;
     }
 
     public void Dispose()
     {
-        foreach (var r in m_resourceReaders.Values)
-        {
-            r?.Dispose();
-        }
-
-        m_resourceReaders.Clear();
     }
 
-    private UnityFileReader GetResourceReader(string filename)
+    /// <summary>
+    /// Extends CRC32 with a stable fingerprint for an external stream segment without reading blob bytes.
+    /// </summary>
+    private static uint AppendExternalStreamFingerprint(uint crc32, long offset, int size, string filename)
     {
-        var slashPos = filename.LastIndexOf('/');
-        if (slashPos > 0)
-        {
-            filename = filename.Remove(0, slashPos + 1);
-        }
-
-        if (!m_resourceReaders.TryGetValue(filename, out var reader))
-        {
-            try
-            {
-                reader = new UnityFileReader("archive:/" + filename, 4 * 1024 * 1024);
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
-                }
-                catch (Exception)
-                {
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine($"Error opening resource file {filename}");
-                    reader = null;
-                }
-            }
-
-            m_resourceReaders[filename] = reader;
-        }
-
-        return reader;
+        crc32 = Crc32Algorithm.Append(crc32, BitConverter.GetBytes(offset));
+        crc32 = Crc32Algorithm.Append(crc32, BitConverter.GetBytes(size));
+        crc32 = Crc32Algorithm.Append(crc32, Encoding.UTF8.GetBytes(filename));
+        return crc32;
     }
 
     public uint Process(long objectId, long offset, TypeTreeNode node)
@@ -123,7 +90,7 @@ public class PPtrAndCrcProcessor : IDisposable
             if (node.Children.Count != 3)
                 throw new Exception("Invalid StreamingInfo");
 
-            var offset = node.Children[0].Size == 4 ? m_Reader.ReadInt32(m_Offset) : m_Reader.ReadInt64(m_Offset);
+            var streamOffset = node.Children[0].Size == 4 ? m_Reader.ReadInt32(m_Offset) : m_Reader.ReadInt64(m_Offset);
             m_Offset += node.Children[0].Size;
 
             var size = m_Reader.ReadInt32(m_Offset);
@@ -136,12 +103,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
             if (size > 0)
             {
-                var resourceFile = GetResourceReader(filename);
-
-                if (resourceFile != null)
-                {
-                    m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
-                }
+                m_Crc32 = AppendExternalStreamFingerprint(m_Crc32, streamOffset, size, filename);
             }
         }
         else if (node.Type == "StreamedResource")
@@ -162,12 +124,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
             if (size > 0)
             {
-                var resourceFile = GetResourceReader(filename);
-
-                if (resourceFile != null)
-                {
-                    m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
-                }
+                m_Crc32 = AppendExternalStreamFingerprint(m_Crc32, offset, size, filename);
             }
         }
         else if (node.CSharpType == typeof(string))
@@ -301,19 +258,19 @@ public class PPtrAndCrcProcessor : IDisposable
             throw new Exception("Invalid ReferencedManagedType");
 
         var stringSize = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, (int)(m_Offset + stringSize + 4), m_Crc32);
+        m_Crc32 = m_Reader.ComputeCRC(m_Offset, stringSize + 4, m_Crc32);
         var className = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
 
         stringSize = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, (int)(m_Offset + stringSize + 4), m_Crc32);
+        m_Crc32 = m_Reader.ComputeCRC(m_Offset, stringSize + 4, m_Crc32);
         var namespaceName = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
 
         stringSize = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, (int)(m_Offset + stringSize + 4), m_Crc32);
+        m_Crc32 = m_Reader.ComputeCRC(m_Offset, stringSize + 4, m_Crc32);
         var assemblyName = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
