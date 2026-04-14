@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -29,7 +29,7 @@ public class TypeTreeNode
 
     // Child nodes container.
     public List<TypeTreeNode> Children => m_Children.Value;
-        
+
     // True if the field has no child.
     public bool IsLeaf => m_FirstChildNodeIndex == 0;
 
@@ -38,7 +38,7 @@ public class TypeTreeNode
 
     // True if the field is an array.
     public bool IsArray => ((int)Flags & (int)TypeTreeFlags.IsArray) != 0;
-        
+
     // True if the field is a ManagedReferenceRegistry
     public bool IsManagedReferenceRegistry => ((int)Flags & (int)TypeTreeFlags.IsManagedReferenceRegistry) != 0;
 

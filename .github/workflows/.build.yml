@@ -1,0 +1,73 @@
+name: Build UnityDataTool
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Build environment'
+        default: 'release'
+        required: true
+        type: choice
+        options:
+          - debug
+          - release
+  push:
+    branches:
+      - main
+
+env:
+  environment: ${{ inputs.environment || 'release' }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows, macos]
+        arch: [x64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+          - os: macos
+            arch: x64
+
+    runs-on: ${{ matrix.os }}-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish UnityDataTool (${{ matrix.os }}-${{ matrix.arch }}-${{ env.environment }})
+        run: >
+          dotnet publish UnityDataTool
+          -c ${{ env.environment }}
+          -a ${{ matrix.arch }}
+          -p:PublishSingleFile=true
+          -p:UseAppHost=true
+          -o publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}
+
+      - name: Remove platform-specific and debug files (Windows)
+        if: matrix.os == 'windows'
+        run: |
+          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.dylib" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.so" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb" -Force -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Remove platform-specific and debug files (macOS)
+        if: matrix.os == 'macos'
+        run: |
+          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/UnityFileSystemApi.dll
+          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.so
+          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}-${{ env.environment }}
+          path: publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}

@@ -17,12 +17,12 @@ public class ExpectedData
     {
         return m_ExpectedValues[key];
     }
-    
+
     public void Save(string path)
     {
         var settings = new JsonSerializerSettings();
         settings.TypeNameHandling = TypeNameHandling.All;
-        
+
         File.WriteAllText(Path.Combine(path, "ExpectedValues.json"), JsonConvert.SerializeObject(m_ExpectedValues, Formatting.Indented, settings));
     }
 
@@ -34,10 +34,10 @@ public class ExpectedData
         {
             return;
         }
-        
+
         var settings = new JsonSerializerSettings();
         settings.TypeNameHandling = TypeNameHandling.All;
-        
+
         m_ExpectedValues = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(path), settings);
     }
 }

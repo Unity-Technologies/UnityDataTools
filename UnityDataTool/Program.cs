@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,6 +9,12 @@ using UnityDataTools.TextDumper;
 
 namespace UnityDataTools.UnityDataTool;
 
+public enum OutputFormat
+{
+    Text,
+    Json
+}
+
 public static class Program
 {
     public static async Task<int> Main(string[] args)
@@ -16,6 +22,8 @@ public static class Program
         UnityFileSystem.Init();
 
         var rootCommand = new RootCommand();
+
+        var typeTreeDataDescription = "Path to an external TypeTree data file to load before processing bundles";
 
         {
             var pathArg = new Argument<DirectoryInfo>("path", "The path to the directory containing the files to analyze").ExistingOnly();
@@ -26,6 +34,8 @@ public static class Program
             var vOpt = new Option<bool>(aliases: new[] { "--verbose", "-v" }, description: "Verbose output");
             var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside path");
 
+            var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: typeTreeDataDescription);
+
             var analyzeCommand = new Command("analyze", "Analyze AssetBundles or SerializedFiles.")
             {
                 pathArg,
@@ -34,13 +44,19 @@ public static class Program
                 rOpt,
                 pOpt,
                 vOpt,
-                recurseOpt
+                recurseOpt,
+                dOpt
             };
 
             analyzeCommand.AddAlias("analyse");
             analyzeCommand.SetHandler(
-                (DirectoryInfo di, string o, bool s, bool r, string p, bool v, bool recurseOpt) => Task.FromResult(HandleAnalyze(di, o, s, r, p, v, recurseOpt)),
-                pathArg, oOpt, sOpt, rOpt, pOpt, vOpt, recurseOpt);
+                (DirectoryInfo di, string o, bool s, bool r, string p, bool v, bool noRecurse, FileInfo d) =>
+                {
+                    var ttResult = LoadTypeTreeDataFile(d);
+                    if (ttResult != 0) return Task.FromResult(ttResult);
+                    return Task.FromResult(HandleAnalyze(di, o, s, r, p, v, noRecurse));
+                },
+                pathArg, oOpt, sOpt, rOpt, pOpt, vOpt, recurseOpt, dOpt);
 
             rootCommand.AddCommand(analyzeCommand);
         }
@@ -74,7 +90,11 @@ public static class Program
             var pathArg = new Argument<FileInfo>("filename", "The path of the file to dump").ExistingOnly();
             var fOpt = new Option<DumpFormat>(aliases: new[] { "--output-format", "-f" }, description: "Output format", getDefaultValue: () => DumpFormat.Text);
             var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
-            var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o"}, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
+            var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
+            var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
+            var typeOpt = new Option<string>(aliases: new[] { "--type", "-t" }, description: "Filter by object type (ClassID number or type name)");
+
+            var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: typeTreeDataDescription);
 
             var dumpCommand = new Command("dump", "Dump the contents of an AssetBundle or SerializedFile.")
             {
@@ -82,10 +102,18 @@ public static class Program
                 fOpt,
                 sOpt,
                 oOpt,
+                objectIdOpt,
+                typeOpt,
+                dOpt,
             };
             dumpCommand.SetHandler(
-                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o) => Task.FromResult(HandleDump(fi, f, s, o)),
-                pathArg, fOpt, sOpt, oOpt);
+                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId, string type, FileInfo d) =>
+                {
+                    var ttResult = LoadTypeTreeDataFile(d);
+                    if (ttResult != 0) return Task.FromResult(ttResult);
+                    return Task.FromResult(HandleDump(fi, f, s, o, objectId, type));
+                },
+                pathArg, fOpt, sOpt, oOpt, objectIdOpt, typeOpt, dOpt);
 
             rootCommand.AddCommand(dumpCommand);
         }
@@ -94,32 +122,128 @@ public static class Program
             var pathArg = new Argument<FileInfo>("filename", "The path of the archive file").ExistingOnly();
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output directory of the extracted archive", getDefaultValue: () => new DirectoryInfo("archive"));
 
+            var filterOpt = new Option<string>(aliases: new[] { "--filter" }, description: "Case-insensitive substring filter on file paths inside the archive");
+
             var extractArchiveCommand = new Command("extract", "Extract an AssetBundle or .data file.")
             {
                 pathArg,
                 oOpt,
+                filterOpt,
             };
 
             extractArchiveCommand.SetHandler(
-                (FileInfo fi, DirectoryInfo o) => Task.FromResult(Archive.HandleExtract(fi, o)),
-                pathArg, oOpt);
+                (FileInfo fi, DirectoryInfo o, string filter) => Task.FromResult(Archive.HandleExtract(fi, o, filter)),
+                pathArg, oOpt, filterOpt);
+
+            var fOpt = new Option<OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => OutputFormat.Text);
 
             var listArchiveCommand = new Command("list", "List the contents of an AssetBundle or .data file.")
             {
                 pathArg,
+                fOpt,
             };
 
             listArchiveCommand.SetHandler(
-                (FileInfo fi) => Task.FromResult(Archive.HandleList(fi)),
-                pathArg);
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleList(fi, f)),
+                pathArg, fOpt);
+
+            var headerArchiveCommand = new Command("header", "Display the header of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            headerArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleHeader(fi, f)),
+                pathArg, fOpt);
+
+            var blocksArchiveCommand = new Command("blocks", "Display the block list of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            blocksArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleBlocks(fi, f)),
+                pathArg, fOpt);
+
+            var infoArchiveCommand = new Command("info", "Display a high-level summary of a Unity Archive file.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            infoArchiveCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(Archive.HandleInfo(fi, f)),
+                pathArg, fOpt);
 
             var archiveCommand = new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
             {
                 extractArchiveCommand,
                 listArchiveCommand,
+                headerArchiveCommand,
+                blocksArchiveCommand,
+                infoArchiveCommand,
             };
 
             rootCommand.AddCommand(archiveCommand);
+        }
+
+        {
+            var pathArg = new Argument<FileInfo>("filename", "The path of the SerializedFile").ExistingOnly();
+            var fOpt = new Option<OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => OutputFormat.Text);
+
+            var externalRefsCommand = new Command("externalrefs", "List external file references in a SerializedFile.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            externalRefsCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleExternalRefs(fi, f)),
+                pathArg, fOpt);
+
+            var objectListCommand = new Command("objectlist", "List all objects in a SerializedFile.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            objectListCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleObjectList(fi, f)),
+                pathArg, fOpt);
+
+            var headerCommand = new Command("header", "Show SerializedFile header information.")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            headerCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleHeader(fi, f)),
+                pathArg, fOpt);
+
+            var metadataCommand = new Command("metadata", "Show information from the metadata section of the SerializedFile (use `-f Json` for detailed information).")
+            {
+                pathArg,
+                fOpt,
+            };
+
+            metadataCommand.SetHandler(
+                (FileInfo fi, OutputFormat f) => Task.FromResult(SerializedFileCommands.HandleMetadata(fi, f)),
+                pathArg, fOpt);
+
+            var serializedFileCommand = new Command("serialized-file", "Inspect a SerializedFile (scene, assets, etc.).")
+            {
+                externalRefsCommand,
+                objectListCommand,
+                headerCommand,
+                metadataCommand,
+            };
+
+            serializedFileCommand.AddAlias("sf");
+
+            rootCommand.AddCommand(serializedFileCommand);
         }
 
         var r = await rootCommand.InvokeAsync(args);
@@ -132,6 +256,24 @@ public static class Program
     enum DumpFormat
     {
         Text,
+    }
+
+    static int LoadTypeTreeDataFile(FileInfo typeTreeDataFile)
+    {
+        if (typeTreeDataFile == null)
+            return 0;
+
+        try
+        {
+            UnityFileSystem.AddTypeTreeSourceFromFile(typeTreeDataFile.FullName);
+        }
+        catch (EntryPointNotFoundException)
+        {
+            Console.Error.WriteLine("Error: The version of UnityFileSystemApi does not support external TypeTree data files. Please use a version from Unity 6.5 or newer.");
+            return 1;
+        }
+
+        return 0;
     }
 
     static int HandleAnalyze(
@@ -173,14 +315,14 @@ public static class Program
         }
     }
 
-    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder)
+    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder, long objectId = 0, string typeFilter = null)
     {
         switch (format)
         {
             case DumpFormat.Text:
             {
                 var textDumper = new TextDumperTool();
-                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays);
+                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId, typeFilter);
             }
         }
 

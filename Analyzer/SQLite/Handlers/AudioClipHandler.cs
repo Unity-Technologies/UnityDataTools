@@ -1,6 +1,6 @@
-﻿using System;
-using Microsoft.Data.Sqlite;
+using System;
 using System.Data;
+using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -13,7 +13,7 @@ public class AudioClipHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.AudioClip;
+        command.CommandText = Resources.AudioClip;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();

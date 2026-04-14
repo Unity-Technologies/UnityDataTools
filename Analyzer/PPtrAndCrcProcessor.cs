@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using UnityDataTools.FileSystem;
 using Force.Crc32;
+using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
 
@@ -65,7 +65,7 @@ public class PPtrAndCrcProcessor : IDisposable
                 {
                     reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.Error.WriteLine();
                     Console.Error.WriteLine($"Error opening resource file {filename}");

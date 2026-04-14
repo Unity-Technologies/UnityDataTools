@@ -5,6 +5,7 @@
 [Tt]emp/
 [Ll]og/
 [Ll]ogs/
+[Pp]ublish/
 
 **/*.csproj.user
 **/*.suo
@@ -27,6 +28,9 @@
 **/.idea/
 **/launchSettings.json
 **/PublishProfiles/
+**/*.args.json
+
+.claude
 
 UnityFileSystemTestData/AssetBundles/
 UnityFileSystemTestData/**/*.csproj
@@ -34,3 +38,5 @@ UnityFileSystemTestData/**/*.sln
 UnityFileSystemTestData/ProjectSettings/
 UnityFileSystemTestData/UserSettings/
 UnityFileSystemTestData/Packages/
+*.db
+*.csv

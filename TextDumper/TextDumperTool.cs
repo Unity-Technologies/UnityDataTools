@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.TextDumper;
@@ -13,14 +14,24 @@ public class TextDumperTool
     SerializedFile m_SerializedFile;
     StreamWriter m_Writer;
 
-    public int Dump(string path, string outputPath, bool skipLargeArrays)
+    public int Dump(string path, string outputPath, bool skipLargeArrays, long objectId = 0, string typeFilter = null)
     {
+        if (string.IsNullOrWhiteSpace(typeFilter))
+            typeFilter = null;
+
         m_SkipLargeArrays = skipLargeArrays;
 
         try
         {
-            try
+            if (!File.Exists(path))
             {
+                Console.WriteLine($"Error: File not found: {path}");
+                return 1;
+            }
+
+            if (ArchiveDetector.IsUnityArchive(path))
+            {
+                // The input is a Unity archive (e.g. AssetBundle); dump each serialized file inside it.
                 using var archive = UnityFileSystem.MountArchive(path, "/");
                 foreach (var node in archive.Nodes)
                 {
@@ -30,31 +41,61 @@ public class TextDumperTool
                     {
                         using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false))
                         {
-                            OutputSerializedFile("/" + node.Path);
+                            OutputSerializedFile("/" + node.Path, objectId, typeFilter);
                         }
                     }
                 }
             }
-            catch (NotSupportedException)
+            else if (YamlSerializedFileDetector.IsYamlSerializedFile(path))
             {
-                // Try as SerializedFile
-                using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
+                Console.WriteLine("Error: The file is a YAML-format SerializedFile, which is not supported.");
+                Console.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
+                return 1;
+            }
+            else if (SerializedFileDetector.TryDetectSerializedFile(path, out _))
+            {
+                // The input is a binary SerializedFile; dump it directly.
+                try
                 {
-                    OutputSerializedFile(path);
+                    using (m_Writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false))
+                    {
+                        OutputSerializedFile(path, objectId, typeFilter);
+                    }
                 }
+                catch (SerializedFileOpenException)
+                {
+                    var hint = SerializedFileDetector.GetOpenFailureHint(path);
+                    if (hint != null)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine(hint);
+                    }
+                    return 1;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.GetType()}: {e.Message}");
+                    Console.WriteLine(e.StackTrace);
+                    return 1;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Error: The file does not appear to be a valid Unity SerializedFile or Unity Archive.");
+                Console.WriteLine($"File: {path}");
+                return 1;
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error!");
-            Console.Write($"{e.GetType()}: ");
-            Console.WriteLine(e.Message);
+            Console.WriteLine($"Error: {e.GetType()}: {e.Message}");
             Console.WriteLine(e.StackTrace);
             return 1;
         }
 
         return 0;
     }
+
 
     void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1)
     {
@@ -232,7 +273,7 @@ public class TextDumperTool
             int i = 0;
 
             while (DumpManagedReferenceData(refTypeNode, refObjData, ref offset, level, i++))
-            {}
+            { }
         }
         else if (version == 2)
         {
@@ -340,8 +381,11 @@ public class TextDumperTool
         return true;
     }
 
-    void OutputSerializedFile(string path)
+    void OutputSerializedFile(string path, long objectId, string typeFilter)
     {
+        int filterTypeId = 0;
+        bool filterByTypeId = typeFilter != null && int.TryParse(typeFilter, out filterTypeId);
+
         using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
         using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
         {
@@ -355,14 +399,47 @@ public class TextDumperTool
             }
             m_Writer.WriteLine();
 
+            bool dumpedObject = false;
             foreach (var obj in m_SerializedFile.Objects)
             {
+                if (objectId != 0 && obj.Id != objectId)
+                    continue;
+
                 var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+
+                if (typeFilter != null)
+                {
+                    if (filterByTypeId)
+                    {
+                        if (obj.TypeId != filterTypeId)
+                            continue;
+                    }
+                    else
+                    {
+                        var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
+                        // GetTypeName returns the id as a string when the type is unknown;
+                        // fall back to the TypeTree root node for script types.
+                        if (typeName == obj.TypeId.ToString())
+                            typeName = root.Type;
+                        if (!string.Equals(typeName, typeFilter, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                    }
+                }
+
                 var offset = obj.Offset;
 
                 m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
                 RecursiveDump(root, ref offset, 0);
                 m_Writer.WriteLine();
+                dumpedObject = true;
+            }
+
+            if ((objectId != 0 || typeFilter != null) && !dumpedObject)
+            {
+                if (objectId != 0)
+                    m_Writer.WriteLine($"Object with ID {objectId} not found.");
+                else
+                    m_Writer.WriteLine($"No objects found matching type \"{typeFilter}\".");
             }
         }
     }

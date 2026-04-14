@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using Microsoft.Data.Sqlite;
 using System.IO;
+using Microsoft.Data.Sqlite;
 
 namespace UnityDataTools.ReferenceFinder;
 
@@ -12,7 +12,7 @@ class ReferenceTreeNode
     {
         Id = id;
     }
-        
+
     public readonly long Id;
     public Dictionary<(long id, string propertyPath), ReferenceTreeNode> Children = new Dictionary<(long, string), ReferenceTreeNode>();
 }

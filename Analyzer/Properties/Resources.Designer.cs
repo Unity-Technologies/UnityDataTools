@@ -19,7 +19,7 @@ namespace UnityDataTools.Analyzer.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,6 +61,487 @@ namespace UnityDataTools.Analyzer.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_bundle_dependencies
+        ///(
+        ///    bundle_id INTEGER,
+        ///    build_id INTEGER,
+        ///    dependency_rid INTEGER,
+        ///    PRIMARY KEY (bundle_id, build_id, dependency_rid),
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildBundleDependencies {
+            get {
+                return ResourceManager.GetString("AddrBuildBundleDependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_bundle_dependent_bundles
+        ///(
+        ///    bundle_id INTEGER,
+        ///    build_id INTEGER,
+        ///    dependent_bundle_rid INTEGER,
+        ///    PRIMARY KEY (bundle_id, build_id, dependent_bundle_rid),
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildBundleDependentBundles {
+            get {
+                return ResourceManager.GetString("AddrBuildBundleDependentBundles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_bundle_expanded_dependencies
+        ///(
+        ///    bundle_id INTEGER,
+        ///    build_id INTEGER,
+        ///    dependency_rid INTEGER,
+        ///    PRIMARY KEY (bundle_id, build_id, dependency_rid),
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildBundleExpandedDependencies {
+            get {
+                return ResourceManager.GetString("AddrBuildBundleExpandedDependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_bundle_files
+        ///(
+        ///    bundle_id INTEGER,
+        ///    build_id INTEGER,
+        ///    file_rid INTEGER,
+        ///    PRIMARY KEY (bundle_id, build_id, file_rid),
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildBundleFiles {
+            get {
+                return ResourceManager.GetString("AddrBuildBundleFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_bundle_regular_dependencies
+        ///(
+        ///    bundle_id INTEGER,
+        ///    build_id INTEGER,
+        ///    dependency_rid INTEGER,
+        ///    PRIMARY KEY (bundle_id, build_id, dependency_rid),
+        ///    FOREIGN KEY (bundle_id, build_id) REFERENCES addressables_build_bundles(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildBundleRegularDependencies {
+            get {
+                return ResourceManager.GetString("AddrBuildBundleRegularDependencies", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_bundles
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    asset_count INTEGER,
+        ///    build_status INTEGER,
+        ///    crc INTEGER,
+        ///    compression TEXT,
+        ///    dependency_file_size INTEGER,
+        ///    expanded_dependency_file_size INTEGER,
+        ///    file_size INTEGER,
+        ///    group_rid INTEGER,
+        ///    hash TEXT,
+        ///    internal_name TEXT,
+        ///    load_path TEXT,
+        ///    name TEXT,
+        ///    provider TEXT,
+        ///    result_type TEXT,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildBundles {
+            get {
+                return ResourceManager.GetString("AddrBuildBundles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_asset_object_references
+        ///(
+        ///    data_from_other_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    local_identifier_in_file INTEGER,
+        ///    asset_id INTEGER,
+        ///    object_id INTEGER,
+        ///    PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file, asset_id, object_id),
+        ///    FOREIGN KEY (data_from_other_asset_id, build_id, local_identifier_in_file) REFERENCES addressables_build_data_from_other_asset_objects(data_from_other_asset_id, build_id, local_identifier_in_file)
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string AddrBuildDataFromOtherAssetObjectReferences {
+            get {
+                return ResourceManager.GetString("AddrBuildDataFromOtherAssetObjectReferences", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_asset_objects
+        ///(
+        ///    data_from_other_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    asset_type INTEGER,
+        ///    component_name TEXT,
+        ///    local_identifier_in_file INTEGER,
+        ///    object_name TEXT,
+        ///    serialized_size INTEGER,
+        ///    streamed_size INTEGER,
+        ///    PRIMARY KEY (data_from_other_asset_id, build_id, local_identifier_in_file),
+        ///    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addressables_build_data_from_other_assets(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildDataFromOtherAssetObjects {
+            get {
+                return ResourceManager.GetString("AddrBuildDataFromOtherAssetObjects", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_asset_referencing_assets
+        ///(
+        ///    data_from_other_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    referencing_asset_rid INTEGER,
+        ///    PRIMARY KEY (data_from_other_asset_id, build_id, referencing_asset_rid),
+        ///    FOREIGN KEY (data_from_other_asset_id, build_id) REFERENCES addressables_build_data_from_other_assets(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildDataFromOtherAssetReferencingAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildDataFromOtherAssetReferencingAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_data_from_other_assets
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    asset_guid TEXT,
+        ///    asset_path TEXT,
+        ///    file INTEGER,
+        ///    main_asset_type INTEGER,
+        ///    object_count INTEGER,
+        ///    serialized_size INTEGER,
+        ///    streamed_size INTEGER,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildDataFromOtherAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildDataFromOtherAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_externally_referenced_assets
+        ///(
+        ///    explicit_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    externally_referenced_asset_rid INTEGER,
+        ///    PRIMARY KEY (explicit_asset_id, build_id, externally_referenced_asset_rid),
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildExplicitAssetExternallyReferencedAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildExplicitAssetExternallyReferencedAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_internal_referenced_explicit_assets
+        ///(
+        ///    explicit_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    internal_referenced_explicit_asset_rid INTEGER,
+        ///    PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_explicit_asset_rid),
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildExplicitAssetInternalReferencedExplicitAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildExplicitAssetInternalReferencedExplicitAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_internal_referenced_other_assets
+        ///(
+        ///    explicit_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    internal_referenced_other_asset_rid INTEGER,
+        ///    PRIMARY KEY (explicit_asset_id, build_id, internal_referenced_other_asset_rid),
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildExplicitAssetInternalReferencedOtherAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildExplicitAssetInternalReferencedOtherAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_explicit_asset_labels
+        ///(
+        ///    explicit_asset_id INTEGER,
+        ///    build_id INTEGER,
+        ///    label TEXT,
+        ///    PRIMARY KEY (explicit_asset_id, build_id, label),
+        ///    FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildExplicitAssetLabels {
+            get {
+                return ResourceManager.GetString("AddrBuildExplicitAssetLabels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_explicit_assets
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    bundle INTEGER,
+        ///    file INTEGER,
+        ///    asset_hash TEXT,
+        ///    asset_path TEXT,
+        ///    addressable_name TEXT,
+        ///    group_guid TEXT,
+        ///    guid TEXT,
+        ///    internal_id TEXT,
+        ///    main_asset_type INTEGER,
+        ///    serialized_size INTEGER,
+        ///    streamed_size INTEGER,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildExplicitAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildExplicitAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_file_assets
+        ///(
+        ///    file_id INTEGER,
+        ///    build_id INTEGER,
+        ///    asset_rid INTEGER,
+        ///    PRIMARY KEY (file_id, build_id, asset_rid),
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildFileAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildFileAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_file_external_references
+        ///(
+        ///    file_id INTEGER,
+        ///    build_id INTEGER,
+        ///    external_reference_rid INTEGER,
+        ///    PRIMARY KEY (file_id, build_id, external_reference_rid),
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildFileExternalReferences {
+            get {
+                return ResourceManager.GetString("AddrBuildFileExternalReferences", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_file_other_assets
+        ///(
+        ///    file_id INTEGER,
+        ///    build_id INTEGER,
+        ///    other_asset_rid INTEGER,
+        ///    PRIMARY KEY (file_id, build_id, other_asset_rid),
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildFileOtherAssets {
+            get {
+                return ResourceManager.GetString("AddrBuildFileOtherAssets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_files
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    bundle INTEGER,
+        ///    bundle_object_info_size INTEGER,
+        ///    mono_script_count INTEGER,
+        ///    mono_script_size INTEGER,
+        ///    name TEXT,
+        ///    preload_info_size INTEGER,
+        ///    write_result_filename TEXT,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildFiles {
+            get {
+                return ResourceManager.GetString("AddrBuildFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_file_sub_files
+        ///(
+        ///    file_id INTEGER,
+        ///    build_id INTEGER,
+        ///    sub_file_rid INTEGER,
+        ///    PRIMARY KEY (file_id, build_id, sub_file_rid),
+        ///    FOREIGN KEY (file_id, build_id) REFERENCES addressables_build_files(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildFileSubFiles {
+            get {
+                return ResourceManager.GetString("AddrBuildFileSubFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_group_bundles
+        ///(
+        ///    group_id INTEGER,
+        ///    build_id INTEGER,
+        ///    bundle_rid INTEGER,
+        ///    PRIMARY KEY (group_id, build_id, bundle_rid),
+        ///    FOREIGN KEY (group_id, build_id) REFERENCES addressables_build_groups(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildGroupBundles {
+            get {
+                return ResourceManager.GetString("AddrBuildGroupBundles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_groups
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    guid TEXT,
+        ///    name TEXT,
+        ///    packing_mode TEXT,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildGroups {
+            get {
+                return ResourceManager.GetString("AddrBuildGroups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_group_schemas
+        ///(
+        ///    group_id INTEGER,
+        ///    build_id INTEGER,
+        ///    schema_rid INTEGER,
+        ///    PRIMARY KEY (group_id, build_id, schema_rid),
+        ///    FOREIGN KEY (group_id, build_id) REFERENCES addressables_build_groups(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildGroupSchemas {
+            get {
+                return ResourceManager.GetString("AddrBuildGroupSchemas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TABLE addressables_builds
+        ///(
+        ///    id INTEGER,
+        ///    name TEXT,
+        ///    build_target INTEGER,
+        ///    start_time TEXT,
+        ///    duration REAL,
+        ///    error TEXT,
+        ///    package_version TEXT,
+        ///    player_version TEXT,
+        ///    build_script TEXT,
+        ///    result_hash TEXT,
+        ///    type INTEGER,
+        ///    unity_version TEXT,
+        ///    PRIMARY KEY (id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuilds {
+            get {
+                return ResourceManager.GetString("AddrBuilds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_schema_data_pairs
+        ///(
+        ///    schema_id INTEGER,
+        ///    build_id INTEGER,
+        ///    key TEXT,
+        ///    value TEXT,
+        ///    PRIMARY KEY (schema_id, build_id, key),
+        ///    FOREIGN KEY (schema_id, build_id) REFERENCES addressables_build_schemas(id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildSchemaDataPairs {
+            get {
+                return ResourceManager.GetString("AddrBuildSchemaDataPairs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_schemas
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    guid TEXT,
+        ///    type TEXT,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildSchemas {
+            get {
+                return ResourceManager.GetString("AddrBuildSchemas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to create table addressables_build_sub_files
+        ///(
+        ///    id INTEGER,
+        ///    build_id INTEGER,
+        ///    is_serialized_file INTEGER,
+        ///    name TEXT,
+        ///    size INTEGER,
+        ///    PRIMARY KEY (id, build_id)
+        ///);.
+        /// </summary>
+        internal static string AddrBuildSubFiles {
+            get {
+                return ResourceManager.GetString("AddrBuildSubFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CREATE TABLE animation_clips(
         ///    id INTEGER,
         ///    legacy INTEGER,
@@ -88,12 +569,21 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    name TEXT
         ///);
         ///
+        ///CREATE TABLE asset_dependencies(
+        ///    object INTEGER,
+        ///    dependency INTEGER
+        ///);
+        ///
         ///CREATE VIEW asset_view AS
         ///SELECT
         ///    a.name AS asset_name,
         ///    o.*
         ///FROM assets a INNER JOIN object_view o ON o.id = a.object;
-        ///.
+        ///
+        ///CREATE VIEW asset_dependencies_view AS
+        ///SELECT a.id, a.asset_name, a.asset_bundle, a.type, od.id dep_id, od.asset_bundle dep_asset_bundle, od.name dep_name, od.type dep_type
+        ///FROM asset_view a
+        ///INNER JOIN asset_dependencies d ON a [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AssetBundle {
             get {
@@ -138,7 +628,67 @@ namespace UnityDataTools.Analyzer.Properties {
                 return ResourceManager.GetString("AudioClip", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TABLE IF NOT EXISTS build_reports(
+        ///    id INTEGER,
+        ///    build_type TEXT,
+        ///    build_result TEXT,
+        ///    platform_name TEXT,
+        ///    subtarget INTEGER,
+        ///    start_time TEXT,
+        ///    end_time TEXT,
+        ///    total_time_seconds INTEGER,
+        ///    total_size INTEGER,
+        ///    build_guid TEXT,
+        ///    total_errors INTEGER,
+        ///    total_warnings INTEGER,
+        ///    options INTEGER,
+        ///    asset_bundle_options INTEGER,
+        ///    output_path TEXT,
+        ///    crc INTEGER,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_files(
+        ///    build_report_id INTEGER NOT NULL,
+        ///    file_index INTEGER NOT NULL,
+        ///    path TEXT NOT NULL,
+        ///    role TEXT NOT NULL,
+        ///    size INTEGER NOT NULL,
+        ///    PRIMARY KEY (build_report_id, file_index),
+        ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_archive_contents(
+        ///    build_report_id INTEGER NOT NULL,
+        ///    assetbundle TEXT NOT NULL,
+        ///    assetbundle_content TEXT NOT NULL,
+        ///    PRIMARY KEY (build_report_id, assetbundle_content),
+        ///    FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
+        ///);
+        ///
+        ///CREATE VIEW build_report_files_view AS
+        ///SELECT
+        ///    o.serialized_file,
+        ///    br.id AS build_report_id,
+        ///    br.build_type,
+        ///    br.platform_name,
+        ///    brf.file_index,
+        ///    brf.path,
+        ///    brf.role,
+        ///    brf.size
+        ///FROM build_report_files brf
+        ///INNER JOIN build_reports br ON brf.build_report_id = br.id
+        ///INNER JOIN object_view o ON br.id = o.id;
+        ///.
+        /// </summary>
+        internal static string BuildReport {
+            get {
+                return ResourceManager.GetString("BuildReport", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to CREATE INDEX refs_object_index ON refs(object);
         ///CREATE INDEX refs_referenced_object_index ON refs(referenced_object);
@@ -183,7 +733,7 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    name TEXT,
         ///    game_object INTEGER,
         ///    size INTEGER,
-        ///    PRIMARY KE [rest of string was truncated]&quot;;.
+        ///    crc32 INTE [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Init {
             get {
@@ -201,6 +751,8 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    vertices INTEGER,
         ///    compression INTEGER,
         ///    rw_enabled INTEGER,
+        ///    vertex_size INTEGER,
+        ///    channels TEXT,
         ///    PRIMARY KEY (id)
         ///);
         ///
@@ -213,10 +765,11 @@ namespace UnityDataTools.Analyzer.Properties {
         ///    m.indices,
         ///    m.vertices,
         ///    m.compression,
-        ///    m.rw_enabled
+        ///    m.rw_enabled,
+        ///    m.vertex_size,
+        ///    m.channels
         ///FROM meshes m
-        ///INNER JOIN object_view o ON o.id = m.id;
-        ///.
+        ///INNER JOIN [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Mesh {
             get {
@@ -228,10 +781,19 @@ namespace UnityDataTools.Analyzer.Properties {
         ///   Looks up a localized string similar to CREATE TABLE shaders(
         ///    id INTEGER,
         ///    decompressed_size INTEGER,
-        ///    sub_shaders INTEGER,
         ///    unique_programs INTEGER,
-        ///    keywords TEXT,
         ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE TABLE shader_keywords(
+        ///    id INTEGER,
+        ///    keyword TEXT,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE TABLE shader_subprogram_keywords(
+        ///    subprogram_id INTEGER,
+        ///    keyword_id INTEGER
         ///);
         ///
         ///CREATE TABLE shader_apis(
@@ -241,19 +803,10 @@ namespace UnityDataTools.Analyzer.Properties {
         ///);
         ///
         ///CREATE TABLE shader_subprograms(
+        ///    id INTEGER,
         ///    shader INTEGER,
-        ///    pass INTEGER,
-        ///    sub_program INTEGER,
-        ///    hw_tier INTEGER,
-        ///    shader_type TEXT,
-        ///    api INTEGER,
-        ///    keywords TEXT
-        ///);
-        ///
-        ///CREATE VIEW shader_view AS
-        ///SELECT
-        ///    o.*,
-        ///    s.decompre [rest of string was truncated]&quot;;.
+        ///    sub_shader INTEGER,
+        ///   [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Shader {
             get {
@@ -295,6 +848,114 @@ namespace UnityDataTools.Analyzer.Properties {
         internal static string Texture2D {
             get {
                 return ResourceManager.GetString("Texture2D", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TABLE IF NOT EXISTS monoscripts(
+        ///    id INTEGER,
+        ///    class_name TEXT,
+        ///    namespace TEXT,
+        ///    assembly_name TEXT,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE VIEW monoscript_view AS
+        ///SELECT
+        ///    o.id,
+        ///    o.object_id,
+        ///    o.asset_bundle,
+        ///    o.serialized_file,
+        ///    m.class_name,
+        ///    m.namespace,
+        ///    m.assembly_name
+        ///FROM object_view o INNER JOIN monoscripts m ON o.id = m.id;
+        ///
+        ///CREATE VIEW script_object_view AS
+        ///SELECT
+        ///    mb.id,
+        ///    mb.object_id,
+        ///    mb.asset_bundle,
+        ///    mb.serialized_file,
+        ///    mb.name,
+        ///    mb.type,
+        ///    mb.size,
+        ///    mb.pretty_size,
+        ///    ms.class_name,
+        ///    ms.namespace,
+        ///    ms.assembly_name
+        ///FROM object_view mb
+        ///INNER JOIN refs r ON mb.id = r.object
+        ///INNER JOIN monoscript_view ms ON r.referenced_object = ms.id
+        ///WHERE mb.type = 'MonoBehaviour' AND r.property_type = 'MonoScript';
+        ///.
+        /// </summary>
+        internal static string MonoScript {
+            get {
+                return ResourceManager.GetString("MonoScript", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TABLE IF NOT EXISTS build_report_packed_assets(
+        ///    id INTEGER,
+        ///    path TEXT,
+        ///    file_header_size INTEGER,
+        ///    PRIMARY KEY (id)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_source_assets(
+        ///    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ///    source_asset_guid TEXT NOT NULL,
+        ///    build_time_asset_path TEXT NOT NULL,
+        ///    UNIQUE(source_asset_guid, build_time_asset_path)
+        ///);
+        ///
+        ///CREATE TABLE IF NOT EXISTS build_report_packed_asset_info(
+        ///    packed_assets_id INTEGER,
+        ///    object_id INTEGER,
+        ///    type INTEGER,
+        ///    size INTEGER,
+        ///    offset INTEGER,
+        ///    source_asset_id INTEGER NOT NULL,
+        ///    FOREIGN KEY (packed_assets_id) REFERENCES build_report_packed_assets(id),
+        ///    FOREIGN KEY (source_asset_id) REFERENCES build_report_source_assets(id)
+        ///);
+        ///
+        ///CREATE VIEW build_report_packed_assets_view AS
+        ///SELECT
+        ///    pa.id,
+        ///    o.object_id,
+        ///    brac.assetbundle,
+        ///    sf.name as build_report,
+        ///    pa.path,
+        ///    pa.file_header_size
+        ///FROM build_report_packed_assets pa
+        ///INNER JOIN objects o ON pa.id = o.id
+        ///INNER JOIN serialized_files sf ON o.serialized_file = sf.id
+        ///LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
+        ///LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
+        ///
+        ///CREATE VIEW build_report_packed_asset_contents_view AS
+        ///SELECT
+        ///    o.serialized_file,
+        ///    pa.path,
+        ///    pac.packed_assets_id,
+        ///    pac.object_id,
+        ///    pac.type,
+        ///    pac.size,
+        ///    pac.offset,
+        ///    sa.source_asset_guid,
+        ///    sa.build_time_asset_path
+        ///FROM build_report_packed_asset_info pac
+        ///LEFT JOIN build_report_packed_assets pa ON pac.packed_assets_id = pa.id
+        ///LEFT JOIN object_view o ON o.id = pa.id
+        ///LEFT JOIN build_report_source_assets sa ON pac.source_asset_id = sa.id;
+        ///.
+        /// </summary>
+        internal static string PackedAssets {
+            get {
+                return ResourceManager.GetString("PackedAssets", resourceCulture);
             }
         }
     }

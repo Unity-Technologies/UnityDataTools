@@ -1,6 +1,6 @@
-﻿using System;
-using Microsoft.Data.Sqlite;
+using System;
 using System.Text;
+using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -13,7 +13,7 @@ public class MeshHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.Mesh;
+        command.CommandText = Resources.Mesh;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();
@@ -54,7 +54,7 @@ public class MeshHandler : ISQLiteHandler
             channels.Append(channel.Dimension);
             channels.AppendLine("]");
         }
-        
+
         m_InsertCommand.Parameters["@channels"].Value = channels.ToString();
 
         m_InsertCommand.ExecuteNonQuery();

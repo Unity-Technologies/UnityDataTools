@@ -21,7 +21,7 @@ public class IdProvider<Key>
     public int GetId(Key key)
     {
         int id;
-        
+
         if (m_Ids.TryGetValue(key, out id))
         {
             return id;
@@ -51,5 +51,5 @@ public class IdProvider<Key>
 
 public class ObjectIdProvider : IdProvider<(int fileId, long pathId)>
 {
-    public ObjectIdProvider(bool bidirectional = false) : base(bidirectional) {}
+    public ObjectIdProvider(bool bidirectional = false) : base(bidirectional) { }
 }

@@ -1,11 +1,11 @@
-CREATE TABLE types
+CREATE TABLE IF NOT EXISTS types
 (
     id INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE asset_bundles
+CREATE TABLE IF NOT EXISTS asset_bundles
 (
     id INTEGER,
     name TEXT,
@@ -14,7 +14,7 @@ CREATE TABLE asset_bundles
     PRIMARY KEY (id)
 );
 
-CREATE TABLE serialized_files
+CREATE TABLE IF NOT EXISTS serialized_files
 (
     id INTEGER,
     asset_bundle INTEGER,
@@ -22,7 +22,7 @@ CREATE TABLE serialized_files
     PRIMARY KEY (id)
 );
 
-CREATE TABLE objects
+CREATE TABLE IF NOT EXISTS objects
 (
     id INTEGER,
     object_id INTEGER,
@@ -35,7 +35,7 @@ CREATE TABLE objects
     PRIMARY KEY (id)
 );
 
-CREATE TABLE refs
+CREATE TABLE IF NOT EXISTS refs
 (
     object INTEGER,
     referenced_object INTEGER,

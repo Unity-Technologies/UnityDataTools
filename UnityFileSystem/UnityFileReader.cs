@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using Force.Crc32;
@@ -8,10 +8,10 @@ namespace UnityDataTools.FileSystem;
 // This class can be used to read typed data from a UnityFile. Is uses a buffer for better performance.
 public class UnityFileReader : IDisposable
 {
-    UnityFile   m_File;
-    byte[]      m_Buffer;
-    long        m_BufferStartInFile;
-    long        m_BufferEndInFile;
+    UnityFile m_File;
+    byte[] m_Buffer;
+    long m_BufferStartInFile;
+    long m_BufferEndInFile;
 
     public long Length { get; }
 
@@ -50,7 +50,7 @@ public class UnityFileReader : IDisposable
         var offset = GetBufferOffset(fileOffset, size);
         Buffer.BlockCopy(m_Buffer, offset, dest, 0, size);
     }
-        
+
     public string ReadString(long fileOffset, int size)
     {
         var offset = GetBufferOffset(fileOffset, size);
@@ -121,7 +121,7 @@ public class UnityFileReader : IDisposable
     {
         var readSize = size > m_Buffer.Length ? m_Buffer.Length : size;
         var readBytes = 0;
-        
+
         while (readBytes < size)
         {
             var offset = GetBufferOffset(fileOffset, readSize);

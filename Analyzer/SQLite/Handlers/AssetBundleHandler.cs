@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
@@ -15,17 +15,17 @@ public class AssetBundleHandler : ISQLiteHandler
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.AssetBundle;
+        command.CommandText = Resources.AssetBundle;
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();
-        
+
         m_InsertCommand.CommandText = "INSERT INTO assets(object, name) VALUES(@object, @name)";
         m_InsertCommand.Parameters.Add("@object", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@name", SqliteType.Text);
 
         m_InsertDepCommand = db.CreateCommand();
-        
+
         m_InsertDepCommand.CommandText = "INSERT INTO asset_dependencies(object, dependency) VALUES(@object, @dependency)";
         m_InsertDepCommand.Parameters.Add("@object", SqliteType.Integer);
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
@@ -34,7 +34,7 @@ public class AssetBundleHandler : ISQLiteHandler
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
         var assetBundle = AssetBundle.Read(reader);
-        
+
         foreach (var asset in assetBundle.Assets)
         {
             if (!assetBundle.IsSceneAssetBundle)
@@ -83,7 +83,7 @@ public class AssetBundleHandler : ISQLiteHandler
         command.Connection = db;
         command.CommandText = "CREATE INDEX asset_dependencies_object ON asset_dependencies(object)";
         command.ExecuteNonQuery();
-        
+
         command.CommandText = "CREATE INDEX asset_dependencies_dependency ON asset_dependencies(dependency)";
         command.ExecuteNonQuery();
     }

@@ -10,29 +10,29 @@ public class Shader
     public IReadOnlyList<SubShader> SubShaders { get; init; }
     public IReadOnlyList<string> Keywords { get; init; }
 
-    private Shader() {}
+    private Shader() { }
 
     public class SubShader
     {
         public IReadOnlyList<Pass> Passes { get; init; }
-        
+
         public class Pass
         {
             public string Name { get; init; }
 
             // The key is the program type (vertex, fragment...) 
-            public IReadOnlyDictionary<string, IReadOnlyList<SubProgram>> Programs { get; init;  }
-            
+            public IReadOnlyDictionary<string, IReadOnlyList<SubProgram>> Programs { get; init; }
+
             public class SubProgram
             {
                 public int HwTier { get; init; }
                 public int Api { get; init; }
                 public uint BlobIndex { get; init; }
-                
+
                 // Keyword index in ShaderData.Keywords 
                 public IReadOnlyList<int> Keywords { get; init; }
-                
-                private SubProgram() {}
+
+                private SubProgram() { }
 
                 public static SubProgram Read(KeywordSet keywordSet, RandomAccessReader reader, Dictionary<int, string> keywordNames, int hwTier = -1)
                 {
@@ -71,8 +71,8 @@ public class Shader
                             }
                         }
                     }
-                
-                    return new SubProgram() { Api = api, BlobIndex = blobIndex, HwTier = hwTier , Keywords = keywords };
+
+                    return new SubProgram() { Api = api, BlobIndex = blobIndex, HwTier = hwTier, Keywords = keywords };
                 }
             }
 
@@ -80,7 +80,7 @@ public class Shader
             {
                 string name = null;
                 Dictionary<string, IReadOnlyList<SubProgram>> programsPerType = new();
-                
+
                 if (keywordNames == null)
                 {
                     keywordNames = new();
@@ -144,12 +144,12 @@ public class Shader
                         if (subPrograms.Count > 0)
                         {
                             var programs = new List<SubProgram>(subPrograms.GetArraySize());
-                            
+
                             foreach (var subProgram in subPrograms)
                             {
                                 programs.Add(SubProgram.Read(keywordSet, subProgram, keywordNames));
                             }
-                            
+
                             programsPerType[progType.typeName] = programs;
                         }
                     }
@@ -163,13 +163,13 @@ public class Shader
         {
             var passesReader = reader["m_Passes"];
             var passes = new List<Pass>(passesReader.GetArraySize());
-            
+
             foreach (var pass in passesReader)
             {
                 passes.Add(Pass.Read(keywordSet, pass, keywordNames));
             }
 
-            return new SubShader() {Passes = passes};
+            return new SubShader() { Passes = passes };
         }
     }
 
@@ -192,13 +192,13 @@ public class Shader
         }
 
         var subShadersReader = parsedForm["m_SubShaders"];
-        List<SubShader> subShaders = new (subShadersReader.GetArraySize());
-        
+        List<SubShader> subShaders = new(subShadersReader.GetArraySize());
+
         foreach (var subShader in subShadersReader)
         {
             subShaders.Add(SubShader.Read(keywordSet, subShader, keywordNames));
         }
-        
+
         int decompressedSize = 0;
 
         if (reader["decompressedLengths"].IsArrayOfObjects)
@@ -244,11 +244,11 @@ public class Shader
 
         private List<string> m_Keywords = new();
         private Dictionary<string, int> m_KeywordToIndex = new();
-        
+
         public int GetKeywordIndex(string name)
         {
             int index;
-        
+
             if (m_KeywordToIndex.TryGetValue(name, out index))
             {
                 return index;

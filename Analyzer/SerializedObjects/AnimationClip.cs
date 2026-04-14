@@ -7,8 +7,8 @@ public class AnimationClip
     public string Name { get; init; }
     public bool Legacy { get; init; }
     public int Events { get; init; }
-    
-    private AnimationClip() {}
+
+    private AnimationClip() { }
 
     public static AnimationClip Read(RandomAccessReader reader)
     {

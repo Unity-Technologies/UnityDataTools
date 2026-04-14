@@ -29,7 +29,7 @@ public class PreloadDataHandler : ISQLiteHandler
         {
             var fileId = ctx.LocalToDbFileId[asset.FileId];
             var objId = ctx.ObjectIdProvider.GetId((fileId, asset.PathId));
-            
+
             m_InsertDepCommand.Parameters["@dependency"].Value = objId;
             m_InsertDepCommand.ExecuteNonQuery();
         }

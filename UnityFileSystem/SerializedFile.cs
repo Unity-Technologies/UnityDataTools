@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -48,6 +48,43 @@ public class SerializedFile : IDisposable
     public TypeTreeNode GetRefTypeTypeTreeRoot(string className, string namespaceName, string assemblyName)
     {
         var r = DllWrapper.GetRefTypeTypeTree(m_Handle, className, namespaceName, assemblyName, out var typeTreeHandle);
+        UnityFileSystem.HandleErrors(r);
+
+        if (m_TypeTreeCache.TryGetValue(typeTreeHandle.Handle, out var node))
+        {
+            return node;
+        }
+
+        node = new TypeTreeNode(typeTreeHandle, 0);
+        m_TypeTreeCache.Add(typeTreeHandle.Handle, node);
+
+        return node;
+    }
+
+    public int GetVersion()
+    {
+        var r = DllWrapper.GetSerializedFileVersion(m_Handle, out var version);
+        UnityFileSystem.HandleErrors(r);
+        return version;
+    }
+
+    public int GetTypeTreeCount()
+    {
+        var r = DllWrapper.GetTypeTreeCount(m_Handle, out var count);
+        UnityFileSystem.HandleErrors(r);
+        return count;
+    }
+
+    public TypeTreeInfo GetTypeTreeInfo(int index)
+    {
+        var r = DllWrapper.GetTypeTreeInfo(m_Handle, index, out var info);
+        UnityFileSystem.HandleErrors(r);
+        return info;
+    }
+
+    public TypeTreeNode GetTypeTreeByIndex(int index)
+    {
+        var r = DllWrapper.GetTypeTreeByIndex(m_Handle, index, out var typeTreeHandle);
         UnityFileSystem.HandleErrors(r);
 
         if (m_TypeTreeCache.TryGetValue(typeTreeHandle.Handle, out var node))

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -15,9 +15,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SQLite" Version="9.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
+<ItemGroup>
+    <Using Include="UnityDataTools.Analyzer.Properties" />
+</ItemGroup>
+
   <ItemGroup>
+    <ProjectReference Include="..\UnityBinaryFormat\UnityBinaryFormat.csproj" />
     <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
   </ItemGroup>
 

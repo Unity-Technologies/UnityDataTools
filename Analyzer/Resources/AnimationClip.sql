@@ -1,4 +1,4 @@
-﻿CREATE TABLE animation_clips(
+﻿CREATE TABLE IF NOT EXISTS animation_clips(
     id INTEGER,
     legacy INTEGER,
     events INTEGER,

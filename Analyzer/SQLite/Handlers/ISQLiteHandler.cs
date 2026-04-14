@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.FileSystem.TypeTreeReaders;
@@ -20,5 +20,13 @@ public interface ISQLiteHandler : IDisposable
 {
     void Init(Microsoft.Data.Sqlite.SqliteConnection db);
     void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize);
-    void Finalize(Microsoft.Data.Sqlite.SqliteConnection db);
+}
+
+public interface ISQLiteFileParser : IDisposable
+{
+    void Init(SqliteConnection db);
+    bool CanParse(string filename);
+    void Parse(string filename);
+    public bool Verbose { get; set; }
+    public bool SkipReferences { get; set; }
 }

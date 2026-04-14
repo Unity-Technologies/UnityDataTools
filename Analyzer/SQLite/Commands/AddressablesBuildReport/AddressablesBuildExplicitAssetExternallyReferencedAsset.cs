@@ -1,0 +1,34 @@
+using System.Collections.Generic;
+using Microsoft.Data.Sqlite;
+
+namespace UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport
+{
+    /* TABLE DEFINITION:
+        create table addressables_build_explicit_asset_externally_referenced_assets
+        (
+            explicit_asset_id INTEGER,
+            build_id INTEGER,
+            externally_referenced_asset_rid INTEGER,
+            PRIMARY KEY (explicit_asset_id, build_id, externally_referenced_asset_rid),
+            FOREIGN KEY (explicit_asset_id, build_id) REFERENCES addressables_build_explicit_assets(id, build_id)
+        );
+    */
+    internal class AddressablesBuildExplicitAssetExternallyReferencedAsset : AbstractCommand
+    {
+        protected override string TableName => "addressables_build_explicit_asset_externally_referenced_assets";
+
+        protected override string DDLSource => Properties.Resources.AddrBuildExplicitAssetExternallyReferencedAssets;
+
+        protected override Dictionary<string, SqliteType> Fields => new Dictionary<string, SqliteType>
+        {
+            { "explicit_asset_id", SqliteType.Integer },
+            { "build_id", SqliteType.Integer },
+            { "externally_referenced_asset_rid", SqliteType.Integer }
+        };
+
+        public AddressablesBuildExplicitAssetExternallyReferencedAsset()
+        {
+        }
+    }
+}
+

@@ -1,8 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using UnityDataTools.Analyzer.SQLite;
+using UnityDataTools.Analyzer.SQLite.Handlers;
+using UnityDataTools.Analyzer.SQLite.Parsers;
+using UnityDataTools.Analyzer.SQLite.Parsers.Models;
+using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
@@ -10,6 +14,12 @@ namespace UnityDataTools.Analyzer;
 public class AnalyzerTool
 {
     bool m_Verbose = false;
+
+    public List<ISQLiteFileParser> parsers = new List<ISQLiteFileParser>()
+    {
+        new AddressablesBuildLayoutParser(),
+        new SerializedFileParser(),
+    };
 
     public int Analyze(
         string path,
@@ -21,11 +31,18 @@ public class AnalyzerTool
     {
         m_Verbose = verbose;
 
-        using SQLiteWriter writer = new (databaseName, skipReferences);
+        using SQLiteWriter writer = new(databaseName);
 
         try
         {
             writer.Begin();
+            foreach (var parser in parsers)
+            {
+                parser.Verbose = verbose;
+                parser.SkipReferences = skipReferences;
+                parser.Init(writer.Connection);
+
+            }
         }
         catch (Exception e)
         {
@@ -41,136 +58,81 @@ public class AnalyzerTool
             searchPattern,
             noRecursion ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories);
 
+        int countFailures = 0;
+        int countSuccess = 0;
+        int countIgnored = 0;
         int i = 1;
         foreach (var file in files)
         {
-            if (ShouldIgnoreFile(file))
+            bool foundParser = false;
+            foreach (var parser in parsers)
             {
-                var relativePath = Path.GetRelativePath(path, file);
-
+                if (parser.CanParse(file))
+                {
+                    foundParser = true;
+                    try
+                    {
+                        parser.Parse(file);
+                        ReportProgress(Path.GetRelativePath(path, file), i, files.Length);
+                        countSuccess++;
+                    }
+                    catch (SerializedFileOpenException e)
+                    {
+                        // Expected failure — the file content could not be parsed.
+                        // Don't print a stack trace; it adds no value for this known failure mode.
+                        EraseProgressLine();
+                        var relativePath = Path.GetRelativePath(path, file);
+                        Console.Error.WriteLine($"Failed to open: {relativePath}");
+                        var hint = SerializedFileDetector.GetOpenFailureHint(e.FilePath);
+                        if (hint != null)
+                            Console.Error.WriteLine(hint);
+                        countFailures++;
+                    }
+                    catch (Exception e)
+                    {
+                        // Unexpected failure (SQL error, I/O error, bug, etc.) — print full details.
+                        EraseProgressLine();
+                        var relativePath = Path.GetRelativePath(path, file);
+                        Console.Error.WriteLine($"Failed to process: {relativePath}");
+                        if (m_Verbose)
+                        {
+                            Console.Error.WriteLine($"  Exception: {e.GetType().Name}: {e.Message}");
+                            if (e.InnerException != null)
+                                Console.Error.WriteLine($"  Inner: {e.InnerException.Message}");
+                            Console.Error.WriteLine(e.StackTrace);
+                        }
+                        countFailures++;
+                    }
+                }
+            }
+            if (!foundParser)
+            {
                 if (m_Verbose)
                 {
+                    var relativePath = Path.GetRelativePath(path, file);
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
-                ++i;
-                continue;
-            }
 
-            ProcessFile(file, path, writer, i, files.Length);
+                countIgnored++;
+            }
             ++i;
         }
 
         Console.WriteLine();
-        Console.WriteLine("Finalizing database...");
+        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Ignored files: {countIgnored}");
 
         writer.End();
+        foreach (var parser in parsers)
+        {
+            parser.Dispose();
+        }
 
         timer.Stop();
         Console.WriteLine();
         Console.WriteLine($"Total time: {(timer.Elapsed.TotalMilliseconds / 1000.0):F3} s");
 
         return 0;
-    }
-
-    bool ShouldIgnoreFile(string file)
-    {
-        // Unfortunately there is no standard extension for AssetBundles, and SerializedFiles often have no extension at all.
-        // Also there is also no distinctive signature at the start of a SerializedFile to immediately recognize it based on its first bytes.
-        // This makes it difficult to use the "--search-pattern" argument to only pick those files.
-
-        // Hence to reduce noise in UnityDataTool output we filter out files that we have a high confidence are
-        // NOT SerializedFiles or Unity Archives.
-
-        string fileName = Path.GetFileName(file);
-        string extension = Path.GetExtension(file);
-
-        return IgnoredFileNames.Contains(fileName) || IgnoredExtensions.Contains(extension);
-    }
-
-    // These lists are based on expected output files in Player, AssetBundle, Addressables and ECS builds.
-    // However this is by no means exhaustive.
-    private static readonly HashSet<string> IgnoredFileNames = new()
-    {
-        ".DS_Store", "boot.config", "archive_dependencies.bin", "scene_info.bin", "app.info", "link.xml",
-        "catalog.bin", "catalog.hash"
-    };
-
-    private static readonly HashSet<string> IgnoredExtensions = new()
-    {
-        ".txt", ".resS", ".resource", ".json", ".dll", ".pdb", ".exe", ".manifest", ".entities", ".entityheader"
-    };
-
-    void ProcessFile(string file, string rootDirectory, SQLiteWriter writer, int fileIndex, int cntFiles)
-    {
-        try
-        {
-            UnityArchive archive = null;
-
-            try
-            {
-                archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar);
-            }
-            catch (NotSupportedException)
-            {
-                // It wasn't an AssetBundle, try to open the file as a SerializedFile.
-
-                var relativePath = Path.GetRelativePath(rootDirectory, file);
-                writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
-
-                ReportProgress(relativePath, fileIndex, cntFiles);
-            }
-
-            if (archive != null)
-            {
-                try
-                {
-                    var assetBundleName = Path.GetRelativePath(rootDirectory, file);
-
-                    writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length, archive.CompressionType);
-                    ReportProgress(assetBundleName, fileIndex, cntFiles);
-
-                    foreach (var node in archive.Nodes)
-                    {
-                        if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                        {
-                            try
-                            {
-                                writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
-                            }
-                            catch (Exception e)
-                            {
-                                EraseProgressLine();
-                                Console.Error.WriteLine($"Error processing {node.Path} in archive {file}");
-                                Console.Error.WriteLine(e);
-                                Console.WriteLine();
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    writer.EndAssetBundle();
-                    archive.Dispose();
-                }
-            }
-            EraseProgressLine();
-        }
-        catch (NotSupportedException)
-        {
-            EraseProgressLine();
-            Console.Error.WriteLine();
-            //A "failed to load" error will already be logged by the UnityFileSystem library
-        }
-        catch (Exception e)
-        {
-            EraseProgressLine();
-            Console.Error.WriteLine();
-            Console.Error.WriteLine($"Error processing file: {file}");
-            Console.WriteLine($"{e.GetType()}: {e.Message}");
-            if (m_Verbose)
-                Console.WriteLine(e.StackTrace);
-        }
     }
 
     int m_LastProgressMessageLength = 0;
@@ -195,7 +157,7 @@ public class AnalyzerTool
     void EraseProgressLine()
     {
         if (!m_Verbose)
-            Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}");
+            Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}\r");
         else
             Console.WriteLine();
     }
