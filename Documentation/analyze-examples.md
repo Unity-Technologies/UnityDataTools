@@ -68,99 +68,7 @@ Shader Graphs/CustomLightingBuildingsB      113.4 KB     1b2fdfe013c58ffd57d7663
 
 See [buildreport.md](buildreport.md) for information about using analyze to look at BuildReport files.
 
-## Example: Local Addressable groups depending on remote groups
 
-Addressables build layout JSON (for example under `Library\com.unity.addressables\BuildReports\`) records which **explicit** addressable assets reference other **explicit** addressables, including references that cross bundles and groups. That information is stored in SQLite when you run **analyze** on those reports; see [addressables-build-reports.md](addressables-build-reports.md) for schema overview.
-
-UnityDataTools does **not** store a boolean “local” or “remote” flag. In practice, each bundle row has a **`load_path`** string from the build report (table `addressables_build_bundles`). You can classify bundles for a given project by testing that string—for example:
-
-* **Remote bundle:** `load_path` starts with `https://` or `http://` (typical for remote profiles).
-* **Local bundle:** not matched by the above (often paths containing `{UnityEngine.AddressableAssets.Addressables.RuntimePath}` or similar). You may refine this for your naming or add conditions such as non-empty `load_path` if you need to exclude odd rows.
-
-Reference edges you care about for “local asset depends on remote explicit addressable” come from two tables (both keyed by `build_id`):
-
-* `addressables_build_explicit_asset_externally_referenced_assets` — from the layout’s **ExternallyReferencedAssets** list.
-* `addressables_build_explicit_asset_internal_referenced_explicit_assets` — from **InternalReferencedExplicitAssets**.
-
-Together, these cover explicit-to-explicit dependencies the report encodes (for example prefabs in a local group referencing materials in a remote group). Dependencies that only appear as non-addressable “other” assets are in `addressables_build_explicit_asset_internal_referenced_other_assets` and `addressables_build_data_from_other_assets`; use those if you need implicit dependency closure.
-
-**1. Produce a database from your build reports** (adjust paths; on Windows use backslashes or quoted paths):
-
-```
-UnityDataTool analyze "C:\YourProject\Library\com.unity.addressables\BuildReports" -o addressables_analysis.db
-```
-
-**2. Find the `build_id`** for the report you care about (often the latest row):
-
-```
-sqlite3 addressables_analysis.db "SELECT id, name, start_time FROM addressables_builds ORDER BY id DESC LIMIT 5;"
-```
-
-Use that `id` as `:build_id` in the query below.
-
-**3. List explicit assets in a local bundle that reference an explicit asset in a remote bundle**
-
-The following uses a `UNION ALL` of the two explicit-explicit edge tables. Replace `1` with your `build_id`. Bundle `load_path` values are joined only so the `WHERE` clause can classify local vs remote bundles; they are not selected in the result. Column aliases **`local_*`** refer to the asset in the locally classified bundle (the referencing side), and **`remote_*`** to the depended-on asset in the remotely classified bundle. The **`dependency_type`** column uses short labels aligned with typical Addressables UI wording: **`explicit`** for edges from **ExternallyReferencedAssets**, and **`implicit`** for edges from **InternalReferencedExplicitAssets**. In both cases the dependency is still between **explicit addressables** in the build layout; non-addressable “other” assets are modeled separately in `addressables_build_explicit_asset_internal_referenced_other_assets` / `addressables_build_data_from_other_assets`.
-
-```sql
-SELECT
-  'explicit' AS dependency_type,
-  src.addressable_name AS local_address,
-  src.asset_path AS local_asset_path,
-  sg.name AS local_group_name,
-  tgt.addressable_name AS remote_address,
-  tgt.asset_path AS remote_asset_path,
-  tg.name AS remote_group_name
-FROM addressables_build_explicit_asset_externally_referenced_assets x
-JOIN addressables_build_explicit_assets src
-  ON src.id = x.explicit_asset_id AND src.build_id = x.build_id
-JOIN addressables_build_explicit_assets tgt
-  ON tgt.id = x.externally_referenced_asset_rid AND tgt.build_id = x.build_id
-JOIN addressables_build_bundles sb
-  ON sb.id = src.bundle AND sb.build_id = src.build_id
-JOIN addressables_build_bundles tb
-  ON tb.id = tgt.bundle AND tb.build_id = tgt.build_id
-JOIN addressables_build_groups sg
-  ON sg.guid = src.group_guid AND sg.build_id = src.build_id
-JOIN addressables_build_groups tg
-  ON tg.guid = tgt.group_guid AND tg.build_id = tgt.build_id
-WHERE x.build_id = 1
-  AND NOT (COALESCE(sb.load_path, '') LIKE 'https://%' OR COALESCE(sb.load_path, '') LIKE 'http://%')
-  AND (COALESCE(tb.load_path, '') LIKE 'https://%' OR COALESCE(tb.load_path, '') LIKE 'http://%')
-
-UNION ALL
-
-SELECT
-  'implicit' AS dependency_type,
-  src.addressable_name AS local_address,
-  src.asset_path AS local_asset_path,
-  sg.name AS local_group_name,
-  tgt.addressable_name AS remote_address,
-  tgt.asset_path AS remote_asset_path,
-  tg.name AS remote_group_name
-FROM addressables_build_explicit_asset_internal_referenced_explicit_assets iref
-JOIN addressables_build_explicit_assets src
-  ON src.id = iref.explicit_asset_id AND src.build_id = iref.build_id
-JOIN addressables_build_explicit_assets tgt
-  ON tgt.id = iref.internal_referenced_explicit_asset_rid AND tgt.build_id = iref.build_id
-JOIN addressables_build_bundles sb
-  ON sb.id = src.bundle AND sb.build_id = src.build_id
-JOIN addressables_build_bundles tb
-  ON tb.id = tgt.bundle AND tb.build_id = tgt.build_id
-JOIN addressables_build_groups sg
-  ON sg.guid = src.group_guid AND sg.build_id = src.build_id
-JOIN addressables_build_groups tg
-  ON tg.guid = tgt.group_guid AND tg.build_id = tgt.build_id
-WHERE iref.build_id = 1
-  AND NOT (COALESCE(sb.load_path, '') LIKE 'https://%' OR COALESCE(sb.load_path, '') LIKE 'http://%')
-  AND (COALESCE(tb.load_path, '') LIKE 'https://%' OR COALESCE(tb.load_path, '') LIKE 'http://%');
-```
-
-To print results from the command line:
-
-```
-sqlite3 addressables_analysis.db ".mode column" ".headers on" "<paste query with build_id adjusted>"
-```
 
 ## Example: Using AI tools to help write queries
 
@@ -355,3 +263,92 @@ Examples of alternative sources of build information:
 * The Editor log reports a lot of information during a build. 
 * Regular AssetBundle builds create [.manifest files](https://docs.unity3d.com/Manual/assetbundles-file-format.html), which contain information about the source assets and types.
 * Addressable builds do not produce BuildReport files, nor .manifest files. But UnityDataTools supports analyzing the [Addressables Build Reports](addressables-build-reports.md) and will populate the `addressables_build_explicit_assets` and `addressables_build_data_from_other_assets` tables.
+
+## Example: Local Addressable groups depending on remote groups
+
+A common sceneario when working with remote content, is to add a new piece of content to a local Addressable group that depends upon content in a remote Addressable group. Often this is fine, but if it's unexpected it can lead to the game stalling while downloading a large quantity of remote content. This example prints out content in local Addressable groups that depend upon content in remote groups.
+
+UnityDataTools does **not** store a boolean “local” or “remote” flag. Each bundle row has a **`load_path`** string (table `addressables_build_bundles`). You can classify bundles for a given project by testing that string—for example:
+
+* **Remote bundle:** `load_path` starts with `https://` or `http://` (typical for remote profiles).
+* **Local bundle:** not matched by the above (often paths containing `{UnityEngine.AddressableAssets.Addressables.RuntimePath}` or similar). You may refine this for your naming or add conditions such as non-empty `load_path` if you need to exclude odd rows.
+
+In this case we want to know about explicitly referenced assets -> that's where you have explicitly linked an asset in another bundle. And implicitly referenced assets which are assets that are dependencies of your source asset. For example prefabs in a local group explicitly referencing materials in a remote group.closure.
+
+**1. Produce a database from your build reports** (adjust paths; on Windows use backslashes or quoted paths):
+
+```
+UnityDataTool analyze "C:\YourProject\Library\com.unity.addressables\BuildReports" -o addressables_analysis.db
+```
+
+**2. Find the `build_id`** for the report you care about (often the latest row):
+
+```
+sqlite3 addressables_analysis.db "SELECT id, name, start_time FROM addressables_builds ORDER BY id DESC LIMIT 5;"
+```
+
+Use that `id` as `:build_id` in the query below.
+
+**3. List explicit assets in a local bundle that reference an explicit asset in a remote bundle**
+
+The following uses a `UNION ALL` of the two explicit-explicit edge tables. Replace `1` with your `build_id`. Bundle `load_path` values are joined only so the `WHERE` clause can classify local vs remote bundles; they are not selected in the result. Column aliases **`local_*`** refer to the asset in the locally classified bundle (the referencing side), and **`remote_*`** to the depended-on asset in the remotely classified bundle. The **`dependency_type`** column uses short labels aligned with typical Addressables UI wording: **`explicit`** for edges from **ExternallyReferencedAssets**, and **`implicit`** for edges from **InternalReferencedExplicitAssets**. In both cases the dependency is still between **explicit addressables** in the build layout; non-addressable “other” assets are modeled separately in `addressables_build_explicit_asset_internal_referenced_other_assets` / `addressables_build_data_from_other_assets`.
+
+```sql
+SELECT
+  'explicit' AS dependency_type,
+  src.addressable_name AS local_address,
+  src.asset_path AS local_asset_path,
+  sg.name AS local_group_name,
+  tgt.addressable_name AS remote_address,
+  tgt.asset_path AS remote_asset_path,
+  tg.name AS remote_group_name
+FROM addressables_build_explicit_asset_externally_referenced_assets x
+JOIN addressables_build_explicit_assets src
+  ON src.id = x.explicit_asset_id AND src.build_id = x.build_id
+JOIN addressables_build_explicit_assets tgt
+  ON tgt.id = x.externally_referenced_asset_rid AND tgt.build_id = x.build_id
+JOIN addressables_build_bundles sb
+  ON sb.id = src.bundle AND sb.build_id = src.build_id
+JOIN addressables_build_bundles tb
+  ON tb.id = tgt.bundle AND tb.build_id = tgt.build_id
+JOIN addressables_build_groups sg
+  ON sg.guid = src.group_guid AND sg.build_id = src.build_id
+JOIN addressables_build_groups tg
+  ON tg.guid = tgt.group_guid AND tg.build_id = tgt.build_id
+WHERE x.build_id = 1
+  AND NOT (COALESCE(sb.load_path, '') LIKE 'https://%' OR COALESCE(sb.load_path, '') LIKE 'http://%')
+  AND (COALESCE(tb.load_path, '') LIKE 'https://%' OR COALESCE(tb.load_path, '') LIKE 'http://%')
+
+UNION ALL
+
+SELECT
+  'implicit' AS dependency_type,
+  src.addressable_name AS local_address,
+  src.asset_path AS local_asset_path,
+  sg.name AS local_group_name,
+  tgt.addressable_name AS remote_address,
+  tgt.asset_path AS remote_asset_path,
+  tg.name AS remote_group_name
+FROM addressables_build_explicit_asset_internal_referenced_explicit_assets iref
+JOIN addressables_build_explicit_assets src
+  ON src.id = iref.explicit_asset_id AND src.build_id = iref.build_id
+JOIN addressables_build_explicit_assets tgt
+  ON tgt.id = iref.internal_referenced_explicit_asset_rid AND tgt.build_id = iref.build_id
+JOIN addressables_build_bundles sb
+  ON sb.id = src.bundle AND sb.build_id = src.build_id
+JOIN addressables_build_bundles tb
+  ON tb.id = tgt.bundle AND tb.build_id = tgt.build_id
+JOIN addressables_build_groups sg
+  ON sg.guid = src.group_guid AND sg.build_id = src.build_id
+JOIN addressables_build_groups tg
+  ON tg.guid = tgt.group_guid AND tg.build_id = tgt.build_id
+WHERE iref.build_id = 1
+  AND NOT (COALESCE(sb.load_path, '') LIKE 'https://%' OR COALESCE(sb.load_path, '') LIKE 'http://%')
+  AND (COALESCE(tb.load_path, '') LIKE 'https://%' OR COALESCE(tb.load_path, '') LIKE 'http://%');
+```
+
+To print results from the command line:
+
+```
+sqlite3 addressables_analysis.db ".mode column" ".headers on" "<paste query with build_id adjusted>"
+```
