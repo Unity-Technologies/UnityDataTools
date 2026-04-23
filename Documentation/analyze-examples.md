@@ -291,7 +291,7 @@ Use that `id` as `:build_id` in the query below.
 
 **3. List explicit assets in a local bundle that reference an explicit asset in a remote bundle**
 
-The following uses a `UNION ALL` of the two explicit-explicit edge tables. Replace `1` with your `build_id`. Bundle `load_path` values are joined only so the `WHERE` clause can classify local vs remote bundles; they are not selected in the result. Column aliases **`local_*`** refer to the asset in the locally classified bundle (the referencing side), and **`remote_*`** to the depended-on asset in the remotely classified bundle. The **`dependency_type`** column uses short labels aligned with typical Addressables UI wording: **`explicit`** for edges from **ExternallyReferencedAssets**, and **`implicit`** for edges from **InternalReferencedExplicitAssets**. In both cases the dependency is still between **explicit addressables** in the build layout; non-addressable “other” assets are modeled separately in `addressables_build_explicit_asset_internal_referenced_other_assets` / `addressables_build_data_from_other_assets`.
+The following uses a `UNION ALL` of the two explicit-explicit edge tables. Bundle `load_path` values are joined only so the `WHERE` clause can classify local vs remote bundles; they are not selected in the result. Column aliases **`local_*`** refer to the asset in the locally classified bundle (the referencing side), and **`remote_*`** to the depended-on asset in the remotely classified bundle. The **`dependency_type`** column uses short labels aligned with typical Addressables UI wording: **`explicit`** for edges from **ExternallyReferencedAssets**, and **`implicit`** for edges from **InternalReferencedExplicitAssets**. In both cases the dependency is still between **explicit addressables** in the build layout; non-addressable “other” assets are modeled separately in `addressables_build_explicit_asset_internal_referenced_other_assets` / `addressables_build_data_from_other_assets`.
 
 ```sql
 SELECT
@@ -315,7 +315,7 @@ JOIN addressables_build_groups sg
   ON sg.guid = src.group_guid AND sg.build_id = src.build_id
 JOIN addressables_build_groups tg
   ON tg.guid = tgt.group_guid AND tg.build_id = tgt.build_id
-WHERE x.build_id = 1
+WHERE x.build_id = :build_id
   AND NOT (COALESCE(sb.load_path, '') LIKE 'https://%' OR COALESCE(sb.load_path, '') LIKE 'http://%')
   AND (COALESCE(tb.load_path, '') LIKE 'https://%' OR COALESCE(tb.load_path, '') LIKE 'http://%')
 
@@ -342,13 +342,15 @@ JOIN addressables_build_groups sg
   ON sg.guid = src.group_guid AND sg.build_id = src.build_id
 JOIN addressables_build_groups tg
   ON tg.guid = tgt.group_guid AND tg.build_id = tgt.build_id
-WHERE iref.build_id = 1
+WHERE iref.build_id = :build_id
   AND NOT (COALESCE(sb.load_path, '') LIKE 'https://%' OR COALESCE(sb.load_path, '') LIKE 'http://%')
   AND (COALESCE(tb.load_path, '') LIKE 'https://%' OR COALESCE(tb.load_path, '') LIKE 'http://%');
 ```
 
-To print results from the command line:
+To print results from the command line, save the query to a file (e.g. `query.sql`) and run:
 
 ```
-sqlite3 addressables_analysis.db ".mode column" ".headers on" "<paste query with build_id adjusted>"
+sqlite3 addressables_analysis.db ".mode column" ".headers on" ".param set :build_id 1" ".read query.sql"
 ```
+
+Replace `1` with the `build_id` value found in step 2.
