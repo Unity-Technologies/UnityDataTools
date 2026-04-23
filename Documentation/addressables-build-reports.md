@@ -127,7 +127,6 @@ SELECT a.explicit_asset_id, b.id, b.asset_path
        addressables_build_data_from_other_assets b
  WHERE a.internal_referenced_other_asset_rid = b.id
    AND a.build_id = b.build_id
-   AND b.build_id = a.build_id
    AND a.explicit_asset_id = 5092
    AND a.build_id = 3;
 ```
