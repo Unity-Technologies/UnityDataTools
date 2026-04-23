@@ -56,7 +56,7 @@ Map groups to their schemas
 
 #### `addressables_build_schemas`
 Contain schema names.
-  * id maps to addressables_build_schemas.id
+  * id is referenced by `addressables_build_group_schemas.schema_rid` and `addressables_build_schema_data_pairs.schema_id`
 
 #### `addressables_build_schema_data_pairs`
 Contains key value pairs of schema settings at time of build.
