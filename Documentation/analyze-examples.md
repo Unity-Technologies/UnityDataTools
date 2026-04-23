@@ -266,7 +266,7 @@ Examples of alternative sources of build information:
 
 ## Example: Local Addressable groups depending on remote groups
 
-A common sceneario when working with remote content, is to add a new piece of content to a local Addressable group that depends upon content in a remote Addressable group. Often this is fine, but if it's unexpected it can lead to the game stalling while downloading a large quantity of remote content. This example prints out content in local Addressable groups that depend upon content in remote groups.
+A common scenario when working with remote content, is to add a new piece of content to a local Addressable group that depends upon content in a remote Addressable group. Often this is fine, but if it's unexpected it can lead to the game stalling while downloading a large quantity of remote content. This example prints out content in local Addressable groups that depend upon content in remote groups.
 
 UnityDataTools does **not** store a boolean “local” or “remote” flag. Each bundle row has a **`load_path`** string (table `addressables_build_bundles`). You can classify bundles for a given project by testing that string—for example:
 
