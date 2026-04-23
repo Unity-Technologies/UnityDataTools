@@ -273,7 +273,7 @@ UnityDataTools does **not** store a boolean “local” or “remote” flag. Ea
 * **Remote bundle:** `load_path` starts with `https://` or `http://` (typical for remote profiles).
 * **Local bundle:** not matched by the above (often paths containing `{UnityEngine.AddressableAssets.Addressables.RuntimePath}` or similar). You may refine this for your naming or add conditions such as non-empty `load_path` if you need to exclude odd rows.
 
-In this case we want to know about explicitly referenced assets -> that's where you have explicitly linked an asset in another bundle. And implicitly referenced assets which are assets that are dependencies of your source asset. For example prefabs in a local group explicitly referencing materials in a remote group.closure.
+In this case, we want to know about both explicitly referenced assets and implicitly referenced assets. Explicitly referenced assets are assets that you have directly linked in another bundle, while implicitly referenced assets are dependencies of your source asset. For example, a prefab in a local group may explicitly reference a material in a remote group.
 
 **1. Produce a database from your build reports** (adjust paths; on Windows use backslashes or quoted paths):
 
