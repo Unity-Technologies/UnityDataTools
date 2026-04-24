@@ -51,14 +51,14 @@ Contains groups used in the build and whether they're pack separate or together.
 
 #### `addressables_build_group_schemas`
 Map groups to their schemas
-  * schema_rid maps to addressables_group_schemas.id
+  * schema_rid maps to addressables_build_schemas.id
   * group_id maps to addressables_build_groups.id
 
 #### `addressables_build_schemas`
 Contain schema names.
-  * id maps to addressables_group_schemas.id
+  * id is referenced by `addressables_build_group_schemas.schema_rid` and `addressables_build_schema_data_pairs.schema_id`
 
-#### `add_build_schema_data_pairs`
+#### `addressables_build_schema_data_pairs`
 Contains key value pairs of schema settings at time of build.
   * schema_id maps to addressables_build_schemas.id
 
@@ -83,8 +83,8 @@ Explicit assets (marked as Addressable). Has Addressable name and asset informat
 
 #### `addressables_build_explicit_asset_internal_referenced_other_assets`
 Map explicit assets to other assets they refer to. For instance a prefab to its underlying FBX
-  * referencing_asset_rid maps to addressables_build_explicit_assets.id
-  * data_from_other_asset_Id maps to addressables_build_data_from_other_assets.id
+  * explicit_asset_id maps to addressables_build_explicit_assets.id
+  * internal_referenced_other_asset_rid maps to addressables_build_data_from_other_assets.id
 
 #### `addressables_build_data_from_other_assets`
 Assets added into the build implicitly by explicitly defined assets.
@@ -110,6 +110,10 @@ UnityDataTools.exe "C:\\Temp\\MyExtractedFiles" -o "addressables_analysis.db" -p
 
 You can analyze a directory with both asset bundles (*.bundle) and json files (*.json) at the same time.
 
+### Cross-group dependencies (local → remote)
+
+To find explicit addressable assets whose bundle is classified as **local** (for example by `load_path`) but that depend on explicit addressables in **remote** bundles, see [Example: Local Addressable groups depending on remote groups](analyze-examples.md#example-local-addressable-groups-depending-on-remote-groups) in analyze-examples.md.
+
 ### Sample Queries
 
 Once the data is in the database, you can run queries to analyze your Addressables build:
@@ -118,12 +122,12 @@ Once the data is in the database, you can run queries to analyze your Addressabl
 #### Find all implicit assets for an explicit asset
 ```sql
 -- Find implicitly included assets for a given explicit asset id
-SELECT a.explicit_asset_id, b.id, b.asset_path, b.asset_path 
-  FROM addressables_build_explicit_asset_internal_referenced_other_assets a, 
+SELECT a.explicit_asset_id, b.id, b.asset_path
+  FROM addressables_build_explicit_asset_internal_referenced_other_assets a,
        addressables_build_data_from_other_assets b
- WHERE a.internal_referenced_other_asset_rid = b.id 
-   AND a.build_id = b.build_id;
-   AND a.explicit_asset_id = 5092 
+ WHERE a.internal_referenced_other_asset_rid = b.id
+   AND a.build_id = b.build_id
+   AND a.explicit_asset_id = 5092
    AND a.build_id = 3;
 ```
 
