@@ -32,125 +32,123 @@ public class TextDumperTool
 
     public int Dump(DumpOptions options)
     {
-        var path = options.Path;
-        var outputPath = options.OutputPath;
-        var toStdout = options.ToStdout;
-
         m_SkipLargeArrays = options.SkipLargeArrays;
 
         try
         {
-            if (!File.Exists(path))
+            if (!File.Exists(options.Path))
             {
-                Console.Error.WriteLine($"Error: File not found: {path}");
+                Console.Error.WriteLine($"Error: File not found: {options.Path}");
                 return 1;
             }
 
-            if (ArchiveDetector.IsUnityArchive(path))
-            {
-                // The input is a Unity archive (e.g. AssetBundle); dump each serialized file inside it.
-                using var archive = UnityFileSystem.MountArchive(path, "/");
+            if (ArchiveDetector.IsUnityArchive(options.Path))
+                return DumpArchive(options);
 
-                if (toStdout)
-                {
-                    ArchiveNode? singleSerializedFile = null;
-                    int serializedFileCount = 0;
-                    foreach (var node in archive.Nodes)
-                    {
-                        if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                        {
-                            ++serializedFileCount;
-                            singleSerializedFile ??= node;
-                        }
-                    }
-
-                    if (serializedFileCount == 0)
-                    {
-                        Console.Error.WriteLine("Error: Archive contains no SerializedFiles.");
-                        return 1;
-                    }
-
-                    if (serializedFileCount > 1)
-                    {
-                        Console.Error.WriteLine($"Error: --stdout cannot be used with an archive containing multiple SerializedFiles ({serializedFileCount} found).");
-                        Console.Error.WriteLine("Extract the archive first, or pass an individual SerializedFile as input.");
-                        return 1;
-                    }
-
-                    var node2 = singleSerializedFile.Value;
-                    Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
-                    m_Writer = Console.Out;
-                    OutputSerializedFile("/" + node2.Path, options);
-                    m_Writer.Flush();
-                }
-                else
-                {
-                    foreach (var node in archive.Nodes)
-                    {
-                        Console.WriteLine($"Processing {node.Path} {node.Size} {node.Flags}");
-
-                        if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                        {
-                            using var writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false);
-                            m_Writer = writer;
-                            OutputSerializedFile("/" + node.Path, options);
-                        }
-                    }
-                }
-            }
-            else if (YamlSerializedFileDetector.IsYamlSerializedFile(path))
+            if (YamlSerializedFileDetector.IsYamlSerializedFile(options.Path))
             {
                 Console.Error.WriteLine("Error: The file is a YAML-format SerializedFile, which is not supported.");
                 Console.Error.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
                 return 1;
             }
-            else if (SerializedFileDetector.TryDetectSerializedFile(path, out _))
-            {
-                // The input is a binary SerializedFile; dump it directly.
-                try
-                {
-                    if (toStdout)
-                    {
-                        m_Writer = Console.Out;
-                        OutputSerializedFile(path, options);
-                        m_Writer.Flush();
-                    }
-                    else
-                    {
-                        using var writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false);
-                        m_Writer = writer;
-                        OutputSerializedFile(path, options);
-                    }
-                }
-                catch (SerializedFileOpenException)
-                {
-                    var hint = SerializedFileDetector.GetOpenFailureHint(path);
-                    if (hint != null)
-                    {
-                        Console.Error.WriteLine();
-                        Console.Error.WriteLine(hint);
-                    }
-                    return 1;
-                }
-                catch (Exception e)
-                {
-                    Console.Error.WriteLine($"Error: {e.GetType()}: {e.Message}");
-                    Console.Error.WriteLine(e.StackTrace);
-                    return 1;
-                }
-            }
-            else
-            {
-                Console.Error.WriteLine("Error: The file does not appear to be a valid Unity SerializedFile or Unity Archive.");
-                Console.Error.WriteLine($"File: {path}");
-                return 1;
-            }
+
+            if (SerializedFileDetector.TryDetectSerializedFile(options.Path, out _))
+                return DumpSerializedFile(options);
+
+            Console.Error.WriteLine("Error: The file does not appear to be a valid Unity SerializedFile or Unity Archive.");
+            Console.Error.WriteLine($"File: {options.Path}");
+            return 1;
         }
         catch (Exception e)
         {
             Console.Error.WriteLine($"Error: {e.GetType()}: {e.Message}");
             Console.Error.WriteLine(e.StackTrace);
             return 1;
+        }
+    }
+
+    int DumpSerializedFile(DumpOptions options)
+    {
+        try
+        {
+            if (options.ToStdout)
+            {
+                m_Writer = Console.Out;
+                OutputSerializedFile(options.Path, options);
+                m_Writer.Flush();
+            }
+            else
+            {
+                using var writer = new StreamWriter(Path.Combine(options.OutputPath, Path.GetFileName(options.Path) + ".txt"), false);
+                m_Writer = writer;
+                OutputSerializedFile(options.Path, options);
+            }
+        }
+        catch (SerializedFileOpenException)
+        {
+            var hint = SerializedFileDetector.GetOpenFailureHint(options.Path);
+            if (hint != null)
+            {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(hint);
+            }
+            return 1;
+        }
+
+        return 0;
+    }
+
+    // For convenience we also support directly dumping serialized files that are inside an archive,
+    // so that its not necessary to use `archive extract` if you only want to see values from the object serialization.
+    int DumpArchive(DumpOptions options)
+    {
+        using var archive = UnityFileSystem.MountArchive(options.Path, "/");
+
+        if (options.ToStdout)
+        {
+            ArchiveNode? singleSerializedFile = null;
+            int serializedFileCount = 0;
+            foreach (var node in archive.Nodes)
+            {
+                if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
+                {
+                    ++serializedFileCount;
+                    singleSerializedFile ??= node;
+                }
+            }
+
+            if (serializedFileCount == 0)
+            {
+                Console.Error.WriteLine("Error: Archive contains no SerializedFiles.");
+                return 1;
+            }
+
+            if (serializedFileCount > 1)
+            {
+                Console.Error.WriteLine($"Error: --stdout cannot be used with an archive containing multiple SerializedFiles ({serializedFileCount} found).");
+                Console.Error.WriteLine("Extract the archive first, or pass an individual SerializedFile as input.");
+                return 1;
+            }
+
+            var node2 = singleSerializedFile.Value;
+            Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
+            m_Writer = Console.Out;
+            OutputSerializedFile("/" + node2.Path, options);
+            m_Writer.Flush();
+        }
+        else
+        {
+            foreach (var node in archive.Nodes)
+            {
+                Console.WriteLine($"Processing {node.Path} {node.Size} {node.Flags}");
+
+                if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
+                {
+                    using var writer = new StreamWriter(Path.Combine(options.OutputPath, Path.GetFileName(node.Path) + ".txt"), false);
+                    m_Writer = writer;
+                    OutputSerializedFile("/" + node.Path, options);
+                }
+            }
         }
 
         return 0;
