@@ -14,12 +14,34 @@ public class TextDumperTool
     SerializedFile m_SerializedFile;
     TextWriter m_Writer;
 
-    public int Dump(string path, string outputPath, bool skipLargeArrays, long objectId = 0, string typeFilter = null, bool toStdout = false)
+    public enum DumpFormat
     {
+        Text,
+    }
+
+    public class DumpOptions
+    {
+        public DumpFormat Format { get; init; } = DumpFormat.Text;
+        public string Path { get; init; }
+        public string OutputPath { get; init; }
+        public bool SkipLargeArrays { get; init; }
+        public long ObjectId { get; init; }
+        public string TypeFilter { get; init; }
+        public bool ToStdout { get; init; }
+    }
+
+    public int Dump(DumpOptions options)
+    {
+        var path = options.Path;
+        var outputPath = options.OutputPath;
+        var objectId = options.ObjectId;
+        var typeFilter = options.TypeFilter;
+        var toStdout = options.ToStdout;
+
         if (string.IsNullOrWhiteSpace(typeFilter))
             typeFilter = null;
 
-        m_SkipLargeArrays = skipLargeArrays;
+        m_SkipLargeArrays = options.SkipLargeArrays;
 
         try
         {
