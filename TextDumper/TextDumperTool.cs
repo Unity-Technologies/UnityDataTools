@@ -154,6 +154,78 @@ public class TextDumperTool
         return 0;
     }
 
+    void OutputSerializedFile(string path, DumpOptions options)
+    {
+        var objectId = options.ObjectId;
+        var typeFilter = string.IsNullOrWhiteSpace(options.TypeFilter) ? null : options.TypeFilter;
+        bool filtered = objectId != 0 || typeFilter != null;
+
+        int filterTypeId = 0;
+        bool filterByTypeId = typeFilter != null && int.TryParse(typeFilter, out filterTypeId);
+
+        using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
+        using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
+        {
+            // External references provide context for PPtrs across the whole file. Skip them when a
+            // filter is in use - the output is about a specific object, and `sf externalrefs` is the
+            // dedicated command for listing external refs.
+            if (!filtered)
+            {
+                var i = 1;
+
+                m_Writer.WriteLine("External References");
+                foreach (var extRef in m_SerializedFile.ExternalReferences)
+                {
+                    m_Writer.WriteLine($"path({i}): \"{extRef.Path}\" GUID: {extRef.Guid} Type: {(int)extRef.Type}");
+                    ++i;
+                }
+                m_Writer.WriteLine();
+            }
+
+            bool dumpedObject = false;
+            foreach (var obj in m_SerializedFile.Objects)
+            {
+                if (objectId != 0 && obj.Id != objectId)
+                    continue;
+
+                var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
+
+                if (typeFilter != null)
+                {
+                    if (filterByTypeId)
+                    {
+                        if (obj.TypeId != filterTypeId)
+                            continue;
+                    }
+                    else
+                    {
+                        var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
+                        // GetTypeName returns the id as a string when the type is unknown;
+                        // fall back to the TypeTree root node for script types.
+                        if (typeName == obj.TypeId.ToString())
+                            typeName = root.Type;
+                        if (!string.Equals(typeName, typeFilter, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                    }
+                }
+
+                var offset = obj.Offset;
+
+                m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
+                RecursiveDump(root, ref offset, 0);
+                m_Writer.WriteLine();
+                dumpedObject = true;
+            }
+
+            if ((objectId != 0 || typeFilter != null) && !dumpedObject)
+            {
+                if (objectId != 0)
+                    m_Writer.WriteLine($"Object with ID {objectId} not found.");
+                else
+                    m_Writer.WriteLine($"No objects found matching type \"{typeFilter}\".");
+            }
+        }
+    }
 
     void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1)
     {
@@ -437,79 +509,6 @@ public class TextDumperTool
         }
 
         return true;
-    }
-
-    void OutputSerializedFile(string path, DumpOptions options)
-    {
-        var objectId = options.ObjectId;
-        var typeFilter = string.IsNullOrWhiteSpace(options.TypeFilter) ? null : options.TypeFilter;
-        bool filtered = objectId != 0 || typeFilter != null;
-
-        int filterTypeId = 0;
-        bool filterByTypeId = typeFilter != null && int.TryParse(typeFilter, out filterTypeId);
-
-        using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
-        using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
-        {
-            // External references provide context for PPtrs across the whole file. Skip them when a
-            // filter is in use - the output is about a specific object, and `sf externalrefs` is the
-            // dedicated command for listing external refs.
-            if (!filtered)
-            {
-                var i = 1;
-
-                m_Writer.WriteLine("External References");
-                foreach (var extRef in m_SerializedFile.ExternalReferences)
-                {
-                    m_Writer.WriteLine($"path({i}): \"{extRef.Path}\" GUID: {extRef.Guid} Type: {(int)extRef.Type}");
-                    ++i;
-                }
-                m_Writer.WriteLine();
-            }
-
-            bool dumpedObject = false;
-            foreach (var obj in m_SerializedFile.Objects)
-            {
-                if (objectId != 0 && obj.Id != objectId)
-                    continue;
-
-                var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
-
-                if (typeFilter != null)
-                {
-                    if (filterByTypeId)
-                    {
-                        if (obj.TypeId != filterTypeId)
-                            continue;
-                    }
-                    else
-                    {
-                        var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
-                        // GetTypeName returns the id as a string when the type is unknown;
-                        // fall back to the TypeTree root node for script types.
-                        if (typeName == obj.TypeId.ToString())
-                            typeName = root.Type;
-                        if (!string.Equals(typeName, typeFilter, StringComparison.OrdinalIgnoreCase))
-                            continue;
-                    }
-                }
-
-                var offset = obj.Offset;
-
-                m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
-                RecursiveDump(root, ref offset, 0);
-                m_Writer.WriteLine();
-                dumpedObject = true;
-            }
-
-            if ((objectId != 0 || typeFilter != null) && !dumpedObject)
-            {
-                if (objectId != 0)
-                    m_Writer.WriteLine($"Object with ID {objectId} not found.");
-                else
-                    m_Writer.WriteLine($"No objects found matching type \"{typeFilter}\".");
-            }
-        }
     }
 
     string ReadValue(TypeTreeNode node, long offset)
