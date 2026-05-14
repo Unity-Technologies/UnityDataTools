@@ -34,12 +34,7 @@ public class TextDumperTool
     {
         var path = options.Path;
         var outputPath = options.OutputPath;
-        var objectId = options.ObjectId;
-        var typeFilter = options.TypeFilter;
         var toStdout = options.ToStdout;
-
-        if (string.IsNullOrWhiteSpace(typeFilter))
-            typeFilter = null;
 
         m_SkipLargeArrays = options.SkipLargeArrays;
 
@@ -85,7 +80,7 @@ public class TextDumperTool
                     var node2 = singleSerializedFile.Value;
                     Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
                     m_Writer = Console.Out;
-                    OutputSerializedFile("/" + node2.Path, objectId, typeFilter);
+                    OutputSerializedFile("/" + node2.Path, options);
                     m_Writer.Flush();
                 }
                 else
@@ -98,7 +93,7 @@ public class TextDumperTool
                         {
                             using var writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(node.Path) + ".txt"), false);
                             m_Writer = writer;
-                            OutputSerializedFile("/" + node.Path, objectId, typeFilter);
+                            OutputSerializedFile("/" + node.Path, options);
                         }
                     }
                 }
@@ -117,14 +112,14 @@ public class TextDumperTool
                     if (toStdout)
                     {
                         m_Writer = Console.Out;
-                        OutputSerializedFile(path, objectId, typeFilter);
+                        OutputSerializedFile(path, options);
                         m_Writer.Flush();
                     }
                     else
                     {
                         using var writer = new StreamWriter(Path.Combine(outputPath, Path.GetFileName(path) + ".txt"), false);
                         m_Writer = writer;
-                        OutputSerializedFile(path, objectId, typeFilter);
+                        OutputSerializedFile(path, options);
                     }
                 }
                 catch (SerializedFileOpenException)
@@ -446,23 +441,33 @@ public class TextDumperTool
         return true;
     }
 
-    void OutputSerializedFile(string path, long objectId, string typeFilter)
+    void OutputSerializedFile(string path, DumpOptions options)
     {
+        var objectId = options.ObjectId;
+        var typeFilter = string.IsNullOrWhiteSpace(options.TypeFilter) ? null : options.TypeFilter;
+        bool filtered = objectId != 0 || typeFilter != null;
+
         int filterTypeId = 0;
         bool filterByTypeId = typeFilter != null && int.TryParse(typeFilter, out filterTypeId);
 
         using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
         using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
         {
-            var i = 1;
-
-            m_Writer.WriteLine("External References");
-            foreach (var extRef in m_SerializedFile.ExternalReferences)
+            // External references provide context for PPtrs across the whole file. Skip them when a
+            // filter is in use - the output is about a specific object, and `sf externalrefs` is the
+            // dedicated command for listing external refs.
+            if (!filtered)
             {
-                m_Writer.WriteLine($"path({i}): \"{extRef.Path}\" GUID: {extRef.Guid} Type: {(int)extRef.Type}");
-                ++i;
+                var i = 1;
+
+                m_Writer.WriteLine("External References");
+                foreach (var extRef in m_SerializedFile.ExternalReferences)
+                {
+                    m_Writer.WriteLine($"path({i}): \"{extRef.Path}\" GUID: {extRef.Guid} Type: {(int)extRef.Type}");
+                    ++i;
+                }
+                m_Writer.WriteLine();
             }
-            m_Writer.WriteLine();
 
             bool dumpedObject = false;
             foreach (var obj in m_SerializedFile.Objects)
