@@ -93,10 +93,12 @@ public static class Program
             var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
             var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
             var typeOpt = new Option<string>(aliases: new[] { "--type", "-t" }, description: "Filter by object type (ClassID number or type name)");
+            var stdoutOpt = new Option<bool>(aliases: new[] { "--stdout" }, description: "Write the dump to stdout instead of a file. Refused for archives that contain more than one SerializedFile.");
 
             var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: typeTreeDataDescription);
 
-            var dumpCommand = new Command("dump", "Dump the contents of an AssetBundle or SerializedFile.")
+            var dumpCommand = new Command("dump",
+                "Dump serialized objects from a SerializedFile as text. For an archive, dumps the objects from each SerializedFile\n  ▎ inside; other archive content is ignored (use archive extract for that).")
             {
                 pathArg,
                 fOpt,
@@ -105,15 +107,27 @@ public static class Program
                 objectIdOpt,
                 typeOpt,
                 dOpt,
+                stdoutOpt,
             };
+            dumpCommand.AddValidator(commandResult =>
+            {
+                var stdoutResult = commandResult.FindResultFor(stdoutOpt);
+                var oResult = commandResult.FindResultFor(oOpt);
+                bool stdoutSet = stdoutResult is { IsImplicit: false };
+                bool oExplicit = oResult is { IsImplicit: false };
+                if (stdoutSet && oExplicit)
+                {
+                    commandResult.ErrorMessage = "--stdout and -o/--output-path are mutually exclusive.";
+                }
+            });
             dumpCommand.SetHandler(
-                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId, string type, FileInfo d) =>
+                (FileInfo fi, DumpFormat f, bool s, DirectoryInfo o, long objectId, string type, FileInfo d, bool toStdout) =>
                 {
                     var ttResult = LoadTypeTreeDataFile(d);
                     if (ttResult != 0) return Task.FromResult(ttResult);
-                    return Task.FromResult(HandleDump(fi, f, s, o, objectId, type));
+                    return Task.FromResult(HandleDump(fi, f, s, o, objectId, type, toStdout));
                 },
-                pathArg, fOpt, sOpt, oOpt, objectIdOpt, typeOpt, dOpt);
+                pathArg, fOpt, sOpt, oOpt, objectIdOpt, typeOpt, dOpt, stdoutOpt);
 
             rootCommand.AddCommand(dumpCommand);
         }
@@ -315,14 +329,14 @@ public static class Program
         }
     }
 
-    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder, long objectId = 0, string typeFilter = null)
+    static int HandleDump(FileInfo filename, DumpFormat format, bool skipLargeArrays, DirectoryInfo outputFolder, long objectId = 0, string typeFilter = null, bool toStdout = false)
     {
         switch (format)
         {
             case DumpFormat.Text:
             {
                 var textDumper = new TextDumperTool();
-                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId, typeFilter);
+                return textDumper.Dump(filename.FullName, outputFolder.FullName, skipLargeArrays, objectId, typeFilter, toStdout);
             }
         }
 
