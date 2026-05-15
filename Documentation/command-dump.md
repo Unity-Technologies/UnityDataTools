@@ -12,6 +12,7 @@ UnityDataTool dump <path> [options]
 |--------|-------------|---------|
 | `<path>` | Path to file to dump | *(required)* |
 | `-o, --output-path <path>` | Output folder | Current folder |
+| `--stdout` | Write the dump to stdout (status and errors go to stderr). Mutually exclusive with `-o`. | `false` |
 | `-f, --output-format <format>` | Output format | `text` |
 | `-s, --skip-large-arrays` | Skip dumping large arrays | `false` |
 | `-i, --objectid <id>` | Only dump object with this ID | All objects |
@@ -54,6 +55,26 @@ Dump the AssetBundle manifest object:
 ```bash
 UnityDataTool dump mybundle -t AssetBundle
 ```
+
+Write the dump to stdout and pipe it through another tool:
+```bash
+UnityDataTool dump /path/to/file --stdout | grep "ClassID: 114"
+```
+
+---
+
+## Writing to stdout
+
+Use `--stdout` to send the dump to standard output instead of writing a `.txt` file. Status messages (the `Processing ...` line, errors, and stack traces) are routed to stderr so the dump on stdout is clean for piping or redirecting.
+
+```bash
+UnityDataTool dump /path/to/file --stdout > my-dump.txt
+```
+
+Restrictions:
+
+- `--stdout` and `-o` are mutually exclusive.
+- For Unity archives that contain more than one SerializedFile, `--stdout` is refused — there is no unambiguous way to deliver multiple files on a single stream. Pass an individual SerializedFile, or omit `--stdout` to get one `.txt` per SerializedFile in the output folder.
 
 ---
 
@@ -124,7 +145,7 @@ UnityDataTool dump /path/to/file.bundle --typetree-data /path/to/typetree.bin
 
 ## Output Format
 
-The output is similar to Unity's `binary2text` tool. Each file begins with external references:
+The output is similar to Unity's `binary2text` tool. Unfiltered dumps begin with external references (when filtering with `-i` or `-t` this section is omitted — use the [`serialized-file externalrefs`](#) command if you want them separately):
 
 ```
 External References

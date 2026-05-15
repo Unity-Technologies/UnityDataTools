@@ -5,12 +5,9 @@ file (AssetBundle or SerializedFile) into human-readable yaml-style text file.
 
 ## How to use
 
-The library consists of a single class called [TextDumperTool](../TextDumper/TextDumperTool.cs). It has a method named Dump and takes five parameters:
-* path (string): path of the data file.
-* outputPath (string): path where the output files will be created.
-* skipLargeArrays (bool): if true, the content of arrays larger than 1KB won't be dumped.
-* objectId (long, optional): if specified and not 0, only the object with this signed 64-bit id will be dumped. If 0 (default), all objects are dumped.
-* typeFilter (string, optional): if specified, only objects matching this type are dumped. Accepts a numeric ClassID (e.g. 114) or a type name (e.g. MonoBehaviour, case-insensitive).
+The library consists of a single class called [TextDumperTool](../TextDumper/TextDumperTool.cs). Call its `Dump` method, passing a `TextDumperTool.DumpOptions` object that specify the path of the file to dump and various flags and options.
+
+The library is used to implement the [`UnityDataTool dump` command](command-dump.md).
 
 ## How to interpret the output files
 
@@ -18,7 +15,7 @@ There will be one output file per SerializedFile. Depending on the type of the i
 be more than one output file (e.g. AssetBundles are archives that can contain several
 SerializedFiles).
 
-The first lines of the output file looks like this:
+For an unfiltered dump, the first lines of the output file look like this (when `ObjectId` or `TypeFilter` are set the External References section is omitted, and the output starts directly with the matching object entries):
 
     External References
     path(1): "Library/unity default resources" GUID: 0000000000000000e000000000000000 Type: 0

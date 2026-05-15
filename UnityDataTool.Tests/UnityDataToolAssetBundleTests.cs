@@ -149,6 +149,36 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     }
 
     [Test]
+    public async Task DumpText_Stdout_WritesDumpToStdout()
+    {
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
+        var unwantedOutputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
+
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", path, "--stdout" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        Assert.IsFalse(File.Exists(unwantedOutputFile), "--stdout should not also write a .txt file");
+
+        var content = sw.ToString();
+        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
+
+        // Normalize line endings.
+        content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");
+        expected = Regex.Replace(expected, @"\r\n|\n\r|\r", "\n");
+
+        Assert.AreEqual(expected, content);
+    }
+
+    [Test]
     public async Task DumpText_TypeFilterByName_OnlyMatchingObjectsDumped()
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
