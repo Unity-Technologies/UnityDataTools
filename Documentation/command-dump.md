@@ -145,7 +145,7 @@ UnityDataTool dump /path/to/file.bundle --typetree-data /path/to/typetree.bin
 
 ## Output Format
 
-The output is similar to Unity's `binary2text` tool. Each file begins with external references:
+The output is similar to Unity's `binary2text` tool. Unfiltered dumps begin with external references (when filtering with `-i` or `-t` this section is omitted — use the [`serialized-file externalrefs`](#) command if you want them separately):
 
 ```
 External References

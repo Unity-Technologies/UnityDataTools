@@ -99,7 +99,7 @@ public class TextDumperTool
     }
 
     // For convenience we also support directly dumping serialized files that are inside an archive,
-    // so that its not necessary to use `archive extract` if you only want to see values from the object serialization.
+    // so that it's not necessary to use `archive extract` if you only want to see values from the object serialization.
     int DumpArchive(DumpOptions options)
     {
         using var archive = UnityFileSystem.MountArchive(options.Path, "/");

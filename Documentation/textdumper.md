@@ -15,7 +15,7 @@ There will be one output file per SerializedFile. Depending on the type of the i
 be more than one output file (e.g. AssetBundles are archives that can contain several
 SerializedFiles).
 
-The first lines of the output file looks like this:
+For an unfiltered dump, the first lines of the output file look like this (when `ObjectId` or `TypeFilter` are set the External References section is omitted, and the output starts directly with the matching object entries):
 
     External References
     path(1): "Library/unity default resources" GUID: 0000000000000000e000000000000000 Type: 0

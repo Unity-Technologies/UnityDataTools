@@ -12,6 +12,7 @@ public class DumpTests
     private string m_TestDataFolder;
     private string m_SerializedFilePath;
     private string m_ResourceFilePath;
+    private string m_MultiSerializedFileArchivePath;
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -19,6 +20,7 @@ public class DumpTests
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data");
         m_SerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "level0");
         m_ResourceFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets0.assets.resS");
+        m_MultiSerializedFileArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
     }
 
     [Test]
@@ -97,6 +99,72 @@ public class DumpTests
 
         var output = sw.ToString();
         Assert.That(output, Does.Not.Contain("External References"));
+    }
+
+    [Test]
+    public async Task Dump_Stdout_FilterByType_DoesNotIncludeExternalReferences()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializedFilePath, "--stdout", "-t", "RenderSettings" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        var output = sw.ToString();
+        Assert.That(output, Does.Contain("(ClassID: 104)"));
+        Assert.That(output, Does.Not.Contain("External References"));
+    }
+
+    [Test]
+    public async Task Dump_Stdout_WithOutputPath_ReturnsError()
+    {
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+            Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_SerializedFilePath, "--stdout", "-o", m_TestDataFolder }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+
+        Assert.That(swErr.ToString(), Does.Contain("--stdout and -o/--output-path are mutually exclusive."));
+    }
+
+    [Test]
+    public async Task Dump_Stdout_MultipleSerializedFilesArchive_Refused()
+    {
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+            Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_MultiSerializedFileArchivePath, "--stdout", "-t", "MonoBehaviour" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+
+        var err = swErr.ToString();
+        Assert.That(err, Does.Contain("--stdout cannot be used with an archive containing multiple SerializedFiles"));
+        Assert.That(err, Does.Contain("(5 found)"));
     }
 
     [Test]

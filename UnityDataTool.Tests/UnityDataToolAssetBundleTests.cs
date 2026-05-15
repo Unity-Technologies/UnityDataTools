@@ -152,6 +152,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     public async Task DumpText_Stdout_WritesDumpToStdout()
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
+        var unwantedOutputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
 
         using var sw = new StringWriter();
         var currentOut = Console.Out;
@@ -164,6 +165,8 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
         {
             Console.SetOut(currentOut);
         }
+
+        Assert.IsFalse(File.Exists(unwantedOutputFile), "--stdout should not also write a .txt file");
 
         var content = sw.ToString();
         var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
