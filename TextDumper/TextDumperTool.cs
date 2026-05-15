@@ -9,7 +9,10 @@ namespace UnityDataTools.TextDumper;
 public class TextDumperTool
 {
     StringBuilder m_StringBuilder = new StringBuilder(1024);
-    bool m_SkipLargeArrays;
+    DumpOptions m_Options;
+    string m_TypeFilter;     // m_Options.TypeFilter normalized: null when blank/unset, otherwise the user-provided string
+    bool m_FilterByTypeId;   // true when m_TypeFilter parses as a ClassID (numeric)
+    int m_FilterTypeId;      // valid only when m_FilterByTypeId is true
     UnityFileReader m_Reader;
     SerializedFile m_SerializedFile;
     TextWriter m_Writer;
@@ -32,31 +35,33 @@ public class TextDumperTool
 
     public int Dump(DumpOptions options)
     {
-        m_SkipLargeArrays = options.SkipLargeArrays;
+        m_Options = options;
+        m_TypeFilter = string.IsNullOrWhiteSpace(m_Options.TypeFilter) ? null : m_Options.TypeFilter;
+        m_FilterByTypeId = m_TypeFilter != null && int.TryParse(m_TypeFilter, out m_FilterTypeId);
 
         try
         {
-            if (!File.Exists(options.Path))
+            if (!File.Exists(m_Options.Path))
             {
-                Console.Error.WriteLine($"Error: File not found: {options.Path}");
+                Console.Error.WriteLine($"Error: File not found: {m_Options.Path}");
                 return 1;
             }
 
-            if (ArchiveDetector.IsUnityArchive(options.Path))
-                return DumpArchive(options);
+            if (ArchiveDetector.IsUnityArchive(m_Options.Path))
+                return DumpArchive();
 
-            if (YamlSerializedFileDetector.IsYamlSerializedFile(options.Path))
+            if (YamlSerializedFileDetector.IsYamlSerializedFile(m_Options.Path))
             {
                 Console.Error.WriteLine("Error: The file is a YAML-format SerializedFile, which is not supported.");
                 Console.Error.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
                 return 1;
             }
 
-            if (SerializedFileDetector.TryDetectSerializedFile(options.Path, out _))
-                return DumpSerializedFile(options);
+            if (SerializedFileDetector.TryDetectSerializedFile(m_Options.Path, out _))
+                return DumpSerializedFile();
 
             Console.Error.WriteLine("Error: The file does not appear to be a valid Unity SerializedFile or Unity Archive.");
-            Console.Error.WriteLine($"File: {options.Path}");
+            Console.Error.WriteLine($"File: {m_Options.Path}");
             return 1;
         }
         catch (Exception e)
@@ -67,26 +72,26 @@ public class TextDumperTool
         }
     }
 
-    int DumpSerializedFile(DumpOptions options)
+    int DumpSerializedFile()
     {
         try
         {
-            if (options.ToStdout)
+            if (m_Options.ToStdout)
             {
                 m_Writer = Console.Out;
-                OutputSerializedFile(options.Path, options);
+                OutputSerializedFile(m_Options.Path);
                 m_Writer.Flush();
             }
             else
             {
-                using var writer = new StreamWriter(Path.Combine(options.OutputPath, Path.GetFileName(options.Path) + ".txt"), false);
+                using var writer = new StreamWriter(Path.Combine(m_Options.OutputPath, Path.GetFileName(m_Options.Path) + ".txt"), false);
                 m_Writer = writer;
-                OutputSerializedFile(options.Path, options);
+                OutputSerializedFile(m_Options.Path);
             }
         }
         catch (SerializedFileOpenException)
         {
-            var hint = SerializedFileDetector.GetOpenFailureHint(options.Path);
+            var hint = SerializedFileDetector.GetOpenFailureHint(m_Options.Path);
             if (hint != null)
             {
                 Console.Error.WriteLine();
@@ -100,11 +105,11 @@ public class TextDumperTool
 
     // For convenience we also support directly dumping serialized files that are inside an archive,
     // so that it's not necessary to use `archive extract` if you only want to see values from the object serialization.
-    int DumpArchive(DumpOptions options)
+    int DumpArchive()
     {
-        using var archive = UnityFileSystem.MountArchive(options.Path, "/");
+        using var archive = UnityFileSystem.MountArchive(m_Options.Path, "/");
 
-        if (options.ToStdout)
+        if (m_Options.ToStdout)
         {
             ArchiveNode? singleSerializedFile = null;
             int serializedFileCount = 0;
@@ -133,7 +138,7 @@ public class TextDumperTool
             var node2 = singleSerializedFile.Value;
             Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
             m_Writer = Console.Out;
-            OutputSerializedFile("/" + node2.Path, options);
+            OutputSerializedFile("/" + node2.Path);
             m_Writer.Flush();
         }
         else
@@ -144,9 +149,9 @@ public class TextDumperTool
 
                 if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                 {
-                    using var writer = new StreamWriter(Path.Combine(options.OutputPath, Path.GetFileName(node.Path) + ".txt"), false);
+                    using var writer = new StreamWriter(Path.Combine(m_Options.OutputPath, Path.GetFileName(node.Path) + ".txt"), false);
                     m_Writer = writer;
-                    OutputSerializedFile("/" + node.Path, options);
+                    OutputSerializedFile("/" + node.Path);
                 }
             }
         }
@@ -154,14 +159,10 @@ public class TextDumperTool
         return 0;
     }
 
-    void OutputSerializedFile(string path, DumpOptions options)
+    void OutputSerializedFile(string path)
     {
-        var objectId = options.ObjectId;
-        var typeFilter = string.IsNullOrWhiteSpace(options.TypeFilter) ? null : options.TypeFilter;
-        bool filtered = objectId != 0 || typeFilter != null;
-
-        int filterTypeId = 0;
-        bool filterByTypeId = typeFilter != null && int.TryParse(typeFilter, out filterTypeId);
+        var objectId = m_Options.ObjectId;
+        bool filtered = objectId != 0 || m_TypeFilter != null;
 
         using (m_Reader = new UnityFileReader(path, 64 * 1024 * 1024))
         using (m_SerializedFile = UnityFileSystem.OpenSerializedFile(path))
@@ -190,11 +191,11 @@ public class TextDumperTool
 
                 var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
 
-                if (typeFilter != null)
+                if (m_TypeFilter != null)
                 {
-                    if (filterByTypeId)
+                    if (m_FilterByTypeId)
                     {
-                        if (obj.TypeId != filterTypeId)
+                        if (obj.TypeId != m_FilterTypeId)
                             continue;
                     }
                     else
@@ -204,7 +205,7 @@ public class TextDumperTool
                         // fall back to the TypeTree root node for script types.
                         if (typeName == obj.TypeId.ToString())
                             typeName = root.Type;
-                        if (!string.Equals(typeName, typeFilter, StringComparison.OrdinalIgnoreCase))
+                        if (!string.Equals(typeName, m_TypeFilter, StringComparison.OrdinalIgnoreCase))
                             continue;
                     }
                 }
@@ -217,12 +218,12 @@ public class TextDumperTool
                 dumpedObject = true;
             }
 
-            if ((objectId != 0 || typeFilter != null) && !dumpedObject)
+            if (filtered && !dumpedObject)
             {
                 if (objectId != 0)
                     m_Writer.WriteLine($"Object with ID {objectId} not found.");
                 else
-                    m_Writer.WriteLine($"No objects found matching type \"{typeFilter}\".");
+                    m_Writer.WriteLine($"No objects found matching type \"{m_TypeFilter}\".");
             }
         }
     }
@@ -347,7 +348,7 @@ public class TextDumperTool
             {
                 m_StringBuilder.Append(' ', (level + 1) * 2);
 
-                if (arraySize > 256 && m_SkipLargeArrays)
+                if (arraySize > 256 && m_Options.SkipLargeArrays)
                 {
                     m_StringBuilder.Append("<Skipped>");
                     offset += dataNode.Size * arraySize;
