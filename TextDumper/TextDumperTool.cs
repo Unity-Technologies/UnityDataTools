@@ -11,11 +11,13 @@ public class TextDumperTool
     StringBuilder m_StringBuilder = new StringBuilder(1024);
     DumpOptions m_Options;
     string m_TypeFilter;     // m_Options.TypeFilter normalized: null when blank/unset, otherwise the user-provided string
-    bool m_FilterByTypeId;   // true when m_TypeFilter parses as a ClassID (numeric)
-    int m_FilterTypeId;      // valid only when m_FilterByTypeId is true
+    int m_FilterTypeId;      // > 0 when filtering by Unity ClassID (numeric form of m_TypeFilter); 0 means no ID filter
+
+    TextWriter m_Writer; // Output, either to a file or Console.Out
+
+    // Set during the processed of each Serialized File
     UnityFileReader m_Reader;
     SerializedFile m_SerializedFile;
-    TextWriter m_Writer;
 
     public enum DumpFormat
     {
@@ -37,7 +39,7 @@ public class TextDumperTool
     {
         m_Options = options;
         m_TypeFilter = string.IsNullOrWhiteSpace(m_Options.TypeFilter) ? null : m_Options.TypeFilter;
-        m_FilterByTypeId = m_TypeFilter != null && int.TryParse(m_TypeFilter, out m_FilterTypeId);
+        m_FilterTypeId = (m_TypeFilter != null && int.TryParse(m_TypeFilter, out var parsed) && parsed > 0) ? parsed : 0;
 
         try
         {
@@ -189,9 +191,12 @@ public class TextDumperTool
                 if (objectId != 0 && obj.Id != objectId)
                     continue;
 
+                if (m_FilterTypeId > 0 && obj.TypeId != m_FilterTypeId)
+                    continue;
+
                 var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
 
-                if (!ObjectMatchesTypeFilter(obj, root))
+                if (m_TypeFilter != null && m_FilterTypeId == 0 && !MatchesTypeNameFilter(obj, root))
                     continue;
 
                 var offset = obj.Offset;
@@ -500,14 +505,8 @@ public class TextDumperTool
     static bool IsTerminusSentinel(string className, string namespaceName, string assemblyName) =>
         className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM";
 
-    bool ObjectMatchesTypeFilter(ObjectInfo obj, TypeTreeNode root)
+    bool MatchesTypeNameFilter(ObjectInfo obj, TypeTreeNode root)
     {
-        if (m_TypeFilter == null)
-            return true;
-
-        if (m_FilterByTypeId)
-            return obj.TypeId == m_FilterTypeId;
-
         var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
         // GetTypeName returns the id as a string when the type is unknown;
         // fall back to the TypeTree root node for script types.
@@ -545,7 +544,7 @@ public class TextDumperTool
                 return m_Reader.ReadUInt64(offset).ToString();
 
             case TypeCode.SByte:
-                return m_Reader.ReadUInt8(offset).ToString();
+                return m_Reader.ReadInt8(offset).ToString();
 
             case TypeCode.Byte:
             case TypeCode.Char:
