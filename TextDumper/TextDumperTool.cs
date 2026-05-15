@@ -191,24 +191,8 @@ public class TextDumperTool
 
                 var root = m_SerializedFile.GetTypeTreeRoot(obj.Id);
 
-                if (m_TypeFilter != null)
-                {
-                    if (m_FilterByTypeId)
-                    {
-                        if (obj.TypeId != m_FilterTypeId)
-                            continue;
-                    }
-                    else
-                    {
-                        var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
-                        // GetTypeName returns the id as a string when the type is unknown;
-                        // fall back to the TypeTree root node for script types.
-                        if (typeName == obj.TypeId.ToString())
-                            typeName = root.Type;
-                        if (!string.Equals(typeName, m_TypeFilter, StringComparison.OrdinalIgnoreCase))
-                            continue;
-                    }
-                }
+                if (!ObjectMatchesTypeFilter(obj, root))
+                    continue;
 
                 var offset = obj.Offset;
 
@@ -247,7 +231,7 @@ public class TextDumperTool
         }
         else
         {
-            m_StringBuilder.Append(' ', level * 2);
+            AppendIndent(level);
 
             if (level != 0)
             {
@@ -268,7 +252,6 @@ public class TextDumperTool
                 m_StringBuilder.Append(node.Type);
             }
 
-            // Basic data type.
             if (node.IsBasicType)
             {
                 m_StringBuilder.Append(' ');
@@ -314,7 +297,7 @@ public class TextDumperTool
             ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AnyChildUsesAlignBytes) != 0
         )
         {
-            offset = (offset + 3) & ~(3);
+            offset = AlignTo4(offset);
         }
     }
 
@@ -331,7 +314,7 @@ public class TextDumperTool
         var arraySize = m_Reader.ReadInt32(offset);
         offset += 4;
 
-        m_StringBuilder.Append(' ', level * 2);
+        AppendIndent(level);
         m_StringBuilder.Append("Array");
         m_StringBuilder.Append('<');
         m_StringBuilder.Append(dataNode.Type);
@@ -346,7 +329,7 @@ public class TextDumperTool
         {
             if (dataNode.IsBasicType)
             {
-                m_StringBuilder.Append(' ', (level + 1) * 2);
+                AppendIndent(level + 1);
 
                 if (arraySize > 256 && m_Options.SkipLargeArrays)
                 {
@@ -449,8 +432,8 @@ public class TextDumperTool
         if (refTypeNode.Children.Count < 3)
             throw new Exception("Invalid ReferencedManagedType");
 
-        m_StringBuilder.Append(' ', level * 2);
-        m_StringBuilder.Append($"rid(");
+        AppendIndent(level);
+        m_StringBuilder.Append("rid(");
         m_StringBuilder.Append(id);
         m_StringBuilder.Append(") ReferencedObject");
 
@@ -460,28 +443,17 @@ public class TextDumperTool
         ++level;
 
         var refTypeOffset = offset;
-        var stringSize = m_Reader.ReadInt32(offset);
-        var className = m_Reader.ReadString(offset + 4, stringSize);
-        offset += stringSize + 4;
-        offset = (offset + 3) & ~(3);
+        var className = ReadPascalStringAndAlign(ref offset);
+        var namespaceName = ReadPascalStringAndAlign(ref offset);
+        var assemblyName = ReadPascalStringAndAlign(ref offset);
 
-        stringSize = m_Reader.ReadInt32(offset);
-        var namespaceName = m_Reader.ReadString(offset + 4, stringSize);
-        offset += stringSize + 4;
-        offset = (offset + 3) & ~(3);
-
-        stringSize = m_Reader.ReadInt32(offset);
-        var assemblyName = m_Reader.ReadString(offset + 4, stringSize);
-        offset += stringSize + 4;
-        offset = (offset + 3) & ~(3);
-
-        if (className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM")
+        if (IsTerminusSentinel(className, namespaceName, assemblyName))
             return false;
 
         // Not the most efficient way, but it simplifies the code.
         RecursiveDump(refTypeNode, ref refTypeOffset, level);
 
-        m_StringBuilder.Append(' ', level * 2);
+        AppendIndent(level);
         m_StringBuilder.Append(referencedTypeDataNode.Name);
         m_StringBuilder.Append(' ');
         m_StringBuilder.Append(referencedTypeDataNode.Type);
@@ -492,7 +464,7 @@ public class TextDumperTool
 
         if (id == -1 || id == -2)
         {
-            m_StringBuilder.Append(' ', level * 2);
+            AppendIndent(level);
             m_StringBuilder.Append(id == -1 ? "  unknown" : "  null");
 
             m_Writer.WriteLine(m_StringBuilder);
@@ -510,6 +482,38 @@ public class TextDumperTool
         }
 
         return true;
+    }
+
+    static long AlignTo4(long offset) => (offset + 3) & ~3L;
+
+    void AppendIndent(int level) => m_StringBuilder.Append(' ', level * 2);
+
+    string ReadPascalStringAndAlign(ref long offset)
+    {
+        var size = m_Reader.ReadInt32(offset);
+        var value = m_Reader.ReadString(offset + 4, size);
+        offset = AlignTo4(offset + 4 + size);
+        return value;
+    }
+
+    // Sentinel record that marks the end of the v1 ReferencedObject sequence.
+    static bool IsTerminusSentinel(string className, string namespaceName, string assemblyName) =>
+        className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM";
+
+    bool ObjectMatchesTypeFilter(ObjectInfo obj, TypeTreeNode root)
+    {
+        if (m_TypeFilter == null)
+            return true;
+
+        if (m_FilterByTypeId)
+            return obj.TypeId == m_FilterTypeId;
+
+        var typeName = TypeIdRegistry.GetTypeName(obj.TypeId);
+        // GetTypeName returns the id as a string when the type is unknown;
+        // fall back to the TypeTree root node for script types.
+        if (typeName == obj.TypeId.ToString())
+            typeName = root.Type;
+        return string.Equals(typeName, m_TypeFilter, StringComparison.OrdinalIgnoreCase);
     }
 
     string ReadValue(TypeTreeNode node, long offset)
@@ -557,28 +561,17 @@ public class TextDumperTool
 
     Array ReadBasicTypeArray(TypeTreeNode node, long offset, int arraySize)
     {
-        // Special case for boolean arrays.
+        // bool isn't blittable into Array.CreateInstance(typeof(bool), ...) the way other basic types
+        // are, so read into a byte buffer and convert.
         if (node.CSharpType == typeof(bool))
         {
             var tmpArray = new byte[arraySize];
-            var boolArray = new bool[arraySize];
-
             m_Reader.ReadArray(offset, arraySize * node.Size, tmpArray);
-
-            for (int i = 0; i < arraySize; ++i)
-            {
-                boolArray[i] = tmpArray[i] != 0;
-            }
-
-            return boolArray;
+            return Array.ConvertAll(tmpArray, b => b != 0);
         }
-        else
-        {
-            var array = Array.CreateInstance(node.CSharpType, arraySize);
 
-            m_Reader.ReadArray(offset, arraySize * node.Size, array);
-
-            return array;
-        }
+        var array = Array.CreateInstance(node.CSharpType, arraySize);
+        m_Reader.ReadArray(offset, arraySize * node.Size, array);
+        return array;
     }
 }
