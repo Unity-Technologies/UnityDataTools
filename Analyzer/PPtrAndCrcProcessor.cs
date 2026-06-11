@@ -71,72 +71,6 @@ public class PPtrAndCrcProcessor : IDisposable
         m_resourceReaders.Clear();
     }
 
-    private UnityFileReader GetResourceReader(string filename)
-    {
-        var slashPos = filename.LastIndexOf('/');
-        if (slashPos > 0)
-        {
-            filename = filename.Remove(0, slashPos + 1);
-        }
-
-        if (!m_resourceReaders.TryGetValue(filename, out var reader))
-        {
-            try
-            {
-                reader = new UnityFileReader("archive:/" + filename, 4 * 1024 * 1024);
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
-                }
-                catch (Exception)
-                {
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine($"Error opening resource file {filename}");
-                    reader = null;
-                }
-            }
-
-            m_resourceReaders[filename] = reader;
-        }
-
-        return reader;
-    }
-
-    // Extends the CRC with a range of the main serialized file, unless CRC is disabled.
-    private void AppendCrc(long offset, int size)
-    {
-        if (!m_SkipCrc)
-            m_Crc32 = m_Reader.ComputeCRC(offset, size, m_Crc32);
-    }
-
-    // Extends the CRC with the content of an external stream segment (StreamingInfo /
-    // StreamedResource), unless CRC is disabled. Content-addressed paths fold in the path
-    // string; other paths read the actual bytes from the companion resource file.
-    private void AppendStreamCrc(long offset, int size, string path)
-    {
-        if (m_SkipCrc)
-            return;
-
-        // A cah:/ stream always references the entire resource file: the hash in the path
-        // is the hash of the whole file, so the path uniquely identifies the bytes and we
-        // fold it into the CRC rather than reading them. The offset/size fields only exist
-        // for backward compatibility with the older output format that packed multiple
-        // resources into one file; ContentDirectory builds never do this (offset is 0 and
-        // size is the full file), which is why ignoring offset/size here is correct.
-        if (path.StartsWith(ContentAddressedPrefix, StringComparison.OrdinalIgnoreCase))
-        {
-            m_Crc32 = Crc32Algorithm.Append(m_Crc32, Encoding.UTF8.GetBytes(path));
-            return;
-        }
-
-        var resourceFile = GetResourceReader(path);
-        if (resourceFile != null)
-            m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
-    }
-
     // Walks the serialized object rooted at `node`, whose data starts at `offset` in the reader,
     // emitting every PPtr through the callback. Returns a CRC32 fingerprint of the object's content
     // (0 when CRC is disabled). `objectId` is the analyzer id of this object, forwarded to the callback.
@@ -409,4 +343,71 @@ public class PPtrAndCrcProcessor : IDisposable
             }
         }
     }
+
+    // Extends the CRC with a range of the main serialized file, unless CRC is disabled.
+    private void AppendCrc(long offset, int size)
+    {
+        if (!m_SkipCrc)
+            m_Crc32 = m_Reader.ComputeCRC(offset, size, m_Crc32);
+    }
+
+    // Extends the CRC with the content of an external stream segment (StreamingInfo /
+    // StreamedResource), unless CRC is disabled. Content-addressed paths fold in the path
+    // string; other paths read the actual bytes from the companion resource file.
+    private void AppendStreamCrc(long offset, int size, string path)
+    {
+        if (m_SkipCrc)
+            return;
+
+        // A cah:/ stream always references the entire resource file: the hash in the path
+        // is the hash of the whole file, so the path uniquely identifies the bytes and we
+        // fold it into the CRC rather than reading them. The offset/size fields only exist
+        // for backward compatibility with the older output format that packed multiple
+        // resources into one file; ContentDirectory builds never do this (offset is 0 and
+        // size is the full file), which is why ignoring offset/size here is correct.
+        if (path.StartsWith(ContentAddressedPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            m_Crc32 = Crc32Algorithm.Append(m_Crc32, Encoding.UTF8.GetBytes(path));
+            return;
+        }
+
+        var resourceFile = GetResourceReader(path);
+        if (resourceFile != null)
+            m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+    }
+
+    private UnityFileReader GetResourceReader(string filename)
+    {
+        var slashPos = filename.LastIndexOf('/');
+        if (slashPos > 0)
+        {
+            filename = filename.Remove(0, slashPos + 1);
+        }
+
+        if (!m_resourceReaders.TryGetValue(filename, out var reader))
+        {
+            try
+            {
+                reader = new UnityFileReader("archive:/" + filename, 4 * 1024 * 1024);
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
+                }
+                catch (Exception)
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"Error opening resource file {filename}");
+                    reader = null;
+                }
+            }
+
+            m_resourceReaders[filename] = reader;
+        }
+
+        return reader;
+    }
+
 }
