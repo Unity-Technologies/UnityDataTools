@@ -13,12 +13,18 @@ public class PPtrAndCrcProcessor : IDisposable
 {
     public delegate int CallbackDelegate(long objectId, int fileId, long pathId, string propertyPath, string propertyType);
 
+    // Content-addressed stream paths (new ContentDirectory build output) look like
+    // "cah:/<hash>". The hash already identifies the content, so the path itself is
+    // folded into the CRC instead of opening the (differently named) resource file.
+    private const string ContentAddressedPrefix = "cah:/";
+
     private SerializedFile m_SerializedFile;
     private UnityFileReader m_Reader;
     private long m_Offset;
     private long m_ObjectId;
     private uint m_Crc32;
     private string m_Folder;
+    private bool m_SkipCrc;
     private StringBuilder m_StringBuilder = new();
     private byte[] m_pptrBytes = new byte[4];
 
@@ -27,11 +33,12 @@ public class PPtrAndCrcProcessor : IDisposable
     private Dictionary<string, UnityFileReader> m_resourceReaders = new();
 
     public PPtrAndCrcProcessor(SerializedFile serializedFile, UnityFileReader reader, string folder,
-        CallbackDelegate callback)
+        bool skipCrc, CallbackDelegate callback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
         m_Folder = folder;
+        m_SkipCrc = skipCrc;
         m_Callback = callback;
     }
 
@@ -79,6 +86,32 @@ public class PPtrAndCrcProcessor : IDisposable
         return reader;
     }
 
+    // Extends the CRC with a range of the main serialized file, unless CRC is disabled.
+    private void AppendCrc(long offset, int size)
+    {
+        if (!m_SkipCrc)
+            m_Crc32 = m_Reader.ComputeCRC(offset, size, m_Crc32);
+    }
+
+    // Extends the CRC with the content of an external stream segment (StreamingInfo /
+    // StreamedResource), unless CRC is disabled. Content-addressed paths fold in the path
+    // string; other paths read the actual bytes from the companion resource file.
+    private void AppendStreamCrc(long offset, int size, string path)
+    {
+        if (m_SkipCrc)
+            return;
+
+        if (path.StartsWith(ContentAddressedPrefix))
+        {
+            m_Crc32 = Crc32Algorithm.Append(m_Crc32, Encoding.UTF8.GetBytes(path));
+            return;
+        }
+
+        var resourceFile = GetResourceReader(path);
+        if (resourceFile != null)
+            m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+    }
+
     public uint Process(long objectId, long offset, TypeTreeNode node)
     {
         m_Offset = offset;
@@ -99,7 +132,7 @@ public class PPtrAndCrcProcessor : IDisposable
     {
         if (node.IsBasicType)
         {
-            m_Crc32 = m_Reader.ComputeCRC(m_Offset, node.Size, m_Crc32);
+            AppendCrc(m_Offset, node.Size);
             m_Offset += node.Size;
         }
         else if (node.IsArray)
@@ -136,12 +169,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
             if (size > 0)
             {
-                var resourceFile = GetResourceReader(filename);
-
-                if (resourceFile != null)
-                {
-                    m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
-                }
+                AppendStreamCrc(offset, size, filename);
             }
         }
         else if (node.Type == "StreamedResource")
@@ -162,19 +190,14 @@ public class PPtrAndCrcProcessor : IDisposable
 
             if (size > 0)
             {
-                var resourceFile = GetResourceReader(filename);
-
-                if (resourceFile != null)
-                {
-                    m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
-                }
+                AppendStreamCrc(offset, size, filename);
             }
         }
         else if (node.CSharpType == typeof(string))
         {
             var prevOffset = m_Offset;
             m_Offset += m_Reader.ReadInt32(m_Offset) + 4;
-            m_Crc32 = m_Reader.ComputeCRC(prevOffset, (int)(m_Offset - prevOffset), m_Crc32);
+            AppendCrc(prevOffset, (int)(m_Offset - prevOffset));
         }
         else if (node.IsManagedReferenceRegistry)
         {
@@ -210,12 +233,12 @@ public class PPtrAndCrcProcessor : IDisposable
         if (dataNode.IsBasicType)
         {
             var arraySize = m_Reader.ReadInt32(m_Offset);
-            m_Crc32 = m_Reader.ComputeCRC(m_Offset, dataNode.Size * arraySize + 4, m_Crc32);
+            AppendCrc(m_Offset, dataNode.Size * arraySize + 4);
             m_Offset += dataNode.Size * arraySize + 4;
         }
         else
         {
-            m_Crc32 = m_Reader.ComputeCRC(m_Offset, 4, m_Crc32);
+            AppendCrc(m_Offset, 4);
             var arraySize = m_Reader.ReadInt32(m_Offset);
             m_Offset += 4;
 
@@ -239,7 +262,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
                     // First child is rid.
                     long rid = m_Reader.ReadInt64(m_Offset);
-                    m_Crc32 = m_Reader.ComputeCRC(m_Offset, 8, m_Crc32);
+                    AppendCrc(m_Offset, 8);
                     m_Offset += 8;
 
                     ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], rid);
@@ -255,7 +278,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
         // First child is version number.
         var version = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, node.Children[0].Size, m_Crc32);
+        AppendCrc(m_Offset, node.Children[0].Size);
         m_Offset += node.Children[0].Size;
 
         if (version == 1)
@@ -301,19 +324,19 @@ public class PPtrAndCrcProcessor : IDisposable
             throw new Exception("Invalid ReferencedManagedType");
 
         var stringSize = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, (int)(m_Offset + stringSize + 4), m_Crc32);
+        AppendCrc(m_Offset, stringSize + 4);
         var className = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
 
         stringSize = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, (int)(m_Offset + stringSize + 4), m_Crc32);
+        AppendCrc(m_Offset, stringSize + 4);
         var namespaceName = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
 
         stringSize = m_Reader.ReadInt32(m_Offset);
-        m_Crc32 = m_Reader.ComputeCRC(m_Offset, (int)(m_Offset + stringSize + 4), m_Crc32);
+        AppendCrc(m_Offset, stringSize + 4);
         var assemblyName = m_Reader.ReadString(m_Offset + 4, stringSize);
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
@@ -347,11 +370,15 @@ public class PPtrAndCrcProcessor : IDisposable
         if (fileId != 0 || pathId != 0)
         {
             var refId = m_Callback(m_ObjectId, fileId, pathId, m_StringBuilder.ToString(), referencedType);
-            m_pptrBytes[0] = (byte)(refId >> 24);
-            m_pptrBytes[1] = (byte)(refId >> 16);
-            m_pptrBytes[2] = (byte)(refId >> 8);
-            m_pptrBytes[3] = (byte)(refId);
-            m_Crc32 = Crc32Algorithm.Append(m_Crc32, m_pptrBytes);
+
+            if (!m_SkipCrc)
+            {
+                m_pptrBytes[0] = (byte)(refId >> 24);
+                m_pptrBytes[1] = (byte)(refId >> 16);
+                m_pptrBytes[2] = (byte)(refId >> 8);
+                m_pptrBytes[3] = (byte)(refId);
+                m_Crc32 = Crc32Algorithm.Append(m_Crc32, m_pptrBytes);
+            }
         }
     }
 }

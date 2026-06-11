@@ -13,7 +13,8 @@ UnityDataTool analyze <path> [options]
 | `<path>` | Path to folder containing files to analyze | *(required)* |
 | `-o, --output-file <file>` | Output database filename | `database.db` |
 | `-p, --search-pattern <pattern>` | File search pattern (`*` and `?` supported) | `*` |
-| `-s, --skip-references` | Skip CRC and reference extraction (faster, smaller DB) | `false` |
+| `-s, --skip-references` | Do not extract references (smaller DB, no `refs` table). CRC is still computed. | `false` |
+| `--skip-crc` | Skip the CRC32 checksum calculation (faster; `objects.crc32` will be 0) | `false` |
 | `-v, --verbose` | Show more information during analysis | `false` |
 | `--no-recurse` | Do not recurse into sub-directories | `false` |
 | `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
@@ -30,9 +31,9 @@ Analyze only `.bundle` files and specify a custom database name:
 UnityDataTool analyze /path/to/asset/bundles -o my_database.db -p "*.bundle"
 ```
 
-Fast analysis (skip reference tracking):
+Fastest analysis (skip both reference extraction and CRC):
 ```bash
-UnityDataTool analyze /path/to/bundles -s
+UnityDataTool analyze /path/to/bundles --skip-references --skip-crc
 ```
 
 See also [Analyze Examples](../../Documentation/analyze-examples.md).
@@ -121,23 +122,27 @@ See [Comparing Builds](../../Documentation/comparing-builds.md) for strategies t
 
 ### Slow Analyze times, large output database
 
-Consider using the `--skip-references` argument.
+Two independent flags reduce analyze time and database size:
 
-A real life analyze of a big Addressables build shows how large a difference this can make:
+* `--skip-crc` skips the CRC32 calculation. This is usually the largest time saver, because computing a CRC requires reading the full content of every object, including large texture, mesh and audio data in companion `.resS`/`.resource` files.
+* `--skip-references` skips reference extraction, which is the largest contributor to database size (the `refs` table). The references are not needed for core asset inventory and size information.
 
-* 208 seconds and producted a 500MB database (not specifying --skip-reference)
-* 9 seconds and produced a 68 MB file (with --skip-reference)
+For the fastest, smallest result, combine them.
 
-The references are not needed for core asset inventory and size information. 
+A real life analyze of a big Addressables build, skipping both references and CRC, shows how large a difference this can make:
 
-Note: When specifying `--skip-reference` some functionality is lost:
+* 208 seconds and produced a 500MB database (default)
+* 9 seconds and produced a 68 MB file (with `--skip-references --skip-crc`)
+
+When `--skip-references` is used, some functionality is lost:
 
 * the `find-refs` command will not work
 * `view_material_shader_refs` and `view_material_texture_refs` will be empty
+* `script_object_view` will be empty
 * Queries that look at the relationship between objects will not work.  For example the refs table is required to link between a `MonoBehaviour` and its `MonoScript`.
-* The `objects.crc32` column will be NULL/0 for all objects. This means:
-  * No detection of identical objects by content hash (See [Comparing Builds](../../Documentation/comparing-builds.md))
-  * The `view_potential_duplicates` view relies partially on CRC32 to distinguish true duplicates
 
-Future work: The refs table contains a lot of repeated strings and could be made smaller and more efficient.  It might also be prudent to control the CRC32 calculation using an independent flag.
+When `--skip-crc` is used, the `objects.crc32` column will be 0 for all objects. This means:
+
+* No detection of identical objects by content hash (See [Comparing Builds](../../Documentation/comparing-builds.md))
+* The `view_potential_duplicates` view relies partially on CRC32 to distinguish true duplicates
 

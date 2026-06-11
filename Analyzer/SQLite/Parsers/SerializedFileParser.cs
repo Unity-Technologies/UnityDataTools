@@ -15,6 +15,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public bool Verbose { get; set; }
         public bool SkipReferences { get; set; }
+        public bool SkipCrc { get; set; }
 
         public bool CanParse(string filename)
         {
@@ -36,7 +37,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public void Init(SqliteConnection db)
         {
-            m_Writer = new SerializedFileSQLiteWriter(db, SkipReferences);
+            m_Writer = new SerializedFileSQLiteWriter(db, SkipReferences, SkipCrc);
         }
 
         public void Parse(string filename)

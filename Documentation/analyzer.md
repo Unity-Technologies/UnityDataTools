@@ -47,7 +47,7 @@ case, Unity will include the asset in all the AssetBundles with a reference to i
 view_potential_duplicates provides the number of instances and the total size of the potentially
 duplicated assets. It also lists all the AssetBundles where the asset was found.
 
-If the skipReferences option is used, there will be a lot of false positives in that view. Otherwise,
+If the `--skip-crc` option is used, there will be a lot of false positives in that view. Otherwise,
 it should be very accurate because CRCs are used to determine if objects are identical.
 
 ## asset_view (AssetBundleProcessor)

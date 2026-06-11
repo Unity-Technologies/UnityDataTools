@@ -26,6 +26,7 @@ public class AnalyzerTool
         string databaseName,
         string searchPattern,
         bool skipReferences,
+        bool skipCrc,
         bool verbose,
         bool noRecursion)
     {
@@ -40,6 +41,7 @@ public class AnalyzerTool
             {
                 parser.Verbose = verbose;
                 parser.SkipReferences = skipReferences;
+                parser.SkipCrc = skipCrc;
                 parser.Init(writer.Connection);
 
             }

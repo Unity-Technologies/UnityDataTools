@@ -15,6 +15,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public bool Verbose { get; set; }
         public bool SkipReferences { get; set; }
+        public bool SkipCrc { get; set; }
 
         public void Dispose()
         {
