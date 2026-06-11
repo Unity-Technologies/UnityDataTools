@@ -269,6 +269,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         }
     }
 
+    // Callback from PPtrAndCrcProcessor for each reference discovered in the SerializedFile
     private int AddReference(long objectId, int fileId, long pathId, string propertyPath, string propertyType)
     {
         // Always resolve the id so the CRC stays stable; only persist the row when references

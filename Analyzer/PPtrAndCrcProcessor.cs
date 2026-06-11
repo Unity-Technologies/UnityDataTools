@@ -16,6 +16,14 @@ namespace UnityDataTools.Analyzer;
 // CRC computation can be disabled (skipCrc) while still extracting references.
 public class PPtrAndCrcProcessor : IDisposable
 {
+    // Invoked for each PPtr (object reference) found while walking an object.
+    //   objectId     - analyzer/database id of the object that contains the reference (the source)
+    //   fileId       - PPtr m_FileID: index into the file's external-reference table; 0 means this (local) file
+    //   pathId       - PPtr m_PathID: the referenced object's local file id (LFID) within that file
+    //   propertyPath - dotted path to the reference, e.g. "m_MyObject.m_MyArray[2].m_PPtrProperty"
+    //   propertyType - the referenced type, e.g. "Texture2D"
+    // Returns the analyzer/database id of the referenced object (same id space as objectId), which the
+    // caller folds into the CRC.
     public delegate int CallbackDelegate(long objectId, int fileId, long pathId, string propertyPath, string propertyType);
 
     // Content-addressed stream paths (new ContentDirectory build output) look like
@@ -51,8 +59,12 @@ public class PPtrAndCrcProcessor : IDisposable
     // skipCrc:        when true, the tree is still walked to emit references but no CRC is computed.
     // callback:       called for every PPtr found; its return value (the referenced object's id) is
     //                 folded into the CRC.
-    public PPtrAndCrcProcessor(SerializedFile serializedFile, UnityFileReader reader, string folder,
-        bool skipCrc, CallbackDelegate callback)
+    public PPtrAndCrcProcessor(
+        SerializedFile serializedFile,
+        UnityFileReader reader,
+        string folder,
+        bool skipCrc,
+        CallbackDelegate callback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
@@ -163,7 +175,10 @@ public class PPtrAndCrcProcessor : IDisposable
         }
         else if (node.IsManagedReferenceRegistry)
         {
-            // ManagedReferenceRegistry are never nested
+            // The registry holds this object's [SerializeReference] instances (see
+            // ProcessManagedReferenceRegistry). It only appears at the top level of the object;
+            // the guard prevents re-entering it when we are already walking referenced-object
+            // data through another type tree (isInManagedReferenceRegistry == true).
             if (!isInManagedReferenceRegistry)
                 ProcessManagedReferenceRegistry(node);
         }
@@ -219,10 +234,12 @@ public class PPtrAndCrcProcessor : IDisposable
                 }
                 else
                 {
+                    // This is the version-2 "RefIds" array. Each element is a ReferencedObject
+                    // whose children are [rid, type, data]; read the rid here and hand the type
+                    // and data nodes to ProcessManagedReferenceData.
                     if (dataNode.Children.Count < 3)
                         throw new Exception("Invalid ReferencedObject");
 
-                    // First child is rid.
                     long rid = m_Reader.ReadInt64(m_Offset);
                     AppendCrc(m_Offset, 8);
                     m_Offset += 8;
@@ -233,6 +250,47 @@ public class PPtrAndCrcProcessor : IDisposable
         }
     }
 
+    // A ManagedReferenceRegistry holds the [SerializeReference] instances owned by this object.
+    // In YAML/JSON it is the "references:" section that always appears at the end of a
+    // MonoBehaviour/ScriptableObject. Each instance is stored here exactly once; the fields that
+    // point at it (elsewhere in the object) only store its "rid", so shared instances and cycles
+    // collapse to the same rid.
+    //
+    // Given this C# source:
+    //
+    //     [Serializable] public class MyClass { public string m_string; }
+    //
+    //     public class MyScriptableObject : ScriptableObject
+    //     {
+    //         [SerializeReference] public MyClass m_refA, m_refB, m_refC;   // m_refC assigned m_refB
+    //     }
+    //
+    // the serialized layout looks like this (YAML shown; the binary we walk has the same shape):
+    //
+    //     m_refA: { rid: 4862042034409046192 }
+    //     m_refB: { rid: 4862042034409046193 }
+    //     m_refC: { rid: 4862042034409046193 }    // shared instance -> same rid as m_refB
+    //     references:
+    //       version: 2
+    //       RefIds:
+    //       - rid: 4862042034409046192
+    //         type: { class: MyClass, ns: , asm: MyAssembly }
+    //         data: { m_string: foo }
+    //       - rid: 4862042034409046193
+    //         type: { class: MyClass, ns: , asm: MyAssembly }
+    //         data: { m_string: bar }
+    //
+    // The complication: TypeTrees cannot express polymorphism, so the layout of each "data" block
+    // is NOT described by this object's own TypeTree. Each RefId entry names its concrete type
+    // (class/namespace/assembly), and the "data" bytes follow a SEPARATE TypeTree obtained via
+    // SerializedFile.GetRefTypeTypeTreeRoot(...). Walking the registry therefore means jumping into
+    // a different TypeTree for every entry (see ProcessManagedReferenceData) - which is exactly why
+    // finding references inside the registry is so much more involved than for the rest of the object.
+    //
+    // Two on-disk versions exist:
+    //   version 1 - entries stored back to back and terminated by a sentinel type (see
+    //               ProcessManagedReferenceData); the rid is implied by position.
+    //   version 2 - entries stored as a "RefIds" array, each element carrying its own rid.
     private void ProcessManagedReferenceRegistry(TypeTreeNode node)
     {
         if (node.Children.Count < 2)
@@ -251,6 +309,8 @@ public class PPtrAndCrcProcessor : IDisposable
             var refTypeNode = refObjNode.Children[0];
             var refObjData = refObjNode.Children[1];
 
+            // Read entries until ProcessManagedReferenceData hits the sentinel; here the rid is
+            // simply the entry's position.
             int i = 0;
             while (ProcessManagedReferenceData(refTypeNode, refObjData, i++))
             {
@@ -280,11 +340,18 @@ public class PPtrAndCrcProcessor : IDisposable
         }
     }
 
+    // Reads one registry entry: the concrete type's fully-qualified name (class, namespace,
+    // assembly) followed by the object's data. The data is laid out according to that type's own
+    // TypeTree, so we fetch it and recurse into it. Returns false at the end of a version-1
+    // registry - marked either by the "Terminus" sentinel type or by a null/unknown rid (-1 / -2)
+    // - and true otherwise.
     bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, long rid)
     {
         if (refTypeNode.Children.Count < 3)
             throw new Exception("Invalid ReferencedManagedType");
 
+        // The type's fully-qualified name is stored as three consecutive strings: class, namespace,
+        // then assembly. Each is a length-prefixed string, padded to a 4-byte boundary.
         var stringSize = m_Reader.ReadInt32(m_Offset);
         AppendCrc(m_Offset, stringSize + 4);
         var className = m_Reader.ReadString(m_Offset + 4, stringSize);
@@ -303,15 +370,17 @@ public class PPtrAndCrcProcessor : IDisposable
         m_Offset += stringSize + 4;
         m_Offset = (m_Offset + 3) & ~(3);
 
+        // Sentinel that terminates a version-1 registry, plus the null/unknown rids.
         if ((className == "Terminus" && namespaceName == "UnityEngine.DMAT" && assemblyName == "FAKE_ASM") ||
             rid == -1 || rid == -2)
         {
             return false;
         }
 
+        // The data block follows the referenced type's own TypeTree, not this object's, so look it
+        // up by FQN and walk it (isInManagedReferenceRegistry = true so we don't re-enter the registry).
         var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
 
-        // Process the ReferencedObject using its own TypeTree.
         var size = m_StringBuilder.Length;
         m_StringBuilder.Append("rid(");
         m_StringBuilder.Append(rid);
