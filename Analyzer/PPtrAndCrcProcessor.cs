@@ -16,6 +16,7 @@ public class PPtrAndCrcProcessor : IDisposable
     // Content-addressed stream paths (new ContentDirectory build output) look like
     // "cah:/<hash>". The hash already identifies the content, so the path itself is
     // folded into the CRC instead of opening the (differently named) resource file.
+    // Matched case-insensitively since the scheme casing is not guaranteed.
     private const string ContentAddressedPrefix = "cah:/";
 
     private SerializedFile m_SerializedFile;
@@ -101,7 +102,13 @@ public class PPtrAndCrcProcessor : IDisposable
         if (m_SkipCrc)
             return;
 
-        if (path.StartsWith(ContentAddressedPrefix))
+        // A cah:/ stream always references the entire resource file: the hash in the path
+        // is the hash of the whole file, so the path uniquely identifies the bytes and we
+        // fold it into the CRC rather than reading them. The offset/size fields only exist
+        // for backward compatibility with the older output format that packed multiple
+        // resources into one file; ContentDirectory builds never do this (offset is 0 and
+        // size is the full file), which is why ignoring offset/size here is correct.
+        if (path.StartsWith(ContentAddressedPrefix, StringComparison.OrdinalIgnoreCase))
         {
             m_Crc32 = Crc32Algorithm.Append(m_Crc32, Encoding.UTF8.GetBytes(path));
             return;
