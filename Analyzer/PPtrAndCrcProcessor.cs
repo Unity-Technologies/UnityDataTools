@@ -7,8 +7,13 @@ using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
 
-// This class is used to extract all the PPtrs in a serialized object. It executes a callback whenever a PPtr is found.
-// It provides a string representing the property path of the property (e.g. "m_MyObject.m_MyArray[2].m_PPtrProperty").
+// Walks the TypeTree of a serialized object to do two things in a single pass:
+//  1. Extract every PPtr (object reference). A callback is executed for each one, receiving the
+//     property path that leads to it (e.g. "m_MyObject.m_MyArray[2].m_PPtrProperty").
+//  2. Accumulate a CRC32 over the object's serialized bytes, including the content of external
+//     streams (texture/mesh/audio data stored in companion .resS/.resource files). This CRC is a
+//     content fingerprint used to detect whether two objects are identical.
+// CRC computation can be disabled (skipCrc) while still extracting references.
 public class PPtrAndCrcProcessor : IDisposable
 {
     public delegate int CallbackDelegate(long objectId, int fileId, long pathId, string propertyPath, string propertyType);
@@ -19,20 +24,33 @@ public class PPtrAndCrcProcessor : IDisposable
     // Matched case-insensitively since the scheme casing is not guaranteed.
     private const string ContentAddressedPrefix = "cah:/";
 
-    private SerializedFile m_SerializedFile;
-    private UnityFileReader m_Reader;
-    private long m_Offset;
-    private long m_ObjectId;
-    private uint m_Crc32;
-    private string m_Folder;
-    private bool m_SkipCrc;
-    private StringBuilder m_StringBuilder = new();
-    private byte[] m_pptrBytes = new byte[4];
+    // Configuration shared across all objects, set once in the constructor.
+    private SerializedFile m_SerializedFile;    // file being analyzed; used to resolve referenced managed type trees
+    private UnityFileReader m_Reader;            // reader over the serialized file holding the object data
+    private string m_Folder;                     // directory of the serialized file; used to find companion resource files
+    private bool m_SkipCrc;                      // when true, skip CRC computation (references are still extracted)
+    private CallbackDelegate m_Callback;         // invoked for each PPtr; returns the referenced object's id
 
-    private CallbackDelegate m_Callback;
-
+    // Readers for external resource (.resS/.resource) files, opened on demand, reused across
+    // objects, and disposed in Dispose().
     private Dictionary<string, UnityFileReader> m_resourceReaders = new();
 
+    // Reusable scratch buffers, kept as fields to avoid allocating per object/property.
+    private StringBuilder m_StringBuilder = new();    // builds the current property path during the walk
+    private byte[] m_pptrBytes = new byte[4];         // holds a referenced object id while feeding it to the CRC
+
+    // State for the object currently being processed, (re)initialized by each Process() call.
+    private long m_Offset;       // current read position within m_Reader
+    private long m_ObjectId;     // analyzer id of the object being processed, passed to the callback
+    private uint m_Crc32;        // CRC accumulated so far for this object
+
+    // serializedFile: the file whose objects are analyzed (used to resolve referenced managed types).
+    // reader:         reader over that file's bytes; Process() walks each object through it.
+    // folder:         directory containing the serialized file; companion .resS/.resource files are
+    //                 looked up here when a non-content-addressed external stream contributes to the CRC.
+    // skipCrc:        when true, the tree is still walked to emit references but no CRC is computed.
+    // callback:       called for every PPtr found; its return value (the referenced object's id) is
+    //                 folded into the CRC.
     public PPtrAndCrcProcessor(SerializedFile serializedFile, UnityFileReader reader, string folder,
         bool skipCrc, CallbackDelegate callback)
     {
@@ -119,6 +137,9 @@ public class PPtrAndCrcProcessor : IDisposable
             m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
     }
 
+    // Walks the serialized object rooted at `node`, whose data starts at `offset` in the reader,
+    // emitting every PPtr through the callback. Returns a CRC32 fingerprint of the object's content
+    // (0 when CRC is disabled). `objectId` is the analyzer id of this object, forwarded to the callback.
     public uint Process(long objectId, long offset, TypeTreeNode node)
     {
         m_Offset = offset;
