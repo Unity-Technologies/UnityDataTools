@@ -54,6 +54,41 @@ public class PPtrAndCrcProcessor : IDisposable
     private long m_ObjectId;     // analyzer id of the object being processed, passed to the callback
     private uint m_Crc32;        // CRC accumulated so far for this object
 
+    // ===================== TEMPORARY DIAGNOSTIC LOGGING (PR #66 perf investigation) =====================
+    // Instruments m_resourceReaders usage during a large analyze. Writes tab-separated "RESLOG" lines to
+    // stderr - run analyze with `2> reslog.txt`. Remove this whole region once the investigation is done.
+    // Per-instance counters (one processor instance == one serialized file):
+    private int m_DiagObjects;            // objects walked in this file
+    private long m_DiagGetCalls;          // GetResourceReader calls
+    private long m_DiagCreates;           // cache misses -> new 4MB UnityFileReader allocations
+    private long m_DiagFailures;          // failed resource opens
+    private long m_DiagCahStreams;        // cah:/ streams folded by path (never touch m_resourceReaders)
+    private long m_DiagComputeCalls;      // ComputeCRC calls against a resource reader
+    private long m_DiagRedundant;         // ComputeCRC calls repeating an already-seen (file,offset,size)
+    private long m_DiagBytes;             // total bytes covered by resource ComputeCRC
+    private readonly HashSet<(string, long, int)> m_DiagSeen = new();
+    private readonly Dictionary<string, (int count, long bytes)> m_DiagPerResource = new();
+    // Cross-run totals:
+    private static long s_DiagFiles, s_DiagGetCalls, s_DiagCreates, s_DiagFailures,
+        s_DiagCahStreams, s_DiagComputeCalls, s_DiagRedundant, s_DiagBytes;
+    private static int s_DiagMaxDictSize;
+    private static readonly Dictionary<string, int> s_DiagCreatesPerFile = new(); // filename -> times a reader was created across the run
+    private static bool s_DiagHeader;
+
+    private static void DiagLog(string line)
+    {
+        if (!s_DiagHeader)
+        {
+            s_DiagHeader = true;
+            Console.Error.WriteLine("RESLOG\tLEGEND\tCREATE=new reader (cache miss); FILE=per-serialized-file summary; " +
+                "RES=per-resource within a file; CUMULATIVE=running totals. Tab-separated key=value. " +
+                "creates vs distinctResourceFiles = cross-file re-open churn; redundant = repeated identical CRC ranges; " +
+                "maxDictSize*4MB ~= peak reader memory in one file.");
+        }
+        Console.Error.WriteLine("RESLOG\t" + line);
+    }
+    // ====================================================================================================
+
     // serializedFile: the file whose objects are analyzed (used to resolve referenced managed types).
     // reader:         reader over that file's bytes; Process() walks each object through it.
     // folder:         directory containing the serialized file; companion .resS/.resource files are
@@ -77,6 +112,22 @@ public class PPtrAndCrcProcessor : IDisposable
 
     public void Dispose()
     {
+        // TEMP DIAGNOSTIC: emit a per-file summary, but only for files that touched external streams.
+        if (m_DiagGetCalls > 0 || m_DiagCahStreams > 0)
+        {
+            ++s_DiagFiles;
+            DiagLog($"FILE\tobjects={m_DiagObjects}\tdistinctReaders={m_resourceReaders.Count}\tgetCalls={m_DiagGetCalls}" +
+                $"\tcreates={m_DiagCreates}\tfailures={m_DiagFailures}\tcahStreams={m_DiagCahStreams}" +
+                $"\tcomputeCalls={m_DiagComputeCalls}\tredundantComputes={m_DiagRedundant}\tbytesCrc={m_DiagBytes}" +
+                $"\treaderMemMB={m_resourceReaders.Count * 4}");
+            foreach (var kv in m_DiagPerResource)
+                DiagLog($"RES\tfile={kv.Key}\tcomputeCalls={kv.Value.count}\tbytes={kv.Value.bytes}");
+            DiagLog($"CUMULATIVE\tfilesWithStreams={s_DiagFiles}\tgetCalls={s_DiagGetCalls}\tcreates={s_DiagCreates}" +
+                $"\tfailures={s_DiagFailures}\tcahStreams={s_DiagCahStreams}\tcomputeCalls={s_DiagComputeCalls}" +
+                $"\tredundant={s_DiagRedundant}\tbytesCrc={s_DiagBytes}\tmaxDictSize={s_DiagMaxDictSize}" +
+                $"\tdistinctResourceFiles={s_DiagCreatesPerFile.Count}\tchurnReaderMemMB={s_DiagCreates * 4}");
+        }
+
         foreach (var r in m_resourceReaders.Values)
         {
             r?.Dispose();
@@ -90,6 +141,7 @@ public class PPtrAndCrcProcessor : IDisposable
     // (0 when CRC is disabled). `objectId` is the analyzer id of this object, forwarded to the callback.
     public uint Process(long objectId, long offset, TypeTreeNode node)
     {
+        ++m_DiagObjects; // TEMP DIAGNOSTIC
         m_Offset = offset;
         m_ObjectId = objectId;
         m_Crc32 = 0;
@@ -456,44 +508,72 @@ public class PPtrAndCrcProcessor : IDisposable
         // size is the full file), which is why ignoring offset/size here is correct.
         if (path.StartsWith(ContentAddressedPrefix, StringComparison.OrdinalIgnoreCase))
         {
+            ++m_DiagCahStreams; ++s_DiagCahStreams; // TEMP DIAGNOSTIC
             m_Crc32 = Crc32Algorithm.Append(m_Crc32, Encoding.UTF8.GetBytes(path));
             return;
         }
 
         var resourceFile = GetResourceReader(path);
         if (resourceFile != null)
+        {
+            // TEMP DIAGNOSTIC: record resource CRC work and flag repeated (file,offset,size) ranges.
+            var name = StripToFilename(path);
+            ++m_DiagComputeCalls; ++s_DiagComputeCalls;
+            m_DiagBytes += size; s_DiagBytes += size;
+            if (!m_DiagSeen.Add((name, offset, size))) { ++m_DiagRedundant; ++s_DiagRedundant; }
+            m_DiagPerResource.TryGetValue(name, out var agg);
+            m_DiagPerResource[name] = (agg.count + 1, agg.bytes + size);
+
             m_Crc32 = resourceFile.ComputeCRC(offset, size, m_Crc32);
+        }
+    }
+
+    private static string StripToFilename(string path)
+    {
+        var slashPos = path.LastIndexOf('/');
+        return slashPos > 0 ? path.Substring(slashPos + 1) : path;
     }
 
     private UnityFileReader GetResourceReader(string filename)
     {
-        var slashPos = filename.LastIndexOf('/');
-        if (slashPos > 0)
-        {
-            filename = filename.Remove(0, slashPos + 1);
-        }
+        filename = StripToFilename(filename);
+
+        ++m_DiagGetCalls; ++s_DiagGetCalls; // TEMP DIAGNOSTIC
 
         if (!m_resourceReaders.TryGetValue(filename, out var reader))
         {
+            string diagResult; // TEMP DIAGNOSTIC
             try
             {
                 reader = new UnityFileReader("archive:/" + filename, 4 * 1024 * 1024);
+                diagResult = "archive";
             }
             catch (Exception)
             {
                 try
                 {
                     reader = new UnityFileReader(Path.Join(m_Folder, filename), 4 * 1024 * 1024);
+                    diagResult = "folder";
                 }
                 catch (Exception)
                 {
                     Console.Error.WriteLine();
                     Console.Error.WriteLine($"Error opening resource file {filename}");
                     reader = null;
+                    diagResult = "FAIL";
                 }
             }
 
             m_resourceReaders[filename] = reader;
+
+            // TEMP DIAGNOSTIC: a cache miss allocated (or tried to allocate) a 4MB reader.
+            ++m_DiagCreates; ++s_DiagCreates;
+            if (reader == null) { ++m_DiagFailures; ++s_DiagFailures; }
+            if (m_resourceReaders.Count > s_DiagMaxDictSize) s_DiagMaxDictSize = m_resourceReaders.Count;
+            s_DiagCreatesPerFile.TryGetValue(filename, out var priorOpens);
+            s_DiagCreatesPerFile[filename] = priorOpens + 1;
+            DiagLog($"CREATE\tfile={filename}\tresult={diagResult}\tdictSize={m_resourceReaders.Count}" +
+                $"\tpriorOpensThisRun={priorOpens}\ttotalCreates={s_DiagCreates}");
         }
 
         return reader;
