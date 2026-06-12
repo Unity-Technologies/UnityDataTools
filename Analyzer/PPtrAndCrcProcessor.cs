@@ -13,6 +13,8 @@ namespace UnityDataTools.Analyzer;
 //  2. Accumulate a CRC32 over the object's serialized bytes, including the content of external
 //     streams (texture/mesh/audio data stored in companion .resS/.resource files). This CRC is a
 //     content fingerprint used to detect whether two objects are identical.
+//     NOTE: references contribute their resolved analyzer object id (see ExtractPPtr), so the CRC
+//     is only comparable within a single analyze database, not between separate runs - see issue #74.
 // CRC computation can be disabled (skipCrc) while still extracting references.
 public class PPtrAndCrcProcessor : IDisposable
 {
@@ -416,6 +418,10 @@ public class PPtrAndCrcProcessor : IDisposable
         {
             var refId = m_Callback(m_ObjectId, fileId, pathId, m_StringBuilder.ToString(), referencedType);
 
+            // The CRC folds in the resolved analyzer object id rather than the raw PPtr
+            // (fileId/pathId). This normalizes references so duplicate objects in different bundles
+            // hash the same within a database, but it makes the CRC depend on per-run id assignment,
+            // so CRCs are not comparable between separate databases. See issue #74.
             if (!m_SkipCrc)
             {
                 m_pptrBytes[0] = (byte)(refId >> 24);
