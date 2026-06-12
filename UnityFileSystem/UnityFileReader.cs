@@ -117,16 +117,18 @@ public class UnityFileReader : IDisposable
         return m_Buffer[offset];
     }
 
+    // Computes the CRC32 over a contiguous range, reading the file in buffer-sized chunks.
     public uint ComputeCRC(long fileOffset, int size, uint crc32 = 0)
     {
-        var readSize = size > m_Buffer.Length ? m_Buffer.Length : size;
-        var readBytes = 0;
+        var remaining = size;
 
-        while (readBytes < size)
+        while (remaining > 0)
         {
-            var offset = GetBufferOffset(fileOffset, readSize);
-            crc32 = Crc32Algorithm.Append(crc32, m_Buffer, offset, readSize);
-            readBytes += readSize;
+            var chunk = (int)Math.Min(m_Buffer.Length, remaining);
+            var offset = GetBufferOffset(fileOffset, chunk);
+            crc32 = Crc32Algorithm.Append(crc32, m_Buffer, offset, chunk);
+            fileOffset += chunk;
+            remaining -= chunk;
         }
 
         return crc32;

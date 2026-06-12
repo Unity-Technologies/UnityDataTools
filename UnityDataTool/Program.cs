@@ -1,5 +1,6 @@
 using System;
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
 using UnityDataTools.Analyzer;
@@ -41,7 +42,8 @@ public static class Program
     {
         var pathArg = new Argument<DirectoryInfo>("path", "The path to the directory containing the files to analyze").ExistingOnly();
         var oOpt = new Option<string>(aliases: new[] { "--output-file", "-o" }, description: "Filename of the output database", getDefaultValue: () => "database.db");
-        var sOpt = new Option<bool>(aliases: new[] { "--skip-references", "-s" }, description: "Skip CRC and do not extract references");
+        var sOpt = new Option<bool>(aliases: new[] { "--skip-references", "-s" }, description: "Do not extract references (CRC is still computed unless --skip-crc is also given)");
+        var scOpt = new Option<bool>(aliases: new[] { "--skip-crc" }, description: "Skip CRC checksum calculation");
         var rOpt = new Option<bool>(aliases: new[] { "--extract-references", "-r" }) { IsHidden = true };
         var pOpt = new Option<string>(aliases: new[] { "--search-pattern", "-p" }, description: "File search pattern", getDefaultValue: () => "*");
         var vOpt = new Option<bool>(aliases: new[] { "--verbose", "-v" }, description: "Verbose output");
@@ -53,6 +55,7 @@ public static class Program
             pathArg,
             oOpt,
             sOpt,
+            scOpt,
             rOpt,
             pOpt,
             vOpt,
@@ -61,14 +64,28 @@ public static class Program
         };
 
         analyzeCommand.AddAlias("analyse");
-        analyzeCommand.SetHandler(
-            (DirectoryInfo di, string o, bool s, bool r, string p, bool v, bool noRecurse, FileInfo d) =>
+        // Bound via InvocationContext because the option count exceeds the strongly-typed
+        // SetHandler overloads.
+        analyzeCommand.SetHandler((InvocationContext context) =>
+        {
+            var d = context.ParseResult.GetValueForOption(dOpt);
+            var ttResult = LoadTypeTreeDataFile(d);
+            if (ttResult != 0)
             {
-                var ttResult = LoadTypeTreeDataFile(d);
-                if (ttResult != 0) return Task.FromResult(ttResult);
-                return Task.FromResult(HandleAnalyze(di, o, s, r, p, v, noRecurse));
-            },
-            pathArg, oOpt, sOpt, rOpt, pOpt, vOpt, recurseOpt, dOpt);
+                context.ExitCode = ttResult;
+                return;
+            }
+
+            context.ExitCode = HandleAnalyze(
+                context.ParseResult.GetValueForArgument(pathArg),
+                context.ParseResult.GetValueForOption(oOpt),
+                context.ParseResult.GetValueForOption(sOpt),
+                context.ParseResult.GetValueForOption(scOpt),
+                context.ParseResult.GetValueForOption(rOpt),
+                context.ParseResult.GetValueForOption(pOpt),
+                context.ParseResult.GetValueForOption(vOpt),
+                context.ParseResult.GetValueForOption(recurseOpt));
+        });
 
         return analyzeCommand;
     }
@@ -293,6 +310,7 @@ public static class Program
         DirectoryInfo path,
         string outputFile,
         bool skipReferences,
+        bool skipCrc,
         bool extractReferences,
         string searchPattern,
         bool verbose,
@@ -305,7 +323,7 @@ public static class Program
             Console.WriteLine("WARNING: --extract-references, -r option is deprecated (references are now extracted by default)");
         }
 
-        return analyzer.Analyze(path.FullName, outputFile, searchPattern, skipReferences, verbose, noRecurse);
+        return analyzer.Analyze(path.FullName, outputFile, searchPattern, skipReferences, skipCrc, verbose, noRecurse);
     }
 
     static int HandleFindReferences(FileInfo databasePath, string outputFile, long? objectId, string objectName, string objectType, bool findAll)

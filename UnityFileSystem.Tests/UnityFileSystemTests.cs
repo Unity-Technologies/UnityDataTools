@@ -244,6 +244,25 @@ public class UnityFileTests : AssetBundleTestFixture
         Assert.Throws<ObjectDisposedException>(() => file.Read(10, new byte[10]));
     }
 
+    // Ranges that cross the internal buffer boundary (and a partial final chunk) must
+    // produce the same CRC as a single-buffer read. TextFile.txt is 21 bytes; an 8-byte
+    // buffer forces three chunks (8 + 8 + 5).
+    [TestCase(0, 21)]  // whole file, partial final chunk
+    [TestCase(0, 16)]  // exact multiple of the buffer size
+    [TestCase(3, 15)]  // unaligned start, crosses two boundaries
+    [TestCase(0, 8)]   // exactly one buffer
+    [TestCase(2, 5)]   // entirely within one buffer
+    public void ComputeCRC_RangeCrossingBuffer_MatchesSingleBufferRead(long offset, int size)
+    {
+        var path = Path.Combine(Context.TestDataFolder, "TextFile.txt");
+
+        using var singleBufferReader = new UnityFileReader(path, 1024 * 1024);
+        var expected = singleBufferReader.ComputeCRC(offset, size);
+
+        using var smallBufferReader = new UnityFileReader(path, 8);
+        Assert.AreEqual(expected, smallBufferReader.ComputeCRC(offset, size));
+    }
+
     [Test]
     public void OpenFile_ArchiveFileSystem_ReturnsFile()
     {

@@ -29,4 +29,5 @@ public interface ISQLiteFileParser : IDisposable
     void Parse(string filename);
     public bool Verbose { get; set; }
     public bool SkipReferences { get; set; }
+    public bool SkipCrc { get; set; }
 }

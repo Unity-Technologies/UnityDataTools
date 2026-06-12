@@ -19,6 +19,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     private int m_NextAssetBundleId = 0;
 
     private bool m_SkipReferences;
+    private bool m_SkipCrc;
 
     private IdProvider<string> m_SerializedFileIdProvider = new();
     private ObjectIdProvider m_ObjectIdProvider = new();
@@ -54,11 +55,12 @@ public class SerializedFileSQLiteWriter : IDisposable
     private SqliteConnection m_Database;
     private SqliteCommand m_LastId = new SqliteCommand();
     private SqliteTransaction m_CurrentTransaction = null;
-    public SerializedFileSQLiteWriter(SqliteConnection database, bool skipReferences)
+    public SerializedFileSQLiteWriter(SqliteConnection database, bool skipReferences, bool skipCrc)
     {
         m_Initialized = false;
         m_Database = database;
         m_SkipReferences = skipReferences;
+        m_SkipCrc = skipCrc;
     }
 
     public void Init()
@@ -116,7 +118,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     {
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
-        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, AddReference);
+        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
         int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLower());
         int sceneId = -1;
 
@@ -228,7 +230,10 @@ public class SerializedFileSQLiteWriter : IDisposable
                     m_AddObjectCommand.SetValue("game_object", "");
                 }
 
-                if (!m_SkipReferences)
+                // The walk both extracts references and accumulates the CRC, so it is needed
+                // unless both are disabled. When CRC is on but references are off, the walk
+                // still resolves referenced object ids (AddReference skips the insert).
+                if (!m_SkipReferences || !m_SkipCrc)
                 {
                     crc32 = pptrReader.Process(currentObjectId, offset, root);
                 }
@@ -264,15 +269,23 @@ public class SerializedFileSQLiteWriter : IDisposable
         }
     }
 
+    // Callback from PPtrAndCrcProcessor for each reference discovered in the SerializedFile
     private int AddReference(long objectId, int fileId, long pathId, string propertyPath, string propertyType)
     {
+        // Always resolve the id so the CRC stays stable; only persist the row when references
+        // are being extracted.
         var referencedObjectId = m_ObjectIdProvider.GetId((m_LocalToDbFileId[fileId], pathId));
-        m_AddReferenceCommand.SetTransaction(m_CurrentTransaction);
-        m_AddReferenceCommand.SetValue("object", objectId);
-        m_AddReferenceCommand.SetValue("referenced_object", referencedObjectId);
-        m_AddReferenceCommand.SetValue("property_path", propertyPath);
-        m_AddReferenceCommand.SetValue("property_type", propertyType);
-        m_AddReferenceCommand.ExecuteNonQuery();
+
+        if (!m_SkipReferences)
+        {
+            m_AddReferenceCommand.SetTransaction(m_CurrentTransaction);
+            m_AddReferenceCommand.SetValue("object", objectId);
+            m_AddReferenceCommand.SetValue("referenced_object", referencedObjectId);
+            m_AddReferenceCommand.SetValue("property_path", propertyPath);
+            m_AddReferenceCommand.SetValue("property_type", propertyType);
+            m_AddReferenceCommand.ExecuteNonQuery();
+        }
+
         return referencedObjectId;
     }
 

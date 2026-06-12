@@ -40,3 +40,5 @@ UnityFileSystemTestData/UserSettings/
 UnityFileSystemTestData/Packages/
 *.db
 *.csv
+
+*.stackdump
