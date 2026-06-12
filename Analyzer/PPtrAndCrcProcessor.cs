@@ -115,10 +115,12 @@ public class PPtrAndCrcProcessor : IDisposable
         }
         else if (node.Type == "vector" || node.Type == "map" || node.Type == "staticvector")
         {
+            // These containers wrap an Array node as their single child; process that array.
             ProcessArray(node.Children[0], false, isInManagedReferenceRegistry);
         }
         else if (node.Type.StartsWith("PPtr<"))
         {
+            // Extract T from the "PPtr<T>" type string.
             var startIndex = node.Type.IndexOf('<') + 1;
             var endIndex = node.Type.Length - 1;
             var referencedType = node.Type.Substring(startIndex, endIndex - startIndex);
@@ -127,12 +129,15 @@ public class PPtrAndCrcProcessor : IDisposable
         }
         else if (node.Type == "StreamingInfo")
         {
+            // StreamingInfo (Texture2D/Mesh) points at external stream data: offset, size, path.
             if (node.Children.Count != 3)
                 throw new Exception("Invalid StreamingInfo");
 
+            // The offset field is 32- or 64-bit depending on the type tree version.
             var offset = node.Children[0].Size == 4 ? m_Reader.ReadInt32(m_Offset) : m_Reader.ReadInt64(m_Offset);
             m_Offset += node.Children[0].Size;
 
+            // size is an unsigned 32-bit field read as a signed int; streams >2GB are not handled.
             var size = m_Reader.ReadInt32(m_Offset);
             m_Offset += 4;
 
@@ -148,6 +153,8 @@ public class PPtrAndCrcProcessor : IDisposable
         }
         else if (node.Type == "StreamedResource")
         {
+            // Like StreamingInfo but used by AudioClip/VideoClip; the fields are in a different
+            // order - path first, then 64-bit offset and size.
             if (node.Children.Count != 3)
                 throw new Exception("Invalid StreamedResource");
 
@@ -159,6 +166,7 @@ public class PPtrAndCrcProcessor : IDisposable
             var offset = m_Reader.ReadInt64(m_Offset);
             m_Offset += 8;
 
+            // 64-bit size truncated to int; streams >2GB are not handled.
             var size = (int)m_Reader.ReadInt64(m_Offset);
             m_Offset += 8;
 
@@ -169,6 +177,7 @@ public class PPtrAndCrcProcessor : IDisposable
         }
         else if (node.CSharpType == typeof(string))
         {
+            // A string is serialized as a 4-byte length followed by its bytes; CRC the whole span.
             var prevOffset = m_Offset;
             m_Offset += m_Reader.ReadInt32(m_Offset) + 4;
             AppendCrc(prevOffset, (int)(m_Offset - prevOffset));
@@ -194,6 +203,8 @@ public class PPtrAndCrcProcessor : IDisposable
             }
         }
 
+        // Unity pads certain fields to a 4-byte boundary. Re-align after the node if it, or any of
+        // its children, is flagged to align.
         if (
                 ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AlignBytes) != 0 ||
                 ((int)node.MetaFlags & (int)TypeTreeMetaFlags.AnyChildUsesAlignBytes) != 0
@@ -205,10 +216,13 @@ public class PPtrAndCrcProcessor : IDisposable
 
     private void ProcessArray(TypeTreeNode node, bool isManagedReferenceRegistry, bool isInManagedReferenceRegistry)
     {
+        // An Array node has two children: [0] is the int element count, [1] the element template.
         var dataNode = node.Children[1];
 
         if (dataNode.IsBasicType)
         {
+            // Fixed-size elements are stored contiguously, so CRC the 4-byte count plus all element
+            // bytes in one range. (size * count can overflow int for very large arrays.)
             var arraySize = m_Reader.ReadInt32(m_Offset);
             AppendCrc(m_Offset, dataNode.Size * arraySize + 4);
             m_Offset += dataNode.Size * arraySize + 4;
@@ -235,8 +249,9 @@ public class PPtrAndCrcProcessor : IDisposable
                 else
                 {
                     // This is the version-2 "RefIds" array. Each element is a ReferencedObject
-                    // whose children are [rid, type, data]; read the rid here and hand the type
-                    // and data nodes to ProcessManagedReferenceData.
+                    // whose children are [rid, type, data]; read the rid here and pass the type
+                    // node to ProcessManagedReferenceData (the data node isn't needed - the layout
+                    // comes from the referenced type's own TypeTree).
                     if (dataNode.Children.Count < 3)
                         throw new Exception("Invalid ReferencedObject");
 
@@ -244,7 +259,7 @@ public class PPtrAndCrcProcessor : IDisposable
                     AppendCrc(m_Offset, 8);
                     m_Offset += 8;
 
-                    ProcessManagedReferenceData(dataNode.Children[1], dataNode.Children[2], rid);
+                    ProcessManagedReferenceData(dataNode.Children[1], rid);
                 }
             }
         }
@@ -303,16 +318,14 @@ public class PPtrAndCrcProcessor : IDisposable
 
         if (version == 1)
         {
-            // Second child is the ReferencedObject.
+            // Second child is the ReferencedObject; its first child describes the referenced type.
             var refObjNode = node.Children[1];
-            // And its children are the referenced type and data nodes.
             var refTypeNode = refObjNode.Children[0];
-            var refObjData = refObjNode.Children[1];
 
             // Read entries until ProcessManagedReferenceData hits the sentinel; here the rid is
             // simply the entry's position.
             int i = 0;
-            while (ProcessManagedReferenceData(refTypeNode, refObjData, i++))
+            while (ProcessManagedReferenceData(refTypeNode, i++))
             {
             }
         }
@@ -342,10 +355,11 @@ public class PPtrAndCrcProcessor : IDisposable
 
     // Reads one registry entry: the concrete type's fully-qualified name (class, namespace,
     // assembly) followed by the object's data. The data is laid out according to that type's own
-    // TypeTree, so we fetch it and recurse into it. Returns false at the end of a version-1
-    // registry - marked either by the "Terminus" sentinel type or by a null/unknown rid (-1 / -2)
-    // - and true otherwise.
-    bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, long rid)
+    // TypeTree, which we look up by name and recurse into - so the data node from the registry's
+    // own TypeTree is not needed here; refTypeNode is used only to sanity-check the entry's shape.
+    // Returns false at the end of a version-1 registry - marked either by the "Terminus" sentinel
+    // type or by a null/unknown rid (-1 / -2) - and true otherwise.
+    bool ProcessManagedReferenceData(TypeTreeNode refTypeNode, long rid)
     {
         if (refTypeNode.Children.Count < 3)
             throw new Exception("Invalid ReferencedManagedType");
