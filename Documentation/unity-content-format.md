@@ -124,3 +124,5 @@ You can include a Unity BuildReport file when running `UnityDataTools analyze`. 
 `UnityDataTools analyze` can also import Addressables build layout files, which include source asset information.  See [Addressable Build Reports](./addressables-build-reports.md).
 
 For AssetBundles built by [BuildPipeline.BuildAssetBundles()](https://docs.unity3d.com/ScriptReference/BuildPipeline.BuildAssetBundles.html), Unity creates a .manifest file for each AssetBundle that has source information.  This is a text-based format.
+
+For content directory builds, the [ContentLayout.json](contentlayout.md) file maps the build output back to the source assets in the project.

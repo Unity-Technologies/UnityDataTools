@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 // this file comes from Addressables and is used to serialize and deserialize
 // build layout information to JSON
-namespace UnityDataTools.Analyzer.SQLite.Parsers.Models
+namespace UnityDataTools.Models
 {
     public class BuildLayout
     {
