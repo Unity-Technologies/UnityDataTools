@@ -2,6 +2,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using UnityDataTools.Analyzer;
 using UnityDataTools.FileSystem;
@@ -24,7 +25,7 @@ public static class Program
     {
         UnityFileSystem.Init();
 
-        var rootCommand = new RootCommand();
+        var rootCommand = new RootCommand(BuildRootDescription());
         rootCommand.AddCommand(BuildAnalyzeCommand());
         rootCommand.AddCommand(BuildFindRefsCommand());
         rootCommand.AddCommand(BuildDumpCommand());
@@ -36,6 +37,30 @@ public static class Program
         UnityFileSystem.Cleanup();
 
         return r;
+    }
+
+    const string DocumentationUrl = "https://github.com/Unity-Technologies/UnityDataTools/blob/main/Documentation/unitydatatool.md";
+
+    static string BuildRootDescription()
+    {
+        var version = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+            ?? "unknown";
+
+        // Strip the SourceLink build-metadata suffix (e.g. "1.3.5+<commit>").
+        var plusIndex = version.IndexOf('+');
+        if (plusIndex >= 0)
+            version = version.Substring(0, plusIndex);
+
+        return
+            "UnityDataTool inspects and analyzes Unity file formats, for example the content formats for AssetBundles, " +
+            "Player and content directory builds. It can build a database of the Unity objects and their " +
+            "references for analysis, dump objects as text, and examine " +
+            "archive and SerializedFile internals.\n\n" +
+            "Run 'UnityDataTool [command] --help' for detailed help on a specific command.\n\n" +
+            $"Documentation: {DocumentationUrl}\n" +
+            $"Version: {version}";
     }
 
     static Command BuildAnalyzeCommand()
