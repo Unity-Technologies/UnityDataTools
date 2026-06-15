@@ -348,7 +348,16 @@ public static class Program
             Console.WriteLine("WARNING: --extract-references, -r option is deprecated (references are now extracted by default)");
         }
 
-        return analyzer.Analyze(path.FullName, outputFile, searchPattern, skipReferences, skipCrc, verbose, noRecurse);
+        return analyzer.Analyze(new AnalyzerTool.AnalyzeOptions
+        {
+            Path = path.FullName,
+            DatabaseName = outputFile,
+            SearchPattern = searchPattern,
+            SkipReferences = skipReferences,
+            SkipCrc = skipCrc,
+            Verbose = verbose,
+            NoRecursion = noRecurse,
+        });
     }
 
     static int HandleFindReferences(FileInfo databasePath, string outputFile, long? objectId, string objectName, string objectType, bool findAll)
