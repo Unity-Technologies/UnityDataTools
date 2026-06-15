@@ -102,7 +102,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             Console.SetError(swErr);
 
             // Analyze should return 0 even if files fail (non-zero would be a critical error)
-            Assert.AreEqual(0, await Program.Main(new string[] { "analyze", testDataFolder, "-p", "level0" }));
+            Assert.AreEqual(0, await Program.Main(new string[] { "analyze", Path.Combine(testDataFolder, "level0") }));
 
             var output = swOut.ToString() + swErr.ToString();
 

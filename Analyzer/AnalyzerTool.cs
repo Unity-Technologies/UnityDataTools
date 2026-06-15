@@ -13,7 +13,7 @@ namespace UnityDataTools.Analyzer;
 
 public class AnalyzerTool
 {
-    bool m_Verbose = false;
+    AnalyzeOptions m_Options;
 
     public List<ISQLiteFileParser> parsers = new List<ISQLiteFileParser>()
     {
@@ -21,27 +21,33 @@ public class AnalyzerTool
         new SerializedFileParser(),
     };
 
-    public int Analyze(
-        string path,
-        string databaseName,
-        string searchPattern,
-        bool skipReferences,
-        bool skipCrc,
-        bool verbose,
-        bool noRecursion)
+    public class AnalyzeOptions
     {
-        m_Verbose = verbose;
+        // Each entry is a file or a directory. Directories are scanned using SearchPattern and
+        // NoRecursion; files are always included regardless of SearchPattern.
+        public IReadOnlyList<string> Paths { get; init; }
+        public string DatabaseName { get; init; }
+        public string SearchPattern { get; init; } = "*";
+        public bool SkipReferences { get; init; }
+        public bool SkipCrc { get; init; }
+        public bool Verbose { get; init; }
+        public bool NoRecursion { get; init; }
+    }
 
-        using SQLiteWriter writer = new(databaseName);
+    public int Analyze(AnalyzeOptions options)
+    {
+        m_Options = options;
+
+        using SQLiteWriter writer = new(m_Options.DatabaseName);
 
         try
         {
             writer.Begin();
             foreach (var parser in parsers)
             {
-                parser.Verbose = verbose;
-                parser.SkipReferences = skipReferences;
-                parser.SkipCrc = skipCrc;
+                parser.Verbose = m_Options.Verbose;
+                parser.SkipReferences = m_Options.SkipReferences;
+                parser.SkipCrc = m_Options.SkipCrc;
                 parser.Init(writer.Connection);
 
             }
@@ -55,17 +61,15 @@ public class AnalyzerTool
         var timer = new Stopwatch();
         timer.Start();
 
-        var files = Directory.GetFiles(
-            path,
-            searchPattern,
-            noRecursion ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories);
+        var files = CollectFiles();
 
         int countFailures = 0;
         int countSuccess = 0;
         int countIgnored = 0;
         int i = 1;
-        foreach (var file in files)
+        foreach (var (file, displayRoot) in files)
         {
+            var relativePath = Path.GetRelativePath(displayRoot, file);
             bool foundParser = false;
             foreach (var parser in parsers)
             {
@@ -75,7 +79,7 @@ public class AnalyzerTool
                     try
                     {
                         parser.Parse(file);
-                        ReportProgress(Path.GetRelativePath(path, file), i, files.Length);
+                        ReportProgress(relativePath, i, files.Count);
                         countSuccess++;
                     }
                     catch (SerializedFileOpenException e)
@@ -83,7 +87,6 @@ public class AnalyzerTool
                         // Expected failure — the file content could not be parsed.
                         // Don't print a stack trace; it adds no value for this known failure mode.
                         EraseProgressLine();
-                        var relativePath = Path.GetRelativePath(path, file);
                         Console.Error.WriteLine($"Failed to open: {relativePath}");
                         var hint = SerializedFileDetector.GetOpenFailureHint(e.FilePath);
                         if (hint != null)
@@ -94,9 +97,8 @@ public class AnalyzerTool
                     {
                         // Unexpected failure (SQL error, I/O error, bug, etc.) — print full details.
                         EraseProgressLine();
-                        var relativePath = Path.GetRelativePath(path, file);
                         Console.Error.WriteLine($"Failed to process: {relativePath}");
-                        if (m_Verbose)
+                        if (m_Options.Verbose)
                         {
                             Console.Error.WriteLine($"  Exception: {e.GetType().Name}: {e.Message}");
                             if (e.InnerException != null)
@@ -109,9 +111,8 @@ public class AnalyzerTool
             }
             if (!foundParser)
             {
-                if (m_Verbose)
+                if (m_Options.Verbose)
                 {
-                    var relativePath = Path.GetRelativePath(path, file);
                     Console.WriteLine();
                     Console.WriteLine($"Ignoring {relativePath}");
                 }
@@ -137,12 +138,46 @@ public class AnalyzerTool
         return 0;
     }
 
+    // Expands the input paths into the concrete files to analyze. Each result pairs the file with the
+    // root used to render its relative path in progress/error messages: the scanned directory for files
+    // found by scanning, or the file's own directory for explicitly-named files. Duplicates reached via
+    // more than one input are analyzed once.
+    List<(string FullPath, string DisplayRoot)> CollectFiles()
+    {
+        var searchOption = m_Options.NoRecursion ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories;
+        var collected = new List<(string FullPath, string DisplayRoot)>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var inputPath in m_Options.Paths)
+        {
+            if (Directory.Exists(inputPath))
+            {
+                foreach (var file in Directory.GetFiles(inputPath, m_Options.SearchPattern, searchOption))
+                {
+                    if (seen.Add(Path.GetFullPath(file)))
+                        collected.Add((file, inputPath));
+                }
+            }
+            else if (File.Exists(inputPath))
+            {
+                if (seen.Add(Path.GetFullPath(inputPath)))
+                    collected.Add((inputPath, Path.GetDirectoryName(Path.GetFullPath(inputPath))));
+            }
+            else
+            {
+                Console.Error.WriteLine($"Warning: path not found, skipping: {inputPath}");
+            }
+        }
+
+        return collected;
+    }
+
     int m_LastProgressMessageLength = 0;
 
     void ReportProgress(string relativePath, int fileIndex, int cntFiles)
     {
         var message = $"Processing {fileIndex * 100 / cntFiles}% ({fileIndex}/{cntFiles}) {relativePath}";
-        if (!m_Verbose)
+        if (!m_Options.Verbose)
         {
             EraseProgressLine();
             Console.Write($"\r{message}");
@@ -158,7 +193,7 @@ public class AnalyzerTool
 
     void EraseProgressLine()
     {
-        if (!m_Verbose)
+        if (!m_Options.Verbose)
             Console.Write($"\r{new string(' ', m_LastProgressMessageLength)}\r");
         else
             Console.WriteLine();

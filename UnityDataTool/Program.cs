@@ -2,6 +2,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using UnityDataTools.Analyzer;
 using UnityDataTools.FileSystem;
@@ -24,7 +25,7 @@ public static class Program
     {
         UnityFileSystem.Init();
 
-        var rootCommand = new RootCommand();
+        var rootCommand = new RootCommand(BuildRootDescription());
         rootCommand.AddCommand(BuildAnalyzeCommand());
         rootCommand.AddCommand(BuildFindRefsCommand());
         rootCommand.AddCommand(BuildDumpCommand());
@@ -38,19 +39,49 @@ public static class Program
         return r;
     }
 
+    const string DocumentationUrl = "https://github.com/Unity-Technologies/UnityDataTools/blob/main/Documentation/unitydatatool.md";
+
+    static string BuildRootDescription()
+    {
+        var version = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+            ?? "unknown";
+
+        // Strip the SourceLink build-metadata suffix (e.g. "1.3.5+<commit>").
+        var plusIndex = version.IndexOf('+');
+        if (plusIndex >= 0)
+            version = version.Substring(0, plusIndex);
+
+        return
+            "UnityDataTool inspects and analyzes Unity file formats, for example the content formats for AssetBundles, " +
+            "Player and content directory builds. It can build a database of the Unity objects and their " +
+            "references for analysis, dump objects as text, and examine " +
+            "archive and SerializedFile internals.\n\n" +
+            "Run 'UnityDataTool [command] --help' for detailed help on a specific command.\n\n" +
+            $"Documentation: {DocumentationUrl}\n" +
+            $"Version: {version}";
+    }
+
     static Command BuildAnalyzeCommand()
     {
-        var pathArg = new Argument<DirectoryInfo>("path", "The path to the directory containing the files to analyze").ExistingOnly();
+        var pathArg = new Argument<FileSystemInfo[]>("paths",
+            "One or more files or directories to analyze. Directories are scanned (see --search-pattern and --no-recurse); "
+            + "files are analyzed directly. Combine paths to include files from multiple locations, e.g. a build output "
+            + "directory and a build report file.")
+        {
+            Arity = ArgumentArity.OneOrMore
+        }.ExistingOnly();
         var oOpt = new Option<string>(aliases: new[] { "--output-file", "-o" }, description: "Filename of the output database", getDefaultValue: () => "database.db");
-        var sOpt = new Option<bool>(aliases: new[] { "--skip-references", "-s" }, description: "Do not extract references (CRC is still computed unless --skip-crc is also given)");
+        var sOpt = new Option<bool>(aliases: new[] { "--skip-references", "-s" }, description: "Do not extract references");
         var scOpt = new Option<bool>(aliases: new[] { "--skip-crc" }, description: "Skip CRC checksum calculation");
         var rOpt = new Option<bool>(aliases: new[] { "--extract-references", "-r" }) { IsHidden = true };
-        var pOpt = new Option<string>(aliases: new[] { "--search-pattern", "-p" }, description: "File search pattern", getDefaultValue: () => "*");
+        var pOpt = new Option<string>(aliases: new[] { "--search-pattern", "-p" }, description: "File search pattern applied when scanning directories", getDefaultValue: () => "*");
         var vOpt = new Option<bool>(aliases: new[] { "--verbose", "-v" }, description: "Verbose output");
-        var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside path");
+        var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside scanned directories");
         var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: TypeTreeDataDescription);
 
-        var analyzeCommand = new Command("analyze", "Analyze AssetBundles or SerializedFiles.")
+        var analyzeCommand = new Command("analyze", "Analyze AssetBundles, SerializedFiles and build reports into a database.")
         {
             pathArg,
             oOpt,
@@ -307,7 +338,7 @@ public static class Program
     }
 
     static int HandleAnalyze(
-        DirectoryInfo path,
+        FileSystemInfo[] paths,
         string outputFile,
         bool skipReferences,
         bool skipCrc,
@@ -323,7 +354,16 @@ public static class Program
             Console.WriteLine("WARNING: --extract-references, -r option is deprecated (references are now extracted by default)");
         }
 
-        return analyzer.Analyze(path.FullName, outputFile, searchPattern, skipReferences, skipCrc, verbose, noRecurse);
+        return analyzer.Analyze(new AnalyzerTool.AnalyzeOptions
+        {
+            Paths = Array.ConvertAll(paths, p => p.FullName),
+            DatabaseName = outputFile,
+            SearchPattern = searchPattern,
+            SkipReferences = skipReferences,
+            SkipCrc = skipCrc,
+            Verbose = verbose,
+            NoRecursion = noRecurse,
+        });
     }
 
     static int HandleFindReferences(FileInfo databasePath, string outputFile, long? objectId, string objectName, string objectType, bool findAll)

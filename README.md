@@ -40,17 +40,15 @@ Refer to the [commit history](https://github.com/Unity-Technologies/UnityDataToo
 
 ## Getting UnityFileSystemApi
 
-UnityFileSystemApi is distributed in the Tools folder of the Unity Editor (from version 2022.1.0a14). The UnityDataTools repository includes a Windows, Mac, and Linux copy of the library in the `UnityFileSystem/` directory. 
+UnityDataTool uses the native `UnityFileSystemApi` library to read Unity Archives and SerializedFiles. **Normally you don't need to do anything with this library.** The repository already includes a recent Windows, Mac, and Linux copy in the [`UnityFileSystem/`](https://github.com/Unity-Technologies/UnityDataTools/tree/main/UnityFileSystem) directory, and using that bundled copy is the recommended way to run the tool.
 
-The library is backward compatible and can read data files from most Unity versions, so typically the version that is provided with UnityDataTools can be used "as is".
+The library is backward compatible but not forward compatible: a given version can read content from the same or older Unity versions, but may be unable to read content produced by a newer Unity Editor than the library itself. The bundled copy is updated periodically as Unity evolves, so in practice it can read content from just about any Unity version.
 
-To analyze data using the library from a specific version of the Unity Editor, copy the appropriate UnityFileSystemApi file from your Unity Editor installation (`{UnityEditor}/Data/Tools/`) to `UnityDataTool/UnityFileSystem/` prior to building:
+`UnityFileSystemApi` is also distributed in the `Data/Tools/` folder of the Unity Editor (for all versions since 2022.1.0a14). In the rare case that you need to read content from a Unity version newer than the bundled library, copy the matching file from your Unity Editor installation (`{UnityEditor}/Data/Tools/`) into the `UnityFileSystem/` directory before building:
 
-The file name is as follows:
-
-- Windows: `UnityFileSystemApi.dll`
-- Mac: `UnityFileSystemApi.dylib`
-- Linux: `UnityFileSystemApi.so`
+- Windows: [`UnityFileSystemApi.dll`](https://github.com/Unity-Technologies/UnityDataTools/blob/main/UnityFileSystem/UnityFileSystemApi.dll)
+- Mac: [`UnityFileSystemApi.dylib`](https://github.com/Unity-Technologies/UnityDataTools/blob/main/UnityFileSystem/UnityFileSystemApi.dylib)
+- Linux: [`UnityFileSystemApi.so`](https://github.com/Unity-Technologies/UnityDataTools/blob/main/UnityFileSystem/UnityFileSystemApi.so)
 
 ## How to Build
 

@@ -5,25 +5,39 @@ The `analyze` command extracts information from Unity Archives (e.g. AssetBundle
 ## Quick Reference
 
 ```
-UnityDataTool analyze <path> [options]
+UnityDataTool analyze <paths>... [options]
 ```
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `<path>` | Path to folder containing files to analyze | *(required)* |
+| `<paths>...` | One or more files or directories to analyze. Directories are scanned; files are analyzed directly. | *(required)* |
 | `-o, --output-file <file>` | Output database filename | `database.db` |
-| `-p, --search-pattern <pattern>` | File search pattern (`*` and `?` supported) | `*` |
+| `-p, --search-pattern <pattern>` | File search pattern applied when scanning directories (`*` and `?` supported) | `*` |
 | `-s, --skip-references` | Do not extract references (smaller DB, no `refs` table). CRC is still computed. | `false` |
 | `--skip-crc` | Skip the CRC32 checksum calculation (faster; `objects.crc32` will be 0) | `false` |
 | `-v, --verbose` | Show more information during analysis | `false` |
-| `--no-recurse` | Do not recurse into sub-directories | `false` |
+| `--no-recurse` | Do not recurse into sub-directories when scanning directories | `false` |
 | `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
+
+There is no way to append to an existing database, so every file you want in the results must be
+included in a single `analyze` invocation. Pass multiple paths to combine files from more than one
+location into the same database.
 
 ## Examples
 
 Analyze all files in a directory:
 ```bash
 UnityDataTool analyze /path/to/asset/bundles
+```
+
+Analyze a single file (no need for `.` plus `-p`):
+```bash
+UnityDataTool analyze /path/to/asset/bundles/my.bundle
+```
+
+Combine a build output directory with a build report file kept in a separate location:
+```bash
+UnityDataTool analyze /path/to/build/output /path/to/Library/LastBuild.buildreport
 ```
 
 Analyze only `.bundle` files and specify a custom database name:
@@ -42,7 +56,9 @@ See also [Analyze Examples](../../Documentation/analyze-examples.md).
 
 ## What Can Be Analyzed
 
-The analyze command works with the following types of directories:
+Each path may be an individual file or a directory. Directories are scanned (honoring
+`--search-pattern` and `--no-recurse`); individually-named files are always analyzed. The analyze
+command works with the following types of input:
 
 | Input Type | Description |
 |------------|-------------|
