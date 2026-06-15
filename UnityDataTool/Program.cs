@@ -65,17 +65,23 @@ public static class Program
 
     static Command BuildAnalyzeCommand()
     {
-        var pathArg = new Argument<DirectoryInfo>("path", "The path to the directory containing the files to analyze").ExistingOnly();
+        var pathArg = new Argument<FileSystemInfo[]>("paths",
+            "One or more files or directories to analyze. Directories are scanned (see --search-pattern and --no-recurse); "
+            + "files are analyzed directly. Combine paths to include files from multiple locations, e.g. a build output "
+            + "directory and a build report file.")
+        {
+            Arity = ArgumentArity.OneOrMore
+        }.ExistingOnly();
         var oOpt = new Option<string>(aliases: new[] { "--output-file", "-o" }, description: "Filename of the output database", getDefaultValue: () => "database.db");
-        var sOpt = new Option<bool>(aliases: new[] { "--skip-references", "-s" }, description: "Do not extract references (CRC is still computed unless --skip-crc is also given)");
+        var sOpt = new Option<bool>(aliases: new[] { "--skip-references", "-s" }, description: "Do not extract references");
         var scOpt = new Option<bool>(aliases: new[] { "--skip-crc" }, description: "Skip CRC checksum calculation");
         var rOpt = new Option<bool>(aliases: new[] { "--extract-references", "-r" }) { IsHidden = true };
-        var pOpt = new Option<string>(aliases: new[] { "--search-pattern", "-p" }, description: "File search pattern", getDefaultValue: () => "*");
+        var pOpt = new Option<string>(aliases: new[] { "--search-pattern", "-p" }, description: "File search pattern applied when scanning directories", getDefaultValue: () => "*");
         var vOpt = new Option<bool>(aliases: new[] { "--verbose", "-v" }, description: "Verbose output");
-        var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside path");
+        var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside scanned directories");
         var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: TypeTreeDataDescription);
 
-        var analyzeCommand = new Command("analyze", "Analyze AssetBundles or SerializedFiles.")
+        var analyzeCommand = new Command("analyze", "Analyze AssetBundles, SerializedFiles and build reports into a database.")
         {
             pathArg,
             oOpt,
@@ -332,7 +338,7 @@ public static class Program
     }
 
     static int HandleAnalyze(
-        DirectoryInfo path,
+        FileSystemInfo[] paths,
         string outputFile,
         bool skipReferences,
         bool skipCrc,
@@ -350,7 +356,7 @@ public static class Program
 
         return analyzer.Analyze(new AnalyzerTool.AnalyzeOptions
         {
-            Path = path.FullName,
+            Paths = Array.ConvertAll(paths, p => p.FullName),
             DatabaseName = outputFile,
             SearchPattern = searchPattern,
             SkipReferences = skipReferences,

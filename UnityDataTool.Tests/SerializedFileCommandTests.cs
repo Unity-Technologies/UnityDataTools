@@ -605,8 +605,8 @@ public class SerializedFileCommandTests
     {
         // First, run analyze command to create database
         var databasePath = Path.Combine(m_TestOutputFolder, "test_analyze.db");
-        var analyzePath = m_TestDataFolder;
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-o", databasePath, "-p", "level0" }));
+        var analyzePath = Path.Combine(m_TestDataFolder, "level0");
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-o", databasePath }));
 
         // Now run serialized-file objectlist
         var path = Path.Combine(m_TestDataFolder, "level0");

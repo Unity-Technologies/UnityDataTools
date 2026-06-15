@@ -49,7 +49,13 @@ SELECT build_time_asset_path from build_report_source_assets WHERE build_time_as
 
 ## Cross-Referencing with Build Output
 
-For comprehensive analysis, run `analyze` on both the build output **and** the matching build report file. Use a clean build to ensure PackedAssets information is fully populated. You may need to copy the build report into the build output directory so both are found by `analyze`.
+For comprehensive analysis, run `analyze` on both the build output **and** the matching build report file. Use a clean build to ensure PackedAssets information is fully populated.
+
+`analyze` accepts multiple path arguments, each of which can be a file or a directory, so you can pass the build output directory together with the build report path (or the directory containing it) in a single command:
+
+```bash
+UnityDataTool analyze /path/to/build/output /path/to/Library/LastBuild.buildreport
+```
 
 PackedAssets data provides source asset information for each object that isn't available when analyzing only the build output. Objects are listed in the same order as they appear in the output SerializedFile, .resS, or .resource file.
 
@@ -64,10 +70,32 @@ PackedAssets data provides source asset information for each object that isn't a
 
 ## Working with Multiple Build Reports
 
-Multiple build reports can be imported into the same database if their filenames differ. This enables:
+Multiple build reports can be imported into the same database if their filenames differ. Pass each report (and any build output directories) as separate path arguments to a single `analyze` command. This enables:
 - Comprehensive build history tracking
 - Cross-build comparisons
 - Identifying duplicated data between Player and AssetBundle builds
+
+### Prior to Unity 6.6
+
+Each build overwrites `Library/LastBuild.buildreport`. To compare builds, manually collect the report after each build, rename the copies so the filenames are unique (the analyzer keys serialized files by filename), then pass them to `analyze`:
+
+```bash
+UnityDataTool analyze build1.buildreport build2.buildreport
+```
+
+### Unity 6.6 and later
+
+Player and content directory builds record a structured [build history](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/Build.BuildHistory.html) (default location `Library/BuildHistory`). Unity assigns each build its own directory and gives every build report a unique GUID-based filename, so there is no need to copy or rename reports to compare them. Run `analyze` on the entire build history folder, or on specific build report directories:
+
+```bash
+# Analyze every build in the history
+UnityDataTool analyze Library/BuildHistory
+
+# Analyze two specific builds
+UnityDataTool analyze Library/BuildHistory/20260504-153912Z-2dd7642e Library/BuildHistory/20260504-153855Z-7aff42f4
+```
+
+AssetBundle builds are not tracked in the build history; they still write only to `Library/LastBuild.buildreport`.
 
 See the schema sections below for guidance on writing queries that handle multiple build reports correctly.
 

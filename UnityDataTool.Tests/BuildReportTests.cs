@@ -46,7 +46,7 @@ public class BuildReportTests
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "AssetBundle.buildreport" };
+        var args = new List<string> { "analyze", Path.Combine(m_TestDataFolder, "AssetBundle.buildreport") };
         if (skipReferences)
             args.Add("--skip-references");
 
@@ -159,7 +159,7 @@ public class BuildReportTests
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "AssetBundle.buildreport" };
+        var args = new List<string> { "analyze", Path.Combine(m_TestDataFolder, "AssetBundle.buildreport") };
         if (skipReferences)
             args.Add("--skip-references");
 
@@ -214,7 +214,7 @@ public class BuildReportTests
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "AssetBundle.buildreport" };
+        var args = new List<string> { "analyze", Path.Combine(m_TestDataFolder, "AssetBundle.buildreport") };
 
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
@@ -246,7 +246,7 @@ public class BuildReportTests
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "Player.buildreport" };
+        var args = new List<string> { "analyze", Path.Combine(m_TestDataFolder, "Player.buildreport") };
 
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
@@ -284,7 +284,7 @@ public class BuildReportTests
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "AssetBundle.buildreport" };
+        var args = new List<string> { "analyze", Path.Combine(m_TestDataFolder, "AssetBundle.buildreport") };
 
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
@@ -344,13 +344,49 @@ public class BuildReportTests
             "Unexpected path in build_report_packed_assets_view");
     }
 
+    // The motivating case for issue #49: combine a scanned build-output directory with a build
+    // report file that lives in a separate location, all in a single analyze invocation.
+    [Test]
+    public async Task Analyze_DirectoryPlusExternalFile_BothIncluded()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        // Simulate a build output directory containing one report, with a second report kept elsewhere.
+        var buildOutputDir = Path.Combine(m_TestOutputFolder, "build_output");
+        Directory.CreateDirectory(buildOutputDir);
+        File.Copy(Path.Combine(m_TestDataFolder, "AssetBundle.buildreport"),
+            Path.Combine(buildOutputDir, "AssetBundle.buildreport"));
+
+        var args = new string[]
+        {
+            "analyze",
+            buildOutputDir,
+            Path.Combine(m_TestDataFolder, "Player.buildreport"),
+        };
+
+        Assert.AreEqual(0, await Program.Main(args));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports", 2,
+            "Expected both the scanned directory's report and the external report");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports WHERE build_type = 'AssetBundle'", 1,
+            "Expected the AssetBundle report from the scanned directory");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_reports WHERE build_type = 'Player'", 1,
+            "Expected the Player report passed as an external file");
+    }
+
     [Test]
     public async Task Analyze_BuildReports_BothReports_ContainsBuildReportFilesData()
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        // Analyze multiple BuildReports into the same database
-        var args = new List<string> { "analyze", m_TestDataFolder, "-p", "*.buildreport" };
+        // Analyze multiple BuildReports into the same database by passing each file explicitly.
+        var args = new List<string>
+        {
+            "analyze",
+            Path.Combine(m_TestDataFolder, "AssetBundle.buildreport"),
+            Path.Combine(m_TestDataFolder, "Player.buildreport"),
+        };
 
         Assert.AreEqual(0, await Program.Main(args.ToArray()));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
