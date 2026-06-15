@@ -656,16 +656,6 @@ public static class SerializedFileDetector
     }
 
     /// <summary>
-    /// Explanation shown for SerializedFiles that have no TypeTrees. Such files can only be
-    /// opened when every type they use exactly matches the build of UnityFileSystemApi in use,
-    /// which is why the native loader reports misleading version mismatch errors (or crashes)
-    /// when that is not the case.
-    /// </summary>
-    public const string MissingTypeTreesHint =
-        "Note: This file does not have TypeTrees and can only be opened if all the " +
-        "types it uses exactly match the types in the build of UnityFileSystemApi being used.";
-
-    /// <summary>
     /// Returns true when the stream is a SerializedFile we can positively confirm has no TypeTrees.
     /// Returns false for files that have TypeTrees and for anything we cannot parse (so callers fall
     /// back to the normal open path rather than skipping a file we simply did not understand).
@@ -675,24 +665,6 @@ public static class SerializedFileDetector
         return TryDetectSerializedFile(stream, out var fileInfo)
             && TryParseMetadata(stream, fileInfo, out var metadata, out _, parseExtended: false)
             && !metadata.EnableTypeTree;
-    }
-
-    /// <summary>
-    /// Returns a diagnostic hint explaining why a SerializedFile may have failed to open,
-    /// or null if no specific diagnosis is available.
-    /// Currently detects the common case of missing TypeTrees (player builds compiled
-    /// without type information, which the DLL reports as a generic unknown error).
-    /// </summary>
-    /// <param name="path">Real filesystem path to the file that failed to open.</param>
-    public static string GetOpenFailureHint(string path)
-    {
-        if (TryDetectSerializedFile(path, out var fileInfo) &&
-            TryParseMetadata(path, fileInfo, out var metadata, out _) &&
-            !metadata.EnableTypeTree)
-        {
-            return MissingTypeTreesHint;
-        }
-        return null;
     }
 
     /// <summary>

@@ -76,6 +76,9 @@ public class TextDumperTool
 
     int DumpSerializedFile()
     {
+        if (ReportIfMissingTypeTrees(m_Options.Path, m_Options.Path))
+            return 1;
+
         try
         {
             if (m_Options.ToStdout)
@@ -93,16 +96,25 @@ public class TextDumperTool
         }
         catch (SerializedFileOpenException)
         {
-            var hint = SerializedFileDetector.GetOpenFailureHint(m_Options.Path);
-            if (hint != null)
-            {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine(hint);
-            }
+            Console.Error.WriteLine($"Error: Failed to open serialized file: {m_Options.Path}");
             return 1;
         }
 
         return 0;
+    }
+
+    // dump needs TypeTrees to interpret object data, so a SerializedFile without them cannot be dumped.
+    // Detecting this up front avoids handing the file to the native loader, which would otherwise emit
+    // misleading version mismatch errors or crash the process. Returns true (and prints a clear message)
+    // when the file has no TypeTrees. The path may be a real file or an entry in a mounted archive.
+    bool ReportIfMissingTypeTrees(string path, string displayName)
+    {
+        using var stream = new UnityFileStream(path);
+        if (!SerializedFileDetector.IsMissingTypeTrees(stream))
+            return false;
+
+        Console.Error.WriteLine($"Error: \"{displayName}\" has no TypeTrees. The dump command needs TypeTrees to interpret the serialized object data, so this file cannot be dumped.");
+        return true;
     }
 
     // For convenience we also support directly dumping serialized files that are inside an archive,
@@ -110,6 +122,7 @@ public class TextDumperTool
     int DumpArchive()
     {
         using var archive = UnityFileSystem.MountArchive(m_Options.Path, "/");
+        bool anyMissingTypeTrees = false;
 
         if (m_Options.ToStdout)
         {
@@ -139,6 +152,8 @@ public class TextDumperTool
 
             var node2 = singleSerializedFile.Value;
             Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
+            if (ReportIfMissingTypeTrees("/" + node2.Path, node2.Path))
+                return 1;
             m_Writer = Console.Out;
             OutputSerializedFile("/" + node2.Path);
             m_Writer.Flush();
@@ -151,6 +166,12 @@ public class TextDumperTool
 
                 if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                 {
+                    if (ReportIfMissingTypeTrees("/" + node.Path, node.Path))
+                    {
+                        anyMissingTypeTrees = true;
+                        continue;
+                    }
+
                     using var writer = new StreamWriter(Path.Combine(m_Options.OutputPath, Path.GetFileName(node.Path) + ".txt"), false);
                     m_Writer = writer;
                     OutputSerializedFile("/" + node.Path);
@@ -158,7 +179,7 @@ public class TextDumperTool
             }
         }
 
-        return 0;
+        return anyMissingTypeTrees ? 1 : 0;
     }
 
     void OutputSerializedFile(string path)
