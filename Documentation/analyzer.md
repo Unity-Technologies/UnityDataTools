@@ -190,7 +190,7 @@ but this approach could be extended to add support for other outputs.
 
 Calling this method processes the provided paths, which can be individual files or directories.
 Directories are scanned recursively for files matching the search pattern (unless recursion is
-disabled). It will add a row in the 'objects' table for each serialized object. This table contain
+disabled). It will add a row in the 'objects' table for each serialized object. This table contains
 basic information such as the size and the name of the object (if it has one).
 
 ## Extending the Library
