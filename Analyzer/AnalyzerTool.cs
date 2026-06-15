@@ -66,6 +66,7 @@ public class AnalyzerTool
         int countFailures = 0;
         int countSuccess = 0;
         int countIgnored = 0;
+        int countNoTypeTrees = 0;
         int i = 1;
         foreach (var (file, displayRoot) in files)
         {
@@ -81,6 +82,16 @@ public class AnalyzerTool
                         parser.Parse(file);
                         ReportProgress(relativePath, i, files.Count);
                         countSuccess++;
+                    }
+                    catch (SerializedFileOpenException e) when (e.MissingTypeTrees)
+                    {
+                        // The file has no TypeTrees and was rejected before opening. This is an
+                        // expected, distinct outcome — reported and counted separately so a large
+                        // run can tell these apart from genuine failures.
+                        EraseProgressLine();
+                        Console.Error.WriteLine($"Skipped (no TypeTrees): {relativePath}");
+                        Console.Error.WriteLine(SerializedFileDetector.MissingTypeTreesHint);
+                        countNoTypeTrees++;
                     }
                     catch (SerializedFileOpenException e)
                     {
@@ -123,7 +134,7 @@ public class AnalyzerTool
         }
 
         Console.WriteLine();
-        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Ignored files: {countIgnored}");
+        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Files without TypeTrees: {countNoTypeTrees}, Ignored files: {countIgnored}");
 
         writer.End();
         foreach (var parser in parsers)

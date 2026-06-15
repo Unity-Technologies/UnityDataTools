@@ -303,16 +303,37 @@ public static class SerializedFileDetector
         try
         {
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return TryDetectSerializedFile(stream, out info);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Stream-based variant of <see cref="TryDetectSerializedFile(string, out SerializedFileInfo)"/>.
+    /// Reads from the current contents of <paramref name="stream"/> (seeking it to the start first),
+    /// allowing detection of files that are not directly on disk (e.g. inside a mounted archive).
+    /// </summary>
+    public static bool TryDetectSerializedFile(Stream stream, out SerializedFileInfo info)
+    {
+        info = null;
+
+        try
+        {
             long fileLength = stream.Length;
 
             // Quick rejection: file must be at least large enough for the legacy header
             if (fileLength < LegacyHeaderSize)
                 return false;
 
+            stream.Seek(0, SeekOrigin.Begin);
+
             // Read enough bytes to cover a modern header (48 bytes)
             // We'll determine which format to parse based on the version field
             byte[] headerBytes = new byte[ModernHeaderSize];
-            int bytesRead = stream.Read(headerBytes, 0, headerBytes.Length);
+            int bytesRead = stream.ReadAtLeast(headerBytes, ModernHeaderSize, throwOnEndOfStream: false);
 
             if (bytesRead < LegacyHeaderSize)
                 return false;
@@ -528,11 +549,33 @@ public static class SerializedFileDetector
         metadata = null;
         errorMessage = null;
 
+        // The supported-version check depends only on the header, so do it before touching the file.
+        if (!IsMetadataVersionSupported(headerInfo.Version, out errorMessage))
+            return false;
+
+        try
+        {
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return TryParseMetadata(stream, headerInfo, out metadata, out errorMessage);
+        }
+        catch
+        {
+            errorMessage = "An unexpected error occurred while opening the file.";
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Validates that the SerializedFile version is within the range whose metadata layout this
+    /// parser understands. Returns false with an explanatory message when it is not.
+    /// </summary>
+    private static bool IsMetadataVersionSupported(uint version, out string errorMessage)
+    {
         // Only support version >= 19 (Unity 2019.1). Older files have metadata format
         // differences we have not implemented.
-        if (headerInfo.Version < MinMetadataParseVersion)
+        if (version < MinMetadataParseVersion)
         {
-            errorMessage = $"Metadata parsing is not supported for SerializedFile version {headerInfo.Version}. " +
+            errorMessage = $"Metadata parsing is not supported for SerializedFile version {version}. " +
                            $"Version {MinMetadataParseVersion} (Unity 2019.1) or newer is required.";
             return false;
         }
@@ -540,20 +583,37 @@ public static class SerializedFileDetector
         // Reject versions beyond the highest known format. Future Unity versions may change the
         // metadata layout in ways that would cause incorrect results or a parse failure.
         // A newer version of UnityDataTool is required to read these files.
-        if (headerInfo.Version > MaxMetadataParseVersion)
+        if (version > MaxMetadataParseVersion)
         {
-            errorMessage = $"SerializedFile version {headerInfo.Version} is not supported. " +
+            errorMessage = $"SerializedFile version {version} is not supported. " +
                            $"UnityDataTool supports up to version {MaxMetadataParseVersion}. " +
                            $"Please use a newer version of UnityDataTool to read this file.";
             return false;
         }
+
+        errorMessage = null;
+        return true;
+    }
+
+    /// <summary>
+    /// Stream-based variant of <see cref="TryParseMetadata(string, SerializedFileInfo, out SerializedFileMetadata, out string)"/>.
+    /// When <paramref name="parseExtended"/> is false, only the leading metadata fields (Unity version,
+    /// target platform and EnableTypeTree) are read; the type/object/reference arrays are skipped. This
+    /// is the cheap path for callers that only need to know whether the file has TypeTrees.
+    /// </summary>
+    public static bool TryParseMetadata(Stream stream, SerializedFileInfo headerInfo, out SerializedFileMetadata metadata, out string errorMessage, bool parseExtended = true)
+    {
+        metadata = null;
+        errorMessage = null;
+
+        if (!IsMetadataVersionSupported(headerInfo.Version, out errorMessage))
+            return false;
 
         try
         {
             long metadataOffset = headerInfo.IsLegacyFormat ? LegacyHeaderSize : ModernHeaderSize;
             bool swap = headerInfo.Endianness == BigEndian;
 
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             stream.Seek(metadataOffset, SeekOrigin.Begin);
             using var reader = new BinaryReader(stream, System.Text.Encoding.ASCII, leaveOpen: true);
 
@@ -583,7 +643,8 @@ public static class SerializedFileDetector
 
             // Parse the rest of the metadata section. Protected by its own try/catch so that any
             // failure there still returns a partially-populated metadata struct.
-            ParseExtendedMetadata(reader, headerInfo, swap, metadataOffset, metadata);
+            if (parseExtended)
+                ParseExtendedMetadata(reader, headerInfo, swap, metadataOffset, metadata);
 
             return true;
         }
@@ -592,6 +653,28 @@ public static class SerializedFileDetector
             errorMessage = "An unexpected error occurred while parsing the metadata section.";
             return false;
         }
+    }
+
+    /// <summary>
+    /// Explanation shown for SerializedFiles that have no TypeTrees. Such files can only be
+    /// opened when every type they use exactly matches the build of UnityFileSystemApi in use,
+    /// which is why the native loader reports misleading version mismatch errors (or crashes)
+    /// when that is not the case.
+    /// </summary>
+    public const string MissingTypeTreesHint =
+        "Note: This file does not have TypeTrees and can only be opened if all the " +
+        "types it uses exactly match the types in the build of UnityFileSystemApi being used.";
+
+    /// <summary>
+    /// Returns true when the stream is a SerializedFile we can positively confirm has no TypeTrees.
+    /// Returns false for files that have TypeTrees and for anything we cannot parse (so callers fall
+    /// back to the normal open path rather than skipping a file we simply did not understand).
+    /// </summary>
+    public static bool IsMissingTypeTrees(Stream stream)
+    {
+        return TryDetectSerializedFile(stream, out var fileInfo)
+            && TryParseMetadata(stream, fileInfo, out var metadata, out _, parseExtended: false)
+            && !metadata.EnableTypeTree;
     }
 
     /// <summary>
@@ -607,8 +690,7 @@ public static class SerializedFileDetector
             TryParseMetadata(path, fileInfo, out var metadata, out _) &&
             !metadata.EnableTypeTree)
         {
-            return "Note: This file does not have TypeTrees and can only be opened if all the " +
-                   "types it uses exactly match the types in the build of UnityFileSystemApi being used.";
+            return MissingTypeTreesHint;
         }
         return null;
     }
