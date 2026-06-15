@@ -6,7 +6,6 @@ using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
 using UnityDataTools.Analyzer.SQLite.Writers;
 using UnityDataTools.Models;
-using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
@@ -90,18 +89,14 @@ public class AnalyzerTool
                         // run can tell these apart from genuine failures.
                         EraseProgressLine();
                         Console.Error.WriteLine($"Skipped (no TypeTrees): {relativePath}");
-                        Console.Error.WriteLine(SerializedFileDetector.MissingTypeTreesHint);
                         countNoTypeTrees++;
                     }
-                    catch (SerializedFileOpenException e)
+                    catch (SerializedFileOpenException)
                     {
                         // Expected failure — the file content could not be parsed.
                         // Don't print a stack trace; it adds no value for this known failure mode.
                         EraseProgressLine();
                         Console.Error.WriteLine($"Failed to open: {relativePath}");
-                        var hint = SerializedFileDetector.GetOpenFailureHint(e.FilePath);
-                        if (hint != null)
-                            Console.Error.WriteLine(hint);
                         countFailures++;
                     }
                     catch (Exception e)

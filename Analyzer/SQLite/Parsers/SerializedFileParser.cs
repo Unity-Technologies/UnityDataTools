@@ -105,7 +105,6 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                                 {
                                     // The file has no TypeTrees and was rejected before opening. This is
                                     // tracked separately so it isn't lumped with genuine processing errors.
-                                    // The hint is printed once per archive by the caller.
                                     archiveHadMissingTypeTrees = true;
                                 }
                                 catch (Exception e)

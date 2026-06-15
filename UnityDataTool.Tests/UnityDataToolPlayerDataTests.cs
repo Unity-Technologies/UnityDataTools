@@ -145,7 +145,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
 
             var output = swOut.ToString() + swErr.ToString();
 
-            Assert.That(output, Does.Contain("does not have TypeTrees"), "Expected the missing-TypeTrees hint in output");
+            Assert.That(output, Does.Contain("Skipped (no TypeTrees)"), "Expected the file to be reported as skipped");
             Assert.That(output, Does.Contain("Files without TypeTrees: 1"), "Expected 'Files without TypeTrees: 1' in summary");
             Assert.That(output, Does.Contain("Successfully processed files: 0"), "Expected 'Successfully processed files: 0' in summary");
         }
