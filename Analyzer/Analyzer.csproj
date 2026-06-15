@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\UnityBinaryFormat\UnityBinaryFormat.csproj" />
     <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
+    <ProjectReference Include="..\UnityDataModels\UnityDataModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>

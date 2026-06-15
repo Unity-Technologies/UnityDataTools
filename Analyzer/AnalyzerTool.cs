@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
-using UnityDataTools.Analyzer.SQLite.Parsers.Models;
 using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.Models;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 

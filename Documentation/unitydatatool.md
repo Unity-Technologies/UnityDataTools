@@ -99,3 +99,4 @@ If you see a warning about `UnityFileSystemApi.dylib` not being verified, go to 
 | [Analyze Examples](analyze-examples.md) | Practical database queries |
 | [Comparing Builds](comparing-builds.md) | Strategies for build comparison |
 | [Unity Content Format](unity-content-format.md) | TypeTrees and file formats |
+| [ContentLayout.json](contentlayout.md) | The content layout file produced by content directory builds |

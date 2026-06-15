@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityDataTools.Analyzer.SQLite.Handlers;
-using UnityDataTools.Analyzer.SQLite.Parsers.Models;
+using UnityDataTools.Models;
 using UnityDataTools.Analyzer.SQLite.Writers;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers

@@ -4,7 +4,7 @@ using System.IO;
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using UnityDataTools.Analyzer.SQLite.Commands.AddressablesBuildReport;
-using UnityDataTools.Analyzer.SQLite.Parsers.Models;
+using UnityDataTools.Models;
 
 namespace UnityDataTools.Analyzer.SQLite.Writers
 {
