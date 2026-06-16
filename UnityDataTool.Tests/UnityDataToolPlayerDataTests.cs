@@ -89,7 +89,9 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     [Test]
     public async Task Analyze_PlayerDataNoTypeTree_ReportsFailureCorrectly()
     {
-        // Test for issue #48: Files that fail to process should be counted as failures, not successes
+        // Test for issue #48: files that cannot be processed must not be counted as successes.
+        // Files without TypeTrees are detected up front and reported in their own summary category
+        // (rather than the generic failure count) so they can be told apart in a large run.
         var testDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerNoTypeTree");
 
         using var swOut = new StringWriter();
@@ -109,8 +111,42 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             // Check that the filename appears in the error output
             Assert.That(output, Does.Contain("level0"), "Expected 'level0' to appear in error output");
 
-            // Check that the summary line correctly reports the failure
-            Assert.That(output, Does.Contain("Failed files: 1"), "Expected 'Failed files: 1' in summary");
+            // Check that the summary line categorizes the file as missing TypeTrees, not a success.
+            Assert.That(output, Does.Contain("Files without TypeTrees: 1"), "Expected 'Files without TypeTrees: 1' in summary");
+            Assert.That(output, Does.Contain("Successfully processed files: 0"), "Expected 'Successfully processed files: 0' in summary");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task Analyze_AssetBundleNoTypeTree_ReportsMissingTypeTreesWithoutCrashing()
+    {
+        // A no-TypeTree SerializedFile inside an archive must be detected up front and skipped
+        // cleanly. Handing it to the native loader otherwise emits misleading version mismatch
+        // errors and can crash the process with an access violation.
+        var bundlePath = Path.Combine(TestContext.CurrentContext.TestDirectory,
+            "Data", "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
+
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+
+            // Analyze should return 0 even when a bundle has no TypeTrees (no crash, no critical error).
+            Assert.AreEqual(0, await Program.Main(new string[] { "analyze", bundlePath }));
+
+            var output = swOut.ToString() + swErr.ToString();
+
+            Assert.That(output, Does.Contain("Skipped (no TypeTrees)"), "Expected the file to be reported as skipped");
+            Assert.That(output, Does.Contain("Files without TypeTrees: 1"), "Expected 'Files without TypeTrees: 1' in summary");
             Assert.That(output, Does.Contain("Successfully processed files: 0"), "Expected 'Successfully processed files: 0' in summary");
         }
         finally

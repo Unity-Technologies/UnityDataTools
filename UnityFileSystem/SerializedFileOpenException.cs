@@ -10,7 +10,19 @@ public class SerializedFileOpenException : Exception
 {
     public string FilePath { get; }
 
-    public SerializedFileOpenException(string filePath)
-        : base($"Failed to open serialized file: \"{filePath}\"")
-        => FilePath = filePath;
+    /// <summary>
+    /// True when the file was not opened because it has no TypeTrees. This is detected before
+    /// handing the file to the native loader, which would otherwise emit misleading version
+    /// mismatch errors or crash. Callers use it to report and count these files distinctly.
+    /// </summary>
+    public bool MissingTypeTrees { get; }
+
+    public SerializedFileOpenException(string filePath, bool missingTypeTrees = false)
+        : base(missingTypeTrees
+            ? $"Serialized file has no TypeTrees: \"{filePath}\""
+            : $"Failed to open serialized file: \"{filePath}\"")
+    {
+        FilePath = filePath;
+        MissingTypeTrees = missingTypeTrees;
+    }
 }

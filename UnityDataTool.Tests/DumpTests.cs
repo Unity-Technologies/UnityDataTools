@@ -13,6 +13,8 @@ public class DumpTests
     private string m_SerializedFilePath;
     private string m_ResourceFilePath;
     private string m_MultiSerializedFileArchivePath;
+    private string m_NoTypeTreeSerializedFilePath;
+    private string m_NoTypeTreeArchivePath;
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -21,6 +23,8 @@ public class DumpTests
         m_SerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "level0");
         m_ResourceFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets0.assets.resS");
         m_MultiSerializedFileArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
+        m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
+        m_NoTypeTreeArchivePath = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
     }
 
     [Test]
@@ -206,5 +210,53 @@ public class DumpTests
         }
 
         Assert.That(swErr.ToString(), Does.Contain("does not appear to be a valid Unity SerializedFile or Unity Archive"));
+    }
+
+    [Test]
+    public async Task Dump_NoTypeTreeSerializedFile_ReportsMissingTypeTreesWithoutCrashing()
+    {
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+            Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_NoTypeTreeSerializedFilePath, "--stdout" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+
+        var output = swOut.ToString() + swErr.ToString();
+        Assert.That(output, Does.Contain("has no TypeTrees"), "Expected a clear missing-TypeTrees message");
+        Assert.That(output, Does.Not.Contain("SerializedFileOpenException"), "Should not leak an exception/stack trace");
+    }
+
+    [Test]
+    public async Task Dump_NoTypeTreeArchive_ReportsMissingTypeTreesWithoutCrashing()
+    {
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+            Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_NoTypeTreeArchivePath, "--stdout" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+
+        var output = swOut.ToString() + swErr.ToString();
+        Assert.That(output, Does.Contain("has no TypeTrees"), "Expected a clear missing-TypeTrees message");
+        Assert.That(output, Does.Not.Contain("SerializedFileOpenException"), "Should not leak an exception/stack trace");
     }
 }

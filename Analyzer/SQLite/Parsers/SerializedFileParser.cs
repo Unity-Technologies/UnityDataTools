@@ -81,6 +81,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             if (ArchiveDetector.IsUnityArchive(file))
             {
                 bool archiveHadErrors = false;
+                bool archiveHadMissingTypeTrees = false;
                 using (UnityArchive archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar))
                 {
                     if (archive == null)
@@ -99,6 +100,12 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                                 try
                                 {
                                     m_Writer.WriteSerializedFile(node.Path, "archive:/" + node.Path, Path.GetDirectoryName(file));
+                                }
+                                catch (SerializedFileOpenException e) when (e.MissingTypeTrees)
+                                {
+                                    // The file has no TypeTrees and was rejected before opening. This is
+                                    // tracked separately so it isn't lumped with genuine processing errors.
+                                    archiveHadMissingTypeTrees = true;
                                 }
                                 catch (Exception e)
                                 {
@@ -124,9 +131,15 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                     }
                 }
 
+                // Genuine errors take precedence over missing TypeTrees when reporting the archive's outcome.
                 if (archiveHadErrors)
                 {
                     throw new Exception("One or more files in the archive failed to process");
+                }
+
+                if (archiveHadMissingTypeTrees)
+                {
+                    throw new SerializedFileOpenException(file, missingTypeTrees: true);
                 }
             }
             else

@@ -6,7 +6,6 @@ using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
 using UnityDataTools.Analyzer.SQLite.Writers;
 using UnityDataTools.Models;
-using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.Analyzer;
@@ -66,6 +65,7 @@ public class AnalyzerTool
         int countFailures = 0;
         int countSuccess = 0;
         int countIgnored = 0;
+        int countNoTypeTrees = 0;
         int i = 1;
         foreach (var (file, displayRoot) in files)
         {
@@ -82,15 +82,21 @@ public class AnalyzerTool
                         ReportProgress(relativePath, i, files.Count);
                         countSuccess++;
                     }
-                    catch (SerializedFileOpenException e)
+                    catch (SerializedFileOpenException e) when (e.MissingTypeTrees)
+                    {
+                        // The file has no TypeTrees and was rejected before opening. This is an
+                        // expected, distinct outcome — reported and counted separately so a large
+                        // run can tell these apart from genuine failures.
+                        EraseProgressLine();
+                        Console.Error.WriteLine($"Skipped (no TypeTrees): {relativePath}");
+                        countNoTypeTrees++;
+                    }
+                    catch (SerializedFileOpenException)
                     {
                         // Expected failure — the file content could not be parsed.
                         // Don't print a stack trace; it adds no value for this known failure mode.
                         EraseProgressLine();
                         Console.Error.WriteLine($"Failed to open: {relativePath}");
-                        var hint = SerializedFileDetector.GetOpenFailureHint(e.FilePath);
-                        if (hint != null)
-                            Console.Error.WriteLine(hint);
                         countFailures++;
                     }
                     catch (Exception e)
@@ -123,7 +129,7 @@ public class AnalyzerTool
         }
 
         Console.WriteLine();
-        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Ignored files: {countIgnored}");
+        Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Files without TypeTrees: {countNoTypeTrees}, Ignored files: {countIgnored}");
 
         writer.End();
         foreach (var parser in parsers)

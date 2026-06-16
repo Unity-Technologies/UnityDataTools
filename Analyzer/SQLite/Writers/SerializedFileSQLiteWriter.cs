@@ -6,6 +6,7 @@ using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.Util;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
@@ -116,6 +117,16 @@ public class SerializedFileSQLiteWriter : IDisposable
 
     public void WriteSerializedFile(string relativePath, string fullPath, string containingFolder)
     {
+        // A file without TypeTrees can only be opened when its types exactly match this build of
+        // UnityFileSystemApi. Handing such a file to the native loader produces misleading version
+        // mismatch errors and can crash the process, so detect and reject it up front. The native
+        // VFS path here may be a real file or an entry inside a mounted archive.
+        using (var detectStream = new UnityFileStream(fullPath))
+        {
+            if (SerializedFileDetector.IsMissingTypeTrees(detectStream))
+                throw new SerializedFileOpenException(fullPath, missingTypeTrees: true);
+        }
+
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
         using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
