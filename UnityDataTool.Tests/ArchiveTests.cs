@@ -301,6 +301,43 @@ BuildPlayer-OtherScene
     }
 
     [Test]
+    public async Task ArchiveInfo_ZstdCompression_JsonFormat()
+    {
+        var infoPath = Path.Combine(m_TestDataFolder, "contentdirectory-zstd", "content0.archive");
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "info", infoPath, "-f", "Json" }));
+
+            var output = sw.ToString();
+            var json = JsonDocument.Parse(output).RootElement;
+            Assert.AreEqual(JsonValueKind.Object, json.ValueKind);
+
+            Assert.AreEqual("5", json.GetProperty("compression").GetString(), "Unexpected compression value in contentdirectory-zstd/content0.archive");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveExtract_ZstdArchive_FileExtractedSuccessfully()
+    {
+        var zstdArchivePath = Path.Combine(m_TestDataFolder, "contentdirectory-zstd", "content0.archive");
+        const string fileName = "d1f0968e6eb3997a264fda27f5eb02d3.cf"; // File known to be contained in the test archive
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", zstdArchivePath, "--filter", fileName }));
+
+        var extractedFile = new FileInfo(Path.Combine(m_TestOutputFolder, "archive", fileName));
+        Assert.IsTrue(extractedFile.Exists, $"Expected file not found: {fileName}");
+        Assert.AreEqual(2176, extractedFile.Length, "Unexpected size for file extracted from contentdirectory-zstd/content0.archive"); // Known size
+    }
+
+    [Test]
     public async Task ArchiveExtract_FilesExtractedSuccessfully()
     {
         Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_ArchivePath }));
