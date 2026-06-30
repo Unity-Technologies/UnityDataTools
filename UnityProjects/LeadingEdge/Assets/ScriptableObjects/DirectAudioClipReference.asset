@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6330d3e9b8e5a0439e4dd147cec19dd, type: 3}
+  m_Name: DirectAudioClipReference
+  m_EditorClassIdentifier: Assembly-CSharp::DirectAudioClipReference
+  clips:
+  - key: 6
+    value: {fileID: 8300000, guid: 278c261333bf8604eb5c83790d02004d, type: 3}
+  - key: a
+    value: {fileID: 8300000, guid: b65a7916245593b4e89f4bd0aa920533, type: 3}

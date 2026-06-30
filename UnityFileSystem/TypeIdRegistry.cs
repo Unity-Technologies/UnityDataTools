@@ -6,7 +6,7 @@ namespace UnityDataTools.FileSystem;
 /// Registry of Unity TypeIds mapped to their type names.
 /// Used as a fallback when TypeTree information is not available.
 /// The entries below are generated from the live engine type list by the
-/// TypeIdRegistryGenerator tool (UnityFileSystemTestData/Assets/Editor/TypeIdRegistryGenerator.cs);
+/// TypeIdRegistryGenerator tool (UnityProjects/Baseline/Assets/Editor/TypeIdRegistryGenerator.cs);
 /// regenerate with a current Unity Editor rather than editing them by hand.
 /// Reference: https://docs.unity3d.com/Manual/ClassIDReference.html
 /// </summary>

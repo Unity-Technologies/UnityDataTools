@@ -174,4 +174,6 @@ To use a specific Unity version's library:
 
 * TestCommon/Data contains small reference files extracted from Unity builds (player and AssetBundles). These are used by the automated tests and also useful for manual testing.
 
-* UnityFileSystemTestData is a Unity project that generates test data for the test suites.
+* UnityProjects contains two Unity projects that generate test data for the test suites:
+  * `Baseline` - tracks stable, broadly-used Unity versions and is upgraded only when necessary. Most UnityDataTools users inspect output from these versions. Its `TypeIdRegistryGenerator` regenerates `UnityFileSystem/TypeIdRegistry.cs`.
+  * `LeadingEdge` - tracks the newest Unity version (currently the 6.6 beta) and is updated proactively so newer build features (Content Directory builds, serialized dictionaries, etc.) can be tested.

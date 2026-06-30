@@ -32,12 +32,13 @@
 
 .claude
 
-UnityFileSystemTestData/AssetBundles/
-UnityFileSystemTestData/**/*.csproj
-UnityFileSystemTestData/**/*.sln
-UnityFileSystemTestData/ProjectSettings/
-UnityFileSystemTestData/UserSettings/
-UnityFileSystemTestData/Packages/
+UnityProjects/**/*.csproj
+UnityProjects/**/*.sln
+UnityProjects/**/AssetBundles/
+UnityProjects/**/ProjectSettings/
+UnityProjects/**/UserSettings/
+UnityProjects/**/Packages/
+UnityProjects/**/Builds/
 *.db
 *.csv
 

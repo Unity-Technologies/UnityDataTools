@@ -1,0 +1,28 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.6.0b3
+CRC: 1978978241
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 44348aaed65aa7c68787f1d802830080
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 4c88c857f41d6968a1090f557f31c5ed
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 87245ee368dca05768c0237d53749a44
+HashAppended: 0
+ClassTypes:
+- Class: 83
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: d6330d3e9b8e5a0439e4dd147cec19dd, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: UnityEngine.CoreModule
+  ClassName: UnityEngine.DictionarySerialization/SerializedKeyValue`2
+Assets:
+- Assets/ScriptableObjects/SingleAudioClipDirectReference.asset
+Dependencies:
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/a

@@ -25,7 +25,7 @@ The repository contains the following items:
 * UnityFileSystem: source code and binaries of a .NET class library exposing the functionalities or the
   UnityFileSystemApi native library.
 * UnityFileSystem.Tests: test suite for the UnityFileSystem library.
-* UnityFileSystemTestData: the Unity project used to generate the test data.
+* UnityProjects: Unity projects used to generate some of the test data.
 * TestCommon: a helper library used by the test projects.
 
 ## Downloads
