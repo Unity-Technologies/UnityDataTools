@@ -15,6 +15,7 @@ public class DumpTests
     private string m_MultiSerializedFileArchivePath;
     private string m_NoTypeTreeSerializedFilePath;
     private string m_NoTypeTreeArchivePath;
+    private string m_SerializationDemoBundlePath;
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -25,6 +26,7 @@ public class DumpTests
         m_MultiSerializedFileArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
         m_NoTypeTreeArchivePath = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
+        m_SerializationDemoBundlePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundles", "serializationdemo");
     }
 
     [Test]
@@ -258,5 +260,53 @@ public class DumpTests
         var output = swOut.ToString() + swErr.ToString();
         Assert.That(output, Does.Contain("has no TypeTrees"), "Expected a clear missing-TypeTrees message");
         Assert.That(output, Does.Not.Contain("SerializedFileOpenException"), "Should not leak an exception/stack trace");
+    }
+
+    // Dumps the SerializationDemo ScriptableObject from the LeadingEdge AssetBundle build and confirms the
+    // serialized field layout and default values (see UnityProjects/LeadingEdge/Assets/Scripts/SerializationDemo.cs).
+    // Uses substring checks against the pseudo-YAML text output; once JSON output is supported this can parse and
+    // assert more precisely.
+    [Test]
+    public async Task Dump_Stdout_AssetBundle_SerializationDemo_ContainsExpectedFields()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializationDemoBundlePath, "--stdout", "--type", "MonoBehaviour" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        var output = sw.ToString();
+
+        // The MonoBehaviour (ScriptableObject) and its SerializeReference-held data object.
+        Assert.That(output, Does.Contain("(ClassID: 114) MonoBehaviour"));
+        Assert.That(output, Does.Contain("m_Name (string) SerializationDemo"));
+        Assert.That(output, Does.Contain("data (managedReference)"));
+        Assert.That(output, Does.Contain("references (ManagedReferencesRegistry)"));
+        Assert.That(output, Does.Contain("class (string) SerializationDemo/SerializedData"));
+
+        // Scalar fields: name, serialized type and value.
+        Assert.That(output, Does.Contain("longValue (SInt64) -1234567890123456789"));
+        Assert.That(output, Does.Contain("ulongValue (UInt64) 12345678901234567890"));
+        Assert.That(output, Does.Contain("intValue (int) -2000000000"));
+        Assert.That(output, Does.Contain("uintValue (unsigned int) 4000000000"));
+        Assert.That(output, Does.Contain("shortValue (SInt16) -12345"));
+        Assert.That(output, Does.Contain("ushortValue (UInt16) 54321"));
+        Assert.That(output, Does.Contain("signedCharValue (SInt8) -123"));
+        Assert.That(output, Does.Contain("unsignedCharValue (UInt8) 234"));
+        Assert.That(output, Does.Contain("boolValue (UInt8) 1"));
+        Assert.That(output, Does.Contain("floatValue (float) 3.1415927"));
+        Assert.That(output, Does.Contain("doubleValue (double) 2.718281828459045"));
+        Assert.That(output, Does.Contain("charValue (UInt16) 90"));
+        Assert.That(output, Does.Contain("stringValue (string) SerializationDemo string value"));
+
+        // Int array of 512 values (0..511). Check the header and a slice of the sequence.
+        Assert.That(output, Does.Contain("Array<int>[512]"));
+        Assert.That(output, Does.Contain("293, 294, 295, 296,"));
     }
 }
