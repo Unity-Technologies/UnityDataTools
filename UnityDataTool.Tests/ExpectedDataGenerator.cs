@@ -30,8 +30,7 @@ public static class ExpectedDataGenerator
 
         Program.Main(new string[] { "analyze", Path.Combine(context.UnityDataFolder), "-r" });
 
-        using var db = new SqliteConnection($"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "database.db")};Version=3;New=True;Foreign Keys=False;");
-        db.Open();
+        using var db = SQLTestHelper.OpenDatabase(Path.Combine(Directory.GetCurrentDirectory(), "database.db"));
 
         using (var cmd = db.CreateCommand())
         {

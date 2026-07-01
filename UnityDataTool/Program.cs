@@ -129,6 +129,7 @@ public static class Program
         var nOpt = new Option<string>(aliases: new[] { "--object-name", "-n" }, description: "Object name");
         var tOpt = new Option<string>(aliases: new[] { "--object-type", "-t" }, description: "Optional object type when searching by name");
         var aOpt = new Option<bool>(aliases: new[] { "--find-all", "-a" }, description: "Find all reference chains originating from the same asset (instead of only one), can be very slow");
+        var stdoutOpt = new Option<bool>(aliases: new[] { "--stdout" }, description: "Write the reference chains to stdout instead of a file.");
 
         var findRefsCommand = new Command("find-refs", "Find reference chains to specified object(s).")
         {
@@ -138,11 +139,23 @@ public static class Program
             nOpt,
             tOpt,
             iOpt,
+            stdoutOpt,
         };
+        findRefsCommand.AddValidator(commandResult =>
+        {
+            var stdoutResult = commandResult.FindResultFor(stdoutOpt);
+            var oResult = commandResult.FindResultFor(oOpt);
+            bool stdoutSet = stdoutResult is { IsImplicit: false };
+            bool oExplicit = oResult is { IsImplicit: false };
+            if (stdoutSet && oExplicit)
+            {
+                commandResult.ErrorMessage = "--stdout and -o/--output-file are mutually exclusive.";
+            }
+        });
 
         findRefsCommand.SetHandler(
-            (FileInfo fi, string o, long? i, string n, string t, bool a) => Task.FromResult(HandleFindReferences(fi, o, i, n, t, a)),
-            pathArg, oOpt, iOpt, nOpt, tOpt, aOpt);
+            (FileInfo fi, string o, long? i, string n, string t, bool a, bool toStdout) => Task.FromResult(HandleFindReferences(fi, o, i, n, t, a, toStdout)),
+            pathArg, oOpt, iOpt, nOpt, tOpt, aOpt, stdoutOpt);
 
         return findRefsCommand;
     }
@@ -366,7 +379,7 @@ public static class Program
         });
     }
 
-    static int HandleFindReferences(FileInfo databasePath, string outputFile, long? objectId, string objectName, string objectType, bool findAll)
+    static int HandleFindReferences(FileInfo databasePath, string outputFile, long? objectId, string objectName, string objectType, bool findAll, bool toStdout)
     {
         var finder = new ReferenceFinderTool();
 
@@ -378,11 +391,11 @@ public static class Program
 
         if (objectId != null)
         {
-            return finder.FindReferences(objectId.Value, databasePath.FullName, outputFile, findAll);
+            return finder.FindReferences(objectId.Value, databasePath.FullName, outputFile, findAll, toStdout);
         }
         else
         {
-            return finder.FindReferences(objectName, objectType, databasePath.FullName, outputFile, findAll);
+            return finder.FindReferences(objectName, objectType, databasePath.FullName, outputFile, findAll, toStdout);
         }
     }
 

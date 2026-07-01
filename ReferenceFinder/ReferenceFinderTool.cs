@@ -24,21 +24,14 @@ public class ReferenceFinderTool
     List<ReferenceTreeNode> m_Roots = new List<ReferenceTreeNode>();
     HashSet<(long, string)> m_ProcessedObjects = new HashSet<(long, string)>();
 
-    StreamWriter m_Writer;
+    TextWriter m_Writer;
 
-    public int FindReferences(string objectName, string objectType, string databasePath, string outputFile, bool findAll)
+    public int FindReferences(string objectName, string objectType, string databasePath, string outputFile, bool findAll, bool toStdout = false)
     {
         var objectIds = new List<long>();
-        SqliteConnection db;
-
-        try
+        using var db = OpenDatabase(databasePath);
+        if (db == null)
         {
-            db = new SqliteConnection($"Data Source={databasePath};Version=3;Foreign Keys=False;");
-            db.Open();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Error opening database: {e.Message}");
             return 1;
         }
 
@@ -81,33 +74,50 @@ public class ReferenceFinderTool
             return 1;
         }
 
-        return FindReferences(db, outputFile, objectIds, findAll);
+        return FindReferences(db, outputFile, objectIds, findAll, toStdout);
     }
 
-    public int FindReferences(long objectId, string databasePath, string outputFile, bool findAll)
+    public int FindReferences(long objectId, string databasePath, string outputFile, bool findAll, bool toStdout = false)
     {
         var objectIds = new List<long>();
-        SqliteConnection db;
-
-        try
+        using var db = OpenDatabase(databasePath);
+        if (db == null)
         {
-            db = new SqliteConnection($"Data Source={databasePath};Version=3;Foreign Keys=False;");
-            db.Open();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Error opening database: {e.Message}");
             return 1;
         }
 
         objectIds.Add(objectId);
 
-        return FindReferences(db, outputFile, objectIds, findAll);
+        return FindReferences(db, outputFile, objectIds, findAll, toStdout);
     }
 
-    int FindReferences(SqliteConnection db, string outputFile, IList<long> objectIds, bool findAll)
+    // Opens the analyze database for reading. Uses SqliteConnectionStringBuilder (matching SQLiteWriter) rather than a
+    // hand-written connection string, which used a legacy System.Data.SQLite keyword that Microsoft.Data.Sqlite rejects.
+    static SqliteConnection OpenDatabase(string databasePath)
     {
-        m_Writer = new StreamWriter(outputFile);
+        try
+        {
+            var connectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = databasePath,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false,
+                ForeignKeys = false,
+            }.ConnectionString;
+            var db = new SqliteConnection(connectionString);
+            db.Open();
+            return db;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error opening database: {e.Message}");
+            return null;
+        }
+    }
+
+    int FindReferences(SqliteConnection db, string outputFile, IList<long> objectIds, bool findAll, bool toStdout)
+    {
+        m_Writer = toStdout ? Console.Out : new StreamWriter(outputFile);
 
         m_GetRefsCommand = db.CreateCommand();
         m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assets a WHERE a.object = r.object) FROM refs r WHERE referenced_object = @id";
@@ -181,7 +191,11 @@ public class ReferenceFinderTool
             }
         }
 
-        m_Writer.Close();
+        // Don't close Console.Out when writing to stdout; just flush it.
+        if (toStdout)
+            m_Writer.Flush();
+        else
+            m_Writer.Close();
 
         return 0;
     }
@@ -196,10 +210,13 @@ public class ReferenceFinderTool
         {
             reader.Read();
 
+            // game_object and script come from correlated subqueries that yield NULL when there is no matching row
+            // (e.g. a ScriptableObject is a MonoBehaviour whose m_GameObject PPtr is 0, or a MonoBehaviour with no
+            // m_Script reference), so both must be null-checked.
             var objectType = reader.GetString(0);
             var objectName = reader.GetString(1);
-            var gameObject = reader.GetString(2);
-            var script = reader.GetString(3);
+            var gameObject = reader.IsDBNull(2) ? "" : reader.GetString(2);
+            var script = reader.IsDBNull(3) ? "" : reader.GetString(3);
 
             if (propertyPath != "")
             {
