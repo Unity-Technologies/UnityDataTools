@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------------
+Build Report - Content Size Statistics
+Serialized File count                      7
+Resource file count                        2
+Object count                               9
+Serialized Files                      14.7 kb	  16.2%
+Serialized Files Headers              11.5 kb	  12.6%
+Resource data (Texture,Audio...)      76.3 kb	  83.8%
+Total build size                      91.0 kb
+
+Largest Types:
+    76.5 kb	  84.1% AudioClip
+     2.7 kb	   3.0% MonoBehaviour
+
+Largest Assets:
+    46.4 kb	  51.0% Assets/Audio/a.mp3
+    30.1 kb	  33.0% Assets/Audio/6.mp3
+     2.2 kb	   2.5% Assets/ScriptableObjects/SerializationDemo.asset
+-------------------------------------------------------------------------------

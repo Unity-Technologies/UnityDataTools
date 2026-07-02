@@ -1,0 +1,25 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.6.0b3
+CRC: 1465243436
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 126f385e23d41aca13d7233b6051d3a1
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: d0726b8e1199eb6125e2245ce15343f9
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 6b339242357a8a3b47aa14706dd55d35
+HashAppended: 0
+ClassTypes:
+- Class: 114
+  Script: {fileID: 11500000, guid: f44aeb02ae06dd84bb3ef76e1df8d525, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers:
+- AssemblyName: Assembly-CSharp
+  ClassName: SerializationDemo/SerializedData
+Assets:
+- Assets/ScriptableObjects/SerializationDemo.asset
+Dependencies: []
