@@ -304,6 +304,64 @@ public class FindRefsTests
         Assert.AreEqual(2, count, "DirectAudioClipReference should reference both AudioClips");
     }
 
+    // The refs table stores ids into property_names/property_types; refs_view rejoins them to expose the
+    // original strings. Verify a known MonoBehaviour -> MonoScript reference surfaces correctly through the view.
+    [Test]
+    public void RefsView_ExposesPropertyPathAndTypeStrings()
+    {
+        using var db = SQLTestHelper.OpenDatabase(m_DatabasePath);
+
+        var monoScriptRefs = SQLTestHelper.QueryInt(db, @"
+            SELECT COUNT(*) FROM refs_view
+            WHERE property_type = 'MonoScript' AND property_path = 'm_Script'
+            AND object IN (SELECT id FROM object_view WHERE type = 'MonoBehaviour')");
+        Assert.Greater(monoScriptRefs, 0,
+            "MonoBehaviours should have an m_Script reference of type MonoScript visible through refs_view");
+    }
+
+    // Every id stored in refs must resolve through the lookup tables, and the lookup tables must not be larger
+    // than the set of strings actually used (dedup should collapse repeats to one row each).
+    [Test]
+    public void RefsLookupTables_AreConsistentWithRefs()
+    {
+        using var db = SQLTestHelper.OpenDatabase(m_DatabasePath);
+
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM refs WHERE property_path NOT IN (SELECT id FROM property_names)", 0,
+            "Every refs.property_path id must exist in property_names");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM refs WHERE property_type NOT IN (SELECT id FROM property_types)", 0,
+            "Every refs.property_type id must exist in property_types");
+
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT (SELECT COUNT(DISTINCT property_path) FROM refs_view) - (SELECT COUNT(*) FROM property_names)", 0,
+            "property_names should contain exactly the distinct property paths used by refs");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT (SELECT COUNT(DISTINCT property_type) FROM refs_view) - (SELECT COUNT(*) FROM property_types)", 0,
+            "property_types should contain exactly the distinct property types used by refs");
+    }
+
+    // find-refs must reject databases created before the normalized refs schema (user_version 0) with a clear
+    // message rather than an obscure SQL error.
+    [Test]
+    public async Task FindRefs_UnsupportedSchemaVersion_FailsCleanly()
+    {
+        var oldSchemaDb = Path.Combine(m_WorkFolder, "old_schema.db");
+        File.Copy(m_DatabasePath, oldSchemaDb, true);
+        using (var db = SQLTestHelper.OpenDatabase(oldSchemaDb))
+        {
+            using var cmd = db.CreateCommand();
+            cmd.CommandText = "PRAGMA user_version = 0";
+            cmd.ExecuteNonQuery();
+        }
+        SqliteConnection.ClearAllPools();
+
+        var (exitCode, output) = await RunFindRefsOn(oldSchemaDb, new[] { "-n", "a", "-t", "AudioClip" });
+
+        Assert.AreNotEqual(0, exitCode);
+        Assert.That(output, Does.Contain("unsupported schema version"));
+    }
+
     private static long QueryLong(SqliteConnection db, string sql)
     {
         using var cmd = db.CreateCommand();

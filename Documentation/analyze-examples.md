@@ -152,7 +152,7 @@ Alternatively, you can write the query manually using the underlying tables:
 ```
 SELECT mb.asset_bundle, mb.serialized_file, mb.name, mb.object_id
 FROM object_view mb
-INNER JOIN refs r ON mb.id = r.object
+INNER JOIN refs_view r ON mb.id = r.object
 INNER JOIN monoscript_view ms ON r.referenced_object = ms.id
 WHERE mb.type = 'MonoBehaviour'
   AND r.property_type = 'MonoScript'

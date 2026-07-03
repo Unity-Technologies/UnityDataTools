@@ -8,10 +8,9 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
     create table refs
     (
         object INTEGER,
-        referenced_object INTEGER, 
-        property_path TEXT,
-        property_type TEXT,
-        PRIMARY KEY (object, referenced_object, property_path)
+        referenced_object INTEGER,
+        property_path INTEGER,   -- id into property_names
+        property_type INTEGER    -- id into property_types
     );
     */
     internal class AddReference : AbstractCommand
@@ -24,8 +23,8 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
         {
             { "object", SqliteType.Integer },
             { "referenced_object", SqliteType.Integer },
-            { "property_path", SqliteType.Text },
-            { "property_type", SqliteType.Text }
+            { "property_path", SqliteType.Integer },
+            { "property_type", SqliteType.Integer }
         };
     }
 }

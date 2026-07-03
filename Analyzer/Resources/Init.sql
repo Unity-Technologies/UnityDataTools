@@ -34,13 +34,35 @@ CREATE TABLE IF NOT EXISTS objects
     PRIMARY KEY (id)
 );
 
+-- Deduplicated lookup tables for the strings referenced by the refs table.
+-- refs stores ids into these instead of repeating the strings on every row.
+CREATE TABLE IF NOT EXISTS property_names
+(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+);
+
+CREATE TABLE IF NOT EXISTS property_types
+(
+    id INTEGER PRIMARY KEY,
+    name TEXT
+);
+
 CREATE TABLE IF NOT EXISTS refs
 (
     object INTEGER,
     referenced_object INTEGER,
-    property_path TEXT,
-    property_type TEXT
+    property_path INTEGER,
+    property_type INTEGER
 );
+
+-- Reproduces the pre-normalization refs shape (property_path/property_type as text)
+-- so queries can read the strings without joining the lookup tables by hand.
+CREATE VIEW refs_view AS
+SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
+FROM refs r
+LEFT JOIN property_names pn ON r.property_path = pn.id
+LEFT JOIN property_types pt ON r.property_type = pt.id;
 
 CREATE VIEW object_view AS
 SELECT o.id, o.object_id, ab.name AS asset_bundle, sf.name AS serialized_file, t.name AS type, o.name, o.game_object, o.size,
@@ -89,19 +111,24 @@ ORDER BY size DESC, instances DESC;
 CREATE VIEW view_material_shader_refs AS
 SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, s.id shader_id, s.name shader_name, s.asset_bundle shader_asset_bundle
 FROM object_view m
-INNER JOIN refs r ON m.id = r.object AND r.property_path = 'm_Shader'
+INNER JOIN refs_view r ON m.id = r.object AND r.property_path = 'm_Shader'
 INNER JOIN object_view s ON r.referenced_object = s.id
 LEFT JOIN assets a ON m.id = a.object;
 
 CREATE VIEW view_material_texture_refs AS
 SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, t.id texture_id, t.name texture_name, t.asset_bundle texture_asset_bundle
 FROM object_view m
-INNER JOIN refs r ON r.object = m.id AND property_type = "Texture"
+INNER JOIN refs_view r ON r.object = m.id AND property_type = 'Texture'
 INNER JOIN object_view t ON r.referenced_object = t.id
 LEFT JOIN assets a ON m.id = a.object
-WHERE m.type = "Material";
+WHERE m.type = 'Material';
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
+
+-- Database schema version. Bump when the schema changes in a way that tools relying on it
+-- (e.g. find-refs) cannot read from an older database. 1 = normalized refs table (issue #44);
+-- databases produced before versioning report 0.
+PRAGMA user_version = 1;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;
