@@ -1,6 +1,6 @@
 # ContentLayout.json
 
-`ContentLayout.json` describes the content that a content directory build produced. It is written by [`BuildPipeline.BuildContentDirectory`](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/BuildPipeline.BuildContentDirectory.html) into the build report directory, alongside the other build report files. For an overview of the build report directory and the other files it contains, see [Build report and build history](https://docs.unity3d.com/6000.6/Documentation/Manual/build-reporting.html) in the Unity Manual.
+`ContentLayout.json` describes the content that a content directory build produced. It is written by [`BuildPipeline.BuildContentDirectory`](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/BuildPipeline.BuildContentDirectory.html) into the build report directory, alongside the other build report files. For an overview of the build report directory and the other files it contains, see [Build report and build history](https://docs.unity3d.com/6000.6/Documentation/Manual/build-history.html) in the Unity Manual.
 
 This page explains what the file contains conceptually to aid in creation of build-analysis tooling or inspection of content directory build output.  The C# types that define the schema are published alongside this documentation in [`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs), which is the authoritative reference for the individual fields.
 

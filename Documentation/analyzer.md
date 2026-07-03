@@ -176,6 +176,26 @@ This view lists all the shaders aggregated by name. The *instances* column indic
 the shader was found in the data files. It also provides the total size per shader and the list of
 AssetBundles in which they were found.
 
+## refs / refs_view
+
+The `refs` table records the references between objects: for each reference it stores the source
+`object`, the `referenced_object`, and the property that holds the reference. On large builds this
+table dominates the database size, so the property strings are deduplicated into two lookup tables
+and `refs` stores integer ids into them:
+
+* `property_names`: distinct property paths (e.g. `m_Shader`, `m_Materials[0]`).
+* `property_types`: distinct referenced types (e.g. `Texture2D`, `MonoScript`).
+
+The `refs_view` rejoins these so the original strings are available directly. Query `refs_view`
+(columns `object`, `referenced_object`, `property_path`, `property_type`) rather than joining the
+lookup tables by hand:
+
+```sql
+SELECT * FROM refs_view WHERE property_type = 'MonoScript';
+```
+
+These tables are not populated when analyze is run with `--skip-references`.
+
 ## BuildReport
 
 See [BuildReport.md](buildreport.md) for details of the tables and views related to analyzing BuildReport files.

@@ -19,6 +19,10 @@ class ReferenceTreeNode
 
 public class ReferenceFinderTool
 {
+    // Minimum analyze database schema version find-refs can read. The normalized refs table
+    // (issue #44) is version 1; databases produced before schema versioning report 0.
+    const long RequiredSchemaVersion = 1;
+
     SqliteCommand m_GetRefsCommand;
     SqliteCommand m_GetObjectCommand;
     List<ReferenceTreeNode> m_Roots = new List<ReferenceTreeNode>();
@@ -106,6 +110,19 @@ public class ReferenceFinderTool
             }.ConnectionString;
             var db = new SqliteConnection(connectionString);
             db.Open();
+
+            using (var versionCmd = db.CreateCommand())
+            {
+                versionCmd.CommandText = "PRAGMA user_version";
+                var version = (long)versionCmd.ExecuteScalar();
+                if (version < RequiredSchemaVersion)
+                {
+                    Console.WriteLine("The provided database uses an unsupported schema version. Re-run 'analyze' on the Unity content to regenerate it.");
+                    db.Dispose();
+                    return null;
+                }
+            }
+
             return db;
         }
         catch (Exception e)
@@ -120,8 +137,19 @@ public class ReferenceFinderTool
         m_Writer = toStdout ? Console.Out : new StreamWriter(outputFile);
 
         m_GetRefsCommand = db.CreateCommand();
-        m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assets a WHERE a.object = r.object) FROM refs r WHERE referenced_object = @id";
+        m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assets a WHERE a.object = r.object) FROM refs_view r WHERE referenced_object = @id";
         m_GetRefsCommand.Parameters.Add("@id", SqliteType.Integer);
+
+        // Resolve the 'm_Script' property path to its id once so the per-object script lookup below
+        // filters on the indexed integer column instead of scanning the property_names table.
+        long scriptPathId = -1;
+        using (var scriptPathCmd = db.CreateCommand())
+        {
+            scriptPathCmd.CommandText = "SELECT id FROM property_names WHERE name = 'm_Script'";
+            var result = scriptPathCmd.ExecuteScalar();
+            if (result != null)
+                scriptPathId = (long)result;
+        }
 
         m_GetObjectCommand = db.CreateCommand();
         m_GetObjectCommand.CommandText =
@@ -134,12 +162,13 @@ public class ReferenceFinderTool
             IIF (o.type = 'MonoBehaviour',
 	            (SELECT s.name FROM objects s
 	            LEFT JOIN refs r
-	            ON r.referenced_object = s.id AND r.property_path = 'm_Script'
+	            ON r.referenced_object = s.id AND r.property_path = @scriptPathId
 	            WHERE r.object = o.id),
 	            '') script
             FROM object_view o
             WHERE o.id =  @id";
         m_GetObjectCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_GetObjectCommand.Parameters.AddWithValue("@scriptPathId", scriptPathId);
 
         for (int i = 0; i < objectIds.Count; ++i)
         {

@@ -190,10 +190,10 @@ public class BuildReportTests
             "No object should reference the BuildReport object");
 
         var refsWithWrongPath = SQLTestHelper.QueryInt(db,
-            "SELECT COUNT(*) FROM refs WHERE property_path NOT LIKE 'm_Appendices[%]'");
+            "SELECT COUNT(*) FROM refs_view WHERE property_path NOT LIKE 'm_Appendices[%]'");
         Assert.AreEqual(0, refsWithWrongPath, "All property_path values should match pattern 'm_Appendices[N]'");
 
-        SQLTestHelper.AssertQueryString(db, "SELECT DISTINCT property_type FROM refs", "Object",
+        SQLTestHelper.AssertQueryString(db, "SELECT DISTINCT property_type FROM refs_view", "Object",
             "All references should have property_type 'Object'");
 
         var objectsNotReferenced = SQLTestHelper.QueryInt(db,

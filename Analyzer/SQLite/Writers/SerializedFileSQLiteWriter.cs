@@ -25,6 +25,14 @@ public class SerializedFileSQLiteWriter : IDisposable
     private IdProvider<string> m_SerializedFileIdProvider = new();
     private ObjectIdProvider m_ObjectIdProvider = new();
 
+    // The refs table stores ids into these deduplicated string tables instead of repeating the
+    // property path/type strings on every row. Ids are assigned lazily and are global across all
+    // files; the HashSets track which ids have already had their lookup row written.
+    private IdProvider<string> m_PropertyPathIdProvider = new();
+    private IdProvider<string> m_PropertyTypeIdProvider = new();
+    private HashSet<int> m_PropertyPathSet = new();
+    private HashSet<int> m_PropertyTypeSet = new();
+
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
     // Used to map PPtr fileId to its corresponding serialized file id in the database.
@@ -46,6 +54,8 @@ public class SerializedFileSQLiteWriter : IDisposable
 
     // serialized files
     private AddReference m_AddReferenceCommand = new AddReference();
+    private AddPropertyName m_AddPropertyNameCommand = new AddPropertyName();
+    private AddPropertyType m_AddPropertyTypeCommand = new AddPropertyType();
     private AddAssetBundle m_AddAssetBundleCommand = new AddAssetBundle();
     private AddSerializedFile m_AddSerializedFileCommand = new AddSerializedFile();
     private AddObject m_AddObjectCommand = new AddObject();
@@ -82,6 +92,8 @@ public class SerializedFileSQLiteWriter : IDisposable
 
         // build serialized file commands
         m_AddReferenceCommand.CreateCommand(m_Database);
+        m_AddPropertyNameCommand.CreateCommand(m_Database);
+        m_AddPropertyTypeCommand.CreateCommand(m_Database);
         m_AddAssetBundleCommand.CreateCommand(m_Database);
         m_AddSerializedFileCommand.CreateCommand(m_Database);
         m_AddObjectCommand.CreateCommand(m_Database);
@@ -289,15 +301,46 @@ public class SerializedFileSQLiteWriter : IDisposable
 
         if (!m_SkipReferences)
         {
+            var propertyPathId = GetPropertyPathId(propertyPath);
+            var propertyTypeId = GetPropertyTypeId(propertyType);
+
             m_AddReferenceCommand.SetTransaction(m_CurrentTransaction);
             m_AddReferenceCommand.SetValue("object", objectId);
             m_AddReferenceCommand.SetValue("referenced_object", referencedObjectId);
-            m_AddReferenceCommand.SetValue("property_path", propertyPath);
-            m_AddReferenceCommand.SetValue("property_type", propertyType);
+            m_AddReferenceCommand.SetValue("property_path", propertyPathId);
+            m_AddReferenceCommand.SetValue("property_type", propertyTypeId);
             m_AddReferenceCommand.ExecuteNonQuery();
         }
 
         return referencedObjectId;
+    }
+
+    // Resolve a property path/type string to its id, writing the lookup row the first time the
+    // string is seen. Called within the current transaction (references are being extracted).
+    private int GetPropertyPathId(string propertyPath)
+    {
+        var id = m_PropertyPathIdProvider.GetId(propertyPath);
+        if (m_PropertyPathSet.Add(id))
+        {
+            m_AddPropertyNameCommand.SetTransaction(m_CurrentTransaction);
+            m_AddPropertyNameCommand.SetValue("id", id);
+            m_AddPropertyNameCommand.SetValue("name", propertyPath);
+            m_AddPropertyNameCommand.ExecuteNonQuery();
+        }
+        return id;
+    }
+
+    private int GetPropertyTypeId(string propertyType)
+    {
+        var id = m_PropertyTypeIdProvider.GetId(propertyType);
+        if (m_PropertyTypeSet.Add(id))
+        {
+            m_AddPropertyTypeCommand.SetTransaction(m_CurrentTransaction);
+            m_AddPropertyTypeCommand.SetValue("id", id);
+            m_AddPropertyTypeCommand.SetValue("name", propertyType);
+            m_AddPropertyTypeCommand.ExecuteNonQuery();
+        }
+        return id;
     }
 
     public void Dispose()
@@ -311,6 +354,8 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddAssetBundleCommand.Dispose();
         m_AddSerializedFileCommand.Dispose();
         m_AddReferenceCommand.Dispose();
+        m_AddPropertyNameCommand.Dispose();
+        m_AddPropertyTypeCommand.Dispose();
         m_AddObjectCommand.Dispose();
         m_AddTypeCommand.Dispose();
         m_InsertDepCommand.Dispose();
