@@ -6,6 +6,11 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
+// Processes the PreloadData object found in scene bundles. Its m_Assets list is recorded as the
+// scene's dependencies (asset_dependencies), so it is meaningful only alongside a synthetic Scene
+// object. This is AssetBundle-specific in practice: Player builds also contain a PreloadData
+// object but have no scene object, so ctx.SceneId is -1 there and the rows below are written
+// against object id -1 (a limitation, not intended output). ContentDirectory builds have neither.
 public class PreloadDataHandler : ISQLiteHandler
 {
     private SqliteCommand m_InsertDepCommand;

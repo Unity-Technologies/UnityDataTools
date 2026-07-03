@@ -37,6 +37,14 @@ public class SerializedFileSQLiteWriter : IDisposable
     private HashSet<int> m_PropertyPathSet = new();
     private HashSet<int> m_PropertyTypeSet = new();
 
+    // Detects the SerializedFiles of a scene bundle and captures the scene name.
+    // LIMITATION (issue 81): this only matches the BuildPipeline.BuildAssetBundles naming convention
+    // ("BuildPlayer-<SceneName>"). It does NOT match scene bundles produced by the Scriptable
+    // Build Pipeline / Addressables ("CAB-<hash of scene path>") or the Multi-Process Build
+    // Pipeline ("CAB-<scene GUID>"), nor player-build scenes ("level0", "level1", ...). For
+    // those builds no synthetic Scene object is created (see the scene handling in
+    // WriteSerializedFile), so the scene rows AssetBundleHandler writes into assets end up
+    // dangling and PreloadDataHandler attributes preload dependencies to SceneId -1.
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
     // Rebuilt for each serialized file: maps a PPtr's local m_FileID (0 = this file, 1..N = an
@@ -155,6 +163,12 @@ public class SerializedFileSQLiteWriter : IDisposable
         using var transaction = m_Database.BeginTransaction();
         m_CurrentTransaction = transaction;
 
+        // A scene has no single Unity object to represent it, yet a scene bundle lists the scene
+        // (by its .unity path) as the bundle's asset and other objects/preloads need something to
+        // hang off of. So for scene bundles we synthesize one "Scene" object per scene and use it
+        // as the target of the assets row (AssetBundleHandler) and of the scene's content and
+        // preload dependencies (below and PreloadDataHandler). This only happens when the file
+        // name matches m_RegexSceneFile; see its LIMITATION note for the builds this misses (issue 81).
         var match = m_RegexSceneFile.Match(relativePath);
 
         if (match.Success)

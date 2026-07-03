@@ -6,10 +6,22 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
+// Processes the AssetBundle Unity object, which only exists in content built as AssetBundles.
+// It fills the assets table from the object's m_Container (the bundle's explicit assets) and adds
+// their dependencies from m_PreloadTable. Player and ContentDirectory builds have no AssetBundle
+// object, so this handler never runs for them (asset_dependencies can still get rows from other
+// sources there - see AssetBundle.sql).
 public class AssetBundleHandler : ISQLiteHandler
 {
     SqliteCommand m_InsertCommand;
     private SqliteCommand m_InsertDepCommand;
+
+    // Extracts the scene name from a container entry like "Assets/Foo/Scene1.unity".
+    // This name must match the one SerializedFileSQLiteWriter derives from the scene's file name
+    // so both compute the same synthetic Scene object id. They only agree for
+    // BuildPipeline.BuildAssetBundles; for Scriptable Build Pipeline / Addressables and other
+    // pipelines the writer never creates the Scene object, so the assets row written below points
+    // at an object id that has no objects-table row (a dangling reference).
     private Regex m_SceneNameRegex = new Regex(@"([^//]+)\.unity");
 
     public void Init(SqliteConnection db)

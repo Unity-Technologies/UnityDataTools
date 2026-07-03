@@ -5,6 +5,11 @@ CREATE TABLE IF NOT EXISTS types
     PRIMARY KEY (id)
 );
 
+-- Describes a unity archive that contains serialized files and other built content.
+-- A common use of the unity archive is for AssetBundles but it can also be used for
+-- Player, Content Archive and ContentDirectory builds.
+--
+-- See issue 68 for proposed rename
 CREATE TABLE IF NOT EXISTS asset_bundles
 (
     id INTEGER,
@@ -13,6 +18,16 @@ CREATE TABLE IF NOT EXISTS asset_bundles
     PRIMARY KEY (id)
 );
 
+-- One row per SerializedFile encountered during analysis. The name is often a technical,
+-- hash-based string rather than a readable path, because that is how the file is named on disk:
+--   * Regular AssetBundles: "CAB-<MD4 hash of the AssetBundle name>". This is MD4, not Unity's
+--     Hash128 (spooky hash), and the optional AssetBundle-filename hash is not part of it.
+--   * Scene bundles vary by build pipeline: BuildPipeline.BuildAssetBundles uses
+--     "BuildPlayer-<SceneName>"; the Scriptable Build Pipeline / Addressables uses
+--     "CAB-<hash of scene path>"; the Multi-Process Build Pipeline uses "CAB-<scene GUID>".
+--   * Player builds name scenes "level0", "level1", ... in scene-list order.
+-- asset_bundle references the row from asset_bundles table of the unity archive containing this file,
+-- or is '' when the file is not inside an unity archive; object_view turns that '' into NULL.
 CREATE TABLE IF NOT EXISTS serialized_files
 (
     id INTEGER,
@@ -21,6 +36,15 @@ CREATE TABLE IF NOT EXISTS serialized_files
     PRIMARY KEY (id)
 );
 
+-- Records information about each Unity Object discovered in the analyze process.
+-- id - unique id for the object (assigned while populating the database, this value does not exist in the serialized content)
+-- object_id - Local file id for the object, serialized as m_PathID in the object references (PPTRs). signed 64 bit.
+--        This is unique within a serialized file, but not across files.
+-- type - references the row in the types table.
+-- name - the Object.name property.  In many case this is empty.
+-- game_object - only applies to components in a game object hierarchy, otherwise it is not set.
+-- crc32 - the CRC of the serialized state of the object, including any external .resS or .resource content.
+--        Useful for comparing builds to detect differences
 CREATE TABLE IF NOT EXISTS objects
 (
     id INTEGER,
@@ -48,6 +72,9 @@ CREATE TABLE IF NOT EXISTS property_types
     name TEXT
 );
 
+-- Tracks all references between Unity Objects (e.g. PPTRs)
+-- These references can exist between objects together inside the same serialized file, or they can
+-- span between serialized files.
 CREATE TABLE IF NOT EXISTS refs
 (
     object INTEGER,
@@ -56,10 +83,7 @@ CREATE TABLE IF NOT EXISTS refs
     property_type INTEGER
 );
 
--- Reproduces the pre-normalization refs shape (property_path/property_type as text)
--- so queries can read the strings without joining the lookup tables by hand.
--- INNER JOIN: every refs row is written with both ids present and their lookup rows
--- inserted in the same transaction, so the joins always match (the ids are foreign keys).
+-- Resolves the property_path and property_type ids in the refs table to their string values.
 CREATE VIEW refs_view AS
 SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
 FROM refs r
@@ -125,6 +149,8 @@ INNER JOIN object_view t ON r.referenced_object = t.id
 LEFT JOIN assets a ON m.id = a.object
 WHERE m.type = 'Material';
 
+-- Special-case type value for the fake Scene object that is sometimes inserted into the object table,
+-- see SerializedFileSQLiteWriter for details
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
 -- Database schema version. Bump when the schema changes in a way that tools relying on it
