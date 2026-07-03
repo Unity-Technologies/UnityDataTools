@@ -58,11 +58,13 @@ CREATE TABLE IF NOT EXISTS refs
 
 -- Reproduces the pre-normalization refs shape (property_path/property_type as text)
 -- so queries can read the strings without joining the lookup tables by hand.
+-- INNER JOIN: every refs row is written with both ids present and their lookup rows
+-- inserted in the same transaction, so the joins always match (the ids are foreign keys).
 CREATE VIEW refs_view AS
 SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
 FROM refs r
-LEFT JOIN property_names pn ON r.property_path = pn.id
-LEFT JOIN property_types pt ON r.property_type = pt.id;
+INNER JOIN property_names pn ON r.property_path = pn.id
+INNER JOIN property_types pt ON r.property_type = pt.id;
 
 CREATE VIEW object_view AS
 SELECT o.id, o.object_id, ab.name AS asset_bundle, sf.name AS serialized_file, t.name AS type, o.name, o.game_object, o.size,
