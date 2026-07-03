@@ -22,6 +22,10 @@ public class SerializedFileSQLiteWriter : IDisposable
     private bool m_SkipReferences;
     private bool m_SkipCrc;
 
+    // Global id assignment shared across every serialized file in the database.
+    // m_SerializedFileIdProvider maps a serialized file (by lowercased file name) to its
+    // serialized_files row id; m_ObjectIdProvider maps a (serialized file id, pathId) pair to
+    // its objects row id. See ObjectIdProvider for how cross-file references are resolved.
     private IdProvider<string> m_SerializedFileIdProvider = new();
     private ObjectIdProvider m_ObjectIdProvider = new();
 
@@ -35,7 +39,10 @@ public class SerializedFileSQLiteWriter : IDisposable
 
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
-    // Used to map PPtr fileId to its corresponding serialized file id in the database.
+    // Rebuilt for each serialized file: maps a PPtr's local m_FileID (0 = this file, 1..N = an
+    // entry in this file's external reference table) to the global serialized file id. A PPtr's
+    // (m_FileID, m_PathID) is only meaningful within its own file, so it must be translated
+    // through this map before being handed to m_ObjectIdProvider.
     Dictionary<int, int> m_LocalToDbFileId = new();
 
     private Dictionary<string, ISQLiteHandler> m_Handlers = new()
@@ -155,9 +162,12 @@ public class SerializedFileSQLiteWriter : IDisposable
             var sceneName = match.Groups[1].Value;
 
             // There is no Scene object in Unity (a Scene is the full content of a
-            // SerializedFile). We generate an object id using the name of the Scene
-            // as SerializedFile name, and the object id 0.
-            sceneId = m_ObjectIdProvider.GetId((m_SerializedFileIdProvider.GetId(sceneName), 0));
+            // SerializedFile), so we synthesize one. Treat the scene name as if it were a
+            // serialized file name to get a file id, then pair it with pathId 0 to get a
+            // stable object id for the scene. AssetBundleHandler builds the scene's object id
+            // the same way, so the two agree.
+            var sceneFileId = m_SerializedFileIdProvider.GetId(sceneName);
+            sceneId = m_ObjectIdProvider.GetId((sceneFileId, 0));
 
             // There are 2 SerializedFiles per Scene, one ends with .sharedAssets. This is a
             // dirty trick to avoid inserting the scene object a second time.
@@ -200,6 +210,9 @@ public class SerializedFileSQLiteWriter : IDisposable
             m_AddSerializedFileCommand.SetValue("name", relativePath);
             m_AddSerializedFileCommand.ExecuteNonQuery();
 
+            // Local file id 0 is always this file itself; ids 1..N follow the order of the
+            // external reference table. Resolve each external reference to its global file id
+            // by (lowercased) file name.
             int localId = 0;
             m_LocalToDbFileId.Add(localId++, serializedFileId);
             foreach (var extRef in sf.ExternalReferences)
@@ -210,8 +223,9 @@ public class SerializedFileSQLiteWriter : IDisposable
 
             foreach (var obj in sf.Objects)
             {
+                // serializedFileId is already this file's global id, so no LocalToDbFileId
+                // translation is needed for the file's own objects; obj.Id is the pathId.
                 var currentObjectId = m_ObjectIdProvider.GetId((serializedFileId, obj.Id));
-                // Console.WriteLine($"\nProcessing {currentObjectId}");
                 var root = sf.GetTypeTreeRoot(obj.Id);
                 var offset = obj.Offset;
                 uint crc32 = 0;
