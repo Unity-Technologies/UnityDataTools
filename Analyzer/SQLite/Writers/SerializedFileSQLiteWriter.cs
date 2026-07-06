@@ -43,8 +43,8 @@ public class SerializedFileSQLiteWriter : IDisposable
     // Build Pipeline / Addressables ("CAB-<hash of scene path>") or the Multi-Process Build
     // Pipeline ("CAB-<scene GUID>"), nor player-build scenes ("level0", "level1", ...). For
     // those builds no synthetic Scene object is created (see the scene handling in
-    // WriteSerializedFile), so the scene rows AssetBundleHandler writes into assets end up
-    // dangling and PreloadDataHandler attributes preload dependencies to SceneId -1.
+    // WriteSerializedFile), so the scene rows AssetBundleHandler writes into assetbundle_assets
+    // end up dangling and PreloadDataHandler attributes preload dependencies to SceneId -1.
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
     // Rebuilt for each serialized file: maps a PPtr's local m_FileID (0 = this file, 1..N = an
@@ -75,7 +75,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     private AddSerializedFile m_AddSerializedFileCommand = new AddSerializedFile();
     private AddObject m_AddObjectCommand = new AddObject();
     private AddType m_AddTypeCommand = new AddType();
-    private AddAssetDependency m_InsertDepCommand = new AddAssetDependency();
+    private AddPreloadDependency m_InsertDepCommand = new AddPreloadDependency();
 
     private bool m_Initialized;
     private SqliteConnection m_Database;
@@ -166,7 +166,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         // A scene has no single Unity object to represent it, yet a scene bundle lists the scene
         // (by its .unity path) as the bundle's asset and other objects/preloads need something to
         // hang off of. So for scene bundles we synthesize one "Scene" object per scene and use it
-        // as the target of the assets row (AssetBundleHandler) and of the scene's content and
+        // as the target of the assetbundle_assets row (AssetBundleHandler) and of the scene's content and
         // preload dependencies (below and PreloadDataHandler). This only happens when the file
         // name matches m_RegexSceneFile; see its LIMITATION note for the builds this misses (issue 81).
         var match = m_RegexSceneFile.Match(relativePath);

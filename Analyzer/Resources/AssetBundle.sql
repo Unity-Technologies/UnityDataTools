@@ -8,7 +8,7 @@
 -- the AssetBundle object, so this table is empty for Player and ContentDirectory builds.
 -- For scene bundles the entry names the scene and points at the synthetic Scene object (see
 -- AssetBundleHandler / SerializedFileSQLiteWriter).
-CREATE TABLE IF NOT EXISTS assets(
+CREATE TABLE IF NOT EXISTS assetbundle_assets(
     object INTEGER,
     name TEXT
 );
@@ -18,22 +18,22 @@ CREATE TABLE IF NOT EXISTS assets(
 --   * AssetBundleHandler: an asset's slice of the AssetBundle object's m_PreloadTable.
 --   * SerializedFileSQLiteWriter: a scene object -> each object in the scene's SerializedFiles.
 --   * PreloadDataHandler: the PreloadData object's m_Assets. PreloadData is a *separate* Unity
---     object (not part of the AssetBundle object) and also exists in Player builds, so this table
---     is NOT empty there; but those builds have no scene object, so PreloadDataHandler currently
---     attributes the rows to object id -1 (a known limitation).
-CREATE TABLE IF NOT EXISTS asset_dependencies(
+--     object (not part of the AssetBundle object) and also exists in Player builds (one per scene in its sharedAsset file),
+--     so this table is NOT empty there; but those builds have no scene object, so PreloadDataHandler currently
+--     attributes the rows to object id -1 (issue 81).
+CREATE TABLE IF NOT EXISTS preload_dependencies(
     object INTEGER,
     dependency INTEGER
 );
 
-CREATE VIEW IF NOT EXISTS asset_view AS
+CREATE VIEW IF NOT EXISTS assetbundle_asset_view AS
 SELECT
     a.name AS asset_name,
     o.*
-FROM assets a INNER JOIN object_view o ON o.id = a.object;
+FROM assetbundle_assets a INNER JOIN object_view o ON o.id = a.object;
 
-CREATE VIEW IF NOT EXISTS asset_dependencies_view AS
+CREATE VIEW IF NOT EXISTS preload_dependencies_view AS
 SELECT a.id, a.asset_name, a.asset_bundle, a.type, od.id dep_id, od.asset_bundle dep_asset_bundle, od.name dep_name, od.type dep_type
-FROM asset_view a
-INNER JOIN asset_dependencies d ON a.id = d.object
+FROM assetbundle_asset_view a
+INNER JOIN preload_dependencies d ON a.id = d.object
 INNER JOIN object_view od ON od.id = d.dependency;
