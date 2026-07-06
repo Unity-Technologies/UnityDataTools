@@ -60,13 +60,13 @@ the container path of the asset.
 This data comes from the AssetBundle Unity object, so the view is only populated for AssetBundle
 builds; Player and ContentDirectory builds have no such object and it is empty for them. For a scene
 bundle the container entry names the scene (its `.unity` path) and points at a synthetic object of
-type `Scene` (there is no single Unity object that represents a scene).
+type `Scene` (there is no single Unity object that represents a scene). Scene objects are created
+for both BuildPipeline.BuildAssetBundles and Scriptable Build Pipeline / Addressables scene bundles.
 
-The view is built with an INNER JOIN to *object_view*, so any container entry whose object is not in
-the `objects` table is silently omitted. This currently happens for scene bundles built by the
-Scriptable Build Pipeline / Addressables (and the Multi-Process Build Pipeline), where the synthetic
-Scene object is not created (see issue #81); the underlying `assetbundle_assets` table still holds
-those rows.
+The view is built with an INNER JOIN to *object_view*, so a container entry whose object is not in
+the `objects` table is omitted. In practice that only happens if the object was genuinely not
+analyzed (for example it lives in a bundle that was not part of the analyzed set); the underlying
+`assetbundle_assets` table still holds those rows.
 
 ## preload_dependencies
 
@@ -79,7 +79,11 @@ What the `object` is depends on the build:
 
 - **AssetBundle asset**: the explicitly-assigned asset, with its dependencies taken from the
   AssetBundle object's preload table.
-- **Scene bundle**: a synthetic `Scene` object that also aggregates the scene's own content objects.
+- **Scene bundle**: a synthetic `Scene` object (a scene has no single Unity object). Its
+  dependencies are the scene's shared assets and the entries of the scene's PreloadData. This works
+  for both BuildPipeline.BuildAssetBundles and Scriptable Build Pipeline / Addressables scene
+  bundles. The scene's own content objects (GameObjects, etc.) are not listed as dependencies but
+  share the scene object's `serialized_file`.
 - **Player build**: the `PreloadData` object itself, because a player build has no scene object to
   attach the dependencies to. A player build has one `PreloadData` per scene (in its
   `sharedassetsN.assets`) plus one in `globalgamemanagers.assets` for the always-loaded set.

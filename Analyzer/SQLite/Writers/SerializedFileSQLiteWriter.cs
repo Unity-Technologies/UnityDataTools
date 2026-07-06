@@ -37,15 +37,12 @@ public class SerializedFileSQLiteWriter : IDisposable
     private HashSet<int> m_PropertyPathSet = new();
     private HashSet<int> m_PropertyTypeSet = new();
 
-    // Detects the SerializedFiles of a scene bundle and captures the scene name.
-    // LIMITATION (issue 81): this only matches the BuildPipeline.BuildAssetBundles naming convention
-    // ("BuildPlayer-<SceneName>"). It does NOT match scene bundles produced by the Scriptable
-    // Build Pipeline / Addressables ("CAB-<hash of scene path>") or the Multi-Process Build
-    // Pipeline ("CAB-<scene GUID>"), nor player-build scenes ("level0", "level1", ...), so no
-    // synthetic Scene object is created for those. For Scriptable Build Pipeline / Addressables
-    // scene bundles that still leaves the assetbundle_assets rows AssetBundleHandler writes
-    // dangling (unfixed part of issue 81). Player builds have no AssetBundle object; their
-    // PreloadData dependencies are attributed to the PreloadData object itself (PreloadDataHandler).
+    // Detects the SerializedFiles of a BuildPipeline.BuildAssetBundles scene bundle
+    // ("BuildPlayer-<SceneName>") and captures the scene name. Scene bundles from the Scriptable
+    // Build Pipeline / Addressables instead use "CAB-<hash>" / "CAB-<hash>.sharedAssets" and are
+    // handled by the .sharedAssets branch in WriteSerializedFile plus AssetBundleHandler.
+    // Player-build scenes ("level0", ...) have no scene object; their PreloadData dependencies are
+    // attributed to the PreloadData object itself (PreloadDataHandler).
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
     // Rebuilt for each serialized file: maps a PPtr's local m_FileID (0 = this file, 1..N = an
@@ -165,22 +162,19 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_CurrentTransaction = transaction;
 
         // A scene has no single Unity object to represent it, yet a scene bundle lists the scene
-        // (by its .unity path) as the bundle's asset and other objects/preloads need something to
-        // hang off of. So for scene bundles we synthesize one "Scene" object per scene and use it
-        // as the target of the assetbundle_assets row (AssetBundleHandler) and of the scene's content and
-        // preload dependencies (below and PreloadDataHandler). This only happens when the file
-        // name matches m_RegexSceneFile; see its LIMITATION note for the builds this misses (issue 81).
+        // (by its .unity path) as the bundle's asset and its preloads need something to hang off
+        // of. So for scene bundles we synthesize one "Scene" object per scene, keyed on the
+        // scene's SerializedFile so every place that references it computes the same id. It is the
+        // target of the assetbundle_assets row (AssetBundleHandler) and of the scene's preload
+        // dependencies (the content loop below and PreloadDataHandler).
         var match = m_RegexSceneFile.Match(relativePath);
 
         if (match.Success)
         {
+            // BuildPipeline.BuildAssetBundles scene bundle. The scene name comes from the file name
+            // itself, and the scene object is keyed on that name (AssetBundleHandler matches it
+            // from the "<sceneName>.unity" container entry).
             var sceneName = match.Groups[1].Value;
-
-            // There is no Scene object in Unity (a Scene is the full content of a
-            // SerializedFile), so we synthesize one. Treat the scene name as if it were a
-            // serialized file name to get a file id, then pair it with pathId 0 to get a
-            // stable object id for the scene. AssetBundleHandler builds the scene's object id
-            // the same way, so the two agree.
             var sceneFileId = m_SerializedFileIdProvider.GetId(sceneName);
             sceneId = m_ObjectIdProvider.GetId((sceneFileId, 0));
 
@@ -201,6 +195,19 @@ public class SerializedFileSQLiteWriter : IDisposable
                 m_AddObjectCommand.SetValue("crc32", 0);
                 m_AddObjectCommand.ExecuteNonQuery();
             }
+        }
+        else if (Path.GetFileName(fullPath).EndsWith(".sharedAssets", StringComparison.OrdinalIgnoreCase))
+        {
+            // Scriptable Build Pipeline / Addressables scene bundle: a scene's shared-assets file is
+            // "<sceneFile>.sharedAssets" (e.g. "CAB-<hash>.sharedAssets"). Resolve the scene object
+            // id from the scene file name so the content loop below and PreloadDataHandler attach
+            // the scene's dependencies to it. Unlike the BuildPipeline case above, the Scene object
+            // itself (and its readable name) is created by AssetBundleHandler, which gets the scene
+            // path -> file mapping from the AssetBundle object's m_SceneHashes.
+            var fileName = Path.GetFileName(fullPath);
+            var sceneFileName = fileName.Substring(0, fileName.Length - ".sharedAssets".Length);
+            var sceneFileId = m_SerializedFileIdProvider.GetId(sceneFileName.ToLower());
+            sceneId = m_ObjectIdProvider.GetId((sceneFileId, 0));
         }
 
         m_LocalToDbFileId.Clear();

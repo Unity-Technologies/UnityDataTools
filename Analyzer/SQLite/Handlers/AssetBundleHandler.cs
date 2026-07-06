@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
@@ -11,17 +12,24 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 // assets) and adds their dependencies from m_PreloadTable. Player and ContentDirectory builds
 // have no AssetBundle object, so this handler never runs for them (preload_dependencies can still
 // get rows from other sources there - see AssetBundle.sql).
+//
+// Scenes have no single Unity object, so for scene bundles we synthesize one "Scene" object per
+// scene and point the assetbundle_assets row at it. The scene object is keyed on the scene's
+// SerializedFile so that PreloadDataHandler (processing that scene's .sharedAssets file) resolves
+// the same id and attaches the scene's preload dependencies to it - see SerializedFileSQLiteWriter.
 public class AssetBundleHandler : ISQLiteHandler
 {
     SqliteCommand m_InsertCommand;
     private SqliteCommand m_InsertDepCommand;
+    private SqliteCommand m_InsertSceneObjectCommand;
 
-    // Extracts the scene name from a container entry like "Assets/Foo/Scene1.unity".
-    // This name must match the one SerializedFileSQLiteWriter derives from the scene's file name
-    // so both compute the same synthetic Scene object id. They only agree for
-    // BuildPipeline.BuildAssetBundles; for Scriptable Build Pipeline / Addressables and other
-    // pipelines the writer never creates the Scene object, so the assetbundle_assets row written
-    // below points at an object id that has no objects-table row (a dangling reference).
+    // Scene object ids already inserted, so a scene referenced by more than one bundle is not
+    // inserted twice (objects.id is a primary key). Persists across files for the whole run.
+    private HashSet<long> m_InsertedSceneObjects = new();
+
+    // Legacy fallback for BuildPipeline.BuildAssetBundles scene bundles, which do not emit
+    // m_SceneHashes: extracts the scene name from a container entry like "Assets/Foo/Scene1.unity".
+    // The Scene object for those is created by SerializedFileSQLiteWriter (keyed on this same name).
     private Regex m_SceneNameRegex = new Regex(@"([^//]+)\.unity");
 
     public void Init(SqliteConnection db)
@@ -41,6 +49,15 @@ public class AssetBundleHandler : ISQLiteHandler
         m_InsertDepCommand.CommandText = "INSERT INTO preload_dependencies(object, dependency) VALUES(@object, @dependency)";
         m_InsertDepCommand.Parameters.Add("@object", SqliteType.Integer);
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
+
+        // Synthetic Scene object (type -1 = "Scene"): object_id 0, no game_object/size/crc.
+        m_InsertSceneObjectCommand = db.CreateCommand();
+        m_InsertSceneObjectCommand.CommandText =
+            "INSERT INTO objects(id, object_id, serialized_file, type, name, game_object, size, crc32) " +
+            "VALUES(@id, 0, @serialized_file, -1, @name, '', 0, 0)";
+        m_InsertSceneObjectCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_InsertSceneObjectCommand.Parameters.Add("@serialized_file", SqliteType.Integer);
+        m_InsertSceneObjectCommand.Parameters.Add("@name", SqliteType.Text);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
@@ -69,8 +86,32 @@ public class AssetBundleHandler : ISQLiteHandler
                     m_InsertDepCommand.ExecuteNonQuery();
                 }
             }
+            else if (assetBundle.SceneToFile.TryGetValue(asset.Name, out var sceneFile))
+            {
+                // Scriptable Build Pipeline / Addressables: key the scene on its SerializedFile
+                // (from m_SceneHashes) and create the synthetic Scene object here, since the writer
+                // cannot recognise a "CAB-<hash>" scene file by name.
+                var sceneFileId = ctx.SerializedFileIdProvider.GetId(sceneFile.ToLower());
+                var objId = ctx.ObjectIdProvider.GetId((sceneFileId, 0));
+
+                if (m_InsertedSceneObjects.Add(objId))
+                {
+                    m_InsertSceneObjectCommand.Transaction = ctx.Transaction;
+                    m_InsertSceneObjectCommand.Parameters["@id"].Value = objId;
+                    m_InsertSceneObjectCommand.Parameters["@serialized_file"].Value = sceneFileId;
+                    m_InsertSceneObjectCommand.Parameters["@name"].Value = asset.Name;
+                    m_InsertSceneObjectCommand.ExecuteNonQuery();
+
+                    m_InsertCommand.Transaction = ctx.Transaction;
+                    m_InsertCommand.Parameters["@object"].Value = objId;
+                    m_InsertCommand.Parameters["@name"].Value = asset.Name;
+                    m_InsertCommand.ExecuteNonQuery();
+                }
+            }
             else
             {
+                // Legacy BuildPipeline.BuildAssetBundles: the Scene object is created by
+                // SerializedFileSQLiteWriter (keyed on the scene name); here we add only the asset row.
                 var match = m_SceneNameRegex.Match(asset.Name);
 
                 if (match.Success)
@@ -104,5 +145,6 @@ public class AssetBundleHandler : ISQLiteHandler
     {
         m_InsertCommand?.Dispose();
         m_InsertDepCommand?.Dispose();
+        m_InsertSceneObjectCommand?.Dispose();
     }
 }

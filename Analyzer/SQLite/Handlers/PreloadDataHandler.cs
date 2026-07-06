@@ -8,8 +8,9 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 // Processes the PreloadData object, recording its m_Assets list as preload_dependencies. The
 // "object" the dependencies hang off of depends on the build:
-//   * Scene bundle: the synthetic Scene object (ctx.SceneId), which also aggregates the scene's
-//     own content.
+//   * Scene bundle: the synthetic Scene object (ctx.SceneId). SerializedFileSQLiteWriter resolves
+//     it for both BuildPipeline ("BuildPlayer-<Scene>.sharedAssets") and Scriptable Build Pipeline
+//     / Addressables ("CAB-<hash>.sharedAssets") scene bundles.
 //   * Player build: there is no scene object (ctx.SceneId == -1), so the dependencies are hung off
 //     the PreloadData object itself. A player build has one PreloadData per scene (in its
 //     sharedassetsN.assets) plus one in globalgamemanagers.assets for the always-loaded set.
