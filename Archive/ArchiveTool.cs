@@ -5,11 +5,17 @@ using System.Text.Json;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
-namespace UnityDataTools.UnityDataTool;
+namespace UnityDataTools.Archive;
 
-public static class Archive
+public static class ArchiveTool
 {
-    public static int HandleExtract(FileInfo filename, DirectoryInfo outputFolder, string filter = null)
+    public enum OutputFormat
+    {
+        Text,
+        Json
+    }
+
+    public static int ExtractContent(FileInfo filename, DirectoryInfo outputFolder, string filter = null)
     {
         try
         {
@@ -39,7 +45,7 @@ public static class Archive
         return 0;
     }
 
-    public static int HandleList(FileInfo filename, OutputFormat format)
+    public static int ListContent(FileInfo filename, OutputFormat format)
     {
         try
         {
@@ -70,7 +76,7 @@ public static class Archive
         return 0;
     }
 
-    public static int HandleHeader(FileInfo filename, OutputFormat format)
+    public static int PrintHeader(FileInfo filename, OutputFormat format)
     {
         var path = filename.ToString();
 
@@ -94,7 +100,7 @@ public static class Archive
         return 0;
     }
 
-    public static int HandleBlocks(FileInfo filename, OutputFormat format)
+    public static int ListBlocks(FileInfo filename, OutputFormat format)
     {
         var path = filename.ToString();
 
@@ -124,7 +130,7 @@ public static class Archive
         return 0;
     }
 
-    public static int HandleInfo(FileInfo filename, OutputFormat format)
+    public static int PrintSummary(FileInfo filename, OutputFormat format)
     {
         var path = filename.ToString();
 

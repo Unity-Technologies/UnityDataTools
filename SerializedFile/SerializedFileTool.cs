@@ -5,11 +5,17 @@ using System.Text.Json;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
-namespace UnityDataTools.UnityDataTool;
+namespace UnityDataTools.SerializedFile;
 
-public static class SerializedFileCommands
+public static class SerializedFileTool
 {
-    public static int HandleExternalRefs(FileInfo filename, OutputFormat format)
+    public enum OutputFormat
+    {
+        Text,
+        Json
+    }
+
+    public static int ListExternalRefs(FileInfo filename, OutputFormat format)
     {
         // External references are read directly from the parsed metadata rather than via UnityFileSystemApi.
         //
@@ -44,10 +50,10 @@ public static class SerializedFileCommands
         return 0;
     }
 
-    public static int HandleObjectList(FileInfo filename, OutputFormat format)
+    public static int ListObjects(FileInfo filename, OutputFormat format)
     {
         // The object list is read directly from the parsed metadata rather than via UnityFileSystemApi.
-        // (See comment in HandleExternalRefs() for the reasons for doing it that way)
+        // (See comment in ListExternalRefs() for the reasons for doing it that way)
         if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
             return 1;
 
@@ -72,7 +78,7 @@ public static class SerializedFileCommands
         return 0;
     }
 
-    public static int HandleHeader(FileInfo filename, OutputFormat format)
+    public static int PrintHeader(FileInfo filename, OutputFormat format)
     {
         if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
             return 1;
@@ -85,7 +91,7 @@ public static class SerializedFileCommands
         return 0;
     }
 
-    public static int HandleMetadata(FileInfo filename, OutputFormat format)
+    public static int PrintMetadata(FileInfo filename, OutputFormat format)
     {
         if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
             return 1;

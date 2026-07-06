@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using UnityDataTools.Archive;
 using UnityDataTools.FileSystem;
 
 namespace UnityDataTools.UnityDataTool.Tests;

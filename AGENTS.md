@@ -90,13 +90,21 @@ UnityDataTool find-refs database.db -n "ObjectName" -t "Texture2D"
 
 ### Component Hierarchy
 ```
-UnityDataTool (CLI executable)
+UnityDataTool (CLI executable)  — wires the feature libraries into commands
 ├── Analyzer → SQLite database generation
 ├── TextDumper → Human-readable text output
-├── ReferenceFinder → Object reference chain tracing
-└── UnityFileSystem → C# wrapper for native library
-    └── UnityFileSystemApi (native .dll/.dylib/.so)
+├── ReferenceFinder → Object reference chain tracing (queries the Analyzer database)
+├── Archive → inspect / extract Unity Archives (the `archive` command)
+├── SerializedFile → inspect SerializedFile header/metadata/objects (the `serialized-file` command)
+└── (base libraries, used by the feature libraries above)
+    ├── UnityBinaryFormat → C# parsers & helpers for Archives / SerializedFiles
+    ├── UnityDataModels → schemas for JSON build-report formats
+    └── UnityFileSystem → C# wrapper for native library
+        └── UnityFileSystemApi (native .dll/.dylib/.so)
 ```
+
+The feature libraries each build on UnityBinaryFormat and UnityFileSystem. See the
+"Repository content" section of `README.md` for a diagram of the dependencies.
 
 ### Key Architectural Patterns
 
