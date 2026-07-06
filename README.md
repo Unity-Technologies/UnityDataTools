@@ -37,19 +37,76 @@ New to Unity's data files or to UnityDataTool? These topics are a good place to 
 
 ## Repository content
 
-The repository contains the following items:
-* [UnityDataTool](Documentation/unitydatatool.md): a command-line tool providing access to the Analyzer, TextDumper and other class libraries.
-* [Analyzer](Documentation/analyzer.md): a class library that can be used to extract key information
-  from Unity data files and output it into a SQLite database.
-* [TextDumper](Documentation/textdumper.md): a class library that can be used to dump SerializedFiles into
-  a human-readable format (similar to binary2text).
-* [ReferenceFinder](Documentation/referencefinder.md): a class library that can be used to find
-  reference chains from objects to other objects using a database created by the Analyzer
-* UnityFileSystem: source code and binaries of a .NET class library exposing the functionalities or the
-  UnityFileSystemApi native library.
-* UnityFileSystem.Tests: test suite for the UnityFileSystem library.
-* UnityProjects: Unity projects used to generate some of the test data.
-* TestCommon: a helper library used by the test projects.
+The solution is organised in three layers. At the base are the libraries that read Unity's binary
+formats. On top of those sit the feature libraries that turn that raw data into something useful
+(a database, a text dump, a reference graph). And at the top is the command-line tool that exposes
+all of that functionality to users.
+
+```mermaid
+flowchart TD
+    CLI["<b>UnityDataTool</b><br/>command-line tool<br/>(+ archive / serialized-file commands)"]
+
+    Analyzer["<b>Analyzer</b><br/>SQLite database"]
+    TextDumper["<b>TextDumper</b><br/>human-readable dump"]
+    ReferenceFinder["<b>ReferenceFinder</b><br/>reference chains"]
+
+    UnityFileSystem["<b>UnityFileSystem</b><br/>C# wrapper +<br/>UnityFileSystemApi (native)"]
+    UnityBinaryFormat["<b>UnityBinaryFormat</b><br/>C# parsers &amp; helpers<br/>for Archives / SerializedFiles"]
+    UnityDataModels["<b>UnityDataModels</b><br/>schemas for build reporting file formats"]
+
+    CLI --> Analyzer
+    CLI --> TextDumper
+    CLI --> ReferenceFinder
+    CLI --> UnityBinaryFormat
+    CLI --> UnityFileSystem
+
+    Analyzer --> UnityFileSystem
+    Analyzer --> UnityBinaryFormat
+    Analyzer --> UnityDataModels
+    TextDumper --> UnityFileSystem
+    TextDumper --> UnityBinaryFormat
+    UnityBinaryFormat --> UnityFileSystem
+
+    ReferenceFinder -. "reads the SQLite database" .-> Analyzer
+```
+
+**Command-line tool**
+* [UnityDataTool](Documentation/unitydatatool.md): the command-line tool. It wires the feature
+  libraries together and exposes them as commands (`analyze`, `dump`, `find-refs`, and more), so most
+  users only ever interact with this executable. It also directly contains the implementation of the
+  `archive` and `serialized-file` commands — critical features for working with the file formats,
+  built mostly on top of UnityBinaryFormat.
+
+**Feature libraries**
+* [Analyzer](Documentation/analyzer.md): extracts key information from Unity data files into a SQLite
+  database for detailed analysis. It also parses Addressables build reports.
+* [TextDumper](Documentation/textdumper.md): dumps SerializedFiles into a human-readable format
+  (similar to Unity's binary2text).
+* [ReferenceFinder](Documentation/referencefinder.md): finds reference chains from one object to
+  another by querying a database produced by the Analyzer (a data dependency rather than a code one).
+
+**Base libraries**
+* UnityFileSystem: a .NET class library, with source and binaries, that wraps the native
+  `UnityFileSystemApi` to mount Unity Archives and read SerializedFiles.
+* UnityBinaryFormat: C# parsers and helpers for reading data out of Unity Archives and SerializedFiles.
+* UnityDataModels: shared C# models for the reading JSON format files produced by the build (Addressables BuildLayout.json, Content Directory ContentLayout.json).
+
+## Purpose of UnityFileSystemApi
+
+UnityFileSystemApi is compiled from the Unity source code and exposes the core functionality to open and read the Unity Archive and Serialized File formats, exposed as a flexible, performant library. It exposes ability to navigates the TypeTrees inside a SerializedFile so objects can be read generically, without hardcoded type knowledge.
+
+It enables custom tools for binary2text-like output and efficient SQLite database generation.
+
+### Tests and test data
+
+The automated tests are not shown in the diagram above. Each library has its own test project, and the
+shared test data doubles as convenient sample content for ad hoc use of the tool.
+
+* TestCommon: a helper library whose `Data/` folder holds small reference files extracted from real
+  Unity builds (Player, AssetBundles, content directory etc). These back the automated tests and are also handy for trying out the tool by hand.
+* Analyzer.Tests, UnityDataTool.Tests, UnityFileSystem.Tests: the per-library test suites.
+* UnityProjects: two Unity projects (`Baseline` and `LeadingEdge`) used to regenerate some of the test
+  data as Unity evolves.
 
 ## Downloads
 
@@ -63,7 +120,7 @@ Refer to the [commit history](https://github.com/Unity-Technologies/UnityDataToo
 
 ## Getting UnityFileSystemApi
 
-UnityDataTool uses the native `UnityFileSystemApi` library to read Unity Archives and SerializedFiles. **Normally you don't need to do anything with this library.** The repository already includes a recent Windows, Mac, and Linux copy in the [`UnityFileSystem/`](https://github.com/Unity-Technologies/UnityDataTools/tree/main/UnityFileSystem) directory, and using that bundled copy is the recommended way to run the tool.
+UnityDataTool uses the pre-compiled `UnityFileSystemApi` library to read Unity Archives and SerializedFiles. **Normally you don't need to do anything with this library.** The repository already includes a recent Windows, Mac, and Linux copy in the [`UnityFileSystem/`](https://github.com/Unity-Technologies/UnityDataTools/tree/main/UnityFileSystem) directory, and using that bundled copy is the recommended way to run the tool.
 
 The library is backward compatible but not forward compatible: a given version can read content from the same or older Unity versions, but may be unable to read content produced by a newer Unity Editor than the library itself. The bundled copy is updated periodically as Unity evolves, so in practice it can read content from just about any Unity version.
 
@@ -83,10 +140,6 @@ The library is backward compatible but not forward compatible: a given version c
 On Windows, the executable is written to `UnityDataTool\bin\Release\net9.0`. Add this location to your system PATH for convenient access.
 
 See the [command-line tool documentation](./Documentation/unitydatatool.md) for usage instructions.
-
-## Purpose of UnityFileSystemApi
-
-UnityFileSystemApi exposes the core functionality of WebExtract and binary2text to open and read the Unity Archive and Serialized File formats, exposed as a flexible, performant library. It enables custom tools for binary2text-like output and efficient SQLite database generation.
 
 ## Origins
 
