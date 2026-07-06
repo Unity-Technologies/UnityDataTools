@@ -101,7 +101,7 @@ flowchart TD
 
 ## Purpose of UnityFileSystemApi
 
-UnityFileSystemApi is compiled from the Unity source code and exposes the core functionality to open and read the Unity Archive and Serialized File formats, exposed as a flexible, performant library. It exposes ability to navigates the TypeTrees inside a SerializedFile so objects can be read generically, without hardcoded type knowledge.
+UnityFileSystemApi is compiled from the Unity source code and exposes the core functionality to open and read the Unity Archive and Serialized File formats as a flexible, performant library. It exposes the ability to navigate the TypeTrees inside a SerializedFile so objects can be read generically, without hardcoded type knowledge.
 
 It enables custom tools for binary2text-like output and efficient SQLite database generation.
 
