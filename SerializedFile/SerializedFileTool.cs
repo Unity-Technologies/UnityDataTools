@@ -5,10 +5,16 @@ using System.Text.Json;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
-namespace UnityDataTools.UnityDataTool;
+namespace UnityDataTools.SerializedFile;
 
-public static class SerializedFileCommands
+public static class SerializedFileTool
 {
+    public enum OutputFormat
+    {
+        Text,
+        Json
+    }
+
     public static int HandleExternalRefs(FileInfo filename, OutputFormat format)
     {
         // External references are read directly from the parsed metadata rather than via UnityFileSystemApi.

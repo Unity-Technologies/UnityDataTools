@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 
-namespace UnityDataTools.UnityDataTool;
+namespace UnityDataTools.Archive;
 
 public static class WebBundleHelper
 {
@@ -50,14 +50,14 @@ public static class WebBundleHelper
         Console.WriteLine($"Extracted {extracted} out of {total} files.");
     }
 
-    public static void List(FileInfo filename, OutputFormat format)
+    public static void List(FileInfo filename, ArchiveTool.OutputFormat format)
     {
         using var fileStream = File.Open(filename.ToString(), FileMode.Open);
         using var stream = GetStream(filename, fileStream);
         using var reader = new BinaryReader(stream, Encoding.UTF8);
         var fileDescriptions = ParseWebBundleHeader(reader);
 
-        if (format == OutputFormat.Json)
+        if (format == ArchiveTool.OutputFormat.Json)
         {
             var jsonArray = new object[fileDescriptions.Count];
             for (int i = 0; i < fileDescriptions.Count; i++)

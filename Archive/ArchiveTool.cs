@@ -5,10 +5,16 @@ using System.Text.Json;
 using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 
-namespace UnityDataTools.UnityDataTool;
+namespace UnityDataTools.Archive;
 
-public static class Archive
+public static class ArchiveTool
 {
+    public enum OutputFormat
+    {
+        Text,
+        Json
+    }
+
     public static int HandleExtract(FileInfo filename, DirectoryInfo outputFolder, string filter = null)
     {
         try

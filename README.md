@@ -44,11 +44,13 @@ all of that functionality to users.
 
 ```mermaid
 flowchart TD
-    CLI["<b>UnityDataTool</b><br/>command-line tool<br/>(+ archive / serialized-file commands)"]
+    CLI["<b>UnityDataTool</b><br/>command-line tool"]
 
     Analyzer["<b>Analyzer</b><br/>SQLite database"]
     TextDumper["<b>TextDumper</b><br/>human-readable dump"]
     ReferenceFinder["<b>ReferenceFinder</b><br/>reference chains"]
+    Archive["<b>Archive</b><br/>inspect / extract archives"]
+    SerializedFile["<b>SerializedFile</b><br/>inspect SerializedFiles"]
 
     UnityFileSystem["<b>UnityFileSystem</b><br/>C# wrapper +<br/>UnityFileSystemApi (native)"]
     UnityBinaryFormat["<b>UnityBinaryFormat</b><br/>C# parsers &amp; helpers<br/>for Archives / SerializedFiles"]
@@ -57,14 +59,18 @@ flowchart TD
     CLI --> Analyzer
     CLI --> TextDumper
     CLI --> ReferenceFinder
-    CLI --> UnityBinaryFormat
-    CLI --> UnityFileSystem
+    CLI --> Archive
+    CLI --> SerializedFile
 
     Analyzer --> UnityFileSystem
     Analyzer --> UnityBinaryFormat
     Analyzer --> UnityDataModels
     TextDumper --> UnityFileSystem
     TextDumper --> UnityBinaryFormat
+    Archive --> UnityFileSystem
+    Archive --> UnityBinaryFormat
+    SerializedFile --> UnityFileSystem
+    SerializedFile --> UnityBinaryFormat
     UnityBinaryFormat --> UnityFileSystem
 
     ReferenceFinder -. "reads the SQLite database" .-> Analyzer
@@ -72,10 +78,8 @@ flowchart TD
 
 **Command-line tool**
 * [UnityDataTool](Documentation/unitydatatool.md): the command-line tool. It wires the feature
-  libraries together and exposes them as commands (`analyze`, `dump`, `find-refs`, and more), so most
-  users only ever interact with this executable. It also directly contains the implementation of the
-  `archive` and `serialized-file` commands — critical features for working with the file formats,
-  built mostly on top of UnityBinaryFormat.
+  libraries together and exposes them as commands (`analyze`, `dump`, `find-refs`, `archive`,
+  `serialized-file`, and more), so most users only ever interact with this executable.
 
 **Feature libraries**
 * [Analyzer](Documentation/analyzer.md): extracts key information from Unity data files into a SQLite
@@ -84,6 +88,10 @@ flowchart TD
   (similar to Unity's binary2text).
 * [ReferenceFinder](Documentation/referencefinder.md): finds reference chains from one object to
   another by querying a database produced by the Analyzer (a data dependency rather than a code one).
+* [Archive](Documentation/command-archive.md): inspects and extracts the contents of Unity Archives
+  (AssetBundles and web platform `.data` files) — the `archive` command.
+* [SerializedFile](Documentation/command-serialized-file.md): inspects the header, metadata, object
+  list, and external references of a SerializedFile — the `serialized-file` command.
 
 **Base libraries**
 * UnityFileSystem: a .NET class library, with source and binaries, that wraps the native

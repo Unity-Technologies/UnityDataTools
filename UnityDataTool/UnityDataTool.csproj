@@ -20,14 +20,14 @@
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta3.22114.1" />
-    <PackageReference Include="System.IO.Packaging" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ReferenceFinder\ReferenceFinder.csproj" />
-    <ProjectReference Include="..\TextDumper\TextDumper.csproj" />
     <ProjectReference Include="..\Analyzer\Analyzer.csproj" />
-    <ProjectReference Include="..\UnityBinaryFormat\UnityBinaryFormat.csproj" />
+    <ProjectReference Include="..\Archive\Archive.csproj" />
+    <ProjectReference Include="..\ReferenceFinder\ReferenceFinder.csproj" />
+    <ProjectReference Include="..\SerializedFile\SerializedFile.csproj" />
+    <ProjectReference Include="..\TextDumper\TextDumper.csproj" />
     <ProjectReference Include="..\UnityFileSystem\UnityFileSystem.csproj" />
   </ItemGroup>
 
