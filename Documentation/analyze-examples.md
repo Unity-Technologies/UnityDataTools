@@ -247,7 +247,7 @@ UnityDataTool works on the output of a Unity build, which, by its very nature, o
 
 For AssetBundles partial asset information can be found in the m_Containers list, inside the AssetBundle object.  This records assets that were explicitly added to AssetBundles.  In the database this can be found in the `assetbundle_assets` table.  However, assets that are included in the build implicitly (because they are referenced from the explicitly added assets) will not be recorded anywhere in the AssetBundle content. 
 
-Similarly for a player build the only paths populated in the `assetbundle_assets` table are the scenes from the Build Profile Scene List.  The paths of the assets in the sharedAsset files is not recorded anywhere in the build output.
+For a player build the `assetbundle_assets` table is empty (player builds don’t contain an AssetBundle object), and the paths of assets in the sharedassets files are not recorded anywhere in the build output.
 
 In many cases the source asset can be inferred based on your specific knowledge of your project, and how the build was configured.  For example the level files in a Player build match the Scenes in the Build Profile Scene list.  And the content of AssetBundles is driven from the assignment of specific assets to those AssetBundles (or Addressable groups), along with assets they depend on.
 
