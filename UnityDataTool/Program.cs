@@ -225,7 +225,7 @@ public static class Program
             filterOpt,
         };
         extractArchiveCommand.SetHandler(
-            (FileInfo fi, DirectoryInfo o, string filter) => Task.FromResult(ArchiveTool.HandleExtract(fi, o, filter)),
+            (FileInfo fi, DirectoryInfo o, string filter) => Task.FromResult(ArchiveTool.ExtractContent(fi, o, filter)),
             pathArg, oOpt, filterOpt);
 
         var fOpt = new Option<ArchiveTool.OutputFormat>(aliases: new[] { "--format", "-f" }, description: "Output format", getDefaultValue: () => ArchiveTool.OutputFormat.Text);
@@ -236,7 +236,7 @@ public static class Program
             fOpt,
         };
         listArchiveCommand.SetHandler(
-            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.HandleList(fi, f)),
+            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.ListContent(fi, f)),
             pathArg, fOpt);
 
         var headerArchiveCommand = new Command("header", "Display the header of a Unity Archive file.")
@@ -245,7 +245,7 @@ public static class Program
             fOpt,
         };
         headerArchiveCommand.SetHandler(
-            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.HandleHeader(fi, f)),
+            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.PrintHeader(fi, f)),
             pathArg, fOpt);
 
         var blocksArchiveCommand = new Command("blocks", "Display the block list of a Unity Archive file.")
@@ -254,7 +254,7 @@ public static class Program
             fOpt,
         };
         blocksArchiveCommand.SetHandler(
-            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.HandleBlocks(fi, f)),
+            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.ListBlocks(fi, f)),
             pathArg, fOpt);
 
         var infoArchiveCommand = new Command("info", "Display a high-level summary of a Unity Archive file.")
@@ -263,7 +263,7 @@ public static class Program
             fOpt,
         };
         infoArchiveCommand.SetHandler(
-            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.HandleInfo(fi, f)),
+            (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.PrintSummary(fi, f)),
             pathArg, fOpt);
 
         return new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
@@ -287,7 +287,7 @@ public static class Program
             fOpt,
         };
         externalRefsCommand.SetHandler(
-            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.HandleExternalRefs(fi, f)),
+            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.ListExternalRefs(fi, f)),
             pathArg, fOpt);
 
         var objectListCommand = new Command("objectlist", "List all objects in a SerializedFile.")
@@ -296,7 +296,7 @@ public static class Program
             fOpt,
         };
         objectListCommand.SetHandler(
-            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.HandleObjectList(fi, f)),
+            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.ListObjects(fi, f)),
             pathArg, fOpt);
 
         var headerCommand = new Command("header", "Show SerializedFile header information.")
@@ -305,7 +305,7 @@ public static class Program
             fOpt,
         };
         headerCommand.SetHandler(
-            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.HandleHeader(fi, f)),
+            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.PrintHeader(fi, f)),
             pathArg, fOpt);
 
         var metadataCommand = new Command("metadata", "Show information from the metadata section of the SerializedFile (use `-f Json` for detailed information).")
@@ -314,7 +314,7 @@ public static class Program
             fOpt,
         };
         metadataCommand.SetHandler(
-            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.HandleMetadata(fi, f)),
+            (FileInfo fi, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.PrintMetadata(fi, f)),
             pathArg, fOpt);
 
         var serializedFileCommand = new Command("serialized-file", "Inspect a SerializedFile (scene, assets, etc.).")
