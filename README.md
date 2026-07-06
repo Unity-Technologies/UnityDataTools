@@ -4,13 +4,36 @@ The UnityDataTool is a command line tool and showcase of the UnityFileSystemApi 
 The main purpose is for analysis of the content of Unity data files, for example AssetBundles and
 Player content.
 
-The [command line tool](./Documentation/unitydatatool.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers most functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content. See [examples](./Documentation/analyze-examples.md) and [comparing builds](./Documentation/comparing-builds.md) for examples of how to use the command line tool.
+The [command line tool](./Documentation/unitydatatool.md) runs directly on Unity data files, without requiring the Editor to be running.  It covers most functionality of the Unity tools WebExtract and binary2text, with better performance.  And it adds a lot of additional functionality, for example the ability to create a SQLite database for detailed analysis of build content. See the [Documentation](#documentation) section below for guides to Unity's content formats and to using the tool.
 
 It is designed to scale for large build outputs and has been used to fine-tune big Unity-based games.
 
 The tool also provides comprehensive analysis of **Unity Addressables build reports**, automatically detecting and parsing Addressables JSON build outputs to extract detailed information about bundles, assets, dependencies, file sizes, and build performance metrics. See the [Addressables Build Report Analysis documentation](./Documentation/addressables-build-reports.md) for complete details.
 
 The command line tool uses the UnityFileSystemApi library to access the content of Unity Archives and Serialized files, which are Unity's primary binary formats. This repository also serves as a reference for how this library could be used as part of incorporating functionality into your own tools.
+
+## Documentation
+
+New to Unity's data files or to UnityDataTool? These topics are a good place to start.
+
+**Understanding Unity content**
+
+| Topic | Description |
+| --- | --- |
+| [Overview of Unity Content](./Documentation/unity-content-format.md) | The core file types (SerializedFiles and Unity Archives), TypeTrees, and how Player and AssetBundle builds are laid out. |
+| [AssetBundle Format](./Documentation/assetbundle-format.md) | A hands-on look inside AssetBundles: the AssetBundle object, preload tables, and how scenes are stored. |
+| [ContentLayout.json](./Documentation/contentlayout.md) | The build layout file that maps content-directory build output back to source assets. |
+
+**Using UnityDataTool**
+
+| Topic | Description |
+| --- | --- |
+| [Command-line tool](./Documentation/unitydatatool.md) | All commands and their options. |
+| [Analyzer & database schema](./Documentation/analyzer.md) | The SQLite database that `analyze` produces, including its tables and views. |
+| [Example queries](./Documentation/analyze-examples.md) | Worked examples of querying the analyze database. |
+| [Comparing builds](./Documentation/comparing-builds.md) | Finding what changed between two builds. |
+| [Addressables build reports](./Documentation/addressables-build-reports.md) | Analyzing Addressables JSON build reports. |
+| [Build reports](./Documentation/buildreport.md) | Importing a Unity BuildReport to map build output back to source assets. |
 
 ## Repository content
 

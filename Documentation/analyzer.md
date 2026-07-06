@@ -52,16 +52,62 @@ it should be very accurate because CRCs are used to determine if objects are ide
 
 ## assetbundle_asset_view (AssetBundleProcessor)
 
-This view lists all the assets that have been explicitly assigned to AssetBundles. The dependencies
-that were automatically added by Unity at build time won't appear in this view. The columns are the
-same as those in the *object_view* with the addition of the *asset_name* that contains the filename
-of the asset.
+Lists the assets that were explicitly assigned to AssetBundles, one row per entry in the AssetBundle
+object's `m_Container`. Dependencies that Unity pulled in automatically at build time are not listed
+here (see `preload_dependencies_view`). The columns are those of *object_view* plus `asset_name`,
+the container path of the asset.
+
+This data comes from the AssetBundle Unity object, so the view is only populated for AssetBundle
+builds; Player and ContentDirectory builds have no such object and it is empty for them. For a scene
+bundle the container entry names the scene (its `.unity` path) and points at a synthetic object of
+type `Scene` (there is no single Unity object that represents a scene). Scene objects are created
+for both BuildPipeline.BuildAssetBundles and Scriptable Build Pipeline / Addressables scene bundles.
+
+The view is built with an INNER JOIN to *object_view*, so a container entry whose object is not in
+the `objects` table is omitted. In practice that only happens if the object was genuinely not
+analyzed (for example it lives in a bundle that was not part of the analyzed set); the underlying
+`assetbundle_assets` table still holds those rows.
+
+## preload_dependencies
+
+This table records preload relationships as `object` -> `dependency` id pairs, where both are
+`objects.id` values. A "dependency" is an object that Unity preloads / pulls in alongside another
+object. The rows come from the AssetBundle and PreloadData Unity objects, so the table is populated
+for AssetBundle and Player builds but not ContentDirectory builds (which have neither object).
+
+What the `object` is depends on the build:
+
+- **AssetBundle asset**: the explicitly-assigned asset, with its dependencies taken from the
+  AssetBundle object's preload table.
+- **Scene bundle**: a synthetic `Scene` object (a scene has no single Unity object). Its
+  dependencies are the scene's shared assets and the entries of the scene's PreloadData. This works
+  for both BuildPipeline.BuildAssetBundles and Scriptable Build Pipeline / Addressables scene
+  bundles. The scene's own content objects (GameObjects, etc.) are not listed as dependencies but
+  share the scene object's `serialized_file`.
+- **Player build**: the `PreloadData` object itself, because a player build has no scene object to
+  attach the dependencies to. A player build has one `PreloadData` per scene (in its
+  `sharedassetsN.assets`) plus one in `globalgamemanagers.assets` for the always-loaded set.
+
+The `dependency` side can reference an object that analyze never recorded, leaving a "dangling" id
+with no matching `objects` row. The most common case is objects in `unity default resources`, the
+built-in resource file that ships with the Unity Editor without TypeTrees and so cannot be analyzed
+without a specially built copy. (`Resources/unity_builtin_extra` is built alongside your content and
+can be analyzed, but produces the same dangling references when it is not part of the analyzed set.)
 
 ## preload_dependencies_view  (AssetBundleProcessor)
 
-This view lists the dependencies of all the assets. You can filter by id or asset_name to get all
-the dependencies of an asset. Conversely, filtering by dep_id will return all the assets that
-depend on this object. This can be useful to figure out why an asset was included in a build.
+A convenience view over `preload_dependencies` that resolves the ids to readable columns: it joins
+each row's `object` to `assetbundle_asset_view` and its `dependency` to *object_view*. Filter by `id`
+or `asset_name` for the dependencies of one asset, or by `dep_id` for everything that depends on a
+given object (useful for figuring out why an object was included in a build).
+
+Because of those inner joins the view is narrower than the underlying table:
+
+- It only includes rows whose `object` is an AssetBundle asset or scene (i.e. present in
+  `assetbundle_asset_view`). Player-build rows hang off a `PreloadData` object rather than an
+  AssetBundle asset, so they do not appear here - query the `preload_dependencies` table directly.
+- It drops rows whose `dependency` is a dangling id (see above), because those have no *object_view*
+  row to join to.
 
 ## monoscripts
 

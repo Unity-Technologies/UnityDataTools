@@ -10,6 +10,12 @@ public class AssetBundle
     public IReadOnlyList<PPtr> PreloadTable { get; init; }
     public bool IsSceneAssetBundle { get; init; }
 
+    // For scene bundles built by the Scriptable Build Pipeline / Addressables: maps each scene's
+    // container path (e.g. "Assets/.../Foo.unity") to the SerializedFile that holds the scene
+    // (e.g. "CAB-<hash>"). Empty when the m_SceneHashes field is absent (older builds, or
+    // BuildPipeline.BuildAssetBundles, which does not emit it).
+    public IReadOnlyDictionary<string, string> SceneToFile { get; init; }
+
     public class Asset
     {
         public string Name { get; init; }
@@ -50,12 +56,22 @@ public class AssetBundle
             assets.Add(Asset.Read(asset));
         }
 
+        var sceneToFile = new Dictionary<string, string>();
+        if (reader.HasChild("m_SceneHashes"))
+        {
+            foreach (var pair in reader["m_SceneHashes"])
+            {
+                sceneToFile[pair["first"].GetValue<string>()] = pair["second"].GetValue<string>();
+            }
+        }
+
         return new AssetBundle()
         {
             Name = name,
             Assets = assets,
             PreloadTable = preloadTable,
-            IsSceneAssetBundle = isSceneAssetBundle
+            IsSceneAssetBundle = isSceneAssetBundle,
+            SceneToFile = sceneToFile
         };
     }
 }

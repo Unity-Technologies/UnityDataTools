@@ -6,11 +6,17 @@ using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
-// Processes the PreloadData object found in scene bundles. Its m_Assets list is recorded as the
-// scene's dependencies (preload_dependencies), so it is meaningful only alongside a synthetic
-// Scene object. This is AssetBundle-specific in practice: Player builds also contain a PreloadData
-// object but have no scene object, so ctx.SceneId is -1 there and the rows below are written
-// against object id -1 (a limitation, not intended output). ContentDirectory builds have neither.
+// Processes the PreloadData object, recording its m_Assets list as preload_dependencies. The
+// "object" the dependencies hang off of depends on the build:
+//   * Scene bundle: the synthetic Scene object (ctx.SceneId). SerializedFileSQLiteWriter resolves
+//     it for both BuildPipeline ("BuildPlayer-<Scene>.sharedAssets") and Scriptable Build Pipeline
+//     / Addressables ("CAB-<hash>.sharedAssets") scene bundles.
+//   * Player build: there is no scene object (ctx.SceneId == -1), so the dependencies are hung off
+//     the PreloadData object itself. A player build has one PreloadData per scene (in its
+//     sharedassetsN.assets) plus one in globalgamemanagers.assets for the always-loaded set.
+// A dependency may resolve to an object that analyze never tracked (e.g. objects in
+// "unity default resources", which normally has no TypeTrees), leaving a row whose dependency has
+// no objects-table entry. ContentDirectory builds have no PreloadData object.
 public class PreloadDataHandler : ISQLiteHandler
 {
     private SqliteCommand m_InsertDepCommand;
@@ -28,7 +34,9 @@ public class PreloadDataHandler : ISQLiteHandler
     {
         var preloadData = PreloadData.Read(reader);
         m_InsertDepCommand.Transaction = ctx.Transaction;
-        m_InsertDepCommand.Parameters["@object"].Value = ctx.SceneId;
+        // Scene bundles hang the dependencies off the synthetic Scene object; player builds have
+        // none, so they hang off the PreloadData object itself.
+        m_InsertDepCommand.Parameters["@object"].Value = ctx.SceneId != -1 ? ctx.SceneId : objectId;
 
         foreach (var asset in preloadData.Assets)
         {

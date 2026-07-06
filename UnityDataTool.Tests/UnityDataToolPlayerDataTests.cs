@@ -68,6 +68,34 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
     }
 
     [Test]
+    public async Task Analyze_PlayerDataPreloadDependencies_ObjectResolvesToRealObject()
+    {
+        // Regression test for issue #81 (player-build case): a player build's PreloadData
+        // dependencies were all attributed to object id -1. They must instead hang off a real
+        // object (the PreloadData object itself, since a player build has no scene object).
+        // PlayerWithTypeTrees exercises this - it has PreloadData in its sharedassetsN.assets and
+        // in globalgamemanagers.assets.
+        var analyzePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerWithTypeTrees");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-o", databasePath }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // The build has PreloadData objects, so there must be rows to validate.
+        Assert.Greater(SQLTestHelper.QueryInt(db, "SELECT COUNT(*) FROM preload_dependencies"), 0);
+
+        // Every row's 'object' must be a real, tracked object: never -1, never a dangling id.
+        // (The 'dependency' side is intentionally allowed to dangle, e.g. references into
+        // "unity default resources", which is not analyzed - see analyzer.md.)
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM preload_dependencies WHERE object = -1",
+            0, "preload_dependencies.object should never be -1 (issue #81)");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM preload_dependencies d LEFT JOIN objects o ON o.id = d.object WHERE o.id IS NULL",
+            0, "every preload_dependencies.object should resolve to an objects row");
+    }
+
+    [Test]
     public async Task DumpText_PlayerData_TextFileCreatedCorrectly()
     {
         var path = Path.Combine(Context.UnityDataFolder, "level0");
