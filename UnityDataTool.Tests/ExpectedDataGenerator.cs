@@ -38,7 +38,7 @@ public static class ExpectedDataGenerator
                 @"SELECT
                     (SELECT COUNT(*) FROM animation_clips),
                     (SELECT COUNT(*) FROM asset_bundles),
-                    (SELECT COUNT(*) FROM assets),
+                    (SELECT COUNT(*) FROM assetbundle_assets),
                     (SELECT COUNT(*) FROM audio_clips),
                     (SELECT COUNT(*) FROM meshes),
                     (SELECT COUNT(*) FROM monoscripts),

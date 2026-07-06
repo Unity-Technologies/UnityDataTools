@@ -19,9 +19,10 @@ class ReferenceTreeNode
 
 public class ReferenceFinderTool
 {
-    // Minimum analyze database schema version find-refs can read. The normalized refs table
-    // (issue #44) is version 1; databases produced before schema versioning report 0.
-    const long RequiredSchemaVersion = 1;
+    // Minimum analyze database schema version find-refs can read. Version 2 renamed the
+    // assets/asset_view tables this tool queries to assetbundle_assets/assetbundle_asset_view
+    // (issue #82), so an older database (version 1 or the pre-versioning 0) cannot be read.
+    const long RequiredSchemaVersion = 2;
 
     SqliteCommand m_GetRefsCommand;
     SqliteCommand m_GetObjectCommand;
@@ -137,7 +138,7 @@ public class ReferenceFinderTool
         m_Writer = toStdout ? Console.Out : new StreamWriter(outputFile);
 
         m_GetRefsCommand = db.CreateCommand();
-        m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assets a WHERE a.object = r.object) FROM refs_view r WHERE referenced_object = @id";
+        m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assetbundle_assets a WHERE a.object = r.object) FROM refs_view r WHERE referenced_object = @id";
         m_GetRefsCommand.Parameters.Add("@id", SqliteType.Integer);
 
         // Resolve the 'm_Script' property path to its id once so the per-object script lookup below
@@ -190,7 +191,7 @@ public class ReferenceFinderTool
 
             ProcessReferences(objectIds[i], findAll);
 
-            command.CommandText = "SELECT asset_name, asset_bundle, serialized_file FROM asset_view WHERE id = @id";
+            command.CommandText = "SELECT asset_name, asset_bundle, serialized_file FROM assetbundle_asset_view WHERE id = @id";
 
             foreach (var root in m_Roots)
             {

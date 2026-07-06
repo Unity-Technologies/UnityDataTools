@@ -50,14 +50,14 @@ duplicated assets. It also lists all the AssetBundles where the asset was found.
 If the `--skip-crc` option is used, there will be a lot of false positives in that view. Otherwise,
 it should be very accurate because CRCs are used to determine if objects are identical.
 
-## asset_view (AssetBundleProcessor)
+## assetbundle_asset_view (AssetBundleProcessor)
 
 This view lists all the assets that have been explicitly assigned to AssetBundles. The dependencies
 that were automatically added by Unity at build time won't appear in this view. The columns are the
 same as those in the *object_view* with the addition of the *asset_name* that contains the filename
 of the asset.
 
-## asset_dependencies_view  (AssetBundleProcessor)
+## preload_dependencies_view  (AssetBundleProcessor)
 
 This view lists the dependencies of all the assets. You can filter by id or asset_name to get all
 the dependencies of an asset. Conversely, filtering by dep_id will return all the assets that

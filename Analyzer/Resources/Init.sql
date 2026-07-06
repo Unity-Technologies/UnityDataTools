@@ -139,14 +139,14 @@ SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bun
 FROM object_view m
 INNER JOIN refs_view r ON m.id = r.object AND r.property_path = 'm_Shader'
 INNER JOIN object_view s ON r.referenced_object = s.id
-LEFT JOIN assets a ON m.id = a.object;
+LEFT JOIN assetbundle_assets a ON m.id = a.object;
 
 CREATE VIEW view_material_texture_refs AS
 SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, t.id texture_id, t.name texture_name, t.asset_bundle texture_asset_bundle
 FROM object_view m
 INNER JOIN refs_view r ON r.object = m.id AND property_type = 'Texture'
 INNER JOIN object_view t ON r.referenced_object = t.id
-LEFT JOIN assets a ON m.id = a.object
+LEFT JOIN assetbundle_assets a ON m.id = a.object
 WHERE m.type = 'Material';
 
 -- Special-case type value for the fake Scene object that is sometimes inserted into the object table,
@@ -155,8 +155,9 @@ INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
 -- Database schema version. Bump when the schema changes in a way that tools relying on it
 -- (e.g. find-refs) cannot read from an older database. 1 = normalized refs table (issue #44);
--- databases produced before versioning report 0.
-PRAGMA user_version = 1;
+-- 2 = renamed assets/asset_dependencies tables to assetbundle_assets/preload_dependencies
+-- (issue #82); databases produced before versioning report 0.
+PRAGMA user_version = 2;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

@@ -51,7 +51,7 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         cmd.CommandText =
             @"SELECT
                 (SELECT COUNT(*) FROM asset_bundles),
-                (SELECT COUNT(*) FROM assets),
+                (SELECT COUNT(*) FROM assetbundle_assets),
                 (SELECT COUNT(*) FROM objects),
                 (SELECT COUNT(*) FROM refs),
                 (SELECT COUNT(*) FROM serialized_files)";
