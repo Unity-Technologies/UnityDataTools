@@ -18,9 +18,10 @@ CREATE TABLE IF NOT EXISTS assetbundle_assets(
 --   * AssetBundleHandler: an asset's slice of the AssetBundle object's m_PreloadTable.
 --   * SerializedFileSQLiteWriter: a scene object -> each object in the scene's SerializedFiles.
 --   * PreloadDataHandler: the PreloadData object's m_Assets. PreloadData is a *separate* Unity
---     object (not part of the AssetBundle object) and also exists in Player builds (one per scene in its sharedAsset file),
---     so this table is NOT empty there; but those builds have no scene object, so PreloadDataHandler currently
---     attributes the rows to object id -1 (issue 81).
+--     object (not part of the AssetBundle object) and also exists in Player builds (one per scene
+--     in its sharedAssetsN.assets, plus one in globalgamemanagers.assets), so this table is NOT
+--     empty there. Player builds have no scene object, so those rows hang off the PreloadData
+--     object itself; scene bundles hang them off the synthetic Scene object.
 CREATE TABLE IF NOT EXISTS preload_dependencies(
     object INTEGER,
     dependency INTEGER

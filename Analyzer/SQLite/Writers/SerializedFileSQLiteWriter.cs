@@ -41,10 +41,11 @@ public class SerializedFileSQLiteWriter : IDisposable
     // LIMITATION (issue 81): this only matches the BuildPipeline.BuildAssetBundles naming convention
     // ("BuildPlayer-<SceneName>"). It does NOT match scene bundles produced by the Scriptable
     // Build Pipeline / Addressables ("CAB-<hash of scene path>") or the Multi-Process Build
-    // Pipeline ("CAB-<scene GUID>"), nor player-build scenes ("level0", "level1", ...). For
-    // those builds no synthetic Scene object is created (see the scene handling in
-    // WriteSerializedFile), so the scene rows AssetBundleHandler writes into assetbundle_assets
-    // end up dangling and PreloadDataHandler attributes preload dependencies to SceneId -1.
+    // Pipeline ("CAB-<scene GUID>"), nor player-build scenes ("level0", "level1", ...), so no
+    // synthetic Scene object is created for those. For Scriptable Build Pipeline / Addressables
+    // scene bundles that still leaves the assetbundle_assets rows AssetBundleHandler writes
+    // dangling (unfixed part of issue 81). Player builds have no AssetBundle object; their
+    // PreloadData dependencies are attributed to the PreloadData object itself (PreloadDataHandler).
     private Regex m_RegexSceneFile = new(@"BuildPlayer-([^\.]+)(?:\.sharedAssets)?");
 
     // Rebuilt for each serialized file: maps a PPtr's local m_FileID (0 = this file, 1..N = an
