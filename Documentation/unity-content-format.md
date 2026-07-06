@@ -26,6 +26,8 @@ AssetBundles always contain at least one SerializedFile.  In the case of an Asse
 
 UnityDataTools supports opening Archive files, so it can analyze AssetBundles.
 
+For a more technical, hands-on look at the internals of AssetBundles - the AssetBundle object, preload tables, and how scenes are laid out inside a bundle - see [AssetBundle Format](assetbundle-format.md).
+
 ## Player Builds
 
 A player build produces content as well as compiled code (assemblies, executables) and various configuration files.  UnityDataTool only concerns itself with the content portion of that output.
