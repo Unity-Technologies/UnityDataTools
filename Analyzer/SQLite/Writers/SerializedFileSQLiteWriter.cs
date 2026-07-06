@@ -155,7 +155,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
         using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
-        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLower());
+        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLowerInvariant());
         int sceneId = -1;
 
         using var transaction = m_Database.BeginTransaction();
@@ -206,7 +206,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             // path -> file mapping from the AssetBundle object's m_SceneHashes.
             var fileName = Path.GetFileName(fullPath);
             var sceneFileName = fileName.Substring(0, fileName.Length - ".sharedAssets".Length);
-            var sceneFileId = m_SerializedFileIdProvider.GetId(sceneFileName.ToLower());
+            var sceneFileId = m_SerializedFileIdProvider.GetId(sceneFileName.ToLowerInvariant());
             sceneId = m_ObjectIdProvider.GetId((sceneFileId, 0));
         }
 
@@ -240,7 +240,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             foreach (var extRef in sf.ExternalReferences)
             {
                 m_LocalToDbFileId.Add(localId++,
-                    m_SerializedFileIdProvider.GetId(extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLower()));
+                    m_SerializedFileIdProvider.GetId(extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLowerInvariant()));
             }
 
             foreach (var obj in sf.Objects)

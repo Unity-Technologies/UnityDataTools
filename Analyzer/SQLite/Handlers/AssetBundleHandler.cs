@@ -91,9 +91,12 @@ public class AssetBundleHandler : ISQLiteHandler
                 // Scriptable Build Pipeline / Addressables: key the scene on its SerializedFile
                 // (from m_SceneHashes) and create the synthetic Scene object here, since the writer
                 // cannot recognise a "CAB-<hash>" scene file by name.
-                var sceneFileId = ctx.SerializedFileIdProvider.GetId(sceneFile.ToLower());
+                var sceneFileId = ctx.SerializedFileIdProvider.GetId(sceneFile.ToLowerInvariant());
                 var objId = ctx.ObjectIdProvider.GetId((sceneFileId, 0));
 
+                // The synthetic Scene object is inserted once (objects.id is a primary key), but the
+                // container entry is always recorded, so a scene exposed by more than one bundle
+                // still gets its assetbundle_assets row.
                 if (m_InsertedSceneObjects.Add(objId))
                 {
                     m_InsertSceneObjectCommand.Transaction = ctx.Transaction;
@@ -101,12 +104,12 @@ public class AssetBundleHandler : ISQLiteHandler
                     m_InsertSceneObjectCommand.Parameters["@serialized_file"].Value = sceneFileId;
                     m_InsertSceneObjectCommand.Parameters["@name"].Value = asset.Name;
                     m_InsertSceneObjectCommand.ExecuteNonQuery();
-
-                    m_InsertCommand.Transaction = ctx.Transaction;
-                    m_InsertCommand.Parameters["@object"].Value = objId;
-                    m_InsertCommand.Parameters["@name"].Value = asset.Name;
-                    m_InsertCommand.ExecuteNonQuery();
                 }
+
+                m_InsertCommand.Transaction = ctx.Transaction;
+                m_InsertCommand.Parameters["@object"].Value = objId;
+                m_InsertCommand.Parameters["@name"].Value = asset.Name;
+                m_InsertCommand.ExecuteNonQuery();
             }
             else
             {
