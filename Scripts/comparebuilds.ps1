@@ -39,13 +39,13 @@ $query = @"
 ATTACH DATABASE '$db2' AS db2;
 
 SELECT
-    COALESCE(o1.asset_bundle, o2.asset_bundle) AS asset_bundle,
+    COALESCE(o1.archive, o2.archive) AS archive,
     COALESCE(o1.object_id, o2.object_id) AS object_id,
     COALESCE(o1.type, o2.type) AS type,
     COALESCE(o1.name, o2.name) AS name,
     CASE
-        WHEN o1.asset_bundle IS NULL THEN 'Only in Build 1'
-        WHEN o2.asset_bundle IS NULL THEN 'Only in Build 2'
+        WHEN o1.archive IS NULL THEN 'Only in Build 1'
+        WHEN o2.archive IS NULL THEN 'Only in Build 2'
         WHEN o1.crc32 != o2.crc32 OR o1.size != o2.size THEN 'Different'
         ELSE 'Same'
     END AS status,
@@ -55,7 +55,7 @@ SELECT
     o2.crc32 AS crc32_build2
 FROM (
     SELECT
-        ab.name AS asset_bundle,
+        ab.name AS archive,
         o.object_id,
         t.name AS type,
         o.name,
@@ -69,11 +69,11 @@ FROM (
     INNER JOIN
         serialized_files sf ON o.serialized_file = sf.id
     LEFT JOIN
-        asset_bundles ab ON sf.asset_bundle = ab.id
+        archives ab ON sf.archive = ab.id
 ) AS o1
 FULL OUTER JOIN (
     SELECT
-        ab.name AS asset_bundle,
+        ab.name AS archive,
         o.object_id,
         t.name AS type,
         o.name,
@@ -87,7 +87,7 @@ FULL OUTER JOIN (
     INNER JOIN
         db2.serialized_files sf ON o.serialized_file = sf.id
     LEFT JOIN
-        db2.asset_bundles ab ON sf.asset_bundle = ab.id
+        db2.archives ab ON sf.archive = ab.id
 ) AS o2 ON o1.object_id = o2.object_id
     AND o1.type = o2.type
     AND o1.name = o2.name

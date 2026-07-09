@@ -37,7 +37,7 @@ public static class ExpectedDataGenerator
             cmd.CommandText =
                 @"SELECT
                     (SELECT COUNT(*) FROM animation_clips),
-                    (SELECT COUNT(*) FROM asset_bundles),
+                    (SELECT COUNT(*) FROM archives),
                     (SELECT COUNT(*) FROM assetbundle_assets),
                     (SELECT COUNT(*) FROM audio_clips),
                     (SELECT COUNT(*) FROM meshes),
@@ -57,7 +57,7 @@ public static class ExpectedDataGenerator
             reader.Read();
 
             expectedData.Add("animation_clips_count", reader.GetInt32(0));
-            expectedData.Add("asset_bundles_count", reader.GetInt32(1));
+            expectedData.Add("archives_count", reader.GetInt32(1));
             expectedData.Add("assets_count", reader.GetInt32(2));
             expectedData.Add("audio_clips_count", reader.GetInt32(3));
             expectedData.Add("meshes_count", reader.GetInt32(4));

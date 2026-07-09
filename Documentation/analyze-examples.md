@@ -89,13 +89,13 @@ Then provide that file as context, prior to asking it to write queries based on 
 If you want to find out which AssetBundles in a build contain a certain object type you can try a query like this:
 
 ```
-sqlite3 Analysis.db "SELECT DISTINCT asset_bundle FROM object_view WHERE type = 'MonoBehaviour';"
+sqlite3 Analysis.db "SELECT DISTINCT archive FROM object_view WHERE type = 'MonoBehaviour';"
 ```
 
 The above query takes advantage of the object_view which pulls together the data from multiple tables.  The following query does exactly the same thing, but uses the underlying tables directly: 
 
 ```
-sqlite3 Analysis.db "SELECT DISTINCT ab.name AS asset_bundle FROM objects o INNER JOIN types t ON o.type = t.id INNER JOIN serialized_files sf ON o.serialized_file = sf.id LEFT JOIN asset_bundles ab ON sf.asset_bundle = ab.id WHERE t.name = 'MonoBehaviour';"
+sqlite3 Analysis.db "SELECT DISTINCT ab.name AS archive FROM objects o INNER JOIN types t ON o.type = t.id INNER JOIN serialized_files sf ON o.serialized_file = sf.id LEFT JOIN archives ab ON sf.archive = ab.id WHERE t.name = 'MonoBehaviour';"
 ```
 
 Note: Both MonoBehaviours and ScriptableObjects have the same serialized type "MonoBehaviour".
@@ -133,7 +133,7 @@ The `script_object_view` provides a convenient way to query MonoBehaviour object
 For example, to search for all instances of the class SpriteSkin in the UnityEngine.U2D.Animation namespace, you can simply query:
 
 ```
-SELECT asset_bundle, serialized_file, name, object_id, class_name, namespace, assembly_name
+SELECT archive, serialized_file, name, object_id, class_name, namespace, assembly_name
 FROM script_object_view
 WHERE class_name = 'SpriteSkin'
   AND namespace = 'UnityEngine.U2D.Animation';
@@ -142,7 +142,7 @@ WHERE class_name = 'SpriteSkin'
 If the class name is unique in your project, you can simplify the query by omitting the namespace filter:
 
 ```
-SELECT asset_bundle, serialized_file, name, object_id, class_name, namespace
+SELECT archive, serialized_file, name, object_id, class_name, namespace
 FROM script_object_view
 WHERE class_name = 'SpriteSkin';
 ```
@@ -150,7 +150,7 @@ WHERE class_name = 'SpriteSkin';
 Alternatively, you can write the query manually using the underlying tables:
 
 ```
-SELECT mb.asset_bundle, mb.serialized_file, mb.name, mb.object_id
+SELECT mb.archive, mb.serialized_file, mb.name, mb.object_id
 FROM object_view mb
 INNER JOIN refs_view r ON mb.id = r.object
 INNER JOIN monoscript_view ms ON r.referenced_object = ms.id

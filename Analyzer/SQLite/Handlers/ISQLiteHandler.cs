@@ -7,7 +7,7 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 public class Context
 {
-    public int AssetBundleId { get; init; }
+    public int ArchiveId { get; init; }
     public int SerializedFileId { get; init; }
     public int SceneId { get; init; }
     public Util.ObjectIdProvider ObjectIdProvider { get; init; }

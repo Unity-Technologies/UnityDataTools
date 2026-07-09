@@ -10,7 +10,7 @@ CREATE VIEW monoscript_view AS
 SELECT
     o.id,
     o.object_id,
-    o.asset_bundle,
+    o.archive,
     o.serialized_file,
     m.class_name,
     m.namespace,
@@ -21,7 +21,7 @@ CREATE VIEW script_object_view AS
 SELECT
     mb.id,
     mb.object_id,
-    mb.asset_bundle,
+    mb.archive,
     mb.serialized_file,
     ms.class_name,
     ms.namespace,

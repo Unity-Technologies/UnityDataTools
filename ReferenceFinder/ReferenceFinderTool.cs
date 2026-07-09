@@ -174,7 +174,7 @@ public class ReferenceFinderTool
         for (int i = 0; i < objectIds.Count; ++i)
         {
             var command = db.CreateCommand();
-            command.CommandText = "SELECT name, type, asset_bundle, serialized_file FROM object_view WHERE id = @id";
+            command.CommandText = "SELECT name, type, archive, serialized_file FROM object_view WHERE id = @id";
             command.Parameters.AddWithValue("@id", objectIds[i]);
 
             using (var reader = command.ExecuteReader())
@@ -184,14 +184,14 @@ public class ReferenceFinderTool
                 m_Writer.WriteLine($"Reference chains to {(reader.IsDBNull(0) ? "" : reader.GetString(0))}");
                 m_Writer.WriteLine($"  ID:             {objectIds[i]}");
                 m_Writer.WriteLine($"  Type:           {reader.GetString(1)}");
-                m_Writer.WriteLine($"  AssetBundle:    {(reader.IsDBNull(2) ? "" : reader.GetString(2))}");
+                m_Writer.WriteLine($"  Archive:        {(reader.IsDBNull(2) ? "" : reader.GetString(2))}");
                 m_Writer.WriteLine($"  SerializedFile: {reader.GetString(3)}");
                 m_Writer.WriteLine();
             }
 
             ProcessReferences(objectIds[i], findAll);
 
-            command.CommandText = "SELECT asset_name, asset_bundle, serialized_file FROM assetbundle_asset_view WHERE id = @id";
+            command.CommandText = "SELECT asset_name, archive, serialized_file FROM assetbundle_asset_view WHERE id = @id";
 
             foreach (var root in m_Roots)
             {
@@ -203,7 +203,7 @@ public class ReferenceFinderTool
 
                     m_Writer.WriteLine("Found reference in:");
                     m_Writer.WriteLine(reader.GetString(0));
-                    m_Writer.WriteLine($"(AssetBundle = {reader.GetString(1)}; SerializedFile = {reader.GetString(2)})");
+                    m_Writer.WriteLine($"(Archive = {reader.GetString(1)}; SerializedFile = {reader.GetString(2)})");
                 }
 
                 OutputReferenceNode(root, "", 1);

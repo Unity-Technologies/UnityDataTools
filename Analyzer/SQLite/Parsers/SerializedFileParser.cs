@@ -89,9 +89,9 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
                     try
                     {
-                        var assetBundleName = Path.GetRelativePath(rootDirectory, file);
+                        var archiveName = Path.GetRelativePath(rootDirectory, file);
 
-                        m_Writer.BeginAssetBundle(assetBundleName, new FileInfo(file).Length);
+                        m_Writer.BeginArchive(archiveName, new FileInfo(file).Length);
 
                         foreach (var node in archive.Nodes)
                         {
@@ -114,7 +114,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                                     // or 'UNIQUE constraint failed: objects.id' which can happen
                                     // if AssetBundles from different builds are being processed by a single call to Analyze
                                     // or if there is a Unity Data Tool bug.
-                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {assetBundleName}");
+                                    Console.Error.WriteLine($"Error processing {node.Path} in archive {archiveName}");
                                     Console.Error.WriteLine(e.Message);
                                     Console.Error.WriteLine();
 
@@ -127,7 +127,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                     }
                     finally
                     {
-                        m_Writer.EndAssetBundle();
+                        m_Writer.EndArchive();
                     }
                 }
 

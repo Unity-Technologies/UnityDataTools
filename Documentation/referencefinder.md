@@ -26,12 +26,12 @@ The content of the output file looks like this:
     Reference chains to
       ID:             1234
       Type:           Transform
-      AssetBundle:    asset_bundle_name
+      Archive:        archive_name
       SerializedFile: CAB-353837edf22eb1c4d651c39d27a233b7
 
     Found reference in:
     MyPrefab.prefab
-    (AssetBundle = MyAssetBundle; SerializedFile = CAB-353837edf22eb1c4d651c39d27a233b7)
+    (Archive = MyAssetBundle; SerializedFile = CAB-353837edf22eb1c4d651c39d27a233b7)
       GameObject (id=1348) MyPrefab
         ↓ m_Component.Array[0].component
         RectTransform (id=721) [Component of MyPrefab (id=1348)]

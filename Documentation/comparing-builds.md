@@ -88,7 +88,7 @@ The [comparebuilds.ps1](../Scripts/comparebuilds.ps1) script is an example Power
 
 
 ```
-asset_bundle                                                  object_id             type           name                                                 status     size_build1  size_build2  crc32_build1  crc32_build2
+archive                                                       object_id             type           name                                                 status     size_build1  size_build2  crc32_build1  crc32_build2
 ------------------------------------------------------------  --------------------  -------------  ---------------------------------------------------  ---------  -----------  -----------  ------------  ------------
 cee5ebdcaa450bf0baa84e3f6fc812e5_monoscripts_d8d9cc26b795c2d  1                     AssetBundle    cee5ebdcaa450bf0baa84e3f6fc812e5_monoscripts.bundle  Same       164          164          3099751197    3099751197
 97b5823f9e593f7d3.bundle
@@ -199,7 +199,7 @@ This is a truncated example output:
 
 
 ```
-asset_bundle    object_id             type                 name                 status     size_build1  size_build2  crc32_build1  crc32_build2
+archive         object_id             type                 name                 status     size_build1  size_build2  crc32_build1  crc32_build2
 --------------  --------------------  -------------------  -------------------  ---------  -----------  -----------  ------------  ------------
 AssetBundles    1                     AssetBundle                               Same       104          104          241569179     241569179
 AssetBundles    2                     AssetBundleManifest  AssetBundleManifest  Different  184          184          4124235088    3102991602

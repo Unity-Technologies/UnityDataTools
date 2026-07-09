@@ -36,7 +36,7 @@ WHERE build_time_asset_path like "Assets/Sprites/Snow.jpg"
 3. Show the AssetBundles that contain content from  "Assets/Sprites/Snow.jpg".
 
 ```
-SELECT DISTINCT assetbundle 
+SELECT DISTINCT archive 
 FROM build_report_packed_asset_contents_view
 WHERE build_time_asset_path like "Assets/Sprites/Snow.jpg"
 ```
@@ -200,12 +200,12 @@ Build report data is stored in the following tables and views:
 |------|------|-------------|
 | `build_reports` | table | Build summary (type, result, platform, duration, etc.) |
 | `build_report_files` | table | Files included in the build (path, role, size). See [BuildReport.GetFiles](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.GetFiles.html) |
-| `build_report_archive_contents` | table | Files inside each AssetBundle |
+| `build_report_archive_contents` | table | Files inside each Unity Archive (AssetBundle or ContentArchive) |
 | `build_report_packed_assets` | table | SerializedFile, .resS, or .resource file info. See [PackedAssets](https://docs.unity3d.com/ScriptReference/Build.Reporting.PackedAssets.html) |
 | `build_report_packed_asset_info` | table | Each object inside a SerializedFile (or data in .resS/.resource files). See [PackedAssetInfo](https://docs.unity3d.com/ScriptReference/Build.Reporting.PackedAssetInfo.html) |
 | `build_report_source_assets` | table | Source asset GUID and path for each PackedAssetInfo reference |
 | `build_report_files_view` | view | All files from all build reports |
-| `build_report_packed_assets_view` | view | All PackedAssets with their BuildReport, AssetBundle, and SerializedFile |
+| `build_report_packed_assets_view` | view | All PackedAssets with their BuildReport, Archive, and SerializedFile |
 | `build_report_packed_asset_contents_view` | view | All objects and resources tracked in build reports |
 
 The `build_reports` table contains primary build information. Additional tables store detailed content data. Views simplify queries by automatically joining tables, especially when working with multiple build reports.
@@ -230,14 +230,14 @@ Views automatically identify which build report each row belongs to, simplifying
 This view demonstrates key relationships:
 - Finds the BuildReport object (`br_obj`) by type (1125) and shared `serialized_file` with the PackedAssets (`pa`)
 - Retrieves the serialized file name from `serialized_files` table (`sf.name`)
-- For AssetBundle builds, retrieves the AssetBundle name from `build_report_archive_contents` by matching BuildReport ID and PackedAssets path (`assetbundle` is NULL for Player builds)
+- For archive-based builds (AssetBundle, ContentDirectory), retrieves the archive name from `build_report_archive_contents` by matching BuildReport ID and PackedAssets path (`archive` is NULL for Player builds)
 
 ```
 CREATE VIEW build_report_packed_assets_view AS
 SELECT
     pa.id,
     o.object_id,
-    brac.assetbundle,
+    brac.archive,
     pa.path,
     pa.file_header_size,
     br_obj.id as build_report_id,
@@ -246,7 +246,7 @@ FROM build_report_packed_assets pa
 INNER JOIN objects o ON pa.id = o.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
-LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
+LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.archive_content;
 ```
 
 ### Column Naming

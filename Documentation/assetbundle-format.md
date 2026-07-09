@@ -19,6 +19,15 @@ package builds its content as AssetBundles too, so the same layout applies there
 An AssetBundle always contains at least one SerializedFile, and may contain auxiliary files such as
 `.resS` (Textures and Meshes) and `.resource` (audio/video).
 
+Because a bundle is just an archive, `analyze` records it in the generic `archives` table rather than
+anything AssetBundle-specific: one row per bundle file (its name and size), and every SerializedFile
+inside it points back through `serialized_files.archive`. In query results this surfaces as the
+`archive` column of `object_view` (the containing bundle's name, or NULL for a bare SerializedFile).
+The same table and column also represent Player and ContentDirectory archives, so a query written
+against `archive` works across all of them. Data that is genuinely specific to the AssetBundle *object*
+lives in the separate `assetbundle_assets` / `preload_dependencies` tables (see
+[How `analyze` represents this](#how-analyze-represents-this)).
+
 ### SerializedFile names inside a bundle
 
 The names of the SerializedFiles inside a bundle are technical and hash-based. You do not need to

@@ -62,7 +62,7 @@ public class AddressablesBuildLayoutTests
             "Unexpected size for specific AssetBundle in build 2");
         SQLTestHelper.AssertQueryString(db, "SELECT packing_mode FROM addressables_build_groups WHERE build_id = 1 and name = \"SamplePack1\"", "PackSeparately",
             "Unexpected packing_mode for group");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM asset_bundles", 0,
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM archives", 0,
             "Expected no AssetBundles found in reference folder");
     }
 }

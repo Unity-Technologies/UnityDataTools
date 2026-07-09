@@ -13,27 +13,36 @@ Once generated, a tool such as the [DB Browser for SQLite](https://sqlitebrowser
 
 See [this topic](analyze-examples.md) for examples of how to use the SQLite output of the UnityDataTool Analyze command.
 
-# DataBase Reference
+# Database Schema Reference
 
-The database provides different views.  The views join multiple tables together and often it is not necessary to write your own SQL queries to find the information you want, especially when you are using a visual SQLite tool.
+The database provides different tables and views.  The views join multiple tables together to provide useful presentations of the data.  With GUI-based SQLite tools it is often possible to skip writing your own SQL queries, and simply view the content of these pre-defined queries.
 
-This section gives an overview of the main views.
+This section gives an overview of the main tables and views.
 
 ## object_view
 
-This is the main view where the information about all the objects in the AssetBundles is available.
+This is the main view, providing information about all the objects in the analyzed build output.
+That output could be AssetBundles, a ContentDirectory build, a Player build, or standalone
+SerializedFiles.
 Its columns are:
 * id: a unique id without any meaning outside of the database
-* object_id: the Unity object id (unique inside its SerializedFile but not necessarily acros all
-  AssetBundles)
-* asset_bundle: the name of the AssetBundle containing the object (will be null if the source file
-  was a SerializedFile and not an AssetBundle)
+* object_id: the Unity object id (unique inside its SerializedFile but not necessarily across all
+  the files in the build)
+* archive: the name of the Unity Archive containing the object (will be null if the source file
+  was a bare SerializedFile and not inside an archive). Archives back AssetBundles, ContentDirectory
+  builds and Player builds.
 * serialized_file: the name of the SerializedFile containing the object
 * type: the type of the object
 * name: the name of the object, if it had one
 * game_object: the id of the GameObject containing this object, if any (mostly for Components)
 * size: the size of the object in bytes (e.g. 3343772)
 * pretty_size: the size in an easier to read format (e.g. 3.2 MB)
+
+## archives
+
+One row per Unity Archive encountered during analysis, holding the archive file's `name` and
+`file_size`. AssetBundle files are recorded here. Compressed Player and other builds may also have content inside archive files. Each SerializedFile links to its archive through the `serialized_files.archive`
+column, and `object_view` surfaces the archive name as its `archive` column. A bare SerializedFile that is not inside an archive has no row here.
 
 ## view_breakdown_by_type
 

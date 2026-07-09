@@ -62,8 +62,8 @@ SELECT
     COALESCE(o1.type, o2.type) AS type,
     COALESCE(o1.name, o2.name) AS name,
     CASE
-        WHEN o1.asset_bundle IS NULL THEN 'Only in Build 1'
-        WHEN o2.asset_bundle IS NULL THEN 'Only in Build 2'
+        WHEN o1.archive IS NULL THEN 'Only in Build 1'
+        WHEN o2.archive IS NULL THEN 'Only in Build 2'
         ELSE 'Different'
     END AS status,
     o1.size AS size_build1,
@@ -72,7 +72,7 @@ SELECT
     o2.crc32 AS crc32_build2
 FROM (
     SELECT
-        ab.name AS asset_bundle,
+        ab.name AS archive,
         o.object_id,
         t.name AS type,
         o.name,
@@ -86,11 +86,11 @@ FROM (
     INNER JOIN
         serialized_files sf ON o.serialized_file = sf.id
     LEFT JOIN
-        asset_bundles ab ON sf.asset_bundle = ab.id
+        archives ab ON sf.archive = ab.id
 ) AS o1
 FULL OUTER JOIN (
     SELECT
-        ab.name AS asset_bundle,
+        ab.name AS archive,
         o.object_id,
         t.name AS type,
         o.name,
@@ -104,10 +104,10 @@ FULL OUTER JOIN (
     INNER JOIN
         db2.serialized_files sf ON o.serialized_file = sf.id
     LEFT JOIN
-        db2.asset_bundles ab ON sf.asset_bundle = ab.id
+        db2.archives ab ON sf.archive = ab.id
 ) AS o2 ON o1.serialized_file = o2.serialized_file
     AND o1.object_id = o2.object_id
-WHERE NOT (o1.asset_bundle IS NOT NULL AND o2.asset_bundle IS NOT NULL AND o1.crc32 = o2.crc32 AND o1.size = o2.size);
+WHERE NOT (o1.archive IS NOT NULL AND o2.archive IS NOT NULL AND o1.crc32 = o2.crc32 AND o1.size = o2.size);
 
 DETACH DATABASE db2;
 "@

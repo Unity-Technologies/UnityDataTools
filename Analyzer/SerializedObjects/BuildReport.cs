@@ -25,7 +25,7 @@ public class BuildReport
     public int BuildType { get; init; }
     public string BuildResult { get; init; }
     public List<BuildFile> Files { get; init; }
-    public FileListAssetBundleHelper fileListAssetBundleHelper { get; init; }
+    public FileListArchiveHelper fileListArchiveHelper { get; init; }
 
     private BuildReport() { }
 
@@ -86,7 +86,7 @@ public class BuildReport
             BuildType = summary["buildType"].GetValue<int>(),
             BuildResult = GetBuildResultString(summary["buildResult"].GetValue<int>()),
             Files = filesList,
-            fileListAssetBundleHelper = new FileListAssetBundleHelper(filesList)
+            fileListArchiveHelper = new FileListArchiveHelper(filesList)
         };
     }
 
@@ -149,17 +149,18 @@ public class BuildFile
 
 
 /// Helper for matching files that are inside an Unity Archive file to the file containing it.
-// Currently this only applies to AssetBundle builds, which can have many output files and which use hard to understand internal file names
+// This applies to AssetBundle builds and ContentDirectory builds (ContentArchive), which can have
+// many output files and which use hard to understand internal file names
 // like "CAB-76a378bdc9304bd3c3a82de8dd97981a".
 // For compressed Player builds the PackedAssets reports the internal files, but the file list does not report the unity3d content,
 // so this code will not pick up the mapping.  However because there is only a single unity3d file on most platforms this is less important
-public class FileListAssetBundleHelper
+public class FileListArchiveHelper
 {
     public Dictionary<string, string> internalNameToArchiveMapping = new Dictionary<string, string>();
 
-    public FileListAssetBundleHelper(List<BuildFile> files)
+    public FileListArchiveHelper(List<BuildFile> files)
     {
-        CalculateAssetBundleMapping(files);
+        CalculateArchiveMapping(files);
     }
 
     /// <summary>
@@ -200,11 +201,11 @@ public class FileListAssetBundleHelper
     1b5ddb63f662928d24e43d5d9b8b9597.cf -> ContentFile
     */
     /// </summary>
-    private void CalculateAssetBundleMapping(List<BuildFile> files)
+    private void CalculateArchiveMapping(List<BuildFile> files)
     {
         internalNameToArchiveMapping.Clear();
 
-        // Track archive paths and their base filenames for AssetBundle or manifest files
+        // Track archive paths and their base filenames for AssetBundle, manifest or content archive files
         var archivePathToFileName = new Dictionary<string, string>();
         foreach (var file in files)
         {
