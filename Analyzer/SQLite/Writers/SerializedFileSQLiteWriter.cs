@@ -16,8 +16,8 @@ public class SerializedFileSQLiteWriter : IDisposable
 {
     private HashSet<int> m_TypeSet = new();
 
-    private int m_CurrentAssetBundleId = -1;
-    private int m_NextAssetBundleId = 0;
+    private int m_CurrentArchiveId = -1;
+    private int m_NextArchiveId = 0;
 
     private bool m_SkipReferences;
     private bool m_SkipCrc;
@@ -69,7 +69,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     private AddReference m_AddReferenceCommand = new AddReference();
     private AddPropertyName m_AddPropertyNameCommand = new AddPropertyName();
     private AddPropertyType m_AddPropertyTypeCommand = new AddPropertyType();
-    private AddAssetBundle m_AddAssetBundleCommand = new AddAssetBundle();
+    private AddArchive m_AddArchiveCommand = new AddArchive();
     private AddSerializedFile m_AddSerializedFileCommand = new AddSerializedFile();
     private AddObject m_AddObjectCommand = new AddObject();
     private AddType m_AddTypeCommand = new AddType();
@@ -107,7 +107,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddReferenceCommand.CreateCommand(m_Database);
         m_AddPropertyNameCommand.CreateCommand(m_Database);
         m_AddPropertyTypeCommand.CreateCommand(m_Database);
-        m_AddAssetBundleCommand.CreateCommand(m_Database);
+        m_AddArchiveCommand.CreateCommand(m_Database);
         m_AddSerializedFileCommand.CreateCommand(m_Database);
         m_AddObjectCommand.CreateCommand(m_Database);
         m_AddTypeCommand.CreateCommand(m_Database);
@@ -116,28 +116,28 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_LastId = m_Database.CreateCommand();
         m_LastId.CommandText = "SELECT last_insert_rowid()";
     }
-    public void BeginAssetBundle(string name, long size)
+    public void BeginArchive(string name, long size)
     {
-        if (m_CurrentAssetBundleId != -1)
+        if (m_CurrentArchiveId != -1)
         {
-            throw new InvalidOperationException("SQLWriter.BeginAssetBundle called twice");
+            throw new InvalidOperationException("SQLWriter.BeginArchive called twice");
         }
 
-        m_CurrentAssetBundleId = m_NextAssetBundleId++;
-        m_AddAssetBundleCommand.SetValue("id", m_CurrentAssetBundleId);
-        m_AddAssetBundleCommand.SetValue("name", name);
-        m_AddAssetBundleCommand.SetValue("file_size", size);
-        m_AddAssetBundleCommand.ExecuteNonQuery();
+        m_CurrentArchiveId = m_NextArchiveId++;
+        m_AddArchiveCommand.SetValue("id", m_CurrentArchiveId);
+        m_AddArchiveCommand.SetValue("name", name);
+        m_AddArchiveCommand.SetValue("file_size", size);
+        m_AddArchiveCommand.ExecuteNonQuery();
     }
 
-    public void EndAssetBundle()
+    public void EndArchive()
     {
-        if (m_CurrentAssetBundleId == -1)
+        if (m_CurrentArchiveId == -1)
         {
-            throw new InvalidOperationException("SQLWriter.EndAssetBundle called before SQLWriter.BeginAssetBundle");
+            throw new InvalidOperationException("SQLWriter.EndArchive called before SQLWriter.BeginArchive");
         }
 
-        m_CurrentAssetBundleId = -1;
+        m_CurrentArchiveId = -1;
     }
 
     public void WriteSerializedFile(string relativePath, string fullPath, string containingFolder)
@@ -214,7 +214,7 @@ public class SerializedFileSQLiteWriter : IDisposable
 
         Context ctx = new()
         {
-            AssetBundleId = m_CurrentAssetBundleId,
+            ArchiveId = m_CurrentArchiveId,
             SerializedFileId = serializedFileId,
             SceneId = sceneId,
             ObjectIdProvider = m_ObjectIdProvider,
@@ -228,7 +228,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         {
             m_AddSerializedFileCommand.SetTransaction(transaction);
             m_AddSerializedFileCommand.SetValue("id", serializedFileId);
-            m_AddSerializedFileCommand.SetValue("asset_bundle", m_CurrentAssetBundleId == -1 ? "" : m_CurrentAssetBundleId);
+            m_AddSerializedFileCommand.SetValue("archive", m_CurrentArchiveId == -1 ? "" : m_CurrentArchiveId);
             m_AddSerializedFileCommand.SetValue("name", relativePath);
             m_AddSerializedFileCommand.ExecuteNonQuery();
 
@@ -387,7 +387,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         }
 
         // Serialized file dispose calls
-        m_AddAssetBundleCommand.Dispose();
+        m_AddArchiveCommand.Dispose();
         m_AddSerializedFileCommand.Dispose();
         m_AddReferenceCommand.Dispose();
         m_AddPropertyNameCommand.Dispose();

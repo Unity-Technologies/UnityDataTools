@@ -1,7 +1,7 @@
 -- tables related to the AssetBundle and PreloadData objects
 
 -- Do not confuse the AssetBundle Unity object (the source of much of this data)
--- with the asset_bundles table, which is general to any Unity Archive.
+-- with the archives table, which is general to any Unity Archive.
 
 -- The "assets" that an AssetBundle explicitly exposes: each m_Container entry of the AssetBundle
 -- object names an object (the addressable/asset name -> object it maps to). Populated only from
@@ -34,7 +34,7 @@ SELECT
 FROM assetbundle_assets a INNER JOIN object_view o ON o.id = a.object;
 
 CREATE VIEW IF NOT EXISTS preload_dependencies_view AS
-SELECT a.id, a.asset_name, a.asset_bundle, a.type, od.id dep_id, od.asset_bundle dep_asset_bundle, od.name dep_name, od.type dep_type
+SELECT a.id, a.asset_name, a.archive, a.type, od.id dep_id, od.archive dep_archive, od.name dep_name, od.type dep_type
 FROM assetbundle_asset_view a
 INNER JOIN preload_dependencies d ON a.id = d.object
 INNER JOIN object_view od ON od.id = d.dependency;

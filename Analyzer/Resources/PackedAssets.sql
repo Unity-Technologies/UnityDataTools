@@ -27,7 +27,7 @@ CREATE VIEW build_report_packed_assets_view AS
 SELECT
     pa.id,
     o.object_id,
-    brac.assetbundle,
+    brac.archive,
     pa.path,
     pa.file_header_size,
     br_obj.id as build_report_id,
@@ -36,12 +36,12 @@ FROM build_report_packed_assets pa
 INNER JOIN objects o ON pa.id = o.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
-LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
+LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.archive_content;
 
 CREATE VIEW build_report_packed_asset_contents_view AS
 SELECT
     sf.name as serialized_file,
-    brac.assetbundle,
+    brac.archive,
     pa.path,
     pac.packed_assets_id,
     pac.object_id,
@@ -57,5 +57,5 @@ LEFT JOIN objects o ON o.id = pa.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN build_report_source_assets sa ON pac.source_asset_id = sa.id
 LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
-LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.assetbundle_content;
+LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.archive_content;
 

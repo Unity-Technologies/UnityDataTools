@@ -63,7 +63,7 @@ CASE
     WHEN sum(size) >= (1024 * 1024)  AND sum(size) < (1024 * 1024 * 1024) THEN printf('%!5.1f MB', sum(size) / 1024.0 / 1024)
     WHEN sum(size) >= (1024 * 1024 * 1024) THEN printf('%!5.1f GB', sum(size) / 1024.0 / 1024 / 1024)
 END AS pretty_total_size,
-sum(size) AS total_size, GROUP_CONCAT(asset_bundle, ',' || CHAR(13)) AS in_bundles
+sum(size) AS total_size, GROUP_CONCAT(archive, ',' || CHAR(13)) AS in_archives
 FROM shader_view
 GROUP BY name
 ORDER BY total_size DESC, instances DESC;

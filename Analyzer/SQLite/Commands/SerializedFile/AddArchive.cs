@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
     /* TABLE DEFINITION:
-    create table asset_bundles
+    create table archives
     (
         id INTEGER,
         name TEXT,
@@ -12,9 +12,9 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
         PRIMARY KEY (id)
     );
     */
-    internal class AddAssetBundle : AbstractCommand
+    internal class AddArchive : AbstractCommand
     {
-        protected override string TableName => "asset_bundles";
+        protected override string TableName => "archives";
 
         protected override string DDLSource => null;
 

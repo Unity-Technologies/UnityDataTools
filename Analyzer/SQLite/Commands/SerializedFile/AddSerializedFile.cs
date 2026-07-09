@@ -8,7 +8,7 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
     create table serialized_files
     (
         id INTEGER,
-        asset_bundle INTEGER,
+        archive INTEGER,
         name TEXT,
         PRIMARY KEY (id)
     );
@@ -22,7 +22,7 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
         protected override Dictionary<string, SqliteType> Fields => new()
         {
             { "id", SqliteType.Integer },
-            { "asset_bundle", SqliteType.Integer },
+            { "archive", SqliteType.Integer },
             { "name", SqliteType.Text }
         };
     }

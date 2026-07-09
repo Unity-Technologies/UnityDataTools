@@ -76,7 +76,7 @@ public class BuildReportTests
         Assert.That(ttlObjCount, Is.GreaterThanOrEqualTo(1+ packedAssetCount + 1),
             "Unexpected number of objects in BuildReport analysis");
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM asset_bundles", 0,
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM archives", 0,
             "Expected no AssetBundles found in reference folder");
 
         //
@@ -139,9 +139,9 @@ public class BuildReportTests
         SQLTestHelper.AssertQueryString(db, "SELECT name FROM serialized_files WHERE id = 0", "AssetBundle.buildreport",
             "Unexpected serialized file name");
 
-        // Verify asset_bundle column is empty/NULL for BuildReport files (they are not asset bundles)
-        var assetBundleValue = SQLTestHelper.QueryString(db, "SELECT COALESCE(asset_bundle, '') FROM serialized_files WHERE id = 0");
-        Assert.That(string.IsNullOrEmpty(assetBundleValue), "BuildReport serialized file should not have asset_bundle value");
+        // Verify archive column is empty/NULL for BuildReport files (they are not inside an archive)
+        var archiveValue = SQLTestHelper.QueryString(db, "SELECT COALESCE(archive, '') FROM serialized_files WHERE id = 0");
+        Assert.That(string.IsNullOrEmpty(archiveValue), "BuildReport serialized file should not have archive value");
 
         // Verify the serialized file name matches what we see in object_view
         var serializedFileName = SQLTestHelper.QueryString(db, "SELECT name FROM serialized_files WHERE id = 0");
@@ -467,8 +467,8 @@ public class BuildReportTests
         var spritesArchiveContentCount = SQLTestHelper.QueryInt(db,
             $@"SELECT COUNT(*) FROM build_report_archive_contents 
                WHERE build_report_id = {assetBundleReportId}
-               AND assetbundle = 'sprites.bundle'
-               AND assetbundle_content = 'CAB-6b49068aebcf9d3b05692c8efd933167.resS'");
+               AND archive = 'sprites.bundle'
+               AND archive_content = 'CAB-6b49068aebcf9d3b05692c8efd933167.resS'");
         Assert.AreEqual(1, spritesArchiveContentCount,
             "Expected to find mapping for sprites.bundle -> CAB-6b49068aebcf9d3b05692c8efd933167.resS");
 
@@ -478,31 +478,31 @@ public class BuildReportTests
         Assert.AreEqual(0, playerArchiveContentsCount,
             "Expected Player BuildReport to have no archive contents mappings");
 
-        // Verify build_report_packed_assets_view includes assetbundle column
+        // Verify build_report_packed_assets_view includes archive column
         var packedAssetsWithBundle = SQLTestHelper.QueryInt(db,
             @"SELECT COUNT(*) FROM build_report_packed_assets_view 
-              WHERE assetbundle IS NOT NULL");
+              WHERE archive IS NOT NULL");
         Assert.That(packedAssetsWithBundle, Is.GreaterThan(0),
-            "Expected some PackedAssets to have assetbundle name populated");
+            "Expected some PackedAssets to have archive name populated");
 
-        // Verify specific PackedAsset has correct assetbundle name
+        // Verify specific PackedAsset has correct archive name
         var specificPackedAssetBundle = SQLTestHelper.QueryString(db,
-            @"SELECT assetbundle FROM build_report_packed_assets_view 
+            @"SELECT archive FROM build_report_packed_assets_view 
               WHERE path = 'CAB-6b49068aebcf9d3b05692c8efd933167'");
         Assert.AreEqual("sprites.bundle", specificPackedAssetBundle,
-            "Expected PackedAsset CAB-6b49068aebcf9d3b05692c8efd933167 to have assetbundle 'sprites.bundle'");
+            "Expected PackedAsset CAB-6b49068aebcf9d3b05692c8efd933167 to have archive 'sprites.bundle'");
 
-        // Verify PackedAssets from Player build have NULL assetbundle
+        // Verify PackedAssets from Player build have NULL archive
         var playerPackedAssetsWithNullBundle = SQLTestHelper.QueryInt(db,
             @"SELECT COUNT(*) FROM build_report_packed_assets_view 
-              WHERE build_report_filename = 'Player.buildreport' AND assetbundle IS NULL");
+              WHERE build_report_filename = 'Player.buildreport' AND archive IS NULL");
         Assert.That(playerPackedAssetsWithNullBundle, Is.GreaterThan(0),
-            "Expected PackedAssets from Player.buildreport to have NULL assetbundle");
+            "Expected PackedAssets from Player.buildreport to have NULL archive");
 
         var playerPackedAssetsWithNonNullBundle = SQLTestHelper.QueryInt(db,
             @"SELECT COUNT(*) FROM build_report_packed_assets_view 
-              WHERE build_report_filename = 'Player.buildreport' AND assetbundle IS NOT NULL");
+              WHERE build_report_filename = 'Player.buildreport' AND archive IS NOT NULL");
         Assert.AreEqual(0, playerPackedAssetsWithNonNullBundle,
-            "Expected all PackedAssets from Player.buildreport have NULL assetbundle");
+            "Expected all PackedAssets from Player.buildreport have NULL archive");
     }
 }

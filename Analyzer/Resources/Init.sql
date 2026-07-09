@@ -8,9 +8,7 @@ CREATE TABLE IF NOT EXISTS types
 -- Describes a unity archive that contains serialized files and other built content.
 -- A common use of the unity archive is for AssetBundles but it can also be used for
 -- Player, Content Archive and ContentDirectory builds.
---
--- See issue 68 for proposed rename
-CREATE TABLE IF NOT EXISTS asset_bundles
+CREATE TABLE IF NOT EXISTS archives
 (
     id INTEGER,
     name TEXT,
@@ -26,12 +24,12 @@ CREATE TABLE IF NOT EXISTS asset_bundles
 --     "BuildPlayer-<SceneName>"; the Scriptable Build Pipeline / Addressables uses
 --     "CAB-<hash of scene path>"; the Multi-Process Build Pipeline uses "CAB-<scene GUID>".
 --   * Player builds name scenes "level0", "level1", ... in scene-list order.
--- asset_bundle references the row from asset_bundles table of the unity archive containing this file,
+-- archive references the row from archives table of the unity archive containing this file,
 -- or is '' when the file is not inside an unity archive; object_view turns that '' into NULL.
 CREATE TABLE IF NOT EXISTS serialized_files
 (
     id INTEGER,
-    asset_bundle INTEGER,
+    archive INTEGER,
     name TEXT,
     PRIMARY KEY (id)
 );
@@ -91,7 +89,7 @@ INNER JOIN property_names pn ON r.property_path = pn.id
 INNER JOIN property_types pt ON r.property_type = pt.id;
 
 CREATE VIEW object_view AS
-SELECT o.id, o.object_id, ab.name AS asset_bundle, sf.name AS serialized_file, t.name AS type, o.name, o.game_object, o.size,
+SELECT o.id, o.object_id, ab.name AS archive, sf.name AS serialized_file, t.name AS type, o.name, o.game_object, o.size,
 CASE
     WHEN size < 1024 THEN printf('%!5.1f B', size * 1.0)
     WHEN size >=  1024 AND size < (1024 * 1024) THEN printf('%!5.1f KB', size / 1024.0)
@@ -101,7 +99,7 @@ END AS pretty_size, o.crc32
 FROM objects o
 INNER JOIN types t ON o.type = t.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
-LEFT JOIN asset_bundles ab ON sf.asset_bundle = ab.id;
+LEFT JOIN archives ab ON sf.archive = ab.id;
 
 CREATE VIEW view_breakdown_by_type AS
 SELECT *,
@@ -128,21 +126,21 @@ END AS pretty_total_size,
 sum(size) AS total_size,
 size,
 pretty_size,
-REPLACE(GROUP_CONCAT(DISTINCT IIF(asset_bundle IS NULL, serialized_file, asset_bundle)), ',', ',' || CHAR(13)) AS in_files
+REPLACE(GROUP_CONCAT(DISTINCT IIF(archive IS NULL, serialized_file, archive)), ',', ',' || CHAR(13)) AS in_files
 FROM object_view
 GROUP BY name, type, size, crc32
 HAVING instances > 1
 ORDER BY size DESC, instances DESC;
 
 CREATE VIEW view_material_shader_refs AS
-SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, s.id shader_id, s.name shader_name, s.asset_bundle shader_asset_bundle
+SELECT m.id material_id, m.name material_name, a.name material_path, m.archive material_archive, s.id shader_id, s.name shader_name, s.archive shader_archive
 FROM object_view m
 INNER JOIN refs_view r ON m.id = r.object AND r.property_path = 'm_Shader'
 INNER JOIN object_view s ON r.referenced_object = s.id
 LEFT JOIN assetbundle_assets a ON m.id = a.object;
 
 CREATE VIEW view_material_texture_refs AS
-SELECT m.id material_id, m.name material_name, a.name material_path, m.asset_bundle material_asset_bundle, t.id texture_id, t.name texture_name, t.asset_bundle texture_asset_bundle
+SELECT m.id material_id, m.name material_name, a.name material_path, m.archive material_archive, t.id texture_id, t.name texture_name, t.archive texture_archive
 FROM object_view m
 INNER JOIN refs_view r ON r.object = m.id AND property_type = 'Texture'
 INNER JOIN object_view t ON r.referenced_object = t.id
@@ -156,8 +154,9 @@ INSERT INTO types (id, name) VALUES (-1, 'Scene');
 -- Database schema version. Bump when the schema changes in a way that tools relying on it
 -- (e.g. find-refs) cannot read from an older database. 1 = normalized refs table (issue #44);
 -- 2 = renamed assets/asset_dependencies tables to assetbundle_assets/preload_dependencies
--- (issue #82); databases produced before versioning report 0.
-PRAGMA user_version = 2;
+-- (issue #82); 3 = renamed asset_bundles table to archives and the asset_bundle column/alias
+-- to archive (issue #68); databases produced before versioning report 0.
+PRAGMA user_version = 3;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

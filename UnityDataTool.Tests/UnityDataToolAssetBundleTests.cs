@@ -328,7 +328,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
             cmd.CommandText =
                 @"SELECT
                     (SELECT COUNT(*) FROM animation_clips),
-                    (SELECT COUNT(*) FROM asset_bundles),
+                    (SELECT COUNT(*) FROM archives),
                     (SELECT COUNT(*) FROM assetbundle_assets),
                     (SELECT COUNT(*) FROM audio_clips),
                     (SELECT COUNT(*) FROM meshes),
@@ -347,7 +347,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
             reader.Read();
 
             Assert.AreEqual(Context.ExpectedData.Get("animation_clips_count"), reader.GetInt32(0));
-            Assert.AreEqual(Context.ExpectedData.Get("asset_bundles_count"), reader.GetInt32(1));
+            Assert.AreEqual(Context.ExpectedData.Get("archives_count"), reader.GetInt32(1));
             Assert.AreEqual(Context.ExpectedData.Get("assets_count"), reader.GetInt32(2));
             Assert.AreEqual(Context.ExpectedData.Get("audio_clips_count"), reader.GetInt32(3));
             Assert.AreEqual(Context.ExpectedData.Get("meshes_count"), reader.GetInt32(4));

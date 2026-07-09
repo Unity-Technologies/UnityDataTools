@@ -26,7 +26,7 @@ public static class ArchiveTool
             }
             else if (ArchiveDetector.IsUnityArchive(path))
             {
-                ExtractAssetBundle(filename, outputFolder, filter);
+                ExtractArchive(filename, outputFolder, filter);
             }
             else
             {
@@ -56,7 +56,7 @@ public static class ArchiveTool
             }
             else if (ArchiveDetector.IsUnityArchive(path))
             {
-                ListAssetBundle(filename, format);
+                ListArchive(filename, format);
             }
             else
             {
@@ -356,7 +356,7 @@ public static class ArchiveTool
         return names.Count > 0 ? string.Join(", ", names) : "None";
     }
 
-    static void ExtractAssetBundle(FileInfo filename, DirectoryInfo outputFolder, string filter)
+    static void ExtractArchive(FileInfo filename, DirectoryInfo outputFolder, string filter)
     {
         Console.WriteLine($"Extracting files from archive: {filename}");
         using var archive = UnityFileSystem.MountArchive(filename.FullName, "/");
@@ -377,7 +377,7 @@ public static class ArchiveTool
         Console.WriteLine($"Extracted {extracted} out of {total} files.");
     }
 
-    static void ListAssetBundle(FileInfo filename, OutputFormat format)
+    static void ListArchive(FileInfo filename, OutputFormat format)
     {
         if (!ArchiveDetector.TryReadArchiveHeader(filename.FullName, out var header, out var errorMessage))
             throw new NotSupportedException(errorMessage);

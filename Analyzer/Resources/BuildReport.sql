@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS build_report_files(
 
 CREATE TABLE IF NOT EXISTS build_report_archive_contents(
     build_report_id INTEGER NOT NULL,
-    assetbundle TEXT NOT NULL,
-    assetbundle_content TEXT NOT NULL,
-    PRIMARY KEY (build_report_id, assetbundle_content),
+    archive TEXT NOT NULL,
+    archive_content TEXT NOT NULL,
+    PRIMARY KEY (build_report_id, archive_content),
     FOREIGN KEY (build_report_id) REFERENCES build_reports(id)
 );
 
