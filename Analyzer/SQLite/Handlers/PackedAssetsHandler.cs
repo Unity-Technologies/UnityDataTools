@@ -16,6 +16,11 @@ public class PackedAssetsHandler : ISQLiteHandler
     private SqliteCommand m_InsertTypeCommand;
     private Dictionary<(string guid, string path), long> m_SourceAssetCache = new();
 
+    // Type ids we have already tried to add to the types table. A single BuildReport can list
+    // thousands of objects sharing a handful of types, so this skips the redundant INSERT calls.
+    // The handler instance lives for the whole analyze, so this dedups across all reports.
+    private HashSet<int> m_InsertedTypes = new();
+
     public void Init(SqliteConnection db)
     {
         using var command = db.CreateCommand();
@@ -106,7 +111,8 @@ public class PackedAssetsHandler : ISQLiteHandler
 
             // Populate the types table so views can display the type name even when the build
             // output (and its TypeTrees) is not analyzed alongside the report.
-            if (TypeIdRegistry.TryGetTypeName(content.Type, out var typeName))
+            if (m_InsertedTypes.Add(content.Type) &&
+                TypeIdRegistry.TryGetTypeName(content.Type, out var typeName))
             {
                 m_InsertTypeCommand.Transaction = ctx.Transaction;
                 m_InsertTypeCommand.Parameters["@id"].Value = content.Type;

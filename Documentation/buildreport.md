@@ -262,7 +262,7 @@ For consistency and clarity, database columns use slightly different names than 
 
 ## Limitations
 
-**Duplicate filenames:** Multiple build reports cannot be imported into the same database if they share the same filename. This is a general UnityDataTool limitation that assumes unique SerializedFile names.  The BuildReport files in the build history (introduced in Unity 6.6) intentionally have unique file names (incorporating the build session GUID), so analyze does not hit this issue when analyzing multiple entries from the BuildHistory folder.  When analyzing multiple AssetBundle build reports, or build reports from older versions of unity, be sure to assign a unique filename to each.  See also issue #36.
+**Duplicate filenames:** Multiple build reports cannot be imported into the same database if they share the same filename. This is a general UnityDataTool limitation that assumes unique SerializedFile names. The BuildReport files in the build history (introduced in Unity 6.6) intentionally have unique file names (incorporating the build session GUID), so analyze does not hit this issue when analyzing multiple entries from the BuildHistory folder. When analyzing multiple AssetBundle build reports, or build reports from older versions of Unity, be sure to assign a unique filename to each. See also issue #36.
 
 ### Information Not Exported
 
