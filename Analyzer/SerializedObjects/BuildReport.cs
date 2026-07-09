@@ -198,7 +198,7 @@ public class FileListArchiveHelper
     ...
 
     Result:
-    1b5ddb63f662928d24e43d5d9b8b9597.cf -> ContentFile
+    1b5ddb63f662928d24e43d5d9b8b9597.cf -> content0.archive
     */
     /// </summary>
     private void CalculateArchiveMapping(List<BuildFile> files)
