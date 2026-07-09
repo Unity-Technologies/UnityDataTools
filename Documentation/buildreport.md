@@ -258,21 +258,20 @@ For consistency and clarity, database columns use slightly different names than 
 | `build_report_packed_assets.path` | `PackedAssets.ShortPath` | Filename of the SerializedFile, .resS, or .resource file ("short" was redundant since only one path is recorded) |
 | `build_report_packed_assets.file_header_size` | `PackedAssets.Overhead` | Size of the file header (zero for .resS and .resource files) |
 | `build_report_packed_asset_info.object_id` | `PackedAssetInfo.fileID` | Local file ID of the object (renamed for consistency with `objects.object_id`) |
-| `build_report_packed_asset_info.type` | `PackedAssetInfo.classID` | Unity object type (renamed for consistency with `objects.type`) |
+| `build_report_packed_asset_info.type` | `PackedAssetInfo.classID` | Unity object type as a numeric [Class ID](https://docs.unity3d.com/Manual/ClassIDReference.html) (renamed for consistency with `objects.type`). `build_report_packed_asset_contents_view` exposes this as the type name. |
 
 ## Limitations
 
-**Duplicate filenames:** Multiple build reports cannot be imported into the same database if they share the same filename. This is a general UnityDataTool limitation that assumes unique SerializedFile names.
-
-**Type names:** While `build_report_packed_asset_info.type` records valid [Class IDs](https://docs.unity3d.com/Manual/ClassIDReference.html), the string type name may not exist in the `types` table. The `types` table is only populated when processing object instances (during TypeTree analysis). Analyzing both build output **and** build report together ensures types are fully populated; otherwise only numeric IDs are available.
+**Duplicate filenames:** Multiple build reports cannot be imported into the same database if they share the same filename. This is a general UnityDataTool limitation that assumes unique SerializedFile names. The BuildReport files in the build history (introduced in Unity 6.6) intentionally have unique file names (incorporating the build session GUID), so analyze does not hit this issue when analyzing multiple entries from the BuildHistory folder. When analyzing multiple AssetBundle build reports, or build reports from older versions of Unity, be sure to assign a unique filename to each. See also issue #36.
 
 ### Information Not Exported
 
 Currently, only the most useful BuildReport data is extracted to SQL. Additional data may be added as needed:
 
-* [Code stripping](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport-strippingInfo.html) appendix (IL2CPP Player builds)
-* [ScenesUsingAssets](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport-scenesUsingAssets.html) (detailed build reports)
-* `BuildReport.m_BuildSteps` array (SQL may not be ideal for this hierarchical data)
-* `BuildAssetBundleInfoSet` appendix (undocumented object listing files in each AssetBundle; `build_report_archive_contents` currently derives this from the File list)
+* [Code stripping](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport-strippingInfo.html) appendix (available only for IL2CPP Player builds)
+* [ScenesUsingAssets](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport-scenesUsingAssets.html) (available only in detailed build reports for Player builds)
+* `BuildReport.m_BuildSteps` array. Supporting this is low priority - SQL is not an ideal representation for this hierarchical data.  Starting in Unity 6.6 the build steps are also reported in the BuildLog.jsonl file and Trace Event Profile (TEP) files, which are easy to parse.
+* `BuildAssetBundleInfoSet` appendix (undocumented object listing files in each AssetBundle; `build_report_archive_contents` currently derives this from the File list without relying on that data)
 * Analytics-only appendices (unlikely to be valuable for analysis)
 
+Tip: All this additional BuildReport data can be viewed using the `dump` command.

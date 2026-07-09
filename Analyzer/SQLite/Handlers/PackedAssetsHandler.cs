@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
+using UnityDataTools.FileSystem;
 using UnityDataTools.FileSystem.TypeTreeReaders;
 
 namespace UnityDataTools.Analyzer.SQLite.Handlers;
@@ -12,7 +13,13 @@ public class PackedAssetsHandler : ISQLiteHandler
     private SqliteCommand m_InsertSourceAssetCommand;
     private SqliteCommand m_GetSourceAssetIdCommand;
     private SqliteCommand m_InsertContentsCommand;
+    private SqliteCommand m_InsertTypeCommand;
     private Dictionary<(string guid, string path), long> m_SourceAssetCache = new();
+
+    // Type ids we have already tried to add to the types table. A single BuildReport can list
+    // thousands of objects sharing a handful of types, so this skips the redundant INSERT calls.
+    // The handler instance lives for the whole analyze, so this dedups across all reports.
+    private HashSet<int> m_InsertedTypes = new();
 
     public void Init(SqliteConnection db)
     {
@@ -59,6 +66,15 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_InsertContentsCommand.Parameters.Add("@size", SqliteType.Integer);
         m_InsertContentsCommand.Parameters.Add("@offset", SqliteType.Integer);
         m_InsertContentsCommand.Parameters.Add("@source_asset_id", SqliteType.Integer);
+
+        // A BuildReport records object types by numeric id only. When we can map an id to a
+        // human-readable name via TypeIdRegistry, we add it to the shared types table so the
+        // build report views can show the name. INSERT OR IGNORE keeps any name already inserted
+        // by TypeTree analysis of the actual build output (which is authoritative).
+        m_InsertTypeCommand = db.CreateCommand();
+        m_InsertTypeCommand.CommandText = "INSERT OR IGNORE INTO types(id, name) VALUES(@id, @name)";
+        m_InsertTypeCommand.Parameters.Add("@id", SqliteType.Integer);
+        m_InsertTypeCommand.Parameters.Add("@name", SqliteType.Text);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
@@ -93,14 +109,20 @@ public class PackedAssetsHandler : ISQLiteHandler
                 m_SourceAssetCache[cacheKey] = sourceAssetId;
             }
 
+            // Populate the types table so views can display the type name even when the build
+            // output (and its TypeTrees) is not analyzed alongside the report.
+            if (m_InsertedTypes.Add(content.Type) &&
+                TypeIdRegistry.TryGetTypeName(content.Type, out var typeName))
+            {
+                m_InsertTypeCommand.Transaction = ctx.Transaction;
+                m_InsertTypeCommand.Parameters["@id"].Value = content.Type;
+                m_InsertTypeCommand.Parameters["@name"].Value = typeName;
+                m_InsertTypeCommand.ExecuteNonQuery();
+            }
+
             m_InsertContentsCommand.Transaction = ctx.Transaction;
             m_InsertContentsCommand.Parameters["@packed_assets_id"].Value = objectId;
             m_InsertContentsCommand.Parameters["@object_id"].Value = content.ObjectID;
-
-            // TODO: Ideally we would also populate the type table if the content.Type is
-            // not already in that table, and if we have a string value for it in TypeIdRegistry. That would
-            // make it possible to view object types as strings, for the most common types, when importing a BuildReport
-            // without the associated built content.
             m_InsertContentsCommand.Parameters["@type"].Value = content.Type;
             m_InsertContentsCommand.Parameters["@size"].Value = (long)content.Size;
             m_InsertContentsCommand.Parameters["@offset"].Value = (long)content.Offset;
@@ -122,6 +144,7 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_InsertSourceAssetCommand?.Dispose();
         m_GetSourceAssetIdCommand?.Dispose();
         m_InsertContentsCommand?.Dispose();
+        m_InsertTypeCommand?.Dispose();
     }
 }
 

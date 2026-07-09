@@ -272,5 +272,15 @@ public static class TypeIdRegistry
             ? name
             : typeId.ToString();
     }
+
+    /// <summary>
+    /// Looks up the type name for a TypeId, returning false when the id is not a known type.
+    /// Unlike GetTypeName, this does not fall back to the numeric id, so callers can tell
+    /// whether a real name is available.
+    /// </summary>
+    public static bool TryGetTypeName(int typeId, out string name)
+    {
+        return s_KnownTypes.TryGetValue(typeId, out name);
+    }
 }
 

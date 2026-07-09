@@ -14,6 +14,11 @@ namespace UnityDataTools.Analyzer.SQLite.Commands
 
         protected virtual string DDLSource { get => null; }
 
+        // Conflict-resolution clause for the INSERT (e.g. "OR IGNORE"). Defaults to none, so a
+        // duplicate primary key surfaces as an error - some tables rely on that to detect problems
+        // such as the same SerializedFile being analyzed twice.
+        protected virtual string ConflictClause => "";
+
         // run data definition language commands to create
         // tables and views, run once at the beginning of creating
         // the database
@@ -31,7 +36,8 @@ namespace UnityDataTools.Analyzer.SQLite.Commands
             RunDDL(database);
 
             m_Command = database.CreateCommand();
-            var commandText = new StringBuilder($"INSERT INTO {TableName} (");
+            var insert = string.IsNullOrEmpty(ConflictClause) ? "INSERT" : $"INSERT {ConflictClause}";
+            var commandText = new StringBuilder($"{insert} INTO {TableName} (");
             commandText.Append(string.Join(", ", Fields.Keys));
             commandText.Append(") VALUES (@");
             commandText.Append(string.Join(", @", Fields.Keys));
