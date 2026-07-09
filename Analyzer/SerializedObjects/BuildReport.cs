@@ -177,6 +177,27 @@ public class FileListAssetBundleHelper
 
     Result:
     CAB-76a378bdc9304bd3c3a82de8dd97981a.resource -> audio.bundle
+
+
+    Similarly for Archives in a content directory build:
+    Array<BuildReportFile>[20]
+...
+      data[1] (BuildReportFile)
+        path (string) content0.archive
+        role (string) ContentArchive
+        id (unsigned int) 1
+        totalSize (UInt64) 441200
+        flags (int) 0
+      data[2] (BuildReportFile)
+        path (string) content0.archive/1b5ddb63f662928d24e43d5d9b8b9597.cf
+        role (string) ContentFile
+        id (unsigned int) 2
+        totalSize (UInt64) 100748
+        flags (int) 0
+    ...
+
+    Result:
+    1b5ddb63f662928d24e43d5d9b8b9597.cf -> ContentFile
     */
     /// </summary>
     private void CalculateAssetBundleMapping(List<BuildFile> files)
@@ -187,7 +208,7 @@ public class FileListAssetBundleHelper
         var archivePathToFileName = new Dictionary<string, string>();
         foreach (var file in files)
         {
-            if (file.Role == "AssetBundle" || file.Role == "ManifestAssetBundle")
+            if (file.Role == "AssetBundle" || file.Role == "ManifestAssetBundle" || file.Role == "ContentArchive")
             {
                 var justFileName = Path.GetFileName(file.Path);
                 archivePathToFileName[file.Path] = justFileName;
