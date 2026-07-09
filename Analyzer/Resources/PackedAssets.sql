@@ -45,7 +45,9 @@ SELECT
     pa.path,
     pac.packed_assets_id,
     pac.object_id,
-    pac.type,
+    -- Show the type name when known (populated from TypeIdRegistry or TypeTree analysis),
+    -- otherwise fall back to the numeric class id as text.
+    COALESCE(t.name, CAST(pac.type AS TEXT)) as type,
     pac.size,
     pac.offset,
     sa.source_asset_guid,
@@ -56,6 +58,7 @@ LEFT JOIN build_report_packed_assets pa ON pac.packed_assets_id = pa.id
 LEFT JOIN objects o ON o.id = pa.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN build_report_source_assets sa ON pac.source_asset_id = sa.id
+LEFT JOIN types t ON pac.type = t.id
 LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125
 LEFT JOIN build_report_archive_contents brac ON br_obj.id = brac.build_report_id AND pa.path = brac.archive_content;
 

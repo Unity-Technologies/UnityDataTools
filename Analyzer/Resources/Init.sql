@@ -151,12 +151,14 @@ WHERE m.type = 'Material';
 -- see SerializedFileSQLiteWriter for details
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
--- Database schema version. Bump when the schema changes in a way that tools relying on it
--- (e.g. find-refs) cannot read from an older database. 1 = normalized refs table (issue #44);
--- 2 = renamed assets/asset_dependencies tables to assetbundle_assets/preload_dependencies
--- (issue #82); 3 = renamed asset_bundles table to archives and the asset_bundle column/alias
--- to archive (issue #68); databases produced before versioning report 0.
-PRAGMA user_version = 3;
+-- Database schema version. Bump on any schema change so the version records which schema a given
+-- analyze.db was produced with. Commands that read an existing database (currently only find-refs)
+-- can compare against it to give a clean error instead of failing on a missing table or column.
+-- 1 = normalized refs table (issue #44); 2 = renamed assets/asset_dependencies tables to
+-- assetbundle_assets/preload_dependencies (issue #82); 3 = renamed asset_bundles table to archives
+-- and the asset_bundle column/alias to archive (issue #68); 4 = build_report_packed_asset_contents_view
+-- type column changed from numeric id to type name (issue #55); databases produced before versioning report 0.
+PRAGMA user_version = 4;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

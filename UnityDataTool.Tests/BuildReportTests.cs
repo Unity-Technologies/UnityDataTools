@@ -311,10 +311,10 @@ public class BuildReportTests
         // Verify the specific content row (data[3] from the dump)
         const long objectId = -1350043613627603771;
         var contentRow = SQLTestHelper.QueryInt(db,
-            $@"SELECT COUNT(*) FROM build_report_packed_asset_contents_view 
-               WHERE packed_assets_id = {packedAssetId} 
+            $@"SELECT COUNT(*) FROM build_report_packed_asset_contents_view
+               WHERE packed_assets_id = {packedAssetId}
                AND object_id = {objectId}
-               AND type = 28
+               AND type = 'Texture2D'
                AND size = 204
                AND offset = 11840
                AND source_asset_guid = '8826f464101b93c4bb006e15a9aff317'
@@ -322,6 +322,15 @@ public class BuildReportTests
 
         Assert.AreEqual(1, contentRow,
             "Expected exactly one packed_asset_contents row matching the specified criteria");
+
+        // The type column shows the human-readable name (from TypeIdRegistry) even though the
+        // build report records only the numeric class id and no build output was analyzed here.
+        SQLTestHelper.AssertQueryString(db,
+            $@"SELECT type FROM build_report_packed_asset_contents_view
+               WHERE packed_assets_id = {packedAssetId}
+               AND object_id = {objectId}",
+            "Texture2D",
+            "Expected type name 'Texture2D' in build_report_packed_asset_contents_view");
 
         // Verify the view works correctly for this content row
         SQLTestHelper.AssertQueryString(db,
