@@ -100,9 +100,9 @@ However in cases where you want to understand what contributes to the size of yo
 
 Often the source of content can be easily inferred, based on your own knowledge of your project, and the names of objects.  For example the name of a Shader should be unique, and typically has a filename that closely matches the Shader name.
 
-You can include a Unity BuildReport file when running `UnityDataTools analyze`. This will import the PackedAsset information, tracking the source asset information for each object in the build output. See [Build Reports](./build-reports.md) for more information, including alternative ways to view the build report.
+You can include a Unity BuildReport file when running `UnityDataTool analyze`. This will import the PackedAsset information, tracking the source asset information for each object in the build output. See [Build Reports](./buildreport.md) for more information, including alternative ways to view the build report.
 
-`UnityDataTools analyze` can also import Addressables build layout files, which include source asset information.  See [Addressable Build Reports](./addressables-build-reports.md).
+`UnityDataTool analyze` can also import Addressables build layout files, which include source asset information.  See [Addressable Build Reports](./addressables-build-reports.md).
 
 For AssetBundles built by [BuildPipeline.BuildAssetBundles()](https://docs.unity3d.com/ScriptReference/BuildPipeline.BuildAssetBundles.html), Unity creates a .manifest file for each AssetBundle that has source information.  This is a text-based format.
 

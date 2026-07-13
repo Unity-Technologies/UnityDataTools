@@ -92,7 +92,8 @@ namespace UnityDataTools.Models
         /// loadable, or -1 if it was dropped (e.g. server build shader references).</summary>
         public int SerializedFile = -1;
 
-        /// <summary>Local file id of the object in the output <see cref="SerializedFile"/>.</summary>
+        /// <summary>Local file id of the object within its output Content File (the one identified by the
+        /// <see cref="SerializedFile"/> index).</summary>
         public long OutputLFID;
     }
 
@@ -170,8 +171,9 @@ namespace UnityDataTools.Models
     /// </summary>
     public class ContentLayout
     {
+        /// <summary>The schema version this type represents.</summary>
         // v1 -> v2: added OutputLFID to LoadableObjectIds entries.
-        const int kContentLayoutVersion = 2;
+        public const int CurrentVersion = 2;
 
         /// <summary>Schema version of the ContentLayout.json file.</summary>
         public int Version;

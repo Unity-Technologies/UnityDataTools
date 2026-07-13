@@ -61,7 +61,7 @@ The file uses a few terms consistently:
 
 The schema is subject to change. The `Version` field records the schema version of the file, independently of the Unity version that produced it. When the schema changes, the version number increments.
 
-[`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs) always represents the latest schema version (currently version 1).
+[`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs) always represents the latest schema version (currently version 2).
 
 ## Related documentation
 
