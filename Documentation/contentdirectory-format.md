@@ -1,16 +1,15 @@
 # Content Directory Format
 
 Content directories are a build pipeline introduced in Unity 6.6 for shipping a project's assets as
-separate content builds that load alongside a Player build. They are designed as a replacement for
+separate content builds that load alongside a Player build. They are designed as a newer alternative to
 [AssetBundles](assetbundle-format.md), with automatic de-duplication of shared content and per-asset
-dependency tracking. Content directories support **local** content only. For the full picture — what
+dependency tracking. For the full picture — what
 they are, how to build them, and the APIs for loading content — see Unity's Manual topic
 [Use content directories to load assets at runtime](https://docs.unity3d.com/6000.6/Documentation/Manual/content-directories.html).
 
 This page focuses on the parts that matter when inspecting a content directory build with
 UnityDataTool. It complements the higher-level [Overview of Unity Content](unity-content-format.md),
-which introduces SerializedFiles and Unity Archives. It does **not** repeat the Manual: it does not
-cover the APIs for building or loading content directories.
+which introduces SerializedFiles and Unity Archives.
 
 ## What a content directory build produces
 
@@ -19,12 +18,15 @@ holding the serialized objects, plus companion `.resS` (texture/mesh) and `.reso
 files — together with a build manifest that records what is needed to load the content at runtime.
 
 The output can be written as loose files or packed into a Unity Archive, so UnityDataTool opens it the
-same way it opens Player and AssetBundle content. The reference build checked in at
-`TestCommon/Data/LeadingEdgeBuilds/ContentDirectory` is an uncompressed build, so its files are loose.
+same way it opens Player and AssetBundle content.
 
-The files use technical, content-hash-based names rather than the familiar `level0` / `sharedassets`
-names of a Player build. A detailed explanation of that naming is planned for a future revision of
-this page.
+An example build, used for testing, can be found in `TestCommon/Data/LeadingEdgeBuilds/ContentDirectory`.
+
+The files use technical, content-hash-based names, rather than the familiar `level0` / `sharedassets`
+names of a Player build or the user-specified names of AssetBundles. You do not need to understand the
+internal file layout for typical usage — defining what to build, running builds, and loading content
+at runtime. This page goes into that detail to help interpret UnityDataTool output in the cases where a
+closer look is useful.
 
 ## Build history
 
@@ -40,14 +42,14 @@ the scope of UnityDataTool and are documented in the Manual's
 [Build history file reference](https://docs.unity3d.com/6000.6/Documentation/Manual/build-history-file-reference.html).
 Two files in the build history are directly relevant here:
 
-* **The BuildReport file** — the build report for the build, in the same SerializedFile format that
-  UnityDataTool reads for Player and AssetBundle builds. In the build history it is named after the
-  build session GUID (rather than the fixed `LastBuild.buildreport` name), so reports from multiple
-  builds can sit side by side and be analyzed together. See [BuildReport Support](buildreport.md).
 * **[`ContentLayout.json`](contentlayout.md)** — maps the built content back to the source assets in
   the project and describes the dependencies between the produced files. It is the key file for
   understanding a content directory build. UnityDataTool support for `ContentLayout.json` is a work in
   progress; for now, see the dedicated [ContentLayout.json](contentlayout.md) page for its structure.
+* **The BuildReport file** — the build report for the build, in the same SerializedFile format that
+  UnityDataTool reads for Player and AssetBundle builds. In the build history it is named after the
+  build session GUID (rather than the fixed `LastBuild.buildreport` name), so reports from multiple
+  builds can sit side by side and be analyzed together. See [BuildReport Support](buildreport.md).
 
 ## Inspecting content directory output with UnityDataTool
 
@@ -59,10 +61,13 @@ paths:
 UnityDataTool analyze /path/to/ContentDirectory /path/to/Library/BuildHistory/<build-directory>
 ```
 
-Analyzing the build output alone records the objects but not where they came from. The build report
+Analyzing the build output alone records the objects, but not where they came from. The build report
 in the build history adds the source-asset mapping (the PackedAssets data), so analyzing the two
 together gives a database that ties each built object back to its source asset. See
 [BuildReport Support](buildreport.md) for how the build report data is stored and queried.
+
+Currently the references between objects are not recorded properly for a content directory build.
+This will be fixed using the information from the `ContentLayout.json` file.
 
 ## Related documentation
 
@@ -73,4 +78,4 @@ together gives a database that ties each built object back to its source asset. 
 | [ContentLayout.json](contentlayout.md) | The build layout file that maps content directory output back to source assets. |
 | [BuildReport Support](buildreport.md) | Analyzing Unity build report files with UnityDataTool. |
 | [Overview of Unity Content](unity-content-format.md) | SerializedFiles, Unity Archives, and TypeTrees. |
-| [AssetBundle Format](assetbundle-format.md) | The system that content directories replace. |
+| [AssetBundle Format](assetbundle-format.md) | The earlier system that content directories are a newer alternative to. |
