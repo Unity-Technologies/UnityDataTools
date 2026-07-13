@@ -44,6 +44,12 @@ By default Player builds omit TypeTrees, which limits what `analyze` and `dump` 
 
 For a hands-on look at the Player build layout, the built-in resource files, compression, and how to inspect Player content (including platform-specific containers on Android and Web) with UnityDataTool, see [Player Build Format](playerbuild-format.md).  For Unity's official reference, see the Manual topic [Content output of a build](https://docs.unity3d.com/Manual/build-content-output.html).
 
+## Content Directories
+
+Content directories are a build pipeline introduced in Unity 6.6 for shipping a project's assets as separate content builds that load alongside a Player build.  They are designed as a replacement for AssetBundles, and are built from the same SerializedFiles and (optionally) Unity Archives described above.
+
+For how content directory output is laid out, its build history, and how to inspect it with UnityDataTool, see [Content Directory Format](contentdirectory-format.md).
+
 ## TypeTrees
 
 The TypeTree is a data structure describing how objects have been serialized, i.e. the name, type, and
@@ -100,4 +106,4 @@ You can include a Unity BuildReport file when running `UnityDataTools analyze`. 
 
 For AssetBundles built by [BuildPipeline.BuildAssetBundles()](https://docs.unity3d.com/ScriptReference/BuildPipeline.BuildAssetBundles.html), Unity creates a .manifest file for each AssetBundle that has source information.  This is a text-based format.
 
-For content directory builds, the [ContentLayout.json](contentlayout.md) file maps the build output back to the source assets in the project.
+For [content directory builds](contentdirectory-format.md), the [ContentLayout.json](contentlayout.md) file maps the build output back to the source assets in the project.
