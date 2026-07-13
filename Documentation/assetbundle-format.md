@@ -40,6 +40,57 @@ understand them for normal use, but they show up throughout UnityDataTool output
   - The Scriptable Build Pipeline / Addressables uses `CAB-<hash of the scene path>`.
   - The Multi-Process Build Pipeline (2023.1+) uses `CAB-<scene GUID>`.
 
+## Bundle dependencies and object references
+
+AssetBundle dependencies exist at two related but different levels:
+
+- The AssetBundle object records bundle-level dependencies in `m_Dependencies`: as AssetBundle
+  names for `BuildPipeline.BuildAssetBundles`, or as internal SerializedFile names for Scriptable
+  Build Pipeline / Addressables builds.
+- Serialized objects record object-level references as `PPtr`s, which point to a file and a local
+  object id.
+
+The bundle filename itself is not written into every object reference. Instead, loading a bundle
+mounts its archive and makes the SerializedFiles inside it available to Unity's object resolver.
+When Unity follows a `PPtr`, it resolves the reference through the current SerializedFile and that
+file's external reference table.
+
+A `PPtr` has two important fields:
+
+- `m_FileID` - `0` means the target object is in the same SerializedFile. Values `1`, `2`, and so on
+  refer to entries in that SerializedFile's external reference table.
+- `m_PathID` - the target object's local object id inside the resolved SerializedFile.
+
+This means that two different bundles can have different filenames while still referencing each
+other through the SerializedFiles mounted from those bundles. The application is still responsible
+for loading dependency bundles. With `BuildPipeline.BuildAssetBundles`, the `AssetBundleManifest`
+tells the application which bundles to load; with Addressables, the Addressables catalog does that
+job. Unity's runtime does not auto-load bundles from `m_Dependencies`.
+
+At runtime, `m_Dependencies` is used only in narrower lookup paths, such as searching already-loaded
+dependency bundles for preload objects. If a named dependency bundle is not loaded, Unity skips it
+rather than loading it automatically. Once the needed SerializedFiles are mounted, object references
+point into those files by `m_FileID` and `m_PathID`.
+
+For example, if an object in `characters.bundle` references a material in `materials.bundle`, the
+object's `PPtr` does not contain the string `materials.bundle`. The source SerializedFile contains
+an external reference entry that identifies the target SerializedFile by its internal path, for
+example `archive:/CAB-<hash>/CAB-<hash>`. The dependency relationship in `m_Dependencies` helps
+Unity search among already-loaded dependency bundles for preload objects, but the application still
+uses the AssetBundleManifest or Addressables catalog to decide which archive files to load.
+
+In UnityDataTool output, these layers appear in different places:
+
+- The containing archive or bundle file appears as `archive` in `object_view`.
+- The mounted SerializedFile appears as `serialized_file` in `object_view`.
+- Object-to-object references appear in the `refs` table when `analyze` runs with reference
+  extraction enabled.
+- Preload relationships from the AssetBundle object and scene `PreloadData` appear in
+  `preload_dependencies`.
+
+Keeping those layers separate helps explain why a query over `refs` may show cross-bundle
+relationships without directly mentioning an AssetBundle filename on each reference row.
+
 ## Inspecting a bundle with UnityDataTool
 
 The [`archive`](command-archive.md) command lists or extracts the files inside a bundle, and
@@ -63,7 +114,9 @@ exposes and what each of them needs preloaded. Its important fields are:
   `preloadIndex`/`preloadSize` range describing that asset's dependencies (see below).
 - `m_PreloadTable` - a flat list of `PPtr`s. Each container entry references a contiguous slice of
   this list.
-- `m_Dependencies` - the names of other bundles this bundle depends on.
+- `m_Dependencies` - the other bundles or internal SerializedFiles this bundle depends on, stored
+  as AssetBundle names for `BuildPipeline.BuildAssetBundles` or as internal SerializedFile names
+  for Scriptable Build Pipeline / Addressables builds.
 - `m_IsStreamedSceneAssetBundle` - true for scene bundles.
 - `m_SceneHashes` - for scene bundles, a map from each scene path to the SerializedFile that holds
   it (populated by SBP/Addressables only; see [Scenes in AssetBundles](#scenes-in-assetbundles)).
@@ -238,6 +291,10 @@ large dependency graphs by loading some assets on demand (via Addressables, Asse
 
 The [`analyze`](analyzer.md) command turns the above into queryable tables:
 
+- Each object is linked to both its `serialized_file` and, when applicable, its containing `archive`
+  in `object_view`.
+- Object references extracted from `PPtr` fields become rows in `refs`; these rows are resolved to
+  analyzer object ids rather than storing AssetBundle filenames directly.
 - Each explicit `m_Container` asset becomes a row in `assetbundle_assets`, and its preload slice
   becomes rows in `preload_dependencies`.
 - Because a scene has no Unity object, `analyze` synthesizes a "Scene" object per scene to stand in
