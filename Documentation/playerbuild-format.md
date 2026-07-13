@@ -268,6 +268,26 @@ list of assemblies), and `RuntimeInitializeOnLoads.json` (methods tagged with
 `[RuntimeInitializeOnLoadMethod]`). These are plain config/JSON files; they are mentioned here only
 so their presence alongside the content is not surprising.
 
+## StreamingAssets and nested content builds
+
+A Player build can carry additional content-only build output inside its `StreamingAssets` folder,
+alongside the main Player content. This is separate content, produced by other build pipelines, that
+Unity copies into the build verbatim. Common examples include:
+
+- **AssetBundles**, including the AssetBundles produced by the Addressables package.
+- **Content-directory builds.**
+- **Entities (DOTS) content** — for example subscene content under `StreamingAssets/ContentArchives`.
+
+Each of these is made up of the same Unity Archives and SerializedFiles as the rest of the build, so
+UnityDataTool can open them too.
+
+This matters when you run [`analyze`](command-analyze.md) from the `Data` folder. By default `analyze`
+recurses into every subdirectory, discovering archives, SerializedFiles, and other supported files
+wherever they are — so it will find the nested content under `StreamingAssets` and analyze it into the
+*same* database as the main Player content. That may be what you want (a single database covering
+everything shipped), but if you want to analyze only the Player content, pass `--no-recurse` to stop
+`analyze` from descending into subdirectories.
+
 ## Platform details
 
 The content stage of a Player build is essentially the same on every platform, but the final
