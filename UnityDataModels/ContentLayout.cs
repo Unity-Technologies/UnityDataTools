@@ -3,8 +3,8 @@
 //
 // See Documentation/contentlayout.md for further details.
 //
-// ContentLayout always represents the latest schema version (currently 1). If the schema changes
-// in future, older versions can be preserved under a version-specific namespace while this type
+// ContentLayout always represents the latest schema version (currently 2). If the schema changes
+// significantly in future, older versions can be preserved under a version-specific namespace while this type
 // continues to track the latest version.
 namespace UnityDataTools.Models
 {
@@ -91,6 +91,10 @@ namespace UnityDataTools.Models
         /// <summary>Index into <see cref="ContentLayout.SerializedFiles"/> for the file that contains this
         /// loadable, or -1 if it was dropped (e.g. server build shader references).</summary>
         public int SerializedFile = -1;
+
+        /// <summary>Local file id of the object within its output Content File (the one identified by the
+        /// <see cref="SerializedFile"/> index).</summary>
+        public long OutputLFID;
     }
 
     /// <summary>
@@ -168,7 +172,8 @@ namespace UnityDataTools.Models
     public class ContentLayout
     {
         /// <summary>The schema version this type represents.</summary>
-        public const int CurrentVersion = 1;
+        // v1 -> v2: added OutputLFID to LoadableObjectIds entries.
+        public const int CurrentVersion = 2;
 
         /// <summary>Schema version of the ContentLayout.json file.</summary>
         public int Version;

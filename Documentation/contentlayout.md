@@ -61,12 +61,13 @@ The file uses a few terms consistently:
 
 The schema is subject to change. The `Version` field records the schema version of the file, independently of the Unity version that produced it. When the schema changes, the version number increments.
 
-[`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs) always represents the latest schema version (currently version 1).
+[`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs) always represents the latest schema version (currently version 2).
 
 ## Related documentation
 
 | Topic | Description |
 |-------|-------------|
+| [Content Directory Format](contentdirectory-format.md) | Content directory builds and inspecting them with UnityDataTool. |
 | [Build report and build history](https://docs.unity3d.com/6000.6/Documentation/Manual/build-reporting.html) | The build report directory and the files in it (Unity Manual). |
 | [BuildReport Support](buildreport.md) | Analyzing Unity build report files with UnityDataTool. |
 | [Unity Content Format](unity-content-format.md) | SerializedFiles, Unity Archives, and how build output maps back to source assets. |
