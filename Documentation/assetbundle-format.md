@@ -44,7 +44,9 @@ understand them for normal use, but they show up throughout UnityDataTool output
 
 AssetBundle dependencies exist at two related but different levels:
 
-- The AssetBundle object records bundle-level dependencies by name in `m_Dependencies`.
+- The AssetBundle object records bundle-level dependencies in `m_Dependencies`: as AssetBundle
+  names for `BuildPipeline.BuildAssetBundles`, or as internal SerializedFile names for Scriptable
+  Build Pipeline / Addressables builds.
 - Serialized objects record object-level references as `PPtr`s, which point to a file and a local
   object id.
 
@@ -60,15 +62,22 @@ A `PPtr` has two important fields:
 - `m_PathID` - the target object's local object id inside the resolved SerializedFile.
 
 This means that two different bundles can have different filenames while still referencing each
-other through the SerializedFiles mounted from those bundles. The AssetBundle object's
-`m_Dependencies` list tells Unity which other bundles must be loaded so those external
-SerializedFiles are available. The object references then point into those files by `m_FileID` and
-`m_PathID`.
+other through the SerializedFiles mounted from those bundles. The application is still responsible
+for loading dependency bundles. With `BuildPipeline.BuildAssetBundles`, the `AssetBundleManifest`
+tells the application which bundles to load; with Addressables, the Addressables catalog does that
+job. Unity's runtime does not auto-load bundles from `m_Dependencies`.
+
+At runtime, `m_Dependencies` is used only in narrower lookup paths, such as searching already-loaded
+dependency bundles for preload objects. If a named dependency bundle is not loaded, Unity skips it
+rather than loading it automatically. Once the needed SerializedFiles are mounted, object references
+point into those files by `m_FileID` and `m_PathID`.
 
 For example, if an object in `characters.bundle` references a material in `materials.bundle`, the
-object's `PPtr` does not usually contain the string `materials.bundle`. The source SerializedFile
-contains an external reference entry that identifies the target SerializedFile, and the AssetBundle
-object records `materials.bundle` as a bundle dependency so Unity knows which archive to mount.
+object's `PPtr` does not contain the string `materials.bundle`. The source SerializedFile contains
+an external reference entry that identifies the target SerializedFile by its internal path, for
+example `archive:/CAB-<hash>/CAB-<hash>`. The dependency relationship in `m_Dependencies` helps
+Unity search among already-loaded dependency bundles for preload objects, but the application still
+uses the AssetBundleManifest or Addressables catalog to decide which archive files to load.
 
 In UnityDataTool output, these layers appear in different places:
 
@@ -105,7 +114,9 @@ exposes and what each of them needs preloaded. Its important fields are:
   `preloadIndex`/`preloadSize` range describing that asset's dependencies (see below).
 - `m_PreloadTable` - a flat list of `PPtr`s. Each container entry references a contiguous slice of
   this list.
-- `m_Dependencies` - the names of other bundles this bundle depends on.
+- `m_Dependencies` - the other bundles or internal SerializedFiles this bundle depends on, stored
+  as AssetBundle names for `BuildPipeline.BuildAssetBundles` or as internal SerializedFile names
+  for Scriptable Build Pipeline / Addressables builds.
 - `m_IsStreamedSceneAssetBundle` - true for scene bundles.
 - `m_SceneHashes` - for scene bundles, a map from each scene path to the SerializedFile that holds
   it (populated by SBP/Addressables only; see [Scenes in AssetBundles](#scenes-in-assetbundles)).
