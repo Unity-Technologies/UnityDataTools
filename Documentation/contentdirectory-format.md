@@ -28,6 +28,99 @@ internal file layout for typical usage — defining what to build, running build
 at runtime. This page goes into that detail to help interpret UnityDataTool output in the cases where a
 closer look is useful.
 
+> [!IMPORTANT]
+> The details of what is *inside* a content directory are subject to change. The stable, supported
+> surface is the build and load API and the observable loading behavior. The on-disk data
+> representation described here continues to be optimized for size, performance, and incremental-build
+> efficiency, so treat the specifics below as informational — do not build tooling that hard-codes
+> them.
+
+## Content Files
+
+The SerializedFiles in a content directory are referred to as **Content Files**. They use the same
+underlying SerializedFile format as Player builds and AssetBundles — UnityDataTool reads them the same
+way — but follow different conventions for naming and for how references between files are recorded.
+Content Files were introduced for building subscenes with the Entities package, and content
+directories build on the same mechanism.
+
+There is a low-level public API for Content Files
+([`Unity.Loading.ContentFile`](https://docs.unity3d.com/ScriptReference/Unity.Loading.ContentFile.html)),
+but the content directory loading API encapsulates it and is the recommended way to access content at
+runtime.
+
+## File naming
+
+Every build artifact is named by the hash of its own content:
+
+- **Content Files** use the `.cf` extension (for example `a77f98db89b6aa1aeaaad01d857e5115.cf`).
+- **`.resS`** files hold streamed texture and mesh data.
+- **`.resource`** files hold audio and video data.
+
+Because the name is a hash of the content, two artifacts with identical content collapse to the same
+file — this is how the pipeline de-duplicates shared content automatically. The `.resS` and
+`.resource` data files are granular in the same way as Content Files: a single texture, mesh, or audio
+clip per file, each named by its content hash.
+
+A Unity object references data inside a `.resS`/`.resource` file by a content-addressable path of the
+form `cah:/<hash>` (a single slash; `cah` stands for "content-addressable hash"). For example an
+AudioClip's `m_Source` is a string like `cah:/4226b5c16a50dab6eff0f08dd1253d4b`, which resolves to the
+`.resource` file of that hash.
+
+The extensions are informational. The loading system identifies content by its hash (through the
+`cah:/` scheme), not by file extension, so the extension is not required to resolve content. Extensions
+are present both for loose files and for entries packed inside an archive.
+
+### The build manifest
+
+The build manifest is a JSON file, also named by its content hash (for example
+`15d5df98d98434e67e06716cfabfad1b.json`). It records everything needed to load the content: the list of
+Content Files, their dependencies, and the loadable objects and scenes. Its schema is internal and may
+change substantially, so this page does not document it. Instead, use
+[`ContentLayout.json`](contentlayout.md), which presents the same information (plus source-asset
+mapping) in a stable, tool-friendly form.
+
+A small `BuildManifestHash.txt` file records the hash of the manifest, so a tool can find the current
+manifest by reading that pointer. When the build is packed into an archive, `BuildManifestHash.txt`
+sits outside the archive while the manifest itself is inside it.
+
+### Archives
+
+When the content is packed rather than written loose, it goes into a Unity Archive named
+`content0.archive`. The loader will mount additional archives if they are present, provided they follow
+sequential names — `content1.archive`, `content2.archive`, and so on — stopping at the first gap.
+`BuildPipeline.BuildContentDirectory()` itself only emits the single `content0.archive` containing all
+the content. The Addressables package, however, supports splitting the output into multiple archives
+based on a maximum-size heuristic. Custom tooling could also perform a loose build and then package the
+content into one or more archives as a post-processing "packaging" step, using
+[`ContentBuildInterface.ArchiveAndCompress`](https://docs.unity3d.com/ScriptReference/Build.Content.ContentBuildInterface.ArchiveAndCompress.html).
+
+Once all the archives are mounted, references between Content Files, and from Content Files to the
+`.resS`/`.resource` data files, resolve through the `cah:/` scheme exactly as they do for loose files.
+Archives serve two purposes: reducing the file-system overhead of many loose files in a folder, and
+applying compression.
+
+## Build layout granularity
+
+The build layout is highly granular. Typically each source asset becomes its own Content File, and
+many files contain just a single Unity object (a Material, Shader, Texture, AudioClip, and so on). A
+few grouping rules shape the result:
+
+- **Scenes and Prefabs** store their whole GameObject/Component hierarchy together in a single Content
+  File, just as they are represented in the Editor.
+- **Assets with sub-assets** are split across multiple Content Files. For example an FBX is separated
+  so that the component hierarchy and the meshes land in different files.
+- **Scripts** are grouped: the `MonoScript` objects for several source scripts can share one Content
+  File.
+- **Circular direct references are best avoided.** Currently a cycle forces all the affected Unity
+  objects to be clustered together into a single Content File, and the build prints a warning. The way
+  to break a cycle is to convert one of the references into a `Loadable` (an on-demand reference)
+  instead of a direct reference.
+
+Built-in resources are handled specially. The manifest carries an entry for `unity default resources`
+flagged as built-in (with no content hash); references to it resolve through the runtime's built-in
+resource mechanism and the `PersistentManager`, rather than through the `ContentLoadManager` that
+manages Content Files.
+
 ## Build history
 
 Every Player and content directory build in Unity 6.6 and later records a **build history** — a set
@@ -51,6 +144,89 @@ Two files in the build history are directly relevant here:
   build session GUID (rather than the fixed `LastBuild.buildreport` name), so reports from multiple
   builds can sit side by side and be analyzed together. See [BuildReport Support](buildreport.md).
 
+## References between Content Files
+
+References between Content Files work differently from AssetBundles or Player builds, so they are worth
+a closer look. In a content directory the reference information is stored **externally to the Content
+File**, in the manifest, rather than in the file's own external-reference table. The manifest data is
+reproduced in [`ContentLayout.json`](contentlayout.md), which is what the examples below use.
+
+Consider `ContentDirectoryRoot.asset`, which directly references several ScriptableObjects. Its entry
+in `ContentLayout.json` names the source asset, the file's own content hash, and — crucially — an
+ordered list of the files it depends on:
+
+```json
+{
+  "Index": 3,
+  "ID": "52b43dad178849b42ac753005736e7bb.cfid",
+  "SourceAssets": [ "Assets/ScriptableObjects/ContentDirectoryRoot.asset" ],
+  "SerializedFileDependencies": [ 4, 2, 6, 7 ],
+  "ContentHash": "a77f98db89b6aa1aeaaad01d857e5115"
+}
+```
+
+The `ContentHash` tells us this asset lives in `a77f98db89b6aa1aeaaad01d857e5115.cf`. Dumping that file
+shows the object's references and the file's external-reference table:
+
+```
+UnityDataTool dump --stdout a77f98db89b6aa1aeaaad01d857e5115.cf
+```
+```
+External References
+path(1): "a2a42d71dddef12e8889849faf59bdd7.cfid" GUID: 00000000000000000000000000000000 Type: 0
+path(2): "4038ff673d390134d924b57fcbed0432.cfid" GUID: 00000000000000000000000000000000 Type: 0
+path(3): "21679be819d6e9146a63bb02a7e51f2f.cfid" GUID: 00000000000000000000000000000000 Type: 0
+path(4): "78532141fd7679a458405eb16bdb75fd.cfid" GUID: 00000000000000000000000000000000 Type: 0
+
+ID: -775554941117088049 (ClassID: 114) MonoBehaviour
+  ...
+      data[1] (SerializedKeyValue`2)
+        key (string) SingleAudioClipLoadableReference
+        value (PPtr<$ScriptableObject>)
+          m_FileID (int) 3
+          m_PathID (SInt64) -2313013086301746513
+```
+
+The external table lists symbolic names ending in `.cfid`, **not** the content-hash filenames.
+These `.cfid` strings are placeholders and never exist as files on disk. This is intentional: if the
+referencing file embedded the target's content hash, then a single property change could cascade — the
+change would alter the target's hash, which would alter every file that referenced it, and so on up
+through the build. A key goal of the content directory design is to reduce the amount of content
+"churn" when doing updates, so references between Content Files now use an extra level of abstraction.
+
+Because of that, the content of the external table is effectively ignored by the loading system for
+Content File references. What counts is the ordered dependency list in the manifest. The
+`"SerializedFileDependencies": [4, 2, 6, 7]` array corresponds, in exact size and order, to the four
+entries of the external table.
+
+So resolving the reference to `SingleAudioClipLoadableReference` above:
+
+1. The `PPtr` has `m_FileID` 3. A non-zero `m_FileID` is a 1-based index into the external table (0
+   would mean "this same file").
+2. Index 3 maps to the 3rd entry of `SerializedFileDependencies`, which is `6`.
+3. `ContentLayout.json` entry with `"Index": 6` is `SingleAudioClipLoadableReference.asset`, whose
+   `ContentHash` is `5c43454a3823f172a2a326410a36ba6b`.
+4. The referenced file is therefore `5c43454a3823f172a2a326410a36ba6b.cf`.
+
+The full mapping for this file, showing how each `m_FileID` in the external table resolves through the
+dependency list `[4, 2, 6, 7]` to a content-hash filename:
+
+```mermaid
+flowchart TD
+    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file a77f98db….cf<br/>deps [4, 2, 6, 7]"]
+    Loadable["<b>LoadableAudioClipReference</b><br/>Index 2 · cfid 4038ff67…<br/>file bfcf18a2….cf"]
+    Single["<b>SingleAudioClipLoadableReference</b><br/>Index 6 · cfid 21679be8…<br/>file 5c43454a….cf"]
+
+    Root -->|"m_FileID 2 → dep 2 → Index 2"| Loadable
+    Root -->|"m_FileID 3 → dep 6 → Index 6"| Single
+```
+
+> [!NOTE]
+> The external table's GUID column is all zeros for Content File references (as above). It is used only
+> for built-in resource references, which resolve through the runtime's built-in resource mechanism
+> instead of the manifest dependency list. The GUIDs in the external table are also used for binary
+> SerializedFiles in the Editor (for example in AssetDatabase artifacts).
+
 ## Inspecting content directory output with UnityDataTool
 
 When you run [`analyze`](command-analyze.md) on a content directory build, analyze the **build output
@@ -66,8 +242,10 @@ in the build history adds the source-asset mapping (the PackedAssets data), so a
 together gives a database that ties each built object back to its source asset. See
 [BuildReport Support](buildreport.md) for how the build report data is stored and queried.
 
-Currently the references between objects are not recorded properly for a content directory build.
-This will be fixed using the information from the `ContentLayout.json` file.
+Currently the references between objects are not recorded properly for a content directory build,
+because those references live in the manifest rather than in the Content Files themselves (see
+[References between Content Files](#references-between-content-files) above). This will be resolved
+using the information from the `ContentLayout.json` file.
 
 ## Related documentation
 
