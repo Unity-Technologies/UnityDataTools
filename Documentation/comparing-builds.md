@@ -29,7 +29,7 @@ When comparing builds there may be a huge number of individual differences.  The
 
 ## AssetBundles and Player Builds
 
-This topic focuses on AssetBundles, because most questions about changes in a build come up around AssetBundles.  However the same techniques can also be used to analyze player builds (so long as the player is built with [TypeTrees enabled](./unity-content-format.md#enabling-typetrees-in-the-player)).
+This topic focuses on AssetBundles, because most questions about changes in a build come up around AssetBundles.  However the same techniques can also be used to analyze player builds (so long as the player is built with [TypeTrees enabled](./playerbuild-format.md#typetrees-in-the-player)).
 
 # Example 1 - Changes to serialized values in an Addressables build
 

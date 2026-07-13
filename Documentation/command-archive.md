@@ -1,6 +1,6 @@
 # archive Command
 
-The `archive` command provides utilities for working with [Unity Archives](unity-content-format.md#unity-archive) — container files used for AssetBundles and web platform `.data` files. Archives hold one or more files (typically SerializedFiles) and may apply compression to the content.
+The `archive` command provides utilities for working with [Unity Archives](unity-content-format.md#unity-archive) — container files used for AssetBundles, compressed Player builds (`data.unity3d`), and web platform `.data` files. Archives hold one or more files (typically SerializedFiles) and may apply compression to the content. See [Player Build Format](playerbuild-format.md) for how these containers are used in Player builds.
 
 To inspect the serialized objects *inside* an archive, use the [`dump`](command-dump.md#archive-support) command, which can open archives directly without extracting first.
 

@@ -22,6 +22,7 @@ New to Unity's data files or to UnityDataTool? These topics are a good place to 
 | --- | --- |
 | [Overview of Unity Content](./Documentation/unity-content-format.md) | The core file types (SerializedFiles and Unity Archives), TypeTrees, and how Player and AssetBundle builds are laid out. |
 | [AssetBundle Format](./Documentation/assetbundle-format.md) | A hands-on look inside AssetBundles: the AssetBundle object, preload tables, and how scenes are stored. |
+| [Player Build Format](./Documentation/playerbuild-format.md) | The Player build layout, compression, built-in resource files, and tips for inspecting Player content (including Android and Web). |
 | [ContentLayout.json](./Documentation/contentlayout.md) | The build layout file that maps content-directory build output back to source assets. |
 
 **Using UnityDataTool**

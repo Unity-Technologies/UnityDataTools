@@ -30,42 +30,19 @@ For a more technical, hands-on look at the internals of AssetBundles - the Asset
 
 ## Player Builds
 
-A player build produces content as well as compiled code (assemblies, executables) and various configuration files.  UnityDataTool only concerns itself with the content portion of that output.
+A Player build produces content alongside compiled code (assemblies, executables) and various configuration files.  UnityDataTool only concerns itself with the content portion of that output.
 
-The content comprises the scenes in the Scene List, the contents of Resources folders, content from the Project Preferences (the "GlobalGameManagers"), and all Assets referenced from those root inputs.  This translates into SerializedFiles in the build output.
+That content is made up of the same SerializedFiles and Unity Archives described above.  In brief:
 
-The SerializedFiles are named in a predictable way.  This is a very quick summary: 
+* Each scene in the Scene List becomes a `level` file (`level0`, `level1`, …).
+* Assets referenced from scenes are written to `sharedassets` files (`sharedassets0.assets`, …).
+* The contents of `Resources` folders become `resources.assets`.
+* Global project settings become `globalgamemanagers`, with their referenced assets in `globalgamemanagers.assets`.
+* With compression enabled, all of these are packed into a single Unity Archive named `data.unity3d`.
 
-* Each scene in the SceneList becomes a "level" file, e.g. "level0", "level1".
-* Assets referenced from Scenes becomes "sharedAssets" files, e.g. "sharedAssets0.assets", "sharedAssets1.assets".  Scenes are processed in order of the scene list and assets are stored in the sharedasset file corresponding to the scene where they are first encountered.  This means that a level file may reference multiple sharedasset files, but only the ones at the same number and lower.  For example the 3rd scene, level2 can reference "sharedAssets2.assets", "sharedAssets1.assets" and "sharedAssets0.assets" but never "sharedAssets3.assets".
-* The contents of the Resources folder becomes "resources.assets".
-* The Preferences become "globalgamemanager".  Assets referenced from "globalgamemanager" are saved in "globalgamemanager.assets".
+By default Player builds omit TypeTrees, which limits what `analyze` and `dump` can do with them unless you rebuild with TypeTrees enabled (see [TypeTrees](#typetrees) below).
 
-If [compression](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/BuildOptions.CompressWithLz4HC.html) is enabled, the Player build will compress all the serialized files into a single Unity Archive file, called `data.unity3d`.
-
-For further details refer to the Unity Manual topic: [Content output of a build](https://docs.unity3d.com/Manual/build-content-output.html).
-
-### Enabling TypeTrees in the Player
-
-UnityDataTools supports Player build output, because that uses the same SerializedFiles and Archives that AssetBundles use.  But often its output is not very useful. That is because, by default, Player builds do not include TypeTrees.
-
->[!IMPORTANT]
->It is possible to generate TypeTrees for the Player data, starting in Unity 2021.2.
->This makes that output compatible with UnityDataTool, but it is not a recommended flag to enable for your production builds.
-
-To do so, the **ForceAlwaysWriteTypeTrees** Diagnostic Switch must be enabled in the Editor Preferences (Diagnostics->Editor section).
-
-![](./TypeTreeForPlayer.png)
-
-
-Note: The `Resources\unity default resources` file is shipped with the Unity Editor and is not rebuilt when doing a Player Build.  It does not have TypeTrees.  Hence it is normal that this file emits errors when analyzing a player build, even after rebuilding with TypeTrees enabled.  For example:
-
-```
-Error processing file: C:\TestProject\CompressedPlayer\TestProject_Data\Resources\unity default resources
-System.ArgumentException: Invalid object id.
-```
-
-For more information about TypeTrees see the following section.
+For a hands-on look at the Player build layout, the built-in resource files, compression, and how to inspect Player content (including platform-specific containers on Android and Web) with UnityDataTool, see [Player Build Format](playerbuild-format.md).  For Unity's official reference, see the Manual topic [Content output of a build](https://docs.unity3d.com/Manual/build-content-output.html).
 
 ## TypeTrees
 
@@ -106,16 +83,6 @@ Starting with Unity 6.5 and Addressables 2.9 it is possible to extract the TypeT
 For details see [Addressable AssetBundle memory considerations](https://docs.unity3d.com/Packages/com.unity.addressables@2.9/manual/memory-assetbundles.html)
 
 UnityDataTools commands that open serialized files using the UnityFileSystem API require access to the TypeTrees.  For example `dump` and `analyze`.  Use the `--typetree-data` option to specify the `.typetreedata` file when examining a build that has extracted TypeTrees.
-
-### Platform details for using UnityDataTool with Player Data
-
-The output structure and file formats for a Unity Player build are quite platform specific.
-
-On some platforms the content is packaged into platform-specific container files, for example Android builds use .apk and .obb files.  So accessing the actual SerializedFiles may involve mounting or extracting the content of those files, and possibly also opening a data.unity3d file inside them.
-
-UnityDataTools directly supports opening the `.data` container file format used in Player builds that target Web platforms (e.g. WebGL).  Specifically the [`archive list`](command-archive.md#list) and [`archive extract`](command-archive.md#extract) commands work with that format.  Once extracted, you can run other UnityDataTool commands on the output.
-
-Android APK files are not difficult to open and expand using freely available utilities.  For example on Windows they can be opened using 7-zip.  Once the content is extracted you can run UnityDataTool commands on the output.
 
 ## Mapping back to Source Assets
 
