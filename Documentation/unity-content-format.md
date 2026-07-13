@@ -6,7 +6,7 @@ This section gives an overview of the core Unity file types and how they are use
 
 ### SerializedFile
 
-A SerializedFile is Unity's binary file format for serializing objects.  It is made up of a file header, then each object serialized one after another.  This binary format is also available in the Editor, but typically Editor content uses the Unity YAML format instead.
+A SerializedFile is Unity's binary file format for serializing objects.  It is made up of a file header, then each object serialized one after another.  This binary format is the primary format loaded by the runtime, so when content is built for the Player this is the format that is produced.  The binary format is also available in the Editor, but typically user-visible project content uses the Unity YAML format instead of the binary format because the YAML format is more friendly for manual edits and source control operations.
 
 The SerializedFiles in build output represent the project content, but optimized for the target platform.  Unity will combine objects from multiple source assets together into files, exclude certain objects (for example editor-only objects), and potentially split or duplicate objects across multiple output files.  This arrangement of objects is called the `build layout`.  Because of all this transformation, there is not a one-to-one mapping between the source assets and the SerializedFiles in the build output.
 
@@ -43,6 +43,8 @@ The SerializedFiles are named in a predictable way.  This is a very quick summar
 
 If [compression](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/BuildOptions.CompressWithLz4HC.html) is enabled, the Player build will compress all the serialized files into a single Unity Archive file, called `data.unity3d`.
 
+For further details refer to the Unity Manual topic: [Content output of a build](https://docs.unity3d.com/Manual/build-content-output.html).
+
 ### Enabling TypeTrees in the Player
 
 UnityDataTools supports Player build output, because that uses the same SerializedFiles and Archives that AssetBundles use.  But often its output is not very useful. That is because, by default, Player builds do not include TypeTrees.
@@ -68,11 +70,13 @@ For more information about TypeTrees see the following section.
 ## TypeTrees
 
 The TypeTree is a data structure describing how objects have been serialized, i.e. the name, type, and
-size of their properties. It is used by Unity when loading a SerializedFile that was built by a
-different Unity version.  When Unity deserializes an object it checks whether the current type
+size of their properties. It is used by Unity when loading objects out of a SerializedFile that was built by a
+different version of the Unity editor, or from different serialization layout for MonoBehaviours and ScriptableObjects in a project.
+
+When Unity deserializes an object it checks whether the current type
 definition exactly matches the type definition used when the object was serialized.  If they do not match,
 Unity will attempt to match up the properties as best it can, based on the property names and structure
-of the data.  This process is called a "Safe Binary Read" and is somewhat slower than the regular fast binary read path.
+of the data.  This process is called a "Safe Binary Read".   This is significantly slower than the regular fast binary read path.
 
 TypeTrees are important in the case of AssetBundles, to avoid rebuilding and redistributing all AssetBundles after each minor upgrade of Unity or after doing minor changes to your MonoBehaviour and ScriptableObject serialization.  However there can be a noticeable overhead to storing the TypeTrees in each AssetBundle, e.g. the header size of each SerializedFile is bigger.
 
@@ -84,11 +88,13 @@ TypeTrees also make it possible to load an AssetBundle in the Editor, when testi
 For Player Data the expectation is that you always rebuild all content together with each new build of the player.
 So the assemblies and serialized objects will all have matching type definitions.  That is why, by default, TypeTrees are not included.
 
-UnityDataTools relies on TypeTrees to understand the content of serialized objects.  This approach means it does
+UnityDataTools relies on TypeTrees to understand the content of serialized objects for the `analyze` and `dump` command.  This approach means it does
 not need to hard-code knowledge about the types and properties of each built-in Unity type
 (for example Materials and Transforms).  It can also interpret serialized C# classes (e.g. MonoBehaviours, ScriptableObjects,
 and objects serialized through the SerializeReference attribute).  This also means that UnityDataTools cannot understand
-Player-built content unless the Player was built with TypeTrees enabled.
+Player-built content, unless the Player was built with TypeTrees enabled.
+
+Note: the `serialized-file` and `archive` command do not require TypeTrees.
 
 >[!TIP]
 >The `binary2text` tool supports an optional argument `-typeinfo` to enable dumping out the TypeTrees in a SerializedFile header.  That is a useful way to learn more about TypeTrees and to see exactly how Unity data is represented in the binary format.
