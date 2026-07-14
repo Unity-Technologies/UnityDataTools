@@ -116,10 +116,17 @@ few grouping rules shape the result:
   to break a cycle is to convert one of the references into a `Loadable` (an on-demand reference)
   instead of a direct reference.
 
-Built-in resources are handled specially. The manifest carries an entry for `unity default resources`
-flagged as built-in (with no content hash); references to it resolve through the runtime's built-in
-resource mechanism and the `PersistentManager`, rather than through the `ContentLoadManager` that
-manages Content Files.
+Unity's two built-in resource files are handled in different ways:
+
+- **`unity default resources`** is referenced but not included in the build, because those resources
+  are always present in the Player that loads the content directory. The manifest carries an entry
+  for it flagged as built-in (with no content hash); references to it resolve through the runtime's
+  built-in resource mechanism and the `PersistentManager`, rather than through the
+  `ContentLoadManager` that manages Content Files.
+- **`Resources/unity_builtin_extra`** gets no such special treatment: any referenced objects from it
+  (for example the default sprite material and its shader) are included directly in the content
+  directory output, in a Content File named by its content hash just like any other file in the
+  build.
 
 ## Scenes
 
@@ -165,8 +172,8 @@ The scene's own `SerializedFiles` entry names the scene as its single source ass
 ```
 
 So this scene lives in `c271b85494f5e4cc35c4ec4a776324af.cf`, and depends on three other files: the
-built-in resources entry, the Content File built from `Resources/unity_builtin_extra` (the default
-sprite material), and the file holding the Sprite it shows.
+built-in `unity default resources` entry, the Content File built from `Resources/unity_builtin_extra`
+(the default sprite material), and the file holding the Sprite it shows.
 
 A `LoadableSceneId` reference is an on-demand reference, like a `Loadable`: loading the referencing
 file does not load the scene. The file holding the reference records the scene by path in its
