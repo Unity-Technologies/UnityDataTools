@@ -86,9 +86,15 @@ public class AnalyzeDanglingRefsTests
     public async Task Analyze_FullAssetBundleSet_ResolvesCrossBundleReferences()
     {
         // Analyzing the whole set brings the dependency bundles in, so no reference dangles into an
-        // un-analyzed file. The only exception is references into Unity's built-in resource files
-        // (from the scene bundle: default materials, spot cookie), which are never part of a bundle
-        // set and always dangle.
+        // un-analyzed file. The only exceptions are the scene bundle's references into Unity's
+        // built-in resource files, which are never part of a bundle set:
+        // - 'unity default resources' (the RenderSettings spot cookie) ships complete with every
+        //   player, so these references always resolve at runtime.
+        // - 'unity_builtin_extra' (the Sprites/Default shader of the copied sprite material) is
+        //   generated per player build and contains only the GraphicsSettings "Always Included
+        //   Shaders", so a bundle's built-in shader reference resolves only if that list covers it
+        //   (Sprites/Default is in it by default). A real AssetBundle limitation, unlike content
+        //   directory builds, which copy the referenced unity_builtin_extra objects into the output.
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_AssetBundlesFolder, "-o", databasePath }));

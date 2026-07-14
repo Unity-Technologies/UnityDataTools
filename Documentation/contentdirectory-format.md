@@ -126,7 +126,9 @@ Unity's two built-in resource files are handled in different ways:
 - **`Resources/unity_builtin_extra`** gets no such special treatment: any referenced objects from it
   (for example the default sprite material and its shader) are included directly in the content
   directory output, in a Content File named by its content hash just like any other file in the
-  build.
+  build. This is because the `unity_builtin_extra` file in a Player is generated per build and
+  contains only the project's "Always Included Shaders" — copying the referenced objects into the
+  content directory makes it independent of what a particular Player build happens to contain.
 
 ## Scenes
 
