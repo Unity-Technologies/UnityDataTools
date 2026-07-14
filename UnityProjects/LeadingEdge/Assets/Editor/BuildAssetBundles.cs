@@ -6,7 +6,8 @@ using UnityEngine;
 // Builds AssetBundles directly into the checked-in reference data under TestCommon. Every asset gets its own bundle
 // (named after its filename): the AssetBundleRoot, both DirectAudioClipReference assets, and each mp3 in
 // Assets/Audio. This highly granular layout ensures no asset is duplicated across bundles - shared assets
-// (e.g. a.mp3) live in a single bundle that the others depend on. The build report is copied alongside the output.
+// (e.g. a.mp3) live in a single bundle that the others depend on. A scene bundle holds the two scenes (AssetBundles
+// require scenes and assets in separate bundles). The build report is copied alongside the output.
 public static class BuildAssetBundles
 {
     const string AudioFolder = "Assets/Audio";
@@ -49,6 +50,12 @@ public static class BuildAssetBundles
                 assetNames = new[] { path }
             });
         }
+
+        bundles.Add(new AssetBundleBuild
+        {
+            assetBundleName = "scenes",
+            assetNames = GenerateAssets.ScenePaths
+        });
 
         var parameters = new BuildAssetBundlesParameters
         {

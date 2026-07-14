@@ -12,7 +12,8 @@ namespace UnityDataTools.UnityDataTool.Tests;
 // not part of the analyzed input get recorded instead of leaving unexplained gaps in the object id
 // space. Uses the LeadingEdge AssetBundles fixture, where assetbundleroot.manifest declares
 // dependencies on three other bundles, so analyzing assetbundleroot alone leaves cross-bundle
-// references dangling; analyzing the whole set resolves them.
+// references dangling; analyzing the whole set resolves everything except references into Unity's
+// built-in resource files, which are never part of a bundle set.
 public class AnalyzeDanglingRefsTests
 {
     private string m_TestOutputFolder;
@@ -85,14 +86,25 @@ public class AnalyzeDanglingRefsTests
     public async Task Analyze_FullAssetBundleSet_ResolvesCrossBundleReferences()
     {
         // Analyzing the whole set brings the dependency bundles in, so no reference dangles into an
-        // un-analyzed file: dangling_refs_view (which joins refs) is empty.
+        // un-analyzed file. The only exceptions are the scene bundle's references into Unity's
+        // built-in resource files, which are never part of a bundle set:
+        // - 'unity default resources' (the RenderSettings spot cookie) ships complete with every
+        //   player, so these references always resolve at runtime.
+        // - 'unity_builtin_extra' (the Sprites/Default shader of the copied sprite material): the
+        //   build copies built-in objects into bundles like user assets, except shaders in the
+        //   GraphicsSettings "Always Included Shaders" list, which are referenced externally and
+        //   resolved against the player's unity_builtin_extra (which holds exactly those shaders).
+        //   Such references break if the player is built with a different list. Content directory
+        //   builds copy all referenced unity_builtin_extra objects into the output instead.
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_AssetBundlesFolder, "-o", databasePath }));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM dangling_refs_view", 0,
-            "analyzing the full set should resolve every cross-bundle reference");
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM dangling_refs_view
+              WHERE target_serialized_file NOT IN ('unity_builtin_extra', 'unity default resources')",
+            0, "analyzing the full set should resolve every cross-bundle reference except built-ins");
 
         AssertReferencesFullyAccounted(db);
     }

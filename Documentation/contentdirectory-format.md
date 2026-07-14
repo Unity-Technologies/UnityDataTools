@@ -52,7 +52,7 @@ runtime.
 
 Every build artifact is named by the hash of its own content:
 
-- **Content Files** use the `.cf` extension (for example `a77f98db89b6aa1aeaaad01d857e5115.cf`).
+- **Content Files** use the `.cf` extension (for example `c0152db4dd710be51b2decb997325f34.cf`).
 - **`.resS`** files hold streamed texture and mesh data.
 - **`.resource`** files hold audio and video data.
 
@@ -73,7 +73,7 @@ are present both for loose files and for entries packed inside an archive.
 ### The build manifest
 
 The build manifest is a JSON file, also named by its content hash (for example
-`15d5df98d98434e67e06716cfabfad1b.json`). It records everything needed to load the content: the list of
+`baff06b928d147276f2245dd3b19216a.json`). It records everything needed to load the content: the list of
 Content Files, their dependencies, and the loadable objects and scenes. Its schema is internal and may
 change substantially, so this page does not document it. Instead, use
 [`ContentLayout.json`](contentlayout.md), which presents the same information (plus source-asset
@@ -106,7 +106,7 @@ many files contain just a single Unity object (a Material, Shader, Texture, Audi
 few grouping rules shape the result:
 
 - **Scenes and Prefabs** store their whole GameObject/Component hierarchy together in a single Content
-  File, just as they are represented in the Editor.
+  File, just as they are represented in the Editor (see [Scenes](#scenes) below).
 - **Assets with sub-assets** are split across multiple Content Files. For example an FBX is separated
   so that the component hierarchy and the meshes land in different files.
 - **Scripts** are grouped: the `MonoScript` objects for several source scripts can share one Content
@@ -116,10 +116,84 @@ few grouping rules shape the result:
   to break a cycle is to convert one of the references into a `Loadable` (an on-demand reference)
   instead of a direct reference.
 
-Built-in resources are handled specially. The manifest carries an entry for `unity default resources`
-flagged as built-in (with no content hash); references to it resolve through the runtime's built-in
-resource mechanism and the `PersistentManager`, rather than through the `ContentLoadManager` that
-manages Content Files.
+Unity's two built-in resource files are handled in different ways:
+
+- **`unity default resources`** is referenced but not included in the build, because those resources
+  are always present in the Player that loads the content directory. The manifest carries an entry
+  for it flagged as built-in (with no content hash); references to it resolve through the runtime's
+  built-in resource mechanism and the `PersistentManager`, rather than through the
+  `ContentLoadManager` that manages Content Files.
+- **`Resources/unity_builtin_extra`** gets no such special treatment: any referenced objects from it
+  (for example the default sprite material and its shader) are included directly in the content
+  directory output, in a Content File named by its content hash just like any other file in the
+  build. This is because the `unity_builtin_extra` file in a Player is generated per build and
+  contains only the project's "Always Included Shaders" — copying the referenced objects into the
+  content directory makes it independent of what a particular Player build happens to contain.
+
+## Scenes
+
+Content directory builds can include Unity Scenes. The build parameters only accept ScriptableObject
+assets as roots, so a scene enters the build by being referenced through a `LoadableSceneId` field (a
+small serializable struct identifying the scene) on an asset reachable from the roots. Every scene
+referenced this way is added to the output, along with the assets the scene itself references. At
+runtime, such a scene is loaded with `SceneManager.LoadSceneAsync(LoadableSceneId)` once the content
+directory is registered.
+
+Each scene produces exactly one Content File, containing only the scene's own GameObject/Component
+hierarchy and scene settings objects. The assets the scene references (textures, materials, and so
+on) are not packed with it — they land in their own Content Files following the normal
+[granularity rules](#build-layout-granularity), and the scene's file reaches them through the
+manifest dependency list. This differs from Player builds, where each scene comes with companion
+`sharedassets` files holding its assets. Scene Content Files also differ in their object IDs: the
+scene's objects get small sequential IDs (1, 2, 3, ...), rather than the 64-bit hash-based IDs used
+in other Content Files.
+
+In `ContentLayout.json` (schema details on the [ContentLayout.json](contentlayout.md) page), the
+top-level `LoadableSceneIds` array lists each scene with its source path and the Content File that
+holds it. From the reference build in `TestCommon/Data/LeadingEdgeBuilds`, which includes two small
+scenes:
+
+```json
+"LoadableSceneIds": [
+  { "GUID": "590cfeb4e0ff90f4e92f9e1262bcfe6f", "Path": "Assets/Scenes/Scene2.unity", "SerializedFile": 6 },
+  { "GUID": "162c015549f8733449ac70ae78ad3aa5", "Path": "Assets/Scenes/Scene1.unity", "SerializedFile": 2 }
+]
+```
+
+The scene's own `SerializedFiles` entry names the scene as its single source asset, and its symbolic
+`ID` is derived from the scene's GUID:
+
+```json
+{
+  "Index": 2,
+  "ID": "162c015549f8733449ac70ae78ad3aa5.cfid",
+  "SourceAssets": [ "Assets/Scenes/Scene1.unity" ],
+  "SerializedFileDependencies": [ 0, 1, 9 ],
+  "ContentHash": "c271b85494f5e4cc35c4ec4a776324af"
+}
+```
+
+So this scene lives in `c271b85494f5e4cc35c4ec4a776324af.cf`, and depends on three other files: the
+built-in `unity default resources` entry, the Content File built from `Resources/unity_builtin_extra`
+(the default sprite material), and the file holding the Sprite it shows.
+
+A `LoadableSceneId` reference is an on-demand reference, like a `Loadable`: loading the referencing
+file does not load the scene. The file holding the reference records the scene by path in its
+`LoadableSceneDependencies`, not in `SerializedFileDependencies`, and nothing appears in its
+external-reference table — the serialized `LoadableSceneId` field itself only holds the scene's
+GUID. The reference build's `SceneList` asset, a ScriptableObject with a dictionary of
+`LoadableSceneId` values, shows this:
+
+```json
+{
+  "Index": 7,
+  "ID": "70a210050f71a924aa83be7146547111.cfid",
+  "SourceAssets": [ "Assets/ScriptableObjects/SceneList.asset" ],
+  "SerializedFileDependencies": [ 8 ],
+  "LoadableSceneDependencies": [ "Assets/Scenes/Scene2.unity", "Assets/Scenes/Scene1.unity" ],
+  "ContentHash": "8ad4924ac5e264fde63d8e95a0dab8ab"
+}
+```
 
 ## Build history
 
@@ -157,19 +231,19 @@ ordered list of the files it depends on:
 
 ```json
 {
-  "Index": 3,
+  "Index": 5,
   "ID": "52b43dad178849b42ac753005736e7bb.cfid",
   "SourceAssets": [ "Assets/ScriptableObjects/ContentDirectoryRoot.asset" ],
-  "SerializedFileDependencies": [ 4, 2, 6, 7 ],
-  "ContentHash": "a77f98db89b6aa1aeaaad01d857e5115"
+  "SerializedFileDependencies": [ 8, 4, 11, 13, 7 ],
+  "ContentHash": "c0152db4dd710be51b2decb997325f34"
 }
 ```
 
-The `ContentHash` tells us this asset lives in `a77f98db89b6aa1aeaaad01d857e5115.cf`. Dumping that file
+The `ContentHash` tells us this asset lives in `c0152db4dd710be51b2decb997325f34.cf`. Dumping that file
 shows the object's references and the file's external-reference table:
 
 ```
-UnityDataTool dump --stdout a77f98db89b6aa1aeaaad01d857e5115.cf
+UnityDataTool dump --stdout c0152db4dd710be51b2decb997325f34.cf
 ```
 ```
 External References
@@ -177,6 +251,7 @@ path(1): "a2a42d71dddef12e8889849faf59bdd7.cfid" GUID: 0000000000000000000000000
 path(2): "4038ff673d390134d924b57fcbed0432.cfid" GUID: 00000000000000000000000000000000 Type: 0
 path(3): "21679be819d6e9146a63bb02a7e51f2f.cfid" GUID: 00000000000000000000000000000000 Type: 0
 path(4): "78532141fd7679a458405eb16bdb75fd.cfid" GUID: 00000000000000000000000000000000 Type: 0
+path(5): "70a210050f71a924aa83be7146547111.cfid" GUID: 00000000000000000000000000000000 Type: 0
 
 ID: -775554941117088049 (ClassID: 114) MonoBehaviour
   ...
@@ -196,29 +271,29 @@ through the build. A key goal of the content directory design is to reduce the a
 
 Because of that, the content of the external table is effectively ignored by the loading system for
 Content File references. What counts is the ordered dependency list in the manifest. The
-`"SerializedFileDependencies": [4, 2, 6, 7]` array corresponds, in exact size and order, to the four
-entries of the external table.
+`"SerializedFileDependencies": [8, 4, 11, 13, 7]` array corresponds, in exact size and order, to the
+five entries of the external table.
 
 So resolving the reference to `SingleAudioClipLoadableReference` above:
 
 1. The `PPtr` has `m_FileID` 3. A non-zero `m_FileID` is a 1-based index into the external table (0
    would mean "this same file").
-2. Index 3 maps to the 3rd entry of `SerializedFileDependencies`, which is `6`.
-3. `ContentLayout.json` entry with `"Index": 6` is `SingleAudioClipLoadableReference.asset`, whose
+2. Index 3 maps to the 3rd entry of `SerializedFileDependencies`, which is `11`.
+3. `ContentLayout.json` entry with `"Index": 11` is `SingleAudioClipLoadableReference.asset`, whose
    `ContentHash` is `5c43454a3823f172a2a326410a36ba6b`.
 4. The referenced file is therefore `5c43454a3823f172a2a326410a36ba6b.cf`.
 
-The full mapping for this file, showing how each `m_FileID` in the external table resolves through the
-dependency list `[4, 2, 6, 7]` to a content-hash filename:
+A partial mapping for this file, showing how `m_FileID` values in the external table resolve through
+the dependency list `[8, 4, 11, 13, 7]` to a content-hash filename:
 
 ```mermaid
 flowchart TD
-    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file a77f98db….cf<br/>deps [4, 2, 6, 7]"]
-    Loadable["<b>LoadableAudioClipReference</b><br/>Index 2 · cfid 4038ff67…<br/>file bfcf18a2….cf"]
-    Single["<b>SingleAudioClipLoadableReference</b><br/>Index 6 · cfid 21679be8…<br/>file 5c43454a….cf"]
+    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file c0152db4….cf<br/>deps [8, 4, 11, 13, 7]"]
+    Loadable["<b>LoadableAudioClipReference</b><br/>Index 4 · cfid 4038ff67…<br/>file bfcf18a2….cf"]
+    Single["<b>SingleAudioClipLoadableReference</b><br/>Index 11 · cfid 21679be8…<br/>file 5c43454a….cf"]
 
-    Root -->|"m_FileID 2 → dep 2 → Index 2"| Loadable
-    Root -->|"m_FileID 3 → dep 6 → Index 6"| Single
+    Root -->|"m_FileID 2 → dep 4 → Index 4"| Loadable
+    Root -->|"m_FileID 3 → dep 11 → Index 11"| Single
 ```
 
 > [!NOTE]

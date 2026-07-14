@@ -19,3 +19,5 @@ MonoBehaviour:
     value: {fileID: 11400000, guid: 21679be819d6e9146a63bb02a7e51f2f, type: 2}
   - key: SerializationDemo
     value: {fileID: 11400000, guid: 78532141fd7679a458405eb16bdb75fd, type: 2}
+  - key: SceneList
+    value: {fileID: 11400000, guid: 70a210050f71a924aa83be7146547111, type: 2}

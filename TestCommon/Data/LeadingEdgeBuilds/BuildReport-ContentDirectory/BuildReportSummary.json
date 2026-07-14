@@ -3,7 +3,7 @@
     "BuildContentOptions": [
         "CleanBuildCache"
     ],
-    "BuildManifestHash": "15d5df98d98434e67e06716cfabfad1b",
+    "BuildManifestHash": "baff06b928d147276f2245dd3b19216a",
     "BuildName": "ContentDirectory",
     "BuildOptions": [
         "None"
@@ -11,17 +11,17 @@
     "BuildProfilePath": "",
     "BuildResult": 1,
     "BuildResultName": "Succeeded",
-    "BuildSessionGUID": "ff7b7f370f4f65d4c870bf25d72893e7",
-    "BuildStartedAt": "2026-07-14T13:23:06.5007879Z",
+    "BuildSessionGUID": "f64157fb08bb9f645971d39c1203bd03",
+    "BuildStartedAt": "2026-07-14T18:37:14.2095142Z",
     "BuildType": 3,
     "BuildTypeName": "ContentDirectory",
-    "OutputPath": "C:/UnitySrc/UnityDataTools_Cursor/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/ContentDirectory",
+    "OutputPath": "C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/ContentDirectory",
     "Platform": 19,
     "PlatformName": "StandaloneWindows64",
     "Subtarget": 2,
     "SubtargetName": "Player",
     "TotalErrors": 0,
-    "TotalSizeBytes": 94903,
-    "TotalTimeMs": 4044,
-    "TotalWarnings": 0
+    "TotalSizeBytes": 980084,
+    "TotalTimeMs": 7515,
+    "TotalWarnings": 1
 }
