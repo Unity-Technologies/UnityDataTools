@@ -68,6 +68,13 @@ public class AssetBundleHandler : ISQLiteHandler
         {
             if (!assetBundle.IsSceneAssetBundle)
             {
+                // Editor-only container entries (e.g. ShaderSubGraph, .preset) can appear in
+                // m_Container with a null PPtr (m_FileID 0 and m_PathID 0) because they have no
+                // runtime object. Skip them: resolving the null PPtr would allocate a phantom
+                // (file, 0) object id and record a bogus dangling reference to it.
+                if (asset.PPtr.FileId == 0 && asset.PPtr.PathId == 0)
+                    continue;
+
                 var fileId = ctx.LocalToDbFileId[asset.PPtr.FileId];
                 var objId = ctx.ObjectIdProvider.GetId((fileId, asset.PPtr.PathId));
                 m_InsertCommand.Transaction = ctx.Transaction;
