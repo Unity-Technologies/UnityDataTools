@@ -12,7 +12,8 @@ namespace UnityDataTools.UnityDataTool.Tests;
 // not part of the analyzed input get recorded instead of leaving unexplained gaps in the object id
 // space. Uses the LeadingEdge AssetBundles fixture, where assetbundleroot.manifest declares
 // dependencies on three other bundles, so analyzing assetbundleroot alone leaves cross-bundle
-// references dangling; analyzing the whole set resolves them.
+// references dangling; analyzing the whole set resolves everything except references into Unity's
+// built-in resource files, which are never part of a bundle set.
 public class AnalyzeDanglingRefsTests
 {
     private string m_TestOutputFolder;
@@ -85,14 +86,18 @@ public class AnalyzeDanglingRefsTests
     public async Task Analyze_FullAssetBundleSet_ResolvesCrossBundleReferences()
     {
         // Analyzing the whole set brings the dependency bundles in, so no reference dangles into an
-        // un-analyzed file: dangling_refs_view (which joins refs) is empty.
+        // un-analyzed file. The only exception is references into Unity's built-in resource files
+        // (from the scene bundle: default materials, spot cookie), which are never part of a bundle
+        // set and always dangle.
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_AssetBundlesFolder, "-o", databasePath }));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM dangling_refs_view", 0,
-            "analyzing the full set should resolve every cross-bundle reference");
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM dangling_refs_view
+              WHERE target_serialized_file NOT IN ('unity_builtin_extra', 'unity default resources')",
+            0, "analyzing the full set should resolve every cross-bundle reference except built-ins");
 
         AssertReferencesFullyAccounted(db);
     }

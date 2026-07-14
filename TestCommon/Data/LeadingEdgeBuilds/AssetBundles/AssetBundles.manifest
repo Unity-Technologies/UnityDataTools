@@ -1,6 +1,6 @@
 ManifestFileVersion: 0
-UnityVersion: 6000.6.0b3
-CRC: 3235539447
+UnityVersion: 6000.6.0b5
+CRC: 3421127840
 HashAppended: 0
 AssetBundleManifest:
   AssetBundleInfos:
@@ -27,4 +27,7 @@ AssetBundleManifest:
       Dependencies: {}
     Info_5:
       Name: a
+      Dependencies: {}
+    Info_6:
+      Name: scenes
       Dependencies: {}
