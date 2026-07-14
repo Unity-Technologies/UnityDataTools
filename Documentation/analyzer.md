@@ -279,9 +279,8 @@ reference, with columns `source_id`, `source_serialized_file`, `source_object_id
 SELECT * FROM dangling_refs_view WHERE source_id = 42;
 ```
 
-Because the view joins `refs`, it is empty when analyze is run with `--skip-references`; in that mode
-the `dangling_refs` table is not populated either. A dangling target reached only through
-`preload_dependencies` or a `game_object` link (not a `refs` row) appears in the table but not the view.
+Because the view joins `refs`, it is not populated when analyze is run with `--skip-references`
+(in that mode neither `refs` nor `dangling_refs` are populated).
 
 ## BuildReport
 

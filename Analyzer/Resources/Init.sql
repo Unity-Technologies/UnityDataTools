@@ -108,10 +108,8 @@ INNER JOIN property_names pn ON r.property_path = pn.id
 INNER JOIN property_types pt ON r.property_type = pt.id;
 
 -- Resolves dangling_refs to the source object(s) that reference each missing target, one row per
--- (referencing object -> dangling target) reference. Because it joins refs, this view is empty
--- when analyze is run with --skip-references even though the dangling_refs table may be populated.
--- A dangling target only reached through preload_dependencies / game_object (not a refs row) is in
--- the table but not here.
+-- (referencing object -> dangling target) reference. Not populated when analyze is run with
+-- --skip-references (neither refs nor dangling_refs are populated in that mode).
 CREATE VIEW dangling_refs_view AS
 SELECT
     r.object AS source_id,

@@ -279,17 +279,22 @@ public class SerializedFileSQLiteWriter : IDisposable
                     name = randomAccessReader["m_Name"].GetValue<string>();
                 }
 
+                // Resolve m_GameObject to its analyzer object id for the game_object column, but only
+                // when the PPtr is non-null. A null PPtr (m_FileID 0 and m_PathID 0) is expected for
+                // any object that is not a component; resolving it would allocate a phantom id for a
+                // (file, 0) object that never exists and then surface as a bogus dangling ref.
+                object gameObject = "";
                 if (randomAccessReader.HasChild("m_GameObject"))
                 {
                     var pptr = randomAccessReader["m_GameObject"];
-                    var fileId = m_LocalToDbFileId[pptr["m_FileID"].GetValue<int>()];
-                    var gameObjectID = m_ObjectIdProvider.GetId((fileId, pptr["m_PathID"].GetValue<long>()));
-                    m_AddObjectCommand.SetValue("game_object", gameObjectID);
+                    var gameObjectFileId = pptr["m_FileID"].GetValue<int>();
+                    var gameObjectPathId = pptr["m_PathID"].GetValue<long>();
+                    if (gameObjectFileId != 0 || gameObjectPathId != 0)
+                    {
+                        gameObject = m_ObjectIdProvider.GetId((m_LocalToDbFileId[gameObjectFileId], gameObjectPathId));
+                    }
                 }
-                else
-                {
-                    m_AddObjectCommand.SetValue("game_object", "");
-                }
+                m_AddObjectCommand.SetValue("game_object", gameObject);
 
                 // The walk both extracts references and accumulates the CRC, so it is needed
                 // unless both are disabled. When CRC is on but references are off, the walk

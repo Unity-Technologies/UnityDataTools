@@ -132,6 +132,11 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         SQLTestHelper.AssertQueryInt(db,
             "SELECT COUNT(*) FROM dangling_refs d INNER JOIN objects o ON o.id = d.id",
             0, "an id must not be in both objects and dangling_refs");
+        // LFID 0 is never a real object; a dangling row with object_id 0 means a null PPtr (e.g. a
+        // null m_GameObject) was mistakenly resolved to a phantom (file, 0) id.
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM dangling_refs WHERE object_id = 0",
+            0, "dangling_refs should not contain phantom object_id 0 entries");
     }
 
     [Test]
