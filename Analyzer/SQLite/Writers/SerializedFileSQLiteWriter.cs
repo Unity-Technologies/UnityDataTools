@@ -367,7 +367,9 @@ public class SerializedFileSQLiteWriter : IDisposable
                 var (fileId, pathId) = entry.Key;
 
                 // Ensure the (un-analyzed) target file has a serialized_files row so the dangling
-                // ref can name it. archive is NULL: the file was referenced, not opened.
+                // ref can name it. We have to put null for archive - even if the target file is inside an AssetBundle
+                // or other archive file, because we simply don't have that information.  This is fundamental to
+                // how references work in Unity.
                 if (writtenFileIds.Add(fileId))
                 {
                     m_AddSerializedFileCommand.SetTransaction(transaction);
