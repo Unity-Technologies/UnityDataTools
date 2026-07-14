@@ -98,7 +98,8 @@ What the `object` is depends on the build:
   `sharedassetsN.assets`) plus one in `globalgamemanagers.assets` for the always-loaded set.
 
 The `dependency` side can reference an object that analyze never recorded, leaving a "dangling" id
-with no matching `objects` row. The most common case is objects in `unity default resources`, the
+with no matching `objects` row (such ids are catalogued in the `dangling_refs` table). The most
+common case is objects in `unity default resources`, the
 built-in resource file that ships with the Unity Editor without TypeTrees and so cannot be analyzed
 without a specially built copy. (`Resources/unity_builtin_extra` is built alongside your content and
 can be analyzed, but produces the same dangling references when it is not part of the analyzed set.)
@@ -250,6 +251,36 @@ SELECT * FROM refs_view WHERE property_type = 'MonoScript';
 ```
 
 These tables are not populated when analyze is run with `--skip-references`.
+
+## dangling_refs / dangling_refs_view
+
+When a reference points to an object whose serialized file was not part of the analyzed input,
+analyze still assigns that target an object id but never writes an `objects` row for it. `dangling_refs`
+records those targets so the reference information is preserved and every object id is accounted for
+(each id resolves to exactly one of `objects` or `dangling_refs`, never both). Common causes:
+
+* Analyzing a single AssetBundle or a partial subset of a bundle group, so cross-bundle references
+  point at bundles that were not analyzed.
+* A Player build referencing `unity default resources` (and `Resources/unity_builtin_extra` when it
+  is not part of the analyzed set) - built-in files that ship without TypeTrees and are not analyzed.
+* A ContentDirectory build analyzed without its `ContentLayout.json`, so references cannot be resolved.
+
+The columns mirror the `objects` table: `id` (the assigned object id, absent from `objects`),
+`object_id` (the target's local file id / LFID) and `serialized_file`. The target file is recorded in
+`serialized_files` (with `archive` NULL and no objects of its own) so its name is available; the
+lowercased file name is all that is known about it - there is no type, size, or other detail.
+
+`dangling_refs_view` joins each dangling target back to the object(s) that reference it, one row per
+reference, with columns `source_id`, `source_serialized_file`, `source_object_id`, `property_path`,
+`property_type`, `target_id`, `target_serialized_file`, `target_object_id`.
+
+```sql
+-- what does object 42 fail to resolve, and where should those objects have come from?
+SELECT * FROM dangling_refs_view WHERE source_id = 42;
+```
+
+Because the view joins `refs`, it is not populated when analyze is run with `--skip-references`
+(in that mode neither `refs` nor `dangling_refs` are populated).
 
 ## BuildReport
 

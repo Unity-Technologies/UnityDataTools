@@ -35,6 +35,12 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             m_Writer.Dispose();
         }
 
+        public void FinalizeDatabase()
+        {
+            // m_Writer is only Init'd once a file is actually parsed; nothing to finalize otherwise.
+            m_Writer.FinalizeDatabase();
+        }
+
         public void Init(SqliteConnection db)
         {
             m_Writer = new SerializedFileSQLiteWriter(db, SkipReferences, SkipCrc);

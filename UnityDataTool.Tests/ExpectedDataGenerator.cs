@@ -44,7 +44,7 @@ public static class ExpectedDataGenerator
                     (SELECT COUNT(*) FROM monoscripts),
                     (SELECT COUNT(*) FROM objects),
                     (SELECT COUNT(*) FROM refs),
-                    (SELECT COUNT(*) FROM serialized_files),
+                    (SELECT COUNT(*) FROM serialized_files WHERE id IN (SELECT serialized_file FROM objects)),
                     (SELECT COUNT(*) FROM shader_subprograms),
                     (SELECT COUNT(*) FROM shaders),
                     (SELECT COUNT(*) FROM shader_keywords),

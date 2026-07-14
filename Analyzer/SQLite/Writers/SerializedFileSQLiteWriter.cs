@@ -74,6 +74,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     private AddObject m_AddObjectCommand = new AddObject();
     private AddType m_AddTypeCommand = new AddType();
     private AddPreloadDependency m_InsertDepCommand = new AddPreloadDependency();
+    private AddDanglingRef m_AddDanglingRefCommand = new AddDanglingRef();
 
     private bool m_Initialized;
     private SqliteConnection m_Database;
@@ -112,6 +113,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddObjectCommand.CreateCommand(m_Database);
         m_AddTypeCommand.CreateCommand(m_Database);
         m_InsertDepCommand.CreateCommand(m_Database);
+        m_AddDanglingRefCommand.CreateCommand(m_Database);
 
         m_LastId = m_Database.CreateCommand();
         m_LastId.CommandText = "SELECT last_insert_rowid()";
@@ -277,17 +279,22 @@ public class SerializedFileSQLiteWriter : IDisposable
                     name = randomAccessReader["m_Name"].GetValue<string>();
                 }
 
+                // Resolve m_GameObject to its analyzer object id for the game_object column, but only
+                // when the PPtr is non-null. A null PPtr (m_FileID 0 and m_PathID 0) is expected for
+                // any object that is not a component; resolving it would allocate a phantom id for a
+                // (file, 0) object that never exists and then surface as a bogus dangling ref.
+                object gameObject = "";
                 if (randomAccessReader.HasChild("m_GameObject"))
                 {
                     var pptr = randomAccessReader["m_GameObject"];
-                    var fileId = m_LocalToDbFileId[pptr["m_FileID"].GetValue<int>()];
-                    var gameObjectID = m_ObjectIdProvider.GetId((fileId, pptr["m_PathID"].GetValue<long>()));
-                    m_AddObjectCommand.SetValue("game_object", gameObjectID);
+                    var gameObjectFileId = pptr["m_FileID"].GetValue<int>();
+                    var gameObjectPathId = pptr["m_PathID"].GetValue<long>();
+                    if (gameObjectFileId != 0 || gameObjectPathId != 0)
+                    {
+                        gameObject = m_ObjectIdProvider.GetId((m_LocalToDbFileId[gameObjectFileId], gameObjectPathId));
+                    }
                 }
-                else
-                {
-                    m_AddObjectCommand.SetValue("game_object", "");
-                }
+                m_AddObjectCommand.SetValue("game_object", gameObject);
 
                 // The walk both extracts references and accumulates the CRC, so it is needed
                 // unless both are disabled. When CRC is on but references are off, the walk
@@ -326,6 +333,78 @@ public class SerializedFileSQLiteWriter : IDisposable
             transaction.Rollback();
             throw;
         }
+    }
+
+    // Records every referenced object that was assigned an id but never written to the objects
+    // table (its serialized file was not part of the analyzed input). Must run after all files are
+    // processed, since an id is only known to be dangling once nothing has claimed it as an object.
+    // The set of written objects/files is read back from the database so this is robust to every
+    // object write site (regular objects, synthetic Scene objects, etc.) without instrumenting them.
+    public void FinalizeDatabase()
+    {
+        // Dangling refs are part of reference tracking, so honor --skip-references (the view that
+        // makes them useful joins the refs table, which is empty in that mode anyway).
+        if (!m_Initialized || m_SkipReferences)
+            return;
+
+        var writtenObjectIds = ReadIntSet("SELECT id FROM objects");
+        var writtenFileIds = ReadIntSet("SELECT id FROM serialized_files");
+
+        // Invert the file-name provider so a dangling target's file id maps back to its name.
+        var fileIdToName = new Dictionary<int, string>();
+        foreach (var entry in m_SerializedFileIdProvider.Entries)
+            fileIdToName[entry.Value] = entry.Key;
+
+        using var transaction = m_Database.BeginTransaction();
+        try
+        {
+            foreach (var entry in m_ObjectIdProvider.Entries)
+            {
+                var objectId = entry.Value;
+                if (writtenObjectIds.Contains(objectId))
+                    continue;
+
+                var (fileId, pathId) = entry.Key;
+
+                // Ensure the (un-analyzed) target file has a serialized_files row so the dangling
+                // ref can name it. We have to put null for archive - even if the target file is inside an AssetBundle
+                // or other archive file, because we simply don't have that information.  This is fundamental to
+                // how references work in Unity.
+                if (writtenFileIds.Add(fileId))
+                {
+                    m_AddSerializedFileCommand.SetTransaction(transaction);
+                    m_AddSerializedFileCommand.SetValue("id", fileId);
+                    m_AddSerializedFileCommand.SetValue("archive", null);
+                    m_AddSerializedFileCommand.SetValue("name",
+                        fileIdToName.TryGetValue(fileId, out var name) ? name : "");
+                    m_AddSerializedFileCommand.ExecuteNonQuery();
+                }
+
+                m_AddDanglingRefCommand.SetTransaction(transaction);
+                m_AddDanglingRefCommand.SetValue("id", objectId);
+                m_AddDanglingRefCommand.SetValue("object_id", pathId);
+                m_AddDanglingRefCommand.SetValue("serialized_file", fileId);
+                m_AddDanglingRefCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    private HashSet<int> ReadIntSet(string sql)
+    {
+        var result = new HashSet<int>();
+        using var command = m_Database.CreateCommand();
+        command.CommandText = sql;
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            result.Add(reader.GetInt32(0));
+        return result;
     }
 
     // Callback from PPtrAndCrcProcessor for each reference discovered in the SerializedFile
@@ -395,6 +474,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddObjectCommand.Dispose();
         m_AddTypeCommand.Dispose();
         m_InsertDepCommand.Dispose();
+        m_AddDanglingRefCommand.Dispose();
 
         m_LastId.Dispose();
     }

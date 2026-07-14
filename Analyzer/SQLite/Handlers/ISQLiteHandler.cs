@@ -27,6 +27,12 @@ public interface ISQLiteFileParser : IDisposable
     void Init(SqliteConnection db);
     bool CanParse(string filename);
     void Parse(string filename);
+
+    // Called once after all files have been parsed, so a parser can write data that can only be
+    // determined from the complete set (e.g. dangling references). No-op for parsers that don't
+    // need it.
+    void FinalizeDatabase();
+
     public bool Verbose { get; set; }
     public bool SkipReferences { get; set; }
     public bool SkipCrc { get; set; }
