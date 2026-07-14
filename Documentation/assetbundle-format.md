@@ -91,6 +91,42 @@ In UnityDataTool output, these layers appear in different places:
 Keeping those layers separate helps explain why a query over `refs` may show cross-bundle
 relationships without directly mentioning an AssetBundle filename on each reference row.
 
+## Built-in resources
+
+Bundle content can reference objects in Unity's two built-in resource files (described in
+[Built-in resource files](playerbuild-format.md#built-in-resource-files) on the Player build page).
+`BuildPipeline.BuildAssetBundles` handles the two differently:
+
+- References to **`Library/unity default resources`** objects (default meshes, the RenderSettings
+  spot cookie, and so on) always stay external references. This is safe: that file is identical in
+  every Player of the same Unity version, so the referenced objects are always available at runtime.
+- Objects from **`Resources/unity_builtin_extra`** (built-in shaders and materials) are treated like
+  user assets and copied into the bundle that uses them — with one exception: shaders in the
+  project's **Always Included Shaders** list (Graphics Settings) are not copied, but referenced
+  externally from `Resources/unity_builtin_extra`. A Player build writes exactly those shaders into
+  its copy of that file, so the references resolve when the bundles and the Player are built from
+  the same project settings.
+
+For example, in the reference scene bundle in `TestCommon/Data/LeadingEdgeBuilds/AssetBundles`, the
+`Sprites-Default` Material and the default reflection Cubemap are copied into the bundle's
+`.sharedAssets` file, but the material's `Sprites/Default` *shader* stays an external reference into
+`Resources/unity_builtin_extra`, because that shader is in the default Always Included Shaders list.
+
+Those external shader references couple a bundle to the Player that loads it: if the Player was
+built with a different Always Included Shaders list (a different project, or settings that changed
+between builds), the bundle can reference a shader the Player does not contain. When you run
+[`analyze`](command-analyze.md) on bundles, references into either built-in file show up in
+`dangling_refs_view`, because the built-in files themselves are never part of the bundle build
+output.
+
+The Scriptable Build Pipeline avoids the coupling entirely: it never references the Player's
+`unity_builtin_extra`, and instead copies the referenced built-in objects into each bundle that uses
+them (references to `unity default resources` stay external, as above). The cost is duplication when
+several bundles use the same built-in shader; the optional `CreateBuiltInBundle` build task removes
+that by collecting the built-in objects into a single dedicated bundle. The Addressables package
+enables that task in its default build, so Addressables content contains its own copy of the
+built-in shaders it needs and does not depend on the Player's Always Included Shaders list.
+
 ## Inspecting a bundle with UnityDataTool
 
 The [`archive`](command-archive.md) command lists or extracts the files inside a bundle, and

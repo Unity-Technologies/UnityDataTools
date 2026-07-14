@@ -90,11 +90,12 @@ public class AnalyzeDanglingRefsTests
         // built-in resource files, which are never part of a bundle set:
         // - 'unity default resources' (the RenderSettings spot cookie) ships complete with every
         //   player, so these references always resolve at runtime.
-        // - 'unity_builtin_extra' (the Sprites/Default shader of the copied sprite material) is
-        //   generated per player build and contains only the GraphicsSettings "Always Included
-        //   Shaders", so a bundle's built-in shader reference resolves only if that list covers it
-        //   (Sprites/Default is in it by default). A real AssetBundle limitation, unlike content
-        //   directory builds, which copy the referenced unity_builtin_extra objects into the output.
+        // - 'unity_builtin_extra' (the Sprites/Default shader of the copied sprite material): the
+        //   build copies built-in objects into bundles like user assets, except shaders in the
+        //   GraphicsSettings "Always Included Shaders" list, which are referenced externally and
+        //   resolved against the player's unity_builtin_extra (which holds exactly those shaders).
+        //   Such references break if the player is built with a different list. Content directory
+        //   builds copy all referenced unity_builtin_extra objects into the output instead.
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_AssetBundlesFolder, "-o", databasePath }));
