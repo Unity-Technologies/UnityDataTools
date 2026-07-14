@@ -1,8 +1,8 @@
 using System;
-using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using NUnit.Framework;
 using UnityDataTools.TestCommon;
 
@@ -54,7 +54,8 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
                 (SELECT COUNT(*) FROM assetbundle_assets),
                 (SELECT COUNT(*) FROM objects),
                 (SELECT COUNT(*) FROM refs),
-                (SELECT COUNT(*) FROM serialized_files)";
+                -- Analyzed files only; serialized_files also holds dangling-ref target files (issue #85).
+                (SELECT COUNT(*) FROM serialized_files WHERE id IN (SELECT serialized_file FROM objects))";
 
         using var reader = cmd.ExecuteReader();
 
@@ -93,6 +94,44 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
         SQLTestHelper.AssertQueryInt(db,
             "SELECT COUNT(*) FROM preload_dependencies d LEFT JOIN objects o ON o.id = d.object WHERE o.id IS NULL",
             0, "every preload_dependencies.object should resolve to an objects row");
+    }
+
+    [Test]
+    public async Task Analyze_PlayerData_RecordsDanglingRefsToDefaultResources()
+    {
+        // Issue #85: a player build references objects in "unity default resources" (shipped without
+        // TypeTrees, never analyzed). Those references must be recorded in dangling_refs instead of
+        // leaving unexplained gaps in the object id space.
+        var analyzePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "PlayerWithTypeTrees");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath, "-o", databasePath }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        Assert.Greater(SQLTestHelper.QueryInt(db, "SELECT COUNT(*) FROM dangling_refs"), 0,
+            "the player build should have dangling references (e.g. into unity default resources)");
+
+        // "unity default resources" is recorded as a serialized_files row and is a dangling target.
+        Assert.Greater(SQLTestHelper.QueryInt(db,
+            @"SELECT COUNT(*) FROM dangling_refs d
+              INNER JOIN serialized_files sf ON sf.id = d.serialized_file
+              WHERE sf.name = 'unity default resources'"),
+            0, "expected dangling references into 'unity default resources'");
+
+        // The dangling references are visible in the view, with real analyzed source files.
+        Assert.Greater(SQLTestHelper.QueryInt(db, "SELECT COUNT(*) FROM dangling_refs_view"), 0,
+            "dangling references should be visible in dangling_refs_view");
+
+        // Every referenced object resolves to exactly one of objects/dangling_refs.
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM refs r
+              LEFT JOIN objects o       ON o.id = r.referenced_object
+              LEFT JOIN dangling_refs d ON d.id = r.referenced_object
+              WHERE o.id IS NULL AND d.id IS NULL",
+            0, "every refs.referenced_object should resolve to an objects or dangling_refs row");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM dangling_refs d INNER JOIN objects o ON o.id = d.id",
+            0, "an id must not be in both objects and dangling_refs");
     }
 
     [Test]

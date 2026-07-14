@@ -11,6 +11,10 @@ public class IdProvider<Key>
 {
     private Dictionary<Key, int> m_Ids = new();
 
+    // Exposes the key->id assignments so callers can iterate or invert the mapping (used at
+    // finalize to map a dangling object id back to its (fileId, pathId) or file name).
+    public IReadOnlyDictionary<Key, int> Entries => m_Ids;
+
     public int GetId(Key key)
     {
         if (m_Ids.TryGetValue(key, out var id))

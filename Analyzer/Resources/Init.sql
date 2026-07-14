@@ -81,12 +81,54 @@ CREATE TABLE IF NOT EXISTS refs
     property_type INTEGER
 );
 
+-- One row per referenced object that analyze assigned an id to but never wrote an objects row
+-- for (its serialized file was not part of the analyzed input). Written after all files are
+-- processed, once we can tell which assigned ids never became objects. Common causes: analyzing a
+-- partial set of AssetBundles, references into "unity default resources" (shipped without
+-- TypeTrees), or a ContentDirectory build analyzed without ContentLayout.json.
+-- Columns mirror the objects table so every object id resolves to exactly one of objects or
+-- dangling_refs:
+--   id - the analyzer object id (no row in objects has this id).
+--   object_id - the target's local file id (LFID / m_PathID) within its serialized file.
+--   serialized_file - references the serialized_files row of the (un-analyzed) file the target
+--        lives in. That row has archive NULL and no objects of its own.
+CREATE TABLE IF NOT EXISTS dangling_refs
+(
+    id INTEGER,
+    object_id INTEGER,
+    serialized_file INTEGER,
+    PRIMARY KEY (id)
+);
+
 -- Resolves the property_path and property_type ids in the refs table to their string values.
 CREATE VIEW refs_view AS
 SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
 FROM refs r
 INNER JOIN property_names pn ON r.property_path = pn.id
 INNER JOIN property_types pt ON r.property_type = pt.id;
+
+-- Resolves dangling_refs to the source object(s) that reference each missing target, one row per
+-- (referencing object -> dangling target) reference. Because it joins refs, this view is empty
+-- when analyze is run with --skip-references even though the dangling_refs table may be populated.
+-- A dangling target only reached through preload_dependencies / game_object (not a refs row) is in
+-- the table but not here.
+CREATE VIEW dangling_refs_view AS
+SELECT
+    r.object AS source_id,
+    src_sf.name AS source_serialized_file,
+    src_o.object_id AS source_object_id,
+    pn.name AS property_path,
+    pt.name AS property_type,
+    d.id AS target_id,
+    tgt_sf.name AS target_serialized_file,
+    d.object_id AS target_object_id
+FROM dangling_refs d
+INNER JOIN refs r ON r.referenced_object = d.id
+INNER JOIN objects src_o ON r.object = src_o.id
+INNER JOIN serialized_files src_sf ON src_o.serialized_file = src_sf.id
+INNER JOIN serialized_files tgt_sf ON d.serialized_file = tgt_sf.id
+LEFT JOIN property_names pn ON r.property_path = pn.id
+LEFT JOIN property_types pt ON r.property_type = pt.id;
 
 CREATE VIEW object_view AS
 SELECT o.id, o.object_id, ab.name AS archive, sf.name AS serialized_file, t.name AS type, o.name, o.game_object, o.size,
@@ -157,8 +199,9 @@ INSERT INTO types (id, name) VALUES (-1, 'Scene');
 -- 1 = normalized refs table (issue #44); 2 = renamed assets/asset_dependencies tables to
 -- assetbundle_assets/preload_dependencies (issue #82); 3 = renamed asset_bundles table to archives
 -- and the asset_bundle column/alias to archive (issue #68); 4 = build_report_packed_asset_contents_view
--- type column changed from numeric id to type name (issue #55); databases produced before versioning report 0.
-PRAGMA user_version = 4;
+-- type column changed from numeric id to type name (issue #55); 5 = added dangling_refs table/view
+-- (issue #85); databases produced before versioning report 0.
+PRAGMA user_version = 5;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

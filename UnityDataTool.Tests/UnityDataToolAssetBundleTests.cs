@@ -334,7 +334,9 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
                     (SELECT COUNT(*) FROM meshes),
                     (SELECT COUNT(*) FROM objects),
                     (SELECT COUNT(*) FROM refs),
-                    (SELECT COUNT(*) FROM serialized_files),
+                    -- Count only analyzed files; serialized_files now also holds referenced-but-not-analyzed
+                    -- files that are dangling-ref targets (issue #85), which are not part of this count.
+                    (SELECT COUNT(*) FROM serialized_files WHERE id IN (SELECT serialized_file FROM objects)),
                     (SELECT COUNT(*) FROM shader_subprograms),
                     (SELECT COUNT(*) FROM shaders),
                     (SELECT COUNT(*) FROM shader_keywords),

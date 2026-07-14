@@ -4,8 +4,8 @@ using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityDataTools.Analyzer.SQLite.Handlers;
-using UnityDataTools.Models;
 using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.Models;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers
 {
@@ -21,6 +21,12 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
         {
             m_Writer.Dispose();
         }
+
+        public void FinalizeDatabase()
+        {
+            // Addressables build reports don't produce dangling object references.
+        }
+
         public void Init(SqliteConnection db)
         {
             m_Writer = new AddressablesBuildLayoutSQLWriter(db);

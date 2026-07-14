@@ -5,8 +5,8 @@ using System.IO;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
 using UnityDataTools.Analyzer.SQLite.Writers;
-using UnityDataTools.Models;
 using UnityDataTools.FileSystem;
+using UnityDataTools.Models;
 
 namespace UnityDataTools.Analyzer;
 
@@ -130,6 +130,13 @@ public class AnalyzerTool
 
         Console.WriteLine();
         Console.WriteLine($"Finalizing database. Successfully processed files: {countSuccess}, Failed files: {countFailures}, Files without TypeTrees: {countNoTypeTrees}, Ignored files: {countIgnored}");
+
+        // Record data that can only be determined once every file has been processed (e.g. which
+        // referenced objects were never resolved) before the database is finalized.
+        foreach (var parser in parsers)
+        {
+            parser.FinalizeDatabase();
+        }
 
         writer.End();
         foreach (var parser in parsers)
