@@ -6,6 +6,8 @@ The command line arguments to invoke Analyze are documented [here](unitydatatool
 
 The definition of the views, and some internal details about how Analyze is implemented, can be found [here](analyzer.md).
 
+Queries specific to ContentDirectory builds and `ContentLayout.json` are collected on a dedicated page: [Example queries for ContentDirectory builds](analyze-examples-contentlayout.md).
+
 ## Running Queries from the Command line
 
 You can find data in the SQLite database by running SQL queries.

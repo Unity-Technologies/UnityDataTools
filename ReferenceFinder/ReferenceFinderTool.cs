@@ -28,6 +28,7 @@ public class ReferenceFinderTool
     SqliteCommand m_GetObjectCommand;
     List<ReferenceTreeNode> m_Roots = new List<ReferenceTreeNode>();
     HashSet<(long, string)> m_ProcessedObjects = new HashSet<(long, string)>();
+    HashSet<long> m_LoadableObjectIds = new HashSet<long>();
 
     TextWriter m_Writer;
 
@@ -141,6 +142,8 @@ public class ReferenceFinderTool
         m_GetRefsCommand.CommandText = @"SELECT object, property_path, EXISTS (SELECT * FROM assetbundle_assets a WHERE a.object = r.object) FROM refs_view r WHERE referenced_object = @id";
         m_GetRefsCommand.Parameters.Add("@id", SqliteType.Integer);
 
+        ReadContentLayoutLoadableObjects(db);
+
         // Resolve the 'm_Script' property path to its id once so the per-object script lookup below
         // filters on the indexed integer column instead of scanning the property_names table.
         long scriptPathId = -1;
@@ -193,17 +196,39 @@ public class ReferenceFinderTool
 
             command.CommandText = "SELECT asset_name, archive, serialized_file FROM assetbundle_asset_view WHERE id = @id";
 
+            // Chain roots from a ContentDirectory build are loadable objects, described by the
+            // imported ContentLayout rather than by an AssetBundle's asset table.
+            SqliteCommand loadableCommand = null;
+            if (m_LoadableObjectIds.Count > 0)
+            {
+                loadableCommand = db.CreateCommand();
+                loadableCommand.CommandText = "SELECT asset_path, filename FROM content_layout_loadable_objects_view WHERE object = @id";
+                loadableCommand.Parameters.Add("@id", SqliteType.Integer);
+            }
+
             foreach (var root in m_Roots)
             {
                 command.Parameters["@id"].Value = root.Id;
 
                 using (var reader = command.ExecuteReader())
                 {
-                    reader.Read();
-
-                    m_Writer.WriteLine("Found reference in:");
-                    m_Writer.WriteLine(reader.GetString(0));
-                    m_Writer.WriteLine($"(Archive = {reader.GetString(1)}; SerializedFile = {reader.GetString(2)})");
+                    if (reader.Read())
+                    {
+                        m_Writer.WriteLine("Found reference in:");
+                        m_Writer.WriteLine(reader.GetString(0));
+                        m_Writer.WriteLine($"(Archive = {reader.GetString(1)}; SerializedFile = {reader.GetString(2)})");
+                    }
+                    else if (loadableCommand != null)
+                    {
+                        loadableCommand.Parameters["@id"].Value = root.Id;
+                        using var loadableReader = loadableCommand.ExecuteReader();
+                        if (loadableReader.Read())
+                        {
+                            m_Writer.WriteLine("Found reference in loadable:");
+                            m_Writer.WriteLine(loadableReader.GetString(0));
+                            m_Writer.WriteLine($"(SerializedFile = {loadableReader.GetString(1)})");
+                        }
+                    }
                 }
 
                 OutputReferenceNode(root, "", 1);
@@ -270,6 +295,28 @@ public class ReferenceFinderTool
         }
     }
 
+    // Loads the analyzed object ids of the loadables described by an imported ContentLayout.
+    // These are the addressable entry points of a ContentDirectory build, so like an
+    // AssetBundle's assets they complete a reference chain. Empty when the database has no
+    // content_layout tables (they are only created when a ContentLayout.json was analyzed).
+    void ReadContentLayoutLoadableObjects(SqliteConnection db)
+    {
+        using var checkCmd = db.CreateCommand();
+        checkCmd.CommandText = "SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'view' AND name = 'content_layout_loadable_objects_view')";
+        if ((long)checkCmd.ExecuteScalar() == 0)
+        {
+            return;
+        }
+
+        using var loadablesCmd = db.CreateCommand();
+        loadablesCmd.CommandText = "SELECT object FROM content_layout_loadable_objects_view WHERE object IS NOT NULL";
+        using var reader = loadablesCmd.ExecuteReader();
+        while (reader.Read())
+        {
+            m_LoadableObjectIds.Add(reader.GetInt64(0));
+        }
+    }
+
     ReferenceTreeNode ProcessReferences(long id, bool findAll)
     {
         var references = new List<(long id, string propertyPath, bool isAsset)>();
@@ -280,7 +327,9 @@ public class ReferenceFinderTool
         {
             while (reader.Read())
             {
-                references.Add((reader.GetInt64(0), reader.GetString(1), reader.GetBoolean(2)));
+                var referencingObject = reader.GetInt64(0);
+                references.Add((referencingObject, reader.GetString(1),
+                    reader.GetBoolean(2) || m_LoadableObjectIds.Contains(referencingObject)));
             }
         }
 

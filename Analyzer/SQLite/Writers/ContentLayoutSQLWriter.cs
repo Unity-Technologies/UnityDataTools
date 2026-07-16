@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Commands.ContentLayout;
+using UnityDataTools.Analyzer.Util;
 using UnityDataTools.Models;
 
 namespace UnityDataTools.Analyzer.SQLite.Writers
@@ -28,12 +29,21 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
         private bool m_Initialized;
         private SqliteConnection m_Database;
 
+        // Shared with the serialized-file analysis (see AnalyzerTool): file ids must agree
+        // between the layout and the analyzed content, and the dependency map is what resolves
+        // the external references of the analyzed .cf files.
+        private IdProvider<string> m_SerializedFileIdProvider;
+        private ContentFileDependencyMap m_ContentFileDependencies;
+
         // The layout files that can have a .cf file on disk, kept for LinkSerializedFiles.
         private List<(int Index, string ContentHash)> m_ImportedFiles = new();
 
-        public ContentLayoutSQLWriter(SqliteConnection database)
+        public ContentLayoutSQLWriter(SqliteConnection database,
+            IdProvider<string> serializedFileIdProvider, ContentFileDependencyMap contentFileDependencies)
         {
             m_Database = database;
+            m_SerializedFileIdProvider = serializedFileIdProvider;
+            m_ContentFileDependencies = contentFileDependencies;
         }
 
         // Creates the content_layout tables and views. Called lazily on the first import so that
@@ -174,23 +184,50 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
             // Indexes are created after the bulk insert so that a very large layout imports fast.
             ExecuteDDL(Properties.Resources.ContentLayoutIndexes);
+
+            PopulateContentFileDependencies(layout);
         }
 
-        // Fills in the serialized_file column, linking each layout entry to the serialized_files
-        // row of its analyzed .cf file. Called after all files are processed; entries whose file
-        // was not part of the analyzed input (e.g. a layout-only analyze) stay NULL. The match is
-        // on the file name (the content hash), ignoring any directory part that the analyze pass
-        // recorded in serialized_files.name.
+        // Fills the shared dependency map that resolves the external references of the analyzed
+        // .cf files (see ContentFileDependencyMap): for each content file, the dependency indexes
+        // become the target filenames, in order. Built-in dependencies (no content hash) map to
+        // null so the reference falls back to the external table path.
+        private void PopulateContentFileDependencies(ContentLayout layout)
+        {
+            var hashByIndex = (layout.SerializedFiles ?? []).ToDictionary(f => f.Index, f => f.ContentHash);
+
+            foreach (var file in layout.SerializedFiles ?? [])
+            {
+                if (string.IsNullOrEmpty(file.ContentHash))
+                    continue;
+
+                var resolved = (file.SerializedFileDependencies ?? [])
+                    .Select(i => hashByIndex.TryGetValue(i, out var hash) && !string.IsNullOrEmpty(hash)
+                        ? (hash + ".cf").ToLowerInvariant()
+                        : null)
+                    .ToArray();
+
+                m_ContentFileDependencies.Add((file.ContentHash + ".cf").ToLowerInvariant(), resolved);
+            }
+        }
+
+        // Fills in the serialized_file column, linking each layout entry to its serialized_files
+        // row. Called after all files are processed. Ids come from the shared IdProvider, so
+        // entries whose .cf file was analyzed link to the row the analyze pass wrote (loose or
+        // inside an archive, with its archive column intact). For files never encountered on the
+        // input (a layout-only analyze, or a subset of a build) a placeholder serialized_files
+        // row is written - name only, archive NULL, no objects - so the link is always valid,
+        // mirroring what the dangling-refs finalize does for referenced-but-unanalyzed files.
         public void LinkSerializedFiles()
         {
-            var fileNameToId = new Dictionary<string, int>();
+            var existingIds = new HashSet<int>();
             using (var select = m_Database.CreateCommand())
             {
-                select.CommandText = "SELECT id, name FROM serialized_files";
+                select.CommandText = "SELECT id FROM serialized_files";
                 using var reader = select.ExecuteReader();
                 while (reader.Read())
                 {
-                    fileNameToId[Path.GetFileName(reader.GetString(1)).ToLowerInvariant()] = reader.GetInt32(0);
+                    existingIds.Add(reader.GetInt32(0));
                 }
             }
 
@@ -201,15 +238,27 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             update.Parameters.Add("@id", SqliteType.Integer);
             update.Parameters.Add("@file_index", SqliteType.Integer);
 
+            var addStubRow = new Commands.SerializedFile.AddSerializedFile();
+            addStubRow.CreateCommand(m_Database);
+            addStubRow.SetTransaction(transaction);
+
             try
             {
                 foreach (var file in m_ImportedFiles)
                 {
-                    if (fileNameToId.TryGetValue(file.ContentHash + ".cf", out var id))
+                    var fileName = (file.ContentHash + ".cf").ToLowerInvariant();
+                    var id = m_SerializedFileIdProvider.GetId(fileName);
+
+                    update.Parameters["@id"].Value = id;
+                    update.Parameters["@file_index"].Value = file.Index;
+                    update.ExecuteNonQuery();
+
+                    if (existingIds.Add(id))
                     {
-                        update.Parameters["@id"].Value = id;
-                        update.Parameters["@file_index"].Value = file.Index;
-                        update.ExecuteNonQuery();
+                        addStubRow.SetValue("id", id);
+                        addStubRow.SetValue("archive", null);
+                        addStubRow.SetValue("name", fileName);
+                        addStubRow.ExecuteNonQuery();
                     }
                 }
 
@@ -219,6 +268,10 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             {
                 transaction.Rollback();
                 throw;
+            }
+            finally
+            {
+                addStubRow.Dispose();
             }
         }
 

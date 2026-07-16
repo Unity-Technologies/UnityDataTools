@@ -4,6 +4,7 @@ using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.Analyzer.Util;
 using UnityDataTools.Models;
 
 namespace UnityDataTools.Analyzer.SQLite.Parsers
@@ -15,22 +16,35 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
     {
         private ContentLayoutSQLWriter m_Writer;
         private string m_ImportedLayout;
+        private IdProvider<string> m_SerializedFileIdProvider;
+        private ContentFileDependencyMap m_ContentFileDependencies;
 
         public bool Verbose { get; set; }
         public bool SkipReferences { get; set; }
         public bool SkipCrc { get; set; }
 
+        public ContentLayoutParser(IdProvider<string> serializedFileIdProvider, ContentFileDependencyMap contentFileDependencies)
+        {
+            m_SerializedFileIdProvider = serializedFileIdProvider;
+            m_ContentFileDependencies = contentFileDependencies;
+        }
+
         public void Init(SqliteConnection db)
         {
-            m_Writer = new ContentLayoutSQLWriter(db);
+            m_Writer = new ContentLayoutSQLWriter(db, m_SerializedFileIdProvider, m_ContentFileDependencies);
+        }
+
+        // Unity always writes this exact filename into the build report directory, so unlike the
+        // Addressables build reports (whose filenames can embed timestamps) no content sniffing
+        // is needed.
+        public static bool IsContentLayoutFile(string filename)
+        {
+            return string.Equals(Path.GetFileName(filename), "ContentLayout.json", StringComparison.OrdinalIgnoreCase);
         }
 
         public bool CanParse(string filename)
         {
-            // Unity always writes this exact filename into the build report directory, so unlike
-            // the Addressables build reports (whose filenames can embed timestamps) no content
-            // sniffing is needed.
-            return string.Equals(Path.GetFileName(filename), "ContentLayout.json", StringComparison.OrdinalIgnoreCase);
+            return IsContentLayoutFile(filename);
         }
 
         public void Parse(string filename)

@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using Newtonsoft.Json;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
 using UnityDataTools.Analyzer.SQLite.Writers;
+using UnityDataTools.Analyzer.Util;
 using UnityDataTools.FileSystem;
 using UnityDataTools.Models;
 
@@ -14,12 +17,23 @@ public class AnalyzerTool
 {
     AnalyzeOptions m_Options;
 
-    public List<ISQLiteFileParser> parsers = new List<ISQLiteFileParser>()
+    // Shared between the ContentLayout import and the serialized-file analysis: both must agree
+    // on the id assigned to each serialized file name, and the layout's dependency information
+    // is what resolves the external references of ContentDirectory files (issue #99).
+    private IdProvider<string> m_SerializedFileIdProvider = new();
+    private ContentFileDependencyMap m_ContentFileDependencies = new();
+
+    public List<ISQLiteFileParser> parsers;
+
+    public AnalyzerTool()
     {
-        new ContentLayoutParser(),
-        new AddressablesBuildLayoutParser(),
-        new SerializedFileParser(),
-    };
+        parsers = new List<ISQLiteFileParser>()
+        {
+            new ContentLayoutParser(m_SerializedFileIdProvider, m_ContentFileDependencies),
+            new AddressablesBuildLayoutParser(),
+            new SerializedFileParser(m_SerializedFileIdProvider, m_ContentFileDependencies),
+        };
+    }
 
     public class AnalyzeOptions
     {
@@ -37,6 +51,15 @@ public class AnalyzerTool
     public int Analyze(AnalyzeOptions options)
     {
         m_Options = options;
+
+        var files = CollectFiles();
+
+        // Validate the ContentDirectory-related inputs before creating the database, so an
+        // invalid combination fails without leaving a partial database behind.
+        if (!PrepareContentDirectoryInputs(files))
+        {
+            return 1;
+        }
 
         using SQLiteWriter writer = new(m_Options.DatabaseName);
 
@@ -60,8 +83,6 @@ public class AnalyzerTool
 
         var timer = new Stopwatch();
         timer.Start();
-
-        var files = CollectFiles();
 
         int countFailures = 0;
         int countSuccess = 0;
@@ -150,6 +171,140 @@ public class AnalyzerTool
         Console.WriteLine($"Total time: {(timer.Elapsed.TotalMilliseconds / 1000.0):F3} s");
 
         return 0;
+    }
+
+    // Validates the ContentDirectory-related inputs and prepares the file list (issue #99):
+    // enforces that a single build is analyzed, selects the ContentLayout.json whose
+    // BuildManifestHash matches that build (dropping any others), and moves it to the front of
+    // the list so it is imported before the content files whose references it resolves. Returns
+    // false, after printing an error, when the input combination is invalid.
+    bool PrepareContentDirectoryInputs(List<(string FullPath, string DisplayRoot)> files)
+    {
+        const string hashFileName = "BuildManifestHash.txt";
+
+        var layoutCandidates = files.Where(f => ContentLayoutParser.IsContentLayoutFile(f.FullPath)).ToList();
+        var hashFiles = files
+            .Where(f => string.Equals(Path.GetFileName(f.FullPath), hashFileName, StringComparison.OrdinalIgnoreCase))
+            .Select(f => f.FullPath)
+            .ToList();
+
+        // ContentDirectory output is recognized by its .cf content files, or by its archive when
+        // built compressed. The BuildManifestHash.txt identifying the build sits next to them; it
+        // is not always on the input (e.g. when specific files are passed), so pick it up from
+        // the directories containing the content.
+        var contentDirectories = files
+            .Where(f => HasExtension(f.FullPath, ".cf") || HasExtension(f.FullPath, ".archive"))
+            .Select(f => Path.GetDirectoryName(Path.GetFullPath(f.FullPath)))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        if (hashFiles.Count == 0)
+        {
+            hashFiles.AddRange(contentDirectories
+                .Select(dir => Path.Combine(dir, hashFileName))
+                .Where(File.Exists));
+        }
+
+        var buildHashes = hashFiles.Select(f => File.ReadAllText(f).Trim()).Distinct().ToList();
+
+        if (buildHashes.Count > 1)
+        {
+            Console.Error.WriteLine("The input contains more than one ContentDirectory build (different BuildManifestHash.txt values). Analyze a single build at a time.");
+            return false;
+        }
+
+        var buildHash = buildHashes.Count == 1 ? buildHashes[0] : null;
+        var hasContentDirectory = buildHash != null || files.Any(f => HasExtension(f.FullPath, ".cf"));
+
+        if (layoutCandidates.Count == 0)
+        {
+            if (hasContentDirectory)
+            {
+                Console.Error.WriteLine(
+                    "Warning: analyzing ContentDirectory output without its ContentLayout.json. The analysis will be incomplete: " +
+                    "references between content files cannot be resolved (they will appear in dangling_refs) and source asset " +
+                    "information is unavailable. Re-run with the build's ContentLayout.json (found in its build report folder) " +
+                    "included in the input paths.");
+            }
+
+            return true;
+        }
+
+        (string FullPath, string DisplayRoot) selected;
+
+        if (hasContentDirectory)
+        {
+            if (buildHash == null)
+            {
+                Console.Error.WriteLine("A ContentLayout.json is in the input but no BuildManifestHash.txt was found for the ContentDirectory content, so the layout cannot be validated against the build.");
+                return false;
+            }
+
+            // The hash match guarantees the layout describes exactly this build; a stale or
+            // unrelated layout would silently produce misleading results.
+            selected = layoutCandidates.FirstOrDefault(c => TryReadBuildManifestHash(c.FullPath) == buildHash);
+
+            if (selected.FullPath == null)
+            {
+                Console.Error.WriteLine($"No ContentLayout.json in the input matches the analyzed build (BuildManifestHash {buildHash}). Include the layout from the build report folder of this build.");
+                return false;
+            }
+        }
+        else if (layoutCandidates.Count == 1)
+        {
+            // A layout without its build content is a valid input (e.g. to query a large layout).
+            selected = layoutCandidates[0];
+        }
+        else
+        {
+            Console.Error.WriteLine("The input contains multiple ContentLayout.json files but no ContentDirectory build to match them against. Only a single layout can be analyzed.");
+            return false;
+        }
+
+        foreach (var candidate in layoutCandidates)
+        {
+            if (candidate != selected)
+            {
+                Console.Error.WriteLine($"Ignoring \"{candidate.FullPath}\": its BuildManifestHash does not match the analyzed build.");
+                files.Remove(candidate);
+            }
+        }
+
+        // Import the layout before the content files it describes, so their references can be
+        // resolved through it.
+        files.Remove(selected);
+        files.Insert(0, selected);
+
+        return true;
+    }
+
+    static bool HasExtension(string path, string extension)
+    {
+        return string.Equals(Path.GetExtension(path), extension, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Reads the top-level BuildManifestHash of a ContentLayout.json without parsing the whole
+    // file (layouts of large builds are big; the hash is one of the first properties). Returns
+    // null when the value cannot be found or the file is not valid json.
+    static string TryReadBuildManifestHash(string path)
+    {
+        try
+        {
+            using var reader = new JsonTextReader(File.OpenText(path));
+
+            for (int i = 0; i < 64 && reader.Read(); ++i)
+            {
+                if (reader.TokenType == JsonToken.PropertyName && reader.Depth == 1 &&
+                    "BuildManifestHash".Equals(reader.Value))
+                {
+                    return reader.ReadAsString();
+                }
+            }
+        }
+        catch (Exception)
+        {
+        }
+
+        return null;
     }
 
     // Expands the input paths into the concrete files to analyze. Each result pairs the file with the

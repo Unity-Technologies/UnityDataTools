@@ -28,6 +28,8 @@ UnityDataTool find-refs <database> [options]
 
 This command requires a database created by the [`analyze`](command-analyze.md) command **without** the `--skip-references` option.
 
+Reference chains end at an asset: an AssetBundle's assets, or — for ContentDirectory builds — the loadable objects described by the build's `ContentLayout.json`. For a ContentDirectory build, include the `ContentLayout.json` in the analyze input, both to resolve the references between content files and to provide those chain roots (see [ContentLayout in the Analyze Database](contentlayout-database.md)).
+
 ---
 
 ## Examples
