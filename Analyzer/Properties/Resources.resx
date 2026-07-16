@@ -226,6 +226,42 @@
   <data name="AddrBuildSchemaDataPairs" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AddrBuildSchemaDataPairs.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="ContentLayout" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayout.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutSerializedFiles" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutSerializedFiles.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutSourceAssets" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutSourceAssets.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutSerializedFileDependencies" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutSerializedFileDependencies.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutLoadableDependencies" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutLoadableDependencies.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutLoadableSceneDependencies" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutLoadableSceneDependencies.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutLoadableObjects" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutLoadableObjects.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutLoadableScenes" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutLoadableScenes.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutBinaryArtifacts" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutBinaryArtifacts.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutArtifactReferences" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutArtifactReferences.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutViews" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutViews.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutIndexes" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutIndexes.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="MonoScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MonoScript.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>

@@ -282,6 +282,47 @@ SELECT * FROM dangling_refs_view WHERE source_id = 42;
 Because the view joins `refs`, it is not populated when analyze is run with `--skip-references`
 (in that mode neither `refs` nor `dangling_refs` are populated).
 
+## ContentLayout (content_layout tables)
+
+When the analyzed input includes the `ContentLayout.json` of a ContentDirectory build (see
+[contentlayout.md](contentlayout.md)), its content is imported into a set of `content_layout*`
+tables. These tables are only created when a layout is actually imported, and a single layout per
+database is supported. The tables mirror the json structure, with the sentinel values mapped to
+SQL NULL (`-1` for "dropped from build", the missing content hash of built-in entries) and the
+top-level `RootAssets` list folded into the `is_root_asset` flag:
+
+* `content_layout`: one row identifying the imported file (`name`, `version`, `build_manifest_hash`).
+* `content_layout_serialized_files`: one row per serialized file (.cf Content File) of the build,
+  keyed by `file_index` (the json array index). Records the symbolic `cfid`, `is_builtin`, and the
+  `content_hash` that gives the filename (`content_hash || '.cf'`). The `serialized_file` column
+  references the core `serialized_files` table when the build content is part of the analyzed
+  input, connecting the layout to the analyzed objects.
+* `content_layout_source_assets`: the source assets included in each serialized file.
+* `content_layout_serialized_file_dependencies`: file-to-file dependency edges. The 1-based
+  `position` column preserves the json array order, which is how PPtr `m_FileID` values resolve
+  (see [contentdirectory-format.md](contentdirectory-format.md)).
+* `content_layout_loadable_dependencies` / `content_layout_loadable_scene_dependencies`: the
+  loadables and scenes referenced from each serialized file.
+* `content_layout_loadable_objects`: the objects loadable on demand, with their source project
+  identity (`guid`, `asset_path`, `lfid`) and output location (`serialized_file_index`,
+  `output_lfid`).
+* `content_layout_loadable_scenes`: the loadable scenes.
+* `content_layout_binary_artifacts`: every artifact of the build output (serialized files, .resS
+  and .resource data files, the manifest) with its `category` and `size`.
+* `content_layout_artifact_references`: direct references between artifacts.
+
+Views join the pieces together: `content_layout_serialized_files_view` (files with derived
+filename, size, and core-table link), `content_layout_source_assets_view` (source asset → built
+files), `content_layout_serialized_file_dependencies_view` (dependency edges with resolved
+filenames), `content_layout_loadable_objects_view` (loadables resolved to their analyzed object),
+`content_layout_binary_artifacts_view` (artifacts with derived filenames), and
+`content_layout_data_files_view` (the .resS/.resource data files each serialized file uses).
+
+```sql
+-- which files was this source asset built into?
+SELECT * FROM content_layout_source_assets_view WHERE asset_path = 'Assets/Textures/GreenStatic.png';
+```
+
 ## BuildReport
 
 See [BuildReport.md](buildreport.md) for details of the tables and views related to analyzing BuildReport files.

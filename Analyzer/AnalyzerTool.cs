@@ -16,6 +16,7 @@ public class AnalyzerTool
 
     public List<ISQLiteFileParser> parsers = new List<ISQLiteFileParser>()
     {
+        new ContentLayoutParser(),
         new AddressablesBuildLayoutParser(),
         new SerializedFileParser(),
     };
