@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Commands.ContentLayout;
 using UnityDataTools.Models;
@@ -26,6 +27,9 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
         private bool m_Initialized;
         private SqliteConnection m_Database;
+
+        // The layout files that can have a .cf file on disk, kept for LinkSerializedFiles.
+        private List<(int Index, string ContentHash)> m_ImportedFiles = new();
 
         public ContentLayoutSQLWriter(SqliteConnection database)
         {
@@ -75,9 +79,15 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
                     m_AddSerializedFile.SetValue("is_builtin", file.IsBuiltIn ? 1 : 0);
                     m_AddSerializedFile.SetValue("content_hash",
                         string.IsNullOrEmpty(file.ContentHash) ? null : file.ContentHash);
-                    // Filled in when the analyzed input also contains the build content.
+                    // Filled in by LinkSerializedFiles when the analyzed input also contains the
+                    // build content.
                     m_AddSerializedFile.SetValue("serialized_file", null);
                     m_AddSerializedFile.ExecuteNonQuery();
+
+                    if (!string.IsNullOrEmpty(file.ContentHash))
+                    {
+                        m_ImportedFiles.Add((file.Index, file.ContentHash));
+                    }
 
                     // Empty arrays can be omitted from the json, leaving the fields null.
                     foreach (var assetPath in file.SourceAssets ?? [])
@@ -164,6 +174,52 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
             // Indexes are created after the bulk insert so that a very large layout imports fast.
             ExecuteDDL(Properties.Resources.ContentLayoutIndexes);
+        }
+
+        // Fills in the serialized_file column, linking each layout entry to the serialized_files
+        // row of its analyzed .cf file. Called after all files are processed; entries whose file
+        // was not part of the analyzed input (e.g. a layout-only analyze) stay NULL. The match is
+        // on the file name (the content hash), ignoring any directory part that the analyze pass
+        // recorded in serialized_files.name.
+        public void LinkSerializedFiles()
+        {
+            var fileNameToId = new Dictionary<string, int>();
+            using (var select = m_Database.CreateCommand())
+            {
+                select.CommandText = "SELECT id, name FROM serialized_files";
+                using var reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    fileNameToId[Path.GetFileName(reader.GetString(1)).ToLowerInvariant()] = reader.GetInt32(0);
+                }
+            }
+
+            using var transaction = m_Database.BeginTransaction();
+            using var update = m_Database.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE content_layout_serialized_files SET serialized_file = @id WHERE file_index = @file_index";
+            update.Parameters.Add("@id", SqliteType.Integer);
+            update.Parameters.Add("@file_index", SqliteType.Integer);
+
+            try
+            {
+                foreach (var file in m_ImportedFiles)
+                {
+                    if (fileNameToId.TryGetValue(file.ContentHash + ".cf", out var id))
+                    {
+                        update.Parameters["@id"].Value = id;
+                        update.Parameters["@file_index"].Value = file.Index;
+                        update.ExecuteNonQuery();
+                    }
+                }
+
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         private void SetTransaction(SqliteTransaction transaction)

@@ -72,8 +72,14 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             throw new Exception(message);
         }
 
+        // Called after all files are processed, so the analyzed .cf files all have their
+        // serialized_files rows and the layout entries can be linked to them.
         public void FinalizeDatabase()
         {
+            if (m_ImportedLayout != null)
+            {
+                m_Writer.LinkSerializedFiles();
+            }
         }
 
         public void Dispose()

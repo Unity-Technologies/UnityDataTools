@@ -295,8 +295,8 @@ top-level `RootAssets` list folded into the `is_root_asset` flag:
 * `content_layout_serialized_files`: one row per serialized file (.cf Content File) of the build,
   keyed by `file_index` (the json array index). Records the symbolic `cfid`, `is_builtin`, and the
   `content_hash` that gives the filename (`content_hash || '.cf'`). The `serialized_file` column
-  references the core `serialized_files` table when the build content is part of the analyzed
-  input, connecting the layout to the analyzed objects.
+  references the core `serialized_files` table, connecting the layout to the analyzed objects
+  (see [Analyzing the layout with or without the build content](#analyzing-the-layout-with-or-without-the-build-content)).
 * `content_layout_source_assets`: the source assets included in each serialized file.
 * `content_layout_serialized_file_dependencies`: file-to-file dependency edges. The 1-based
   `position` column preserves the json array order, which is how PPtr `m_FileID` values resolve
@@ -322,6 +322,23 @@ filenames), `content_layout_loadable_objects_view` (loadables resolved to their 
 -- which files was this source asset built into?
 SELECT * FROM content_layout_source_assets_view WHERE asset_path = 'Assets/Textures/GreenStatic.png';
 ```
+
+### Analyzing the layout with or without the build content
+
+A `ContentLayout.json` can be analyzed on its own — useful for running SQL queries against a large
+layout — or together with the build output it describes. The layout tables themselves are
+identical in both cases; what differs is the connection to the core tables:
+
+* When the build content is part of the analyzed input, each `content_layout_serialized_files`
+  row is linked to its analyzed file through the `serialized_file` column, and the views resolve
+  across that link (e.g. `content_layout_loadable_objects_view` shows the object, type, name and
+  size of each loadable).
+* In a layout-only analyze there is nothing to link to, so expect NULL in
+  `content_layout_serialized_files.serialized_file`, in the `archive` column of
+  `content_layout_serialized_files_view`, and in the `object`, `type`, `name` and `size` columns
+  of `content_layout_loadable_objects_view`. Built-in entries (`is_builtin = 1`) additionally
+  always have a NULL `content_hash` and `serialized_file` - they are not files produced by the
+  build.
 
 ## BuildReport
 

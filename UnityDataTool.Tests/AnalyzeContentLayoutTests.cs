@@ -146,6 +146,43 @@ public class AnalyzeContentLayoutTests
     }
 
     [Test]
+    public async Task Analyze_ContentDirectoryWithLayout_LinksLayoutToAnalyzedContent()
+    {
+        var contentDirectory = Path.Combine(TestContext.CurrentContext.TestDirectory,
+            "Data", "LeadingEdgeBuilds", "ContentDirectory");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_ContentLayoutPath, contentDirectory, "-o", databasePath }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // Every non-built-in layout entry links to the serialized_files row of its analyzed file.
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 0 AND serialized_file IS NULL", 0,
+            "all analyzed files should be linked");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 1 AND serialized_file IS NOT NULL", 0,
+            "built-in entries have no file to link to");
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM content_layout_serialized_files f
+              WHERE f.serialized_file IS NOT NULL
+                AND NOT EXISTS (SELECT 1 FROM objects o WHERE o.serialized_file = f.serialized_file)", 0,
+            "every linked file should have analyzed objects");
+
+        // The loadables resolve to their analyzed objects through the link.
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM content_layout_loadable_objects_view WHERE object IS NULL", 0,
+            "every loadable should resolve to an analyzed object");
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT name FROM content_layout_loadable_objects_view
+              WHERE asset_path = 'Assets/ScriptableObjects/ContentDirectoryRoot.asset'",
+            "ContentDirectoryRoot", "the root loadable resolves to the root ScriptableObject");
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT type FROM content_layout_loadable_objects_view
+              WHERE asset_path = 'Assets/ScriptableObjects/ContentDirectoryRoot.asset'",
+            "MonoBehaviour", "ScriptableObjects are serialized as MonoBehaviour");
+    }
+
+    [Test]
     public async Task Analyze_WithoutContentLayout_DoesNotCreateLayoutTables()
     {
         var bundlePath = Path.Combine(TestContext.CurrentContext.TestDirectory,
