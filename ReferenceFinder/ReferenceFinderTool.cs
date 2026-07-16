@@ -198,10 +198,9 @@ public class ReferenceFinderTool
 
             // Chain roots from a ContentDirectory build are loadable objects, described by the
             // imported ContentLayout rather than by an AssetBundle's asset table.
-            SqliteCommand loadableCommand = null;
-            if (m_LoadableObjectIds.Count > 0)
+            using var loadableCommand = m_LoadableObjectIds.Count > 0 ? db.CreateCommand() : null;
+            if (loadableCommand != null)
             {
-                loadableCommand = db.CreateCommand();
                 loadableCommand.CommandText = "SELECT asset_path, filename FROM content_layout_loadable_objects_view WHERE object = @id";
                 loadableCommand.Parameters.Add("@id", SqliteType.Integer);
             }

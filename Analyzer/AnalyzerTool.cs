@@ -204,7 +204,16 @@ public class AnalyzerTool
                 .Where(File.Exists));
         }
 
-        var buildHashes = hashFiles.Select(f => File.ReadAllText(f).Trim()).Distinct().ToList();
+        List<string> buildHashes;
+        try
+        {
+            buildHashes = hashFiles.Select(f => File.ReadAllText(f).Trim()).Distinct().ToList();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error reading {hashFileName}: {e.Message}");
+            return false;
+        }
 
         if (buildHashes.Count > 1)
         {
