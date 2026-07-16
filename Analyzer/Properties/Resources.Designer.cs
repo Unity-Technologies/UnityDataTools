@@ -246,6 +246,78 @@ namespace UnityDataTools.Analyzer.Properties {
             }
         }
 
+        internal static string ContentLayout {
+            get {
+                return ResourceManager.GetString("ContentLayout", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutArtifactReferences {
+            get {
+                return ResourceManager.GetString("ContentLayoutArtifactReferences", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutBinaryArtifacts {
+            get {
+                return ResourceManager.GetString("ContentLayoutBinaryArtifacts", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutIndexes {
+            get {
+                return ResourceManager.GetString("ContentLayoutIndexes", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutLoadableDependencies {
+            get {
+                return ResourceManager.GetString("ContentLayoutLoadableDependencies", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutLoadableObjects {
+            get {
+                return ResourceManager.GetString("ContentLayoutLoadableObjects", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutLoadableSceneDependencies {
+            get {
+                return ResourceManager.GetString("ContentLayoutLoadableSceneDependencies", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutLoadableScenes {
+            get {
+                return ResourceManager.GetString("ContentLayoutLoadableScenes", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutSerializedFileDependencies {
+            get {
+                return ResourceManager.GetString("ContentLayoutSerializedFileDependencies", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutSerializedFiles {
+            get {
+                return ResourceManager.GetString("ContentLayoutSerializedFiles", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutSourceAssets {
+            get {
+                return ResourceManager.GetString("ContentLayoutSourceAssets", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutViews {
+            get {
+                return ResourceManager.GetString("ContentLayoutViews", resourceCulture);
+            }
+        }
+
         internal static string Finalize {
             get {
                 return ResourceManager.GetString("Finalize", resourceCulture);

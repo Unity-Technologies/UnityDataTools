@@ -282,6 +282,17 @@ SELECT * FROM dangling_refs_view WHERE source_id = 42;
 Because the view joins `refs`, it is not populated when analyze is run with `--skip-references`
 (in that mode neither `refs` nor `dangling_refs` are populated).
 
+## ContentLayout (content_layout tables)
+
+When the analyzed input includes the `ContentLayout.json` of a ContentDirectory build (see
+[contentlayout.md](contentlayout.md)), its content is imported into a set of `content_layout*`
+tables and views: the source assets each file was built from, the dependencies between the files,
+the loadable objects and scenes, and the size of every artifact, all connected to the analyzed
+objects in the core tables. These tables are only created when a layout is actually imported.
+
+See [ContentLayout in the Analyze Database](contentlayout-database.md) for the tables, the views,
+and how they join with the core tables.
+
 ## BuildReport
 
 See [BuildReport.md](buildreport.md) for details of the tables and views related to analyzing BuildReport files.
