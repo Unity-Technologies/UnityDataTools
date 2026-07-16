@@ -211,8 +211,9 @@ Two files in the build history are directly relevant here:
 
 * **[`ContentLayout.json`](contentlayout.md)** — maps the built content back to the source assets in
   the project and describes the dependencies between the produced files. It is the key file for
-  understanding a content directory build. UnityDataTool support for `ContentLayout.json` is a work in
-  progress; for now, see the dedicated [ContentLayout.json](contentlayout.md) page for its structure.
+  understanding a content directory build. [`analyze`](command-analyze.md) imports it into queryable
+  database tables and uses it to resolve the references between Content Files (see
+  [ContentLayout in the Analyze Database](contentlayout-database.md)).
 * **The BuildReport file** — the build report for the build, in the same SerializedFile format that
   UnityDataTool reads for Player and AssetBundle builds. In the build history it is named after the
   build session GUID (rather than the fixed `LastBuild.buildreport` name), so reports from multiple
@@ -312,15 +313,20 @@ paths:
 UnityDataTool analyze /path/to/ContentDirectory /path/to/Library/BuildHistory/<build-directory>
 ```
 
-Analyzing the build output alone records the objects, but not where they came from. The build report
-in the build history adds the source-asset mapping (the PackedAssets data), so analyzing the two
-together gives a database that ties each built object back to its source asset. See
-[BuildReport Support](buildreport.md) for how the build report data is stored and queried.
+Analyzing the build output alone records the objects, but not where they came from — and because the
+references between Content Files live in the manifest rather than in the files themselves (see
+[References between Content Files](#references-between-content-files) above), those references end up
+in the `dangling_refs` table and analyze prints a warning. Including the build history folder fixes
+both: the `ContentLayout.json` it contains provides the source-asset mapping (imported as the
+`content_layout` tables, see [ContentLayout in the Analyze Database](contentlayout-database.md)) and
+the dependency information that analyze uses to resolve the references between Content Files. The
+build report adds the per-object source mapping (the PackedAssets data, see
+[BuildReport Support](buildreport.md)).
 
-Currently the references between objects are not recorded properly for a content directory build,
-because those references live in the manifest rather than in the Content Files themselves (see
-[References between Content Files](#references-between-content-files) above). This will be resolved
-using the information from the `ContentLayout.json` file.
+Analyze verifies that the `ContentLayout.json` matches the build through the build's
+`BuildManifestHash.txt`, so a stale layout from a different build is rejected rather than producing
+misleading results. See the [`analyze` command](command-analyze.md#contentdirectory-builds) page for
+the exact input combinations.
 
 ## Related documentation
 
@@ -329,6 +335,7 @@ using the information from the `ContentLayout.json` file.
 | [Use content directories to load assets at runtime](https://docs.unity3d.com/6000.6/Documentation/Manual/content-directories.html) | Unity Manual: what content directories are, and the APIs to build and load them. |
 | [Analyze builds](https://docs.unity3d.com/6000.6/Documentation/Manual/build-analyze-builds.html) | Unity Manual: the build history and the build report. |
 | [ContentLayout.json](contentlayout.md) | The build layout file that maps content directory output back to source assets. |
+| [ContentLayout in the Analyze Database](contentlayout-database.md) | How `analyze` imports `ContentLayout.json` into queryable database tables. |
 | [BuildReport Support](buildreport.md) | Analyzing Unity build report files with UnityDataTool. |
 | [Overview of Unity Content](unity-content-format.md) | SerializedFiles, Unity Archives, and TypeTrees. |
 | [AssetBundle Format](assetbundle-format.md) | The earlier system that content directories are a newer alternative to. |

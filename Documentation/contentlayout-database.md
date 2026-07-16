@@ -2,12 +2,14 @@
 
 When the input of the [`analyze`](command-analyze.md) command includes the `ContentLayout.json` of a content directory build, its content is imported into the database tables and views documented on this page. This makes the layout of the build queryable with SQL — which source assets each file was built from, the dependencies between the files, the loadable objects and scenes, and the size of every artifact — and connects that information to the objects and references that `analyze` extracts from the build content itself.
 
-For what `ContentLayout.json` contains conceptually, see [ContentLayout.json](contentlayout.md); for the build output format it describes, see [Content Directory Format](contentdirectory-format.md).
+The layout is also what makes reference information correct for a ContentDirectory build: the external reference tables inside the build's files hold symbolic placeholders, and analyze resolves them through the layout's dependency lists. With the layout on the input, references between content files land in the regular `refs` table (and [`find-refs`](command-find-refs.md) works across files); without it they are recorded in [`dangling_refs`](analyzer.md#dangling_refs--dangling_refs_view).
+
+For what `ContentLayout.json` contains conceptually, see [ContentLayout.json](contentlayout.md); for the build output format it describes and the reference-resolution mechanics, see [Content Directory Format](contentdirectory-format.md). For the input combinations analyze accepts (including how the layout is matched to the build), see [the `analyze` command](command-analyze.md#contentdirectory-builds). Example queries: [Example queries for ContentDirectory builds](analyze-examples-contentlayout.md).
 
 ## General notes
 
 * The `content_layout*` tables and views are only created when a `ContentLayout.json` is actually part of the analyzed input, so databases produced from AssetBundles or Player builds are not cluttered with empty tables.
-* A single layout per database is supported. Additional `ContentLayout.json` files on the input are reported as failed.
+* A single layout per database is supported. When several `ContentLayout.json` files are on the input, the one whose `BuildManifestHash` matches the analyzed build is selected and the rest are ignored (see [the `analyze` command](command-analyze.md#contentdirectory-builds)).
 * The tables mirror the json structure. Entries that cross-reference each other by array index in the json do the same in the database: `file_index` and `artifact_index` columns hold the json array indexes.
 * Two adjustments are made so the data is natural to query:
   * The json's sentinel values are stored as SQL `NULL`: a `SerializedFile` value of `-1` (an object dropped from the build) and the missing `ContentHash` of built-in entries.
@@ -24,7 +26,7 @@ One row identifying the imported layout: `name` (the path of the imported file),
 
 One row per serialized file (`.cf` Content File) of the build, keyed by `file_index`. Records the symbolic `cfid` reference string, the `is_builtin` flag, and the `content_hash` that gives the filename (`content_hash || '.cf'`).
 
-The `serialized_file` column references the core `serialized_files` table when the build content is part of the analyzed input, connecting the layout to the analyzed objects (see [below](#analyzing-the-layout-with-or-without-the-build-content)).
+The `serialized_file` column references the core `serialized_files` table, connecting the layout to the analyzed objects (see [below](#analyzing-the-layout-with-or-without-the-build-content) for what the referenced row contains when the build content was not analyzed).
 
 ### content_layout_source_assets
 
@@ -76,10 +78,10 @@ FROM content_layout_binary_artifacts GROUP BY category ORDER BY bytes DESC;
 
 ## Analyzing the layout with or without the build content
 
-A `ContentLayout.json` can be analyzed on its own — useful for running SQL queries against a large layout — or together with the build output it describes. The layout tables themselves are identical in both cases; what differs is the connection to the core tables:
+A `ContentLayout.json` can be analyzed on its own — useful for running SQL queries against a large layout — or together with the build output it describes. The layout tables themselves are identical in both cases; what differs is what the `serialized_file` link points at:
 
-* When the build content is part of the analyzed input, each `content_layout_serialized_files` row is linked to its analyzed file through the `serialized_file` column, and the views resolve across that link (e.g. `content_layout_loadable_objects_view` shows the object, type, name and size of each loadable).
-* In a layout-only analyze there is nothing to link to, so expect NULL in `content_layout_serialized_files.serialized_file`, in the `archive` column of `content_layout_serialized_files_view`, and in the `object`, `type`, `name` and `size` columns of `content_layout_loadable_objects_view`.
+* When the build content is part of the analyzed input, each `content_layout_serialized_files` row links to its analyzed file, and the views resolve across that link (e.g. `content_layout_loadable_objects_view` shows the object, type, name and size of each loadable).
+* When a file was not part of the analyzed input (a layout-only analyze, or a subset of a build), its layout entry links to a placeholder `serialized_files` row instead: the row holds only the filename, with `archive` NULL and no objects. The link column is therefore always valid, and whether a file was actually analyzed is visible through its objects: `EXISTS (SELECT 1 FROM objects o WHERE o.serialized_file = f.serialized_file)`. In a layout-only database, expect NULL in the `archive` column of `content_layout_serialized_files_view` and in the `object`, `type`, `name` and `size` columns of `content_layout_loadable_objects_view`.
 * Built-in entries (`is_builtin = 1`) always have a NULL `content_hash` and `serialized_file` — they are not files produced by the build.
 
 ## Related documentation
@@ -88,5 +90,6 @@ A `ContentLayout.json` can be analyzed on its own — useful for running SQL que
 |-------|-------------|
 | [ContentLayout.json](contentlayout.md) | What the file contains and its json schema. |
 | [Content Directory Format](contentdirectory-format.md) | Content directory builds and inspecting them with UnityDataTool. |
-| [`analyze` command](command-analyze.md) | The command that imports the layout. |
+| [`analyze` command](command-analyze.md) | The command that imports the layout, and the accepted input combinations. |
+| [Example queries for ContentDirectory builds](analyze-examples-contentlayout.md) | Example SQL queries against these tables. |
 | [Analyzer](analyzer.md) | The core database schema (objects, serialized files, references). |

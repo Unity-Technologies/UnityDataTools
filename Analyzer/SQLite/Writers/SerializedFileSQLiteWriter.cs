@@ -24,10 +24,17 @@ public class SerializedFileSQLiteWriter : IDisposable
 
     // Global id assignment shared across every serialized file in the database.
     // m_SerializedFileIdProvider maps a serialized file (by lowercased file name) to its
-    // serialized_files row id; m_ObjectIdProvider maps a (serialized file id, pathId) pair to
-    // its objects row id. See ObjectIdProvider for how cross-file references are resolved.
-    private IdProvider<string> m_SerializedFileIdProvider = new();
+    // serialized_files row id; it is owned by AnalyzerTool because the ContentLayout import
+    // assigns ids through the same provider. m_ObjectIdProvider maps a (serialized file id,
+    // pathId) pair to its objects row id. See ObjectIdProvider for how cross-file references
+    // are resolved.
+    private IdProvider<string> m_SerializedFileIdProvider;
     private ObjectIdProvider m_ObjectIdProvider = new();
+
+    // File-to-file dependencies from an imported ContentLayout.json, used to resolve the
+    // external references of ContentDirectory files (whose external reference table holds
+    // symbolic placeholders). Empty when no layout is imported.
+    private ContentFileDependencyMap m_ContentFileDependencies;
 
     // The refs table stores ids into these deduplicated string tables instead of repeating the
     // property path/type strings on every row. Ids are assigned lazily and are global across all
@@ -80,12 +87,15 @@ public class SerializedFileSQLiteWriter : IDisposable
     private SqliteConnection m_Database;
     private SqliteCommand m_LastId = new SqliteCommand();
     private SqliteTransaction m_CurrentTransaction = null;
-    public SerializedFileSQLiteWriter(SqliteConnection database, bool skipReferences, bool skipCrc)
+    public SerializedFileSQLiteWriter(SqliteConnection database, bool skipReferences, bool skipCrc,
+        IdProvider<string> serializedFileIdProvider, ContentFileDependencyMap contentFileDependencies)
     {
         m_Initialized = false;
         m_Database = database;
         m_SkipReferences = skipReferences;
         m_SkipCrc = skipCrc;
+        m_SerializedFileIdProvider = serializedFileIdProvider;
+        m_ContentFileDependencies = contentFileDependencies;
     }
 
     public void Init()
@@ -236,13 +246,28 @@ public class SerializedFileSQLiteWriter : IDisposable
 
             // Local file id 0 is always this file itself; ids 1..N follow the order of the
             // external reference table. Resolve each external reference to its global file id
-            // by (lowercased) file name.
+            // by (lowercased) file name. For ContentDirectory files the external table holds
+            // symbolic placeholders, so when an imported ContentLayout covers this file the
+            // actual target comes from its dependency list, matched by position; built-in
+            // dependencies (null entries) keep the external table path.
+            var resolvedDependencies = m_ContentFileDependencies.GetDependencies(
+                Path.GetFileName(fullPath).ToLowerInvariant());
+
+            if (resolvedDependencies != null && resolvedDependencies.Length != sf.ExternalReferences.Count)
+            {
+                Console.Error.WriteLine(
+                    $"Warning: {relativePath}: the external reference count ({sf.ExternalReferences.Count}) does not match " +
+                    $"the ContentLayout dependency count ({resolvedDependencies.Length}); using the external reference table.");
+                resolvedDependencies = null;
+            }
+
             int localId = 0;
             m_LocalToDbFileId.Add(localId++, serializedFileId);
             foreach (var extRef in sf.ExternalReferences)
             {
-                m_LocalToDbFileId.Add(localId++,
-                    m_SerializedFileIdProvider.GetId(extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLowerInvariant()));
+                var name = resolvedDependencies?[localId - 1]
+                    ?? extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLowerInvariant();
+                m_LocalToDbFileId.Add(localId++, m_SerializedFileIdProvider.GetId(name));
             }
 
             foreach (var obj in sf.Objects)

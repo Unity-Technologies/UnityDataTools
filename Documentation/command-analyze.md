@@ -67,10 +67,48 @@ command works with the following types of input:
 | **Entities content** | `StreamingAssets/ContentArchives` folder for [Entities](https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/content-management-intro.html) projects |
 | **Player Data folder** | The `Data` folder of a Unity Player build |
 | **Compressed Player builds** | The `data.unity3d` file will be analyzed like AssetBundles |
+| **ContentDirectory build output** | The output of [`BuildPipeline.BuildContentDirectory`](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/BuildPipeline.BuildContentDirectory.html) (Unity 6.6+), ideally together with its build history folder. See [ContentDirectory builds](#contentdirectory-builds) |
+| **ContentLayout.json** | The layout file of a ContentDirectory build, imported into dedicated tables. Also useful on its own for querying a large layout with SQL. See [ContentLayout in the Analyze Database](contentlayout-database.md) |
 | **BuildReport files** | The build report is typically found at a path like `Library/LastBuild.buildreport`and is a binary serialized file |
 | **AssetDatabase Artifacts** | The tool will work to some extent with serialized files created in the AssetDatabase artifact storage, inside the Library folder |
 
 > **Note**: Some platforms require extracting content from platform-specific containers first (e.g., `.apk` files on Android).
+
+---
+
+## ContentDirectory builds
+
+Analyze a ContentDirectory build together with its `ContentLayout.json` by passing the build output
+folder and the build report folder (or the layout file itself) in one call:
+
+```bash
+UnityDataTool analyze /path/to/ContentDirectory /path/to/Library/BuildHistory/<build-directory> -o database.db
+```
+
+The layout provides the source-asset mapping (imported as the `content_layout` tables, see
+[ContentLayout in the Analyze Database](contentlayout-database.md)) and the dependency information
+that resolves the references between the build's Content Files (see
+[Content Directory Format](contentdirectory-format.md)). Without it, cross-file references cannot be
+resolved and are recorded in `dangling_refs`.
+
+A `ContentLayout.json` is only used when its `BuildManifestHash` matches the analyzed build's
+`BuildManifestHash.txt` (a file guaranteed to exist in the build output folder, which analyze picks
+up automatically). This exact-match rule prevents a stale or unrelated layout from silently
+producing misleading results, and it means you can point analyze at a folder containing several
+layouts (such as `Library/BuildHistory`) and the matching one is selected.
+
+How the input combinations behave:
+
+| Input | Result |
+|-------|--------|
+| ContentDirectory only | Analyzed, with a warning that the analysis is incomplete (broken references, no source mapping) |
+| Subset of files from a ContentDirectory | Same as above; recognized by the `.cf` extension |
+| ContentDirectory + matching ContentLayout.json | Analyzed with resolved references and source mapping |
+| Subset of ContentDirectory files + ContentLayout.json | Works when a `BuildManifestHash.txt` can be found for the hash match; error when the layout cannot be validated |
+| ContentDirectory + multiple ContentLayout.json | The one matching the build is used, the rest are ignored; error when none match |
+| ContentLayout.json only | Imported on its own (layout tables only) |
+| Multiple ContentDirectory builds | Error — analyze a single build at a time |
+| Non-ContentDirectory content + ContentDirectory | Allowed, e.g. a Player build and a ContentDirectory together for duplicate detection |
 
 ---
 

@@ -12,10 +12,18 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
     public class SerializedFileParser : ISQLiteFileParser
     {
         private SerializedFileSQLiteWriter m_Writer;
+        private Util.IdProvider<string> m_SerializedFileIdProvider;
+        private Util.ContentFileDependencyMap m_ContentFileDependencies;
 
         public bool Verbose { get; set; }
         public bool SkipReferences { get; set; }
         public bool SkipCrc { get; set; }
+
+        public SerializedFileParser(Util.IdProvider<string> serializedFileIdProvider, Util.ContentFileDependencyMap contentFileDependencies)
+        {
+            m_SerializedFileIdProvider = serializedFileIdProvider;
+            m_ContentFileDependencies = contentFileDependencies;
+        }
 
         public bool CanParse(string filename)
         {
@@ -43,7 +51,8 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
         public void Init(SqliteConnection db)
         {
-            m_Writer = new SerializedFileSQLiteWriter(db, SkipReferences, SkipCrc);
+            m_Writer = new SerializedFileSQLiteWriter(db, SkipReferences, SkipCrc,
+                m_SerializedFileIdProvider, m_ContentFileDependencies);
         }
 
         public void Parse(string filename)
