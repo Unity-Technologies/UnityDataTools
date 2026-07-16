@@ -1,5 +1,6 @@
 -- Convenience views over the content_layout tables. Created together with the tables (only when
--- a ContentLayout.json is imported). See Documentation/analyzer.md for the schema reference.
+-- a ContentLayout.json is imported). See Documentation/contentlayout-database.md for the schema
+-- reference.
 
 -- One row per layout serialized file with the derived filename, artifact size, and core-table link.
 -- Built-in entries have no file on disk, so their path (cfid) is shown as the filename.

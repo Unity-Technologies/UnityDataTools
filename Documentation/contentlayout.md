@@ -67,6 +67,7 @@ The schema is subject to change. The `Version` field records the schema version 
 
 | Topic | Description |
 |-------|-------------|
+| [ContentLayout in the Analyze Database](contentlayout-database.md) | How the [`analyze` command](command-analyze.md) imports this file into queryable database tables. |
 | [Content Directory Format](contentdirectory-format.md) | Content directory builds and inspecting them with UnityDataTool. |
 | [Build report and build history](https://docs.unity3d.com/6000.6/Documentation/Manual/build-reporting.html) | The build report directory and the files in it (Unity Manual). |
 | [BuildReport Support](buildreport.md) | Analyzing Unity build report files with UnityDataTool. |

@@ -10,7 +10,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 {
     // Imports the ContentLayout.json produced by BuildPipeline.BuildContentDirectory into the
     // content_layout* tables (see Documentation/contentlayout.md for the file, and
-    // Documentation/analyzer.md for the resulting schema).
+    // Documentation/contentlayout-database.md for the resulting schema).
     public class ContentLayoutParser : ISQLiteFileParser
     {
         private ContentLayoutSQLWriter m_Writer;

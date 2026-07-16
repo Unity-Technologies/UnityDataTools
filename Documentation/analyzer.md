@@ -286,59 +286,12 @@ Because the view joins `refs`, it is not populated when analyze is run with `--s
 
 When the analyzed input includes the `ContentLayout.json` of a ContentDirectory build (see
 [contentlayout.md](contentlayout.md)), its content is imported into a set of `content_layout*`
-tables. These tables are only created when a layout is actually imported, and a single layout per
-database is supported. The tables mirror the json structure, with the sentinel values mapped to
-SQL NULL (`-1` for "dropped from build", the missing content hash of built-in entries) and the
-top-level `RootAssets` list folded into the `is_root_asset` flag:
+tables and views: the source assets each file was built from, the dependencies between the files,
+the loadable objects and scenes, and the size of every artifact, all connected to the analyzed
+objects in the core tables. These tables are only created when a layout is actually imported.
 
-* `content_layout`: one row identifying the imported file (`name`, `version`, `build_manifest_hash`).
-* `content_layout_serialized_files`: one row per serialized file (.cf Content File) of the build,
-  keyed by `file_index` (the json array index). Records the symbolic `cfid`, `is_builtin`, and the
-  `content_hash` that gives the filename (`content_hash || '.cf'`). The `serialized_file` column
-  references the core `serialized_files` table, connecting the layout to the analyzed objects
-  (see [Analyzing the layout with or without the build content](#analyzing-the-layout-with-or-without-the-build-content)).
-* `content_layout_source_assets`: the source assets included in each serialized file.
-* `content_layout_serialized_file_dependencies`: file-to-file dependency edges. The 1-based
-  `position` column preserves the json array order, which is how PPtr `m_FileID` values resolve
-  (see [contentdirectory-format.md](contentdirectory-format.md)).
-* `content_layout_loadable_dependencies` / `content_layout_loadable_scene_dependencies`: the
-  loadables and scenes referenced from each serialized file.
-* `content_layout_loadable_objects`: the objects loadable on demand, with their source project
-  identity (`guid`, `asset_path`, `lfid`) and output location (`serialized_file_index`,
-  `output_lfid`).
-* `content_layout_loadable_scenes`: the loadable scenes.
-* `content_layout_binary_artifacts`: every artifact of the build output (serialized files, .resS
-  and .resource data files, the manifest) with its `category` and `size`.
-* `content_layout_artifact_references`: direct references between artifacts.
-
-Views join the pieces together: `content_layout_serialized_files_view` (files with derived
-filename, size, and core-table link), `content_layout_source_assets_view` (source asset → built
-files), `content_layout_serialized_file_dependencies_view` (dependency edges with resolved
-filenames), `content_layout_loadable_objects_view` (loadables resolved to their analyzed object),
-`content_layout_binary_artifacts_view` (artifacts with derived filenames), and
-`content_layout_data_files_view` (the .resS/.resource data files each serialized file uses).
-
-```sql
--- which files was this source asset built into?
-SELECT * FROM content_layout_source_assets_view WHERE asset_path = 'Assets/Textures/GreenStatic.png';
-```
-
-### Analyzing the layout with or without the build content
-
-A `ContentLayout.json` can be analyzed on its own — useful for running SQL queries against a large
-layout — or together with the build output it describes. The layout tables themselves are
-identical in both cases; what differs is the connection to the core tables:
-
-* When the build content is part of the analyzed input, each `content_layout_serialized_files`
-  row is linked to its analyzed file through the `serialized_file` column, and the views resolve
-  across that link (e.g. `content_layout_loadable_objects_view` shows the object, type, name and
-  size of each loadable).
-* In a layout-only analyze there is nothing to link to, so expect NULL in
-  `content_layout_serialized_files.serialized_file`, in the `archive` column of
-  `content_layout_serialized_files_view`, and in the `object`, `type`, `name` and `size` columns
-  of `content_layout_loadable_objects_view`. Built-in entries (`is_builtin = 1`) additionally
-  always have a NULL `content_hash` and `serialized_file` - they are not files produced by the
-  build.
+See [ContentLayout in the Analyze Database](contentlayout-database.md) for the tables, the views,
+and how they join with the core tables.
 
 ## BuildReport
 
