@@ -44,6 +44,11 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
             // The tool's failure summary only includes exception details in verbose mode, so
             // report the reason for these expected failures directly.
+            if (layout == null)
+            {
+                Fail($"\"{filename}\" does not contain a ContentLayout.");
+            }
+
             if (layout.Version != ContentLayout.CurrentVersion)
             {
                 Fail($"Unsupported ContentLayout.json version {layout.Version} (this version of UnityDataTool supports version {ContentLayout.CurrentVersion}).");

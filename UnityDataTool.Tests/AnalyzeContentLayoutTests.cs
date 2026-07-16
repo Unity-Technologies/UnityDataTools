@@ -129,6 +129,13 @@ public class AnalyzeContentLayoutTests
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_data_files_view", 4,
             "the reference build has 2 .resS and 2 .resource data files");
         SQLTestHelper.AssertQueryString(db,
+            "SELECT filename FROM content_layout_serialized_files_view WHERE is_builtin = 1",
+            "Library/unity default resources", "built-in entries show their path as the filename");
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
+              WHERE serialized_file_index = 2 AND position = 1",
+            "Library/unity default resources", "dependencies on built-in entries resolve to their path");
+        SQLTestHelper.AssertQueryString(db,
             @"SELECT filename FROM content_layout_loadable_objects_view
               WHERE asset_path = 'Assets/ScriptableObjects/ContentDirectoryRoot.asset'",
             "c0152db4dd710be51b2decb997325f34.cf", "the loadable view resolves the containing file");
@@ -168,6 +175,22 @@ public class AnalyzeContentLayoutTests
         SQLTestHelper.AssertQueryInt(db,
             "SELECT COUNT(*) FROM sqlite_master WHERE name LIKE 'content_layout%'", 0,
             "an unsupported layout version must not be imported");
+    }
+
+    [Test]
+    public async Task Analyze_ContentLayoutWithoutContent_ImportsNothing()
+    {
+        var layoutFolder = Path.Combine(m_TestOutputFolder, "null_layout");
+        Directory.CreateDirectory(layoutFolder);
+        File.WriteAllText(Path.Combine(layoutFolder, "ContentLayout.json"), "null");
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", layoutFolder, "-o", databasePath }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM sqlite_master WHERE name LIKE 'content_layout%'", 0,
+            "a json file without a ContentLayout must not be imported");
     }
 
     [Test]
