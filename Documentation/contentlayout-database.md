@@ -65,7 +65,7 @@ Direct references between artifacts (`artifact_index` → `referenced_artifact_i
 | `content_layout_serialized_file_dependencies_view` | The dependency edges with filenames resolved on both sides. |
 | `content_layout_loadable_objects_view` | The loadables resolved to their analyzed object (`object`, `type`, `name`, `size`). |
 | `content_layout_binary_artifacts_view` | The artifacts with their derived on-disk filename (content hash + category-based extension). |
-| `content_layout_resource_files_view` | The `.resS`/`.resource` data files each serialized file uses, derived from the artifact graph.  Note: the same resource can be referenced by multiple serialized file. |
+| `content_layout_resource_files_view` | The `.resS`/`.resource` data files each serialized file uses, derived from the artifact graph.  Note: the same resource can be referenced by multiple serialized files. |
 
 ```sql
 -- which files was this source asset built into?
