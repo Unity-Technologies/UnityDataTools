@@ -53,7 +53,7 @@ SELECT artifact_index, content_hash, category, size,
 FROM content_layout_binary_artifacts;
 
 -- The data files (.resS/.resource) each serialized file uses, derived from the artifact graph.
-CREATE VIEW IF NOT EXISTS content_layout_data_files_view AS
+CREATE VIEW IF NOT EXISTS content_layout_resource_files_view AS
 SELECT f.file_index, f.content_hash || '.cf' AS filename,
        ra.category, rav.filename AS data_filename, ra.size
 FROM content_layout_serialized_files f
