@@ -210,6 +210,8 @@ Build report data is stored in the following tables and views:
 
 The `build_reports` table contains primary build information. Additional tables store detailed content data. Views simplify queries by automatically joining tables, especially when working with multiple build reports.
 
+These tables and views are created on demand, so a database analyzed without any build report does not contain them. The `build_reports`, `build_report_files`, `build_report_archive_contents` group and `build_report_files_view` are created when the first BuildReport object is analyzed; the `build_report_packed_*` tables and views are created when the first PackedAssets object is analyzed (a build report with no PackedAssets objects, such as some scene-only builds, will not have them).
+
 ### Schema Overview
 
 Views automatically identify which build report each row belongs to, simplifying multi-report queries. To create custom queries, understand the table relationships:

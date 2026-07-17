@@ -7,15 +7,18 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 public class BuildReportHandler : ISQLiteHandler
 {
+    private SqliteConnection m_Database;
+    private bool m_SchemaCreated;
     private SqliteCommand m_InsertCommand;
     private SqliteCommand m_InsertFileCommand;
     private SqliteCommand m_InsertArchiveContentCommand;
 
     public void Init(SqliteConnection db)
     {
-        using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.BuildReport ?? throw new InvalidOperationException("BuildReport resource not found");
-        command.ExecuteNonQuery();
+        // The build_report tables are created lazily, on the first BuildReport object (see
+        // EnsureSchema), so a database analyzed without any build report is not cluttered with
+        // empty build_report tables.
+        m_Database = db;
 
         m_InsertCommand = db.CreateCommand();
         m_InsertCommand.CommandText = @"INSERT INTO build_reports(
@@ -70,8 +73,25 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertArchiveContentCommand.Parameters.Add("@archive_content", SqliteType.Text);
     }
 
+    // Creates the build_report schema on first use. Runs inside the current file's transaction, so
+    // it is committed together with the rows it is about to receive.
+    private void EnsureSchema(SqliteTransaction transaction)
+    {
+        if (m_SchemaCreated)
+            return;
+
+        using var command = m_Database.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = Properties.Resources.BuildReport ?? throw new InvalidOperationException("BuildReport resource not found");
+        command.ExecuteNonQuery();
+
+        m_SchemaCreated = true;
+    }
+
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
+        EnsureSchema(ctx.Transaction);
+
         var buildReport = BuildReport.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
         m_InsertCommand.Parameters["@id"].Value = objectId;

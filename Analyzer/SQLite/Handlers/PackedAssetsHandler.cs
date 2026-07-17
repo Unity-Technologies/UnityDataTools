@@ -9,6 +9,8 @@ namespace UnityDataTools.Analyzer.SQLite.Handlers;
 
 public class PackedAssetsHandler : ISQLiteHandler
 {
+    private SqliteConnection m_Database;
+    private bool m_SchemaCreated;
     private SqliteCommand m_InsertPackedAssetsCommand;
     private SqliteCommand m_InsertSourceAssetCommand;
     private SqliteCommand m_GetSourceAssetIdCommand;
@@ -23,9 +25,10 @@ public class PackedAssetsHandler : ISQLiteHandler
 
     public void Init(SqliteConnection db)
     {
-        using var command = db.CreateCommand();
-        command.CommandText = Properties.Resources.PackedAssets ?? throw new InvalidOperationException("PackedAssets resource not found");
-        command.ExecuteNonQuery();
+        // The build_report_packed_* tables and views are created lazily, on the first PackedAssets
+        // object (see EnsureSchema). A build report without any PackedAssets object (or a database
+        // analyzed without any build report) therefore does not get these tables.
+        m_Database = db;
 
         m_InsertPackedAssetsCommand = db.CreateCommand();
         m_InsertPackedAssetsCommand.CommandText = @"INSERT INTO build_report_packed_assets(
@@ -77,8 +80,28 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_InsertTypeCommand.Parameters.Add("@name", SqliteType.Text);
     }
 
+    // Creates the build_report_packed_* schema on first use. Runs inside the current file's
+    // transaction, so it is committed together with the rows it is about to receive. Its views
+    // reference build_report_archive_contents (created by BuildReportHandler); SQLite does not
+    // resolve view references until query time, and every build report containing PackedAssets
+    // objects also contains the BuildReport object, so that table exists before any query.
+    private void EnsureSchema(SqliteTransaction transaction)
+    {
+        if (m_SchemaCreated)
+            return;
+
+        using var command = m_Database.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = Properties.Resources.PackedAssets ?? throw new InvalidOperationException("PackedAssets resource not found");
+        command.ExecuteNonQuery();
+
+        m_SchemaCreated = true;
+    }
+
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
     {
+        EnsureSchema(ctx.Transaction);
+
         var packedAssets = PackedAssets.Read(reader);
 
         m_InsertPackedAssetsCommand.Transaction = ctx.Transaction;
