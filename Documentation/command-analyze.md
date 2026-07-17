@@ -64,12 +64,12 @@ command works with the following types of input:
 |------------|-------------|
 | **AssetBundle build output** | The output path of an AssetBundle build |
 | **Addressables folder** | `StreamingAssets/aa` folder from a Player build, including BuildLayout files |
-| **Entities content** | `StreamingAssets/ContentArchives` folder for [Entities](https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/content-management-intro.html) projects |
 | **Player Data folder** | The `Data` folder of a Unity Player build |
 | **Compressed Player builds** | The `data.unity3d` file will be analyzed like AssetBundles |
 | **ContentDirectory build output** | The output of [`BuildPipeline.BuildContentDirectory`](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/BuildPipeline.BuildContentDirectory.html) (Unity 6.6+), ideally together with its build history folder. See [ContentDirectory builds](#contentdirectory-builds) |
 | **ContentLayout.json** | The layout file of a ContentDirectory build, imported into dedicated tables. Also useful on its own for querying a large layout with SQL. See [ContentLayout in the Analyze Database](contentlayout-database.md) |
-| **BuildReport files** | The build report is typically found at a path like `Library/LastBuild.buildreport`and is a binary serialized file |
+| **BuildReport files** | The build report is typically found inside `Library/BuildHistory` or at `Library/LastBuild.buildreport`.  It is a binary serialized file |
+| **Entities content** | `StreamingAssets/ContentArchives` folder for [Entities](https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/content-management-intro.html) projects |
 | **AssetDatabase Artifacts** | The tool will work to some extent with serialized files created in the AssetDatabase artifact storage, inside the Library folder |
 
 > **Note**: Some platforms require extracting content from platform-specific containers first (e.g., `.apk` files on Android).
@@ -193,6 +193,7 @@ When `--skip-references` is used, some functionality is lost:
 * the `find-refs` command will not work
 * `view_material_shader_refs` and `view_material_texture_refs` will be empty
 * `script_object_view` will be empty
+* `dangling_refs` will be empty
 * Queries that look at the relationship between objects will not work.  For example the refs table is required to link between a `MonoBehaviour` and its `MonoScript`.
 
 When `--skip-crc` is used, the `objects.crc32` column will be 0 for all objects. This means:

@@ -62,9 +62,8 @@ file — this is how the pipeline de-duplicates shared content automatically. Th
 clip per file, each named by its content hash.
 
 A Unity object references data inside a `.resS`/`.resource` file by a content-addressable path of the
-form `cah:/<hash>` (a single slash; `cah` stands for "content-addressable hash"). For example an
-AudioClip's `m_Source` is a string like `cah:/4226b5c16a50dab6eff0f08dd1253d4b`, which resolves to the
-`.resource` file of that hash.
+form `cah:/<hash>`. This, and the way it differs from AssetBundle and Player builds, is covered in
+[References to resource files](#references-to-resource-files) below.
 
 The extensions are informational. The loading system identifies content by its hash (through the
 `cah:/` scheme), not by file extension, so the extension is not required to resolve content. Extensions
@@ -303,7 +302,101 @@ flowchart TD
 > instead of the manifest dependency list. The GUIDs in the external table are also used for binary
 > SerializedFiles in the Editor (for example in AssetDatabase artifacts).
 
+## References to resource files
+
+The bulk of a texture, mesh, audio clip, or video clip is not stored in the Content File itself but in a
+companion data file: a `.resS` file for texture and mesh data, a `.resource` file for audio and video.
+A Unity object points at its data with a content-addressable path of the form `cah:/<hash>` (a single
+slash; `cah` stands for "content-addressable hash"). Unlike the `.cfid` placeholders used for
+[references between Content Files](#references-between-content-files), the `<hash>` here is the real
+content hash of the data file, so it resolves directly to `<hash>.resS` or `<hash>.resource` with no
+manifest lookup.
+
+The reference build in `TestCommon/Data/LeadingEdgeBuilds/ContentDirectory` deliberately includes both
+audio clips and a texture, so it exercises both kinds of data file. Dumping the Content File built from
+`Assets/Audio/a.mp3` shows the AudioClip pointing at its `.resource` file, and dumping the one holding
+`Assets/Textures/GreenStatic.png`'s texture data shows the Texture2D pointing at its `.resS` file:
+
+```
+ID: -6933612096100796476 (ClassID: 83) AudioClip
+  m_Name (string) a
+  ...
+  m_Resource (StreamedResource)
+    m_Source (string) cah:/4226b5c16a50dab6eff0f08dd1253d4b
+    m_Offset (FileSize) 0
+    m_Size (UInt64) 47424
+```
+```
+ID: 1183010003894172340 (ClassID: 28) Texture2D
+  m_Name (string) GreenStatic
+  m_StreamData (StreamingInfo)
+    offset (UInt64) 0
+    path (string) cah:/f0a44ad4a4babd121543fd44032928e7
+```
+
+So the AudioClip's data lives in `4226b5c16a50dab6eff0f08dd1253d4b.resource` and the texture's in
+`f0a44ad4a4babd121543fd44032928e7.resS`.
+
+### One resource per file, deduplicated across the build
+
+Each `.resS` and `.resource` file holds a **single** distinct texture, mesh, audio clip, or video clip.
+Because the file is named by its content hash, if several objects reference identical binary data — even
+across separate source assets — they all point at the same `cah:/<hash>`, and the build stores that data
+only once. Deduplication of shared resource data is therefore automatic, the same way it is for Content
+Files.
+
+This is the opposite of how AssetBundle and Player builds lay out resource data. There, all the `.resS`
+data needed by a given SerializedFile is concatenated into one companion file belonging to that
+SerializedFile (likewise for `.resource`), an object points into it by byte offset and size, and there is
+no sharing between SerializedFiles — the same texture used by two bundles is written into each. Content
+directories flip this to fine-grained, content-addressed, per-resource files that are shared across the
+whole build.
+
+### How the relationship is recorded
+
+The link from a Content File to the resource files it uses is recorded in the `BinaryArtifacts` section
+of [`ContentLayout.json`](contentlayout.md), not inside the Content File. Every artifact — each Content
+File, each resource file, and the manifest — is an entry with a `Category` and a `Size`, and a Content
+File's `ArtifactReferences` point at the resource artifacts it needs. Continuing the `a.mp3` example, its
+`contentfile` artifact references the `audio` artifact whose content hash is the `cah:/` target seen
+above:
+
+```json
+{ "Index": 11, "ContentHash": "730d2d641a53eeb1e633f2ff60d730e9", "Category": "contentfile", "Size": 1288, "ArtifactReferences": [12] },
+{ "Index": 12, "ContentHash": "4226b5c16a50dab6eff0f08dd1253d4b", "Category": "audio", "Size": 47424 }
+```
+
+When [`analyze`](command-analyze.md) imports the layout it preserves this: the artifacts land in
+`content_layout_binary_artifacts` (keyed by `artifact_index`, with `category` and `size`) and the
+content-file → resource-file edges in `content_layout_artifact_references`. Resource files never appear
+in the core `objects`/`serialized_files` tables, so `content_layout_binary_artifacts` is where their
+sizes are recorded. The `content_layout_resource_files_view` walks that edge for you; joined with the
+source-asset table it shows which resource file each asset was built into:
+
+```sql
+SELECT sa.asset_path, rfv.data_filename, rfv.category, rfv.size
+FROM content_layout_resource_files_view rfv
+JOIN content_layout_source_assets sa ON sa.serialized_file_index = rfv.file_index
+ORDER BY rfv.category, rfv.size;
+```
+```
+asset_path                       data_filename                              category  size
+-------------------------------  -----------------------------------------  --------  ------
+Assets/Audio/6.mp3               68c9d0b12420e1951eec7790bd0754fe.resource  audio     30688
+Assets/Audio/a.mp3               4226b5c16a50dab6eff0f08dd1253d4b.resource  audio     47424
+Assets/Textures/GreenStatic.png  f0a44ad4a4babd121543fd44032928e7.resS      texture   215970
+Resources/unity_builtin_extra    ea7c9fa2d58ef71544726747da8ade6d.resS      texture   524280
+```
+
+The fourth row is the default sprite texture pulled in from `Resources/unity_builtin_extra` (see the
+[granularity rules](#build-layout-granularity)). See [ContentLayout in the Analyze
+Database](contentlayout-database.md) for the full set of `content_layout` tables and views.
+
 ## Inspecting content directory output with UnityDataTool
+
+The `dump` and `serialized-file` commands can be used to inspect serialized files in a content directory.
+If the content is distributed inside archive files (e.g. `content0.archive`) then the `archive` command
+can be used to view or extract the content.
 
 When you run [`analyze`](command-analyze.md) on a content directory build, analyze the **build output
 folder and its matching build history folder together**, in a single `analyze` call, by passing both
@@ -319,14 +412,17 @@ references between Content Files live in the manifest rather than in the files t
 in the `dangling_refs` table and analyze prints a warning. Including the build history folder fixes
 both: the `ContentLayout.json` it contains provides the source-asset mapping (imported as the
 `content_layout` tables, see [ContentLayout in the Analyze Database](contentlayout-database.md)) and
-the dependency information that analyze uses to resolve the references between Content Files. The
-build report adds the per-object source mapping (the PackedAssets data, see
-[BuildReport Support](buildreport.md)).
+the dependency information that analyze uses to resolve the references between Content Files.
 
 Analyze verifies that the `ContentLayout.json` matches the build through the build's
 `BuildManifestHash.txt`, so a stale layout from a different build is rejected rather than producing
 misleading results. See the [`analyze` command](command-analyze.md#contentdirectory-builds) page for
 the exact input combinations.
+
+Note: Passing in the entire build report folder in the build history means that the .buildreport file
+will also be analyzed.  That brings in statistics about the build (how long it took etc).  For
+content directory builds there is no PackedAssets data, but other build_report_* tables will be populated.
+Call `analyze` with the path of the correct ContentLayout.json file, instead of the entire build report folder, if you do not need this extra data.
 
 ## Related documentation
 

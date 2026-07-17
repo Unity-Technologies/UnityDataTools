@@ -156,7 +156,7 @@ TypeTrees describe how Unity objects are serialized (property names, types, offs
 ### File Formats
 - **Unity Archive** - Container format (AssetBundles, .data files). Can be mounted as virtual filesystem.
 - **SerializedFile** - Binary format storing Unity objects with TypeTree metadata.
-- **Addressables BuildLayout** - JSON build report (buildlogreport.json, AddressablesReport.json)
+- **JSON** - JSON files used for build reporting (schema found in UnityDataModels as C# data structures).
 
 ### Common Issues
 

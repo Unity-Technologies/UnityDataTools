@@ -136,9 +136,9 @@ public class AnalyzeContentLayoutTests
         SQLTestHelper.AssertViewExists(db, "content_layout_serialized_file_dependencies_view");
         SQLTestHelper.AssertViewExists(db, "content_layout_loadable_objects_view");
         SQLTestHelper.AssertViewExists(db, "content_layout_binary_artifacts_view");
-        SQLTestHelper.AssertViewExists(db, "content_layout_data_files_view");
+        SQLTestHelper.AssertViewExists(db, "content_layout_resource_files_view");
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_data_files_view", 4,
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_resource_files_view", 4,
             "the reference build has 2 .resS and 2 .resource data files");
         SQLTestHelper.AssertQueryString(db,
             "SELECT filename FROM content_layout_serialized_files_view WHERE is_builtin = 1",

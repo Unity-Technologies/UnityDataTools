@@ -44,7 +44,7 @@ SELECT v.* FROM closure INNER JOIN content_layout_serialized_files_view v USING 
 
 Add up the `size` column of the result for the total load footprint (excluding data loaded on
 demand through loadables, and the `.resS`/`.resource` data files — join
-`content_layout_data_files_view` to include those).
+`content_layout_resource_files_view` to include those).
 
 ## All objects built from a source asset (layout + content)
 
@@ -74,7 +74,7 @@ The `.resS`/`.resource` files holding the streamed texture/mesh and audio/video 
 serialized file:
 
 ```sql
-SELECT * FROM content_layout_data_files_view
+SELECT * FROM content_layout_resource_files_view
 WHERE filename = 'c0152db4dd710be51b2decb997325f34.cf';
 ```
 
