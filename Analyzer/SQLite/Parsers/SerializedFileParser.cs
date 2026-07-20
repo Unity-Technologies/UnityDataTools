@@ -122,13 +122,18 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                                     // tracked separately so it isn't lumped with genuine processing errors.
                                     archiveHadMissingTypeTrees = true;
                                 }
+                                catch (AnalyzeDuplicateException e)
+                                {
+                                    // A SerializedFile with this name was already analyzed (e.g. two
+                                    // differently-named bundles containing the same CAB). Report the
+                                    // self-contained message rather than a raw SQLite constraint error.
+                                    Console.Error.WriteLine($"Skipping {node.Path} in archive {archiveName}: {e.Message}");
+                                    archiveHadErrors = true;
+                                }
                                 catch (Exception e)
                                 {
-                                    // the most likely exception here is Microsoft.Data.Sqlite.SqliteException,
-                                    // for example 'UNIQUE constraint failed: serialized_files.id'.
-                                    // or 'UNIQUE constraint failed: objects.id' which can happen
-                                    // if AssetBundles from different builds are being processed by a single call to Analyze
-                                    // or if there is a Unity Data Tool bug.
+                                    // An unexpected error, for example a Unity Data Tool bug. Duplicate
+                                    // names (the common 'UNIQUE constraint failed' case) are handled above.
                                     Console.Error.WriteLine($"Error processing {node.Path} in archive {archiveName}");
                                     Console.Error.WriteLine(e.Message);
                                     Console.Error.WriteLine();

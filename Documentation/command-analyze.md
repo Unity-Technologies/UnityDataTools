@@ -154,25 +154,36 @@ This error occurs when SerializedFiles are built without TypeTrees. The command 
 UnityDataTool analyze /path/to/bundles --typetree-data /path/to/typetree.bin
 ```
 
-### SQL Constraint Errors
+### Duplicate SerializedFile name / Duplicate archive name
 
 ```
-SQLite Error 19: 'UNIQUE constraint failed: objects.id'
+Skipping build2\level0: Duplicate SerializedFile name 'level0'. Only a single build can be analyzed at a time; the same SerializedFile name cannot be analyzed twice.
 ```
 or
 ```
-SQLite Error 19: 'UNIQUE constraint failed: serialized_files.id'.
+Skipping build2\assetbundle: Duplicate archive name 'assetbundle'. Each analyzed archive must have a unique name; only a single build can be analyzed at a time.
 ```
 
-These errors occur when the same serialized file name appears in multiple sources:
+**analyze only supports a single build at a time.** Unity resolves references between SerializedFiles
+by file name, so two files that share a name are indistinguishable to those references — there is no
+way to tell which copy a reference points at. For that reason each SerializedFile name (and each
+archive name) may appear only once in a database.
 
-| Cause | Solution |
-|-------|----------|
-| Multiple builds in same directory | Analyze each build separately |
-| Scenes with same filename (different paths) | Rename scenes to be unique |
-| AssetBundle variants | Analyze variants separately |
+When analyze encounters a second file or archive with a name it has already processed, it prints one
+of the messages above, **skips that file or archive** (counting it as a failed file), and continues
+with the rest of the input. The already-analyzed copy is kept; the duplicate's content is ignored.
 
-See [Comparing Builds](../../Documentation/comparing-builds.md) for strategies to compare different versions of builds.
+This is expected when the input contains more than one build, and in these common cases:
+
+| Cause | What to do |
+|-------|------------|
+| Multiple builds passed together (or nested in one directory) | Analyze each build into its own database |
+| AssetBundle variants (same content, different variant) | Analyze each variant separately |
+| Hashed AssetBundle file names across two builds | The file names differ but the inner SerializedFile (`CAB-<hash>`) is shared — analyze each build separately |
+| Player scenes with the same file name (`level0`, …) from different builds | Analyze each build separately |
+
+To compare two builds, analyze each into a separate database and query across them — see
+[Comparing Builds](../../Documentation/comparing-builds.md).
 
 ### Slow Analyze times, large output database
 
