@@ -19,6 +19,14 @@ public class SerializedFileSQLiteWriter : IDisposable
     private int m_CurrentArchiveId = -1;
     private int m_NextArchiveId = 0;
 
+    // Names/ids already written to the archives and serialized_files tables, used to reject a
+    // second copy of the same content with a clear error instead of a raw UNIQUE constraint
+    // failure. Only a single build can be analyzed at a time (see AnalyzeDuplicateException).
+    // Archive names are compared case-sensitively, matching the archives.name schema constraint
+    // and the name as it exists on the file system.
+    private HashSet<string> m_WrittenArchiveNames = new();
+    private HashSet<int> m_WrittenSerializedFileIds = new();
+
     private bool m_SkipReferences;
     private bool m_SkipCrc;
 
@@ -135,7 +143,17 @@ public class SerializedFileSQLiteWriter : IDisposable
             throw new InvalidOperationException("SQLWriter.BeginArchive called twice");
         }
 
+        // Assign the id before the duplicate check throws, so the caller's EndArchive (called from
+        // its finally) unwinds cleanly instead of masking the exception.
         m_CurrentArchiveId = m_NextArchiveId++;
+
+        // Reject a duplicate archive name so no second archives row is created and the caller can
+        // report it before reading the archive's contents.
+        if (!m_WrittenArchiveNames.Add(name))
+        {
+            throw new AnalyzeDuplicateException(name, isArchive: true);
+        }
+
         m_AddArchiveCommand.SetValue("id", m_CurrentArchiveId);
         m_AddArchiveCommand.SetValue("name", name);
         m_AddArchiveCommand.SetValue("file_size", size);
@@ -169,6 +187,14 @@ public class SerializedFileSQLiteWriter : IDisposable
         using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
         int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLowerInvariant());
         int sceneId = -1;
+
+        // Two SerializedFiles with the same name map to the same id (the provider deduplicates by
+        // name), so a second one would collide on serialized_files.id. Reject it before opening a
+        // transaction; the file name is what matters to the user, not the analyzer id.
+        if (m_WrittenSerializedFileIds.Contains(serializedFileId))
+        {
+            throw new AnalyzeDuplicateException(Path.GetFileName(fullPath), isArchive: false);
+        }
 
         using var transaction = m_Database.BeginTransaction();
         m_CurrentTransaction = transaction;
@@ -352,6 +378,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             }
 
             transaction.Commit();
+            m_WrittenSerializedFileIds.Add(serializedFileId);
         }
         catch (Exception)
         {

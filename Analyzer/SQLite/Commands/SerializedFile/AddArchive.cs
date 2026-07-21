@@ -9,7 +9,8 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
         id INTEGER,
         name TEXT,
         file_size INTEGER,
-        PRIMARY KEY (id)
+        PRIMARY KEY (id),
+        UNIQUE (name)
     );
     */
     internal class AddArchive : AbstractCommand

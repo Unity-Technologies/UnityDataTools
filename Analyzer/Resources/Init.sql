@@ -8,12 +8,17 @@ CREATE TABLE IF NOT EXISTS types
 -- Describes a unity archive that contains serialized files and other built content.
 -- A common use of the unity archive is for AssetBundles but it can also be used for
 -- Player, Content Archive and ContentDirectory builds.
+-- name is UNIQUE (case-sensitive, matching the name on the file system): analyze only supports a
+-- single build, so two archives with the same name would make queries ambiguous. A duplicate is
+-- caught in code and reported (see AnalyzeDuplicateException); the constraint is the durable
+-- backstop for that invariant.
 CREATE TABLE IF NOT EXISTS archives
 (
     id INTEGER,
     name TEXT,
     file_size INTEGER,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE (name)
 );
 
 -- One row per SerializedFile encountered during analysis. The name is often a technical,
@@ -198,8 +203,8 @@ INSERT INTO types (id, name) VALUES (-1, 'Scene');
 -- assetbundle_assets/preload_dependencies (issue #82); 3 = renamed asset_bundles table to archives
 -- and the asset_bundle column/alias to archive (issue #68); 4 = build_report_packed_asset_contents_view
 -- type column changed from numeric id to type name (issue #55); 5 = added dangling_refs table/view
--- (issue #85); databases produced before versioning report 0.
-PRAGMA user_version = 5;
+-- (issue #85); 6 = archives.name is unique (issue #51); databases produced before versioning report 0.
+PRAGMA user_version = 6;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;
