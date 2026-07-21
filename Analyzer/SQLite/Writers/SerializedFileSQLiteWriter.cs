@@ -185,7 +185,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
         using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
-        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath).ToLowerInvariant());
+        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath));
         int sceneId = -1;
 
         // Two SerializedFiles with the same name map to the same id (the provider deduplicates by
@@ -244,7 +244,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             // path -> file mapping from the AssetBundle object's m_SceneHashes.
             var fileName = Path.GetFileName(fullPath);
             var sceneFileName = fileName.Substring(0, fileName.Length - ".sharedAssets".Length);
-            var sceneFileId = m_SerializedFileIdProvider.GetId(sceneFileName.ToLowerInvariant());
+            var sceneFileId = m_SerializedFileIdProvider.GetId(sceneFileName);
             sceneId = m_ObjectIdProvider.GetId((sceneFileId, 0));
         }
 
@@ -272,12 +272,13 @@ public class SerializedFileSQLiteWriter : IDisposable
 
             // Local file id 0 is always this file itself; ids 1..N follow the order of the
             // external reference table. Resolve each external reference to its global file id
-            // by (lowercased) file name. For ContentDirectory files the external table holds
-            // symbolic placeholders, so when an imported ContentLayout covers this file the
-            // actual target comes from its dependency list, matched by position; built-in
-            // dependencies (null entries) keep the external table path.
+            // by file name (matched case-sensitively, as it appears on disk / in the archive).
+            // For ContentDirectory files the external table holds symbolic placeholders, so when
+            // an imported ContentLayout covers this file the actual target comes from its
+            // dependency list, matched by position; built-in dependencies (null entries) keep the
+            // external table path.
             var resolvedDependencies = m_ContentFileDependencies.GetDependencies(
-                Path.GetFileName(fullPath).ToLowerInvariant());
+                Path.GetFileName(fullPath));
 
             if (resolvedDependencies != null && resolvedDependencies.Length != sf.ExternalReferences.Count)
             {
@@ -292,7 +293,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             foreach (var extRef in sf.ExternalReferences)
             {
                 var name = resolvedDependencies?[localId - 1]
-                    ?? extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1).ToLowerInvariant();
+                    ?? extRef.Path.Substring(extRef.Path.LastIndexOf('/') + 1);
                 m_LocalToDbFileId.Add(localId++, m_SerializedFileIdProvider.GetId(name));
             }
 

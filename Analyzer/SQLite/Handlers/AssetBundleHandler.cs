@@ -98,7 +98,7 @@ public class AssetBundleHandler : ISQLiteHandler
                 // Scriptable Build Pipeline / Addressables: key the scene on its SerializedFile
                 // (from m_SceneHashes) and create the synthetic Scene object here, since the writer
                 // cannot recognise a "CAB-<hash>" scene file by name.
-                var sceneFileId = ctx.SerializedFileIdProvider.GetId(sceneFile.ToLowerInvariant());
+                var sceneFileId = ctx.SerializedFileIdProvider.GetId(sceneFile);
                 var objId = ctx.ObjectIdProvider.GetId((sceneFileId, 0));
 
                 // The synthetic Scene object is inserted once (objects.id is a primary key), but the

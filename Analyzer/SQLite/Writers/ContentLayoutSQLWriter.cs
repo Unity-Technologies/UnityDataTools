@@ -203,11 +203,11 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
                 var resolved = (file.SerializedFileDependencies ?? [])
                     .Select(i => hashByIndex.TryGetValue(i, out var hash) && !string.IsNullOrEmpty(hash)
-                        ? (hash + ".cf").ToLowerInvariant()
+                        ? hash + ".cf"
                         : null)
                     .ToArray();
 
-                m_ContentFileDependencies.Add((file.ContentHash + ".cf").ToLowerInvariant(), resolved);
+                m_ContentFileDependencies.Add(file.ContentHash + ".cf", resolved);
             }
         }
 
@@ -246,7 +246,7 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             {
                 foreach (var file in m_ImportedFiles)
                 {
-                    var fileName = (file.ContentHash + ".cf").ToLowerInvariant();
+                    var fileName = file.ContentHash + ".cf";
                     var id = m_SerializedFileIdProvider.GetId(fileName);
 
                     update.Parameters["@id"].Value = id;
