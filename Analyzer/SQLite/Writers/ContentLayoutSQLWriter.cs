@@ -189,9 +189,11 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
         }
 
         // Fills the shared dependency map that resolves the external references of the analyzed
-        // .cf files (see ContentFileDependencyMap): for each content file, the dependency indexes
-        // become the target filenames, in order. Built-in dependencies (no content hash) map to
-        // null so the reference falls back to the external table path.
+        // content files (see ContentFileDependencyMap): for each content file, the dependency
+        // indexes become the target names, in order. Built-in dependencies (no content hash) map to
+        // null so the reference falls back to the external table path. Keys and resolved names use
+        // the normalized content-hash name so they match the analyzed files regardless of whether
+        // those carry the ".cf" extension on disk.
         private void PopulateContentFileDependencies(ContentLayout layout)
         {
             var hashByIndex = (layout.SerializedFiles ?? []).ToDictionary(f => f.Index, f => f.ContentHash);
@@ -203,21 +205,24 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
 
                 var resolved = (file.SerializedFileDependencies ?? [])
                     .Select(i => hashByIndex.TryGetValue(i, out var hash) && !string.IsNullOrEmpty(hash)
-                        ? hash + ".cf"
+                        ? ContentFileDependencyMap.NormalizeFileName(hash)
                         : null)
                     .ToArray();
 
-                m_ContentFileDependencies.Add(file.ContentHash + ".cf", resolved);
+                m_ContentFileDependencies.Add(ContentFileDependencyMap.NormalizeFileName(file.ContentHash), resolved);
             }
         }
 
         // Fills in the serialized_file column, linking each layout entry to its serialized_files
-        // row. Called after all files are processed. Ids come from the shared IdProvider, so
-        // entries whose .cf file was analyzed link to the row the analyze pass wrote (loose or
-        // inside an archive, with its archive column intact). For files never encountered on the
-        // input (a layout-only analyze, or a subset of a build) a placeholder serialized_files
-        // row is written - name only, archive NULL, no objects - so the link is always valid,
-        // mirroring what the dangling-refs finalize does for referenced-but-unanalyzed files.
+        // row. Called after all files are processed. Ids come from the shared IdProvider (keyed by
+        // the normalized content hash), so entries whose content file was analyzed link to the row
+        // the analyze pass wrote (loose or inside an archive, with its archive column intact),
+        // regardless of whether that file carried the ".cf" extension on disk. For files never
+        // encountered on the input (a layout-only analyze, or a subset of a build) a placeholder
+        // serialized_files row is written - name only, archive NULL, no objects - so the link is
+        // always valid, mirroring what the dangling-refs finalize does for referenced-but-unanalyzed
+        // files. The placeholder's name uses the canonical "<hash>.cf" form since the file was not
+        // seen on disk.
         public void LinkSerializedFiles()
         {
             var existingIds = new HashSet<int>();
@@ -246,8 +251,8 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             {
                 foreach (var file in m_ImportedFiles)
                 {
-                    var fileName = file.ContentHash + ".cf";
-                    var id = m_SerializedFileIdProvider.GetId(fileName);
+                    var id = m_SerializedFileIdProvider.GetId(
+                        ContentFileDependencyMap.NormalizeFileName(file.ContentHash));
 
                     update.Parameters["@id"].Value = id;
                     update.Parameters["@file_index"].Value = file.Index;
@@ -257,7 +262,7 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
                     {
                         addStubRow.SetValue("id", id);
                         addStubRow.SetValue("archive", null);
-                        addStubRow.SetValue("name", fileName);
+                        addStubRow.SetValue("name", file.ContentHash + ".cf");
                         addStubRow.ExecuteNonQuery();
                     }
                 }

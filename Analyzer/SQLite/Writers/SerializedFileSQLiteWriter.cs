@@ -31,8 +31,9 @@ public class SerializedFileSQLiteWriter : IDisposable
     private bool m_SkipCrc;
 
     // Global id assignment shared across every serialized file in the database.
-    // m_SerializedFileIdProvider maps a serialized file (by lowercased file name) to its
-    // serialized_files row id; it is owned by AnalyzerTool because the ContentLayout import
+    // m_SerializedFileIdProvider maps a serialized file (by file name, matched case-sensitively as
+    // it appears on disk / in the archive, with any ".cf" content-file extension normalized away)
+    // to its serialized_files row id; it is owned by AnalyzerTool because the ContentLayout import
     // assigns ids through the same provider. m_ObjectIdProvider maps a (serialized file id,
     // pathId) pair to its objects row id. See ObjectIdProvider for how cross-file references
     // are resolved.
@@ -185,7 +186,8 @@ public class SerializedFileSQLiteWriter : IDisposable
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
         using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
-        int serializedFileId = m_SerializedFileIdProvider.GetId(Path.GetFileName(fullPath));
+        int serializedFileId = m_SerializedFileIdProvider.GetId(
+            ContentFileDependencyMap.NormalizeFileName(Path.GetFileName(fullPath)));
         int sceneId = -1;
 
         // Two SerializedFiles with the same name map to the same id (the provider deduplicates by
@@ -278,7 +280,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             // dependency list, matched by position; built-in dependencies (null entries) keep the
             // external table path.
             var resolvedDependencies = m_ContentFileDependencies.GetDependencies(
-                Path.GetFileName(fullPath));
+                ContentFileDependencyMap.NormalizeFileName(Path.GetFileName(fullPath)));
 
             if (resolvedDependencies != null && resolvedDependencies.Length != sf.ExternalReferences.Count)
             {
