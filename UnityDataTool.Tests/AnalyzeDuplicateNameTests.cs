@@ -55,8 +55,8 @@ public class AnalyzeDuplicateNameTests
     }
 
     // Case 2 / Case 3: two build folders each contain an archive named "assetbundle" (and "scenes").
-    // The second archive of each name is rejected before it is opened, so exactly one row per name
-    // survives and no UNIQUE constraint error is shown.
+    // The second archive of each name is rejected before it is recorded (its contents are never
+    // processed), so exactly one row per name survives and no UNIQUE constraint error is shown.
     [Test]
     public async Task Analyze_ArchivesWithSameName_SkippedWithClearMessage()
     {

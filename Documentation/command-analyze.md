@@ -183,7 +183,7 @@ This is expected when the input contains more than one build, and in these commo
 | Player scenes with the same file name (`level0`, …) from different builds | Analyze each build separately |
 
 To compare two builds, analyze each into a separate database and query across them — see
-[Comparing Builds](../../Documentation/comparing-builds.md).
+[Comparing Builds](comparing-builds.md).
 
 ### Slow Analyze times, large output database
 

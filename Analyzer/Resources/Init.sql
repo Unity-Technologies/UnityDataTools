@@ -8,9 +8,10 @@ CREATE TABLE IF NOT EXISTS types
 -- Describes a unity archive that contains serialized files and other built content.
 -- A common use of the unity archive is for AssetBundles but it can also be used for
 -- Player, Content Archive and ContentDirectory builds.
--- name is UNIQUE: analyze only supports a single build, so two archives with the same name would
--- make queries ambiguous. A duplicate is caught in code and reported (see AnalyzeDuplicateException);
--- the constraint is the durable backstop for that invariant.
+-- name is UNIQUE (case-sensitive, matching the name on the file system): analyze only supports a
+-- single build, so two archives with the same name would make queries ambiguous. A duplicate is
+-- caught in code and reported (see AnalyzeDuplicateException); the constraint is the durable
+-- backstop for that invariant.
 CREATE TABLE IF NOT EXISTS archives
 (
     id INTEGER,

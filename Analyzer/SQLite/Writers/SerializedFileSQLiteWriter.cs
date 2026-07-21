@@ -22,7 +22,9 @@ public class SerializedFileSQLiteWriter : IDisposable
     // Names/ids already written to the archives and serialized_files tables, used to reject a
     // second copy of the same content with a clear error instead of a raw UNIQUE constraint
     // failure. Only a single build can be analyzed at a time (see AnalyzeDuplicateException).
-    private HashSet<string> m_WrittenArchiveNames = new(StringComparer.OrdinalIgnoreCase);
+    // Archive names are compared case-sensitively, matching the archives.name schema constraint
+    // and the name as it exists on the file system.
+    private HashSet<string> m_WrittenArchiveNames = new();
     private HashSet<int> m_WrittenSerializedFileIds = new();
 
     private bool m_SkipReferences;
