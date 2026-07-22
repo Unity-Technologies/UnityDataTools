@@ -14,6 +14,7 @@ public static class BuildHistoryHelper
 {
     public const string HashFileName = "BuildManifestHash.txt";
     public const string LayoutFileName = "ContentLayout.json";
+    public const string SummaryFileName = "BuildReportSummary.json";
 
     // Reads the BuildManifestHash.txt values identifying the ContentDirectory build(s) in the
     // input files: taken from the input itself when present, otherwise picked up next to the
@@ -42,8 +43,9 @@ public static class BuildHistoryHelper
         return hashFiles.Select(f => File.ReadAllText(f).Trim()).Distinct().ToList();
     }
 
-    // A .cf content file marks ContentDirectory output even when no BuildManifestHash.txt is
-    // available.
+    // Fallback signal used when no BuildManifestHash.txt is available: a .cf file marks
+    // ContentDirectory output. This is only a rough sanity check — the reverse does not hold, as
+    // content files can be built without the extension or sit inside archives.
     public static bool HasContentFiles(IEnumerable<string> files)
     {
         return files.Any(f => HasExtension(f, ".cf"));
@@ -52,29 +54,51 @@ public static class BuildHistoryHelper
     // Searches the history root and its direct child folders for the ContentLayout.json whose
     // BuildManifestHash matches the analyzed build. A build history is flat, so there is no
     // recursion — which also keeps the scan bounded if a large unrelated folder is passed. When
-    // several folders match (rebuilds of identical content), the most recently written layout
-    // wins. Returns the containing folder, or null when nothing matches.
+    // several folders match (rebuilds of identical content), the most recent build wins.
+    // Returns the containing folder, or null when nothing matches.
     public static string LocateBuildFolder(string historyRoot, string buildHash)
     {
         var matches = Directory.EnumerateDirectories(historyRoot)
             .Prepend(historyRoot)
-            .Select(dir => Path.Combine(dir, LayoutFileName))
-            .Where(File.Exists)
-            .Where(layout => TryReadBuildManifestHash(layout) == buildHash);
+            .Where(dir => File.Exists(Path.Combine(dir, LayoutFileName)))
+            .Where(dir => TryReadBuildManifestHash(Path.Combine(dir, LayoutFileName)) == buildHash);
 
         string selected = null;
         var selectedTime = default(DateTime);
-        foreach (var layout in matches)
+        foreach (var folder in matches)
         {
-            var writeTime = File.GetLastWriteTimeUtc(layout);
-            if (selected == null || writeTime > selectedTime)
+            var startTime = TryReadBuildStartTime(folder);
+            if (selected == null || startTime > selectedTime)
             {
-                selected = layout;
-                selectedTime = writeTime;
+                selected = folder;
+                selectedTime = startTime;
             }
         }
 
-        return selected == null ? null : Path.GetDirectoryName(selected);
+        return selected;
+    }
+
+    // The subset of BuildReportSummary.json needed here.
+    private class BuildReportSummary
+    {
+        public DateTime BuildStartedAt { get; set; }
+    }
+
+    // Reads the start time of the build from the BuildReportSummary.json of a build history
+    // folder. The file is expected to always be present; returns a zero timestamp when it is
+    // missing or unreadable.
+    public static DateTime TryReadBuildStartTime(string buildFolder)
+    {
+        try
+        {
+            var json = File.ReadAllText(Path.Combine(buildFolder, SummaryFileName));
+            var summary = JsonConvert.DeserializeObject<BuildReportSummary>(json);
+            return summary?.BuildStartedAt ?? default;
+        }
+        catch (Exception)
+        {
+            return default;
+        }
     }
 
     // The files of a build history folder that analyze imports: the layout and the build report.
@@ -88,11 +112,11 @@ public static class BuildHistoryHelper
     // Reads the top-level BuildManifestHash of a ContentLayout.json without parsing the whole
     // file (layouts of large builds are big; the hash is one of the first properties). Returns
     // null when the value cannot be found or the file is not valid json.
-    public static string TryReadBuildManifestHash(string path)
+    public static string TryReadBuildManifestHash(string contentLayoutPath)
     {
         try
         {
-            using var reader = new JsonTextReader(File.OpenText(path));
+            using var reader = new JsonTextReader(File.OpenText(contentLayoutPath));
 
             for (int i = 0; i < 64 && reader.Read(); ++i)
             {

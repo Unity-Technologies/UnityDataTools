@@ -43,13 +43,16 @@ public class AnalyzeBuildHistoryTests
         outputFolder.EnumerateDirectories().ToList().ForEach(d => d.Delete(true));
     }
 
-    // Creates a build folder holding the reference build's ContentLayout.json and .buildreport.
+    // Creates a build folder holding the reference build's ContentLayout.json, .buildreport and
+    // BuildReportSummary.json.
     private string CreateMatchingBuildFolder(string historyRoot, string name)
     {
         var folder = Path.Combine(historyRoot, name);
         Directory.CreateDirectory(folder);
         File.Copy(Path.Combine(m_FixtureReportFolder, "ContentLayout.json"),
             Path.Combine(folder, "ContentLayout.json"));
+        File.Copy(Path.Combine(m_FixtureReportFolder, "BuildReportSummary.json"),
+            Path.Combine(folder, "BuildReportSummary.json"));
         foreach (var report in Directory.EnumerateFiles(m_FixtureReportFolder, "*.buildreport"))
             File.Copy(report, Path.Combine(folder, Path.GetFileName(report)));
         return folder;
@@ -191,17 +194,28 @@ public class AnalyzeBuildHistoryTests
         Assert.IsFalse(File.Exists(databasePath), "no partial database should be left behind");
     }
 
+    // Overwrites the BuildReportSummary.json of a build folder with the given build start time.
+    private static void SetBuildStartTime(string buildFolder, string buildStartedAt)
+    {
+        File.WriteAllText(Path.Combine(buildFolder, "BuildReportSummary.json"),
+            $"{{\"Version\":2,\"BuildStartedAt\":\"{buildStartedAt}\"}}");
+    }
+
     [Test]
     public async Task Analyze_MultipleMatchingBuilds_UsesMostRecent()
     {
         // Rebuilding identical content produces several history folders with the same
-        // BuildManifestHash; the most recently written layout wins. The older folder sorts
-        // first alphabetically, so a "first found wins" regression would pick it instead.
+        // BuildManifestHash; the one with the latest BuildStartedAt (from
+        // BuildReportSummary.json) wins. The older build sorts first alphabetically, so a
+        // "first found wins" regression would pick it instead.
+        // A folder without a BuildReportSummary.json gets a zero timestamp and loses.
         var history = Path.Combine(m_TestOutputFolder, "history");
         var older = CreateMatchingBuildFolder(history, "Build-A-Older");
         var newer = CreateMatchingBuildFolder(history, "Build-B-Newer");
-        File.SetLastWriteTimeUtc(Path.Combine(older, "ContentLayout.json"), DateTime.UtcNow.AddHours(-1));
-        File.SetLastWriteTimeUtc(Path.Combine(newer, "ContentLayout.json"), DateTime.UtcNow);
+        var noSummary = CreateMatchingBuildFolder(history, "Build-C-NoSummary");
+        SetBuildStartTime(older, "2026-07-14T18:37:14.2095142Z");
+        SetBuildStartTime(newer, "2026-07-22T09:00:00.0000000Z");
+        File.Delete(Path.Combine(noSummary, "BuildReportSummary.json"));
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
         var (exitCode, stdOut) = await RunCapturingStdOut(

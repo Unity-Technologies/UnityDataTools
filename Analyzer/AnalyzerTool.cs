@@ -312,11 +312,17 @@ public class AnalyzerTool
 
         Console.WriteLine($"Using build history folder \"{buildFolder}\".");
 
-        var newEntries = BuildHistoryHelper.CollectBuildFiles(buildFolder)
-            .Where(file => !files.Any(f =>
-                string.Equals(Path.GetFullPath(f.FullPath), Path.GetFullPath(file), StringComparison.OrdinalIgnoreCase)))
-            .Select(file => (file, buildFolder))
-            .ToList();
+        // Skip files that are already on the input (e.g. the layout was also passed explicitly).
+        var newEntries = new List<(string FullPath, string DisplayRoot)>();
+        foreach (var file in BuildHistoryHelper.CollectBuildFiles(buildFolder))
+        {
+            var alreadyIncluded = files.Any(f => string.Equals(
+                Path.GetFullPath(f.FullPath), Path.GetFullPath(file), StringComparison.OrdinalIgnoreCase));
+
+            if (!alreadyIncluded)
+                newEntries.Add((file, buildFolder));
+        }
+
         files.InsertRange(0, newEntries);
 
         return true;
