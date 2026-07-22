@@ -14,11 +14,18 @@ public class BuildReportTests
     private string m_TestOutputFolder;
     private string m_TestDataFolder;
 
+    // Unity 6.6 reference reports, which include the new Summary fields and a ContentSummary object.
+    private string m_ContentDirectoryReport;
+    private string m_AssetBundleReport;
+
     [OneTimeSetUp]
     public void OneTimeSetup()
     {
         m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "test_folder");
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "BuildReports");
+        var leadingEdge = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LeadingEdgeBuilds");
+        m_ContentDirectoryReport = Path.Combine(leadingEdge, "BuildReport-ContentDirectory", "f64157fb08bb9f645971d39c1203bd03.buildreport");
+        m_AssetBundleReport = Path.Combine(leadingEdge, "BuildReport-AssetBundles", "LastBuild.buildreport");
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
     }
@@ -513,5 +520,163 @@ public class BuildReportTests
               WHERE build_report_filename = 'Player.buildreport' AND archive IS NOT NULL");
         Assert.AreEqual(0, playerPackedAssetsWithNonNullBundle,
             "Expected all PackedAssets from Player.buildreport have NULL archive");
+    }
+
+    // The Unity 6.6 Summary adds several fields (issue #107 Part 1). Verify they land in the new
+    // build_reports columns for a ContentDirectory report, which populates all of them.
+    [Test]
+    public async Task Analyze_BuildReport_ContentDirectory_ContainsNewSummaryColumns()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", m_ContentDirectoryReport }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryString(db, "SELECT build_type FROM build_reports", "ContentDirectory",
+            "Unexpected build_type");
+        SQLTestHelper.AssertQueryString(db, "SELECT build_name FROM build_reports", "ContentDirectory",
+            "Unexpected build_name");
+        SQLTestHelper.AssertQueryInt(db, "SELECT build_content_options FROM build_reports", 32,
+            "Unexpected build_content_options");
+        // The session GUID matches the report's GUID-based filename.
+        SQLTestHelper.AssertQueryString(db, "SELECT build_session_guid FROM build_reports",
+            "f64157fb08bb9f645971d39c1203bd03", "Unexpected build_session_guid");
+        SQLTestHelper.AssertQueryString(db, "SELECT build_manifest_hash FROM build_reports",
+            "baff06b928d147276f2245dd3b19216a", "Unexpected build_manifest_hash");
+        // No build profile was active: the path is present-but-empty, and the all-zero GUID -> NULL.
+        SQLTestHelper.AssertQueryString(db, "SELECT build_profile_path FROM build_reports",
+            "", "Expected empty build_profile_path");
+        SQLTestHelper.AssertQueryString(db, "SELECT COALESCE(build_profile_guid, 'NULL') FROM build_reports",
+            "NULL", "Expected NULL build_profile_guid");
+
+        var dataPath = SQLTestHelper.QueryString(db, "SELECT data_path FROM build_reports");
+        Assert.That(dataPath, Does.Contain("ContentDirectory"), "Unexpected data_path");
+    }
+
+    // An AssetBundle build has no build name; that field is present-but-empty in the report.
+    [Test]
+    public async Task Analyze_BuildReport_AssetBundle_HasEmptyBuildName()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", m_AssetBundleReport }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryString(db, "SELECT build_name FROM build_reports", "",
+            "Expected empty build_name for AssetBundle build");
+        SQLTestHelper.AssertQueryInt(db, "SELECT build_content_options FROM build_reports", 0,
+            "Expected zero build_content_options for AssetBundle build");
+    }
+
+    // Older Unity reports lack all the new Summary fields; the columns must be NULL and analyze
+    // must still succeed.
+    [Test]
+    public async Task Analyze_BuildReport_OldReport_NewSummaryColumnsAreNull()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", Path.Combine(m_TestDataFolder, "Player.buildreport") }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM build_reports
+              WHERE build_name IS NULL AND build_content_options IS NULL
+              AND build_session_guid IS NULL AND build_manifest_hash IS NULL
+              AND build_profile_path IS NULL AND build_profile_guid IS NULL AND data_path IS NULL",
+            1, "Expected all new Summary columns to be NULL for an old report");
+    }
+
+    // issue #107 Part 2: a ContentSummary object (Unity 6.6+) populates the on-demand
+    // build_report_content_* tables and views.
+    [Test]
+    public async Task Analyze_BuildReport_ContentDirectory_ContainsContentSummary()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", m_ContentDirectoryReport }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_content_summary", 1,
+            "Expected exactly one ContentSummary row");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_content_type_stats", 14,
+            "Unexpected number of type stats rows");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_content_asset_stats", 15,
+            "Unexpected number of asset stats rows");
+
+        // Spot-check the cross-build stats.
+        SQLTestHelper.AssertQueryInt(db, "SELECT serialized_file_size FROM build_report_content_summary", 158832,
+            "Unexpected serialized_file_size");
+        SQLTestHelper.AssertQueryInt(db, "SELECT object_count FROM build_report_content_summary", 28,
+            "Unexpected object_count");
+
+        // Spot-check a specific type stat (Cubemap, class id 89).
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT size FROM build_report_content_type_stats WHERE type = 89", 524532,
+            "Unexpected size for type 89");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT resource_count FROM build_report_content_type_stats WHERE type = 89", 1,
+            "Unexpected resource_count for type 89");
+
+        // The type-stats view resolves the class id to a name and the owning build report.
+        SQLTestHelper.AssertQueryString(db,
+            "SELECT type_name FROM build_report_content_type_stats_view WHERE type = 89", "Cubemap",
+            "Expected type_name 'Cubemap' for type 89");
+
+        var buildReportId = SQLTestHelper.QueryInt(db, "SELECT id FROM objects WHERE type = 1125");
+        SQLTestHelper.AssertQueryInt(db,
+            $"SELECT COUNT(*) FROM build_report_content_type_stats_view WHERE build_report_id != {buildReportId}", 0,
+            "All type stats should resolve to the single BuildReport object");
+        SQLTestHelper.AssertQueryInt(db,
+            $"SELECT build_report_id FROM build_report_content_summary_view", buildReportId,
+            "ContentSummary should resolve to the BuildReport object in the same file");
+
+        // A specific source asset appears in the asset stats.
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM build_report_content_asset_stats WHERE source_asset_path = 'Assets/Audio/a.mp3'",
+            1, "Expected the a.mp3 source asset in asset stats");
+    }
+
+    // The ContentSummary tables are created on demand, like PackedAssets: an older report without a
+    // ContentSummary object must not create them.
+    [Test]
+    public async Task Analyze_BuildReport_OldReport_NoContentSummaryTables()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", Path.Combine(m_TestDataFolder, "Player.buildreport") }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM sqlite_master WHERE name LIKE 'build_report_content%'", 0,
+            "Expected no ContentSummary tables/views for a report without a ContentSummary object");
+    }
+
+    // When multiple 6.6 reports are analyzed together, each ContentSummary's rows must resolve back
+    // to the BuildReport object in its own serialized file.
+    [Test]
+    public async Task Analyze_BuildReport_MultipleReports_ContentSummaryJoinsCorrectly()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", m_ContentDirectoryReport, m_AssetBundleReport }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_content_summary", 2,
+            "Expected one ContentSummary per report");
+
+        // Each report's type stats resolve to a build report in the matching serialized file.
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM build_report_content_type_stats_view
+              WHERE build_report_filename = 'f64157fb08bb9f645971d39c1203bd03.buildreport'
+              AND type_name = 'Cubemap'",
+            1, "Expected the ContentDirectory report's Cubemap type stat");
+
+        // Every type/summary row resolves to a non-NULL build report.
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM build_report_content_summary_view WHERE build_report_id IS NULL", 0,
+            "Every ContentSummary should resolve to a BuildReport");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM build_report_content_type_stats_view WHERE build_report_id IS NULL", 0,
+            "Every type stat should resolve to a BuildReport");
     }
 }

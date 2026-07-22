@@ -24,11 +24,13 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.CommandText = @"INSERT INTO build_reports(
             id, build_type, build_result, platform_name, subtarget, start_time, end_time, total_time_seconds,
             total_size, build_guid, total_errors, total_warnings, options, asset_bundle_options,
-            output_path, crc
+            output_path, crc, build_name, build_content_options, build_session_guid, build_manifest_hash,
+            build_profile_path, build_profile_guid, data_path
         ) VALUES(
             @id, @build_type, @build_result, @platform_name, @subtarget, @start_time, @end_time, @total_time_seconds,
             @total_size, @build_guid, @total_errors, @total_warnings, @options, @asset_bundle_options,
-            @output_path, @crc
+            @output_path, @crc, @build_name, @build_content_options, @build_session_guid, @build_manifest_hash,
+            @build_profile_path, @build_profile_guid, @data_path
         )";
 
         m_InsertCommand.Parameters.Add("@id", SqliteType.Integer);
@@ -47,6 +49,13 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@asset_bundle_options", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@output_path", SqliteType.Text);
         m_InsertCommand.Parameters.Add("@crc", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@build_name", SqliteType.Text);
+        m_InsertCommand.Parameters.Add("@build_content_options", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@build_session_guid", SqliteType.Text);
+        m_InsertCommand.Parameters.Add("@build_manifest_hash", SqliteType.Text);
+        m_InsertCommand.Parameters.Add("@build_profile_path", SqliteType.Text);
+        m_InsertCommand.Parameters.Add("@build_profile_guid", SqliteType.Text);
+        m_InsertCommand.Parameters.Add("@data_path", SqliteType.Text);
 
         m_InsertFileCommand = db.CreateCommand();
         m_InsertFileCommand.CommandText = @"INSERT INTO build_report_files(
@@ -110,6 +119,13 @@ public class BuildReportHandler : ISQLiteHandler
         m_InsertCommand.Parameters["@asset_bundle_options"].Value = buildReport.AssetBundleOptions;
         m_InsertCommand.Parameters["@output_path"].Value = buildReport.OutputPath;
         m_InsertCommand.Parameters["@crc"].Value = buildReport.Crc;
+        m_InsertCommand.Parameters["@build_name"].Value = (object)buildReport.BuildName ?? DBNull.Value;
+        m_InsertCommand.Parameters["@build_content_options"].Value = (object)buildReport.BuildContentOptions ?? DBNull.Value;
+        m_InsertCommand.Parameters["@build_session_guid"].Value = (object)buildReport.BuildSessionGuid ?? DBNull.Value;
+        m_InsertCommand.Parameters["@build_manifest_hash"].Value = (object)buildReport.BuildManifestHash ?? DBNull.Value;
+        m_InsertCommand.Parameters["@build_profile_path"].Value = (object)buildReport.BuildProfilePath ?? DBNull.Value;
+        m_InsertCommand.Parameters["@build_profile_guid"].Value = (object)buildReport.BuildProfileGuid ?? DBNull.Value;
+        m_InsertCommand.Parameters["@data_path"].Value = (object)buildReport.DataPath ?? DBNull.Value;
 
         m_InsertCommand.ExecuteNonQuery();
 

@@ -24,6 +24,14 @@ public class BuildReport
     public int TotalWarnings { get; init; }
     public int BuildType { get; init; }
     public string BuildResult { get; init; }
+    // Fields added in Unity 6.6; null when analyzing reports from older versions.
+    public string BuildName { get; init; }
+    public int? BuildContentOptions { get; init; }
+    public string BuildSessionGuid { get; init; }
+    public string BuildManifestHash { get; init; }
+    public string BuildProfilePath { get; init; }
+    public string BuildProfileGuid { get; init; }
+    public string DataPath { get; init; }
     public List<BuildFile> Files { get; init; }
     public FileListArchiveHelper fileListArchiveHelper { get; init; }
 
@@ -69,6 +77,13 @@ public class BuildReport
 
         return new BuildReport()
         {
+            BuildName = summary.HasChild("buildName") ? summary["buildName"].GetValue<string>() : null,
+            BuildContentOptions = summary.HasChild("buildContentOptions") ? summary["buildContentOptions"].GetValue<int>() : null,
+            BuildSessionGuid = ReadOptionalGuid(summary, "buildSessionGUID"),
+            BuildManifestHash = ReadOptionalHash128(summary, "buildManifestHash"),
+            BuildProfilePath = summary.HasChild("buildProfilePath") ? summary["buildProfilePath"].GetValue<string>() : null,
+            BuildProfileGuid = ReadOptionalGuid(summary, "buildProfileGuid"),
+            DataPath = summary.HasChild("dataPath") ? summary["dataPath"].GetValue<string>() : null,
             Name = reader["m_Name"].GetValue<string>(),
             BuildGuid = guidString,
             PlatformName = summary["platformName"].GetValue<string>(),
@@ -112,6 +127,45 @@ public class BuildReport
         {
             file.Path = file.Path.Substring(longestCommonRoot.Length);
         }
+    }
+
+    // Reads a Unity GUID (4 uints) if present, returning null when the field is absent (older
+    // Unity) or a default all-zero GUID (e.g. no build profile was active).
+    static string ReadOptionalGuid(RandomAccessReader summary, string fieldName)
+    {
+        if (!summary.HasChild(fieldName))
+            return null;
+
+        var guidData = summary[fieldName];
+        var guid0 = guidData["data[0]"].GetValue<uint>();
+        var guid1 = guidData["data[1]"].GetValue<uint>();
+        var guid2 = guidData["data[2]"].GetValue<uint>();
+        var guid3 = guidData["data[3]"].GetValue<uint>();
+
+        if ((guid0 | guid1 | guid2 | guid3) == 0)
+            return null;
+
+        return GuidHelper.FormatUnityGuid(guid0, guid1, guid2, guid3);
+    }
+
+    // Reads a Unity Hash128 (16 bytes) if present, returning null when the field is absent (older
+    // Unity) or an all-zero hash (e.g. non-ContentDirectory builds have no manifest hash).
+    static string ReadOptionalHash128(RandomAccessReader summary, string fieldName)
+    {
+        if (!summary.HasChild(fieldName))
+            return null;
+
+        var hashData = summary[fieldName];
+        var bytes = new byte[16];
+        var allZero = true;
+        for (var i = 0; i < 16; i++)
+        {
+            bytes[i] = hashData[$"bytes[{i}]"].GetValue<byte>();
+            if (bytes[i] != 0)
+                allZero = false;
+        }
+
+        return allZero ? null : GuidHelper.FormatUnityHash128(bytes);
     }
 
     public static string GetBuildTypeString(int buildType)
