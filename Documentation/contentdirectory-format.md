@@ -204,10 +204,13 @@ is not distributed with your application. For the full picture, see the Manual t
 [Analyze builds](https://docs.unity3d.com/6000.6/Documentation/Manual/build-analyze-builds.html).
 
 Most of the files in a build history directory (the Trace Event Profile, `BuildLog.jsonl`,
-`ScriptsOnlyCache.yaml`, `ContentSizeSummary.txt`, `BuildReportSummary.json`, and others) are outside
+`ScriptsOnlyCache.yaml`, `ContentSizeSummary.txt`, and others) are outside
 the scope of UnityDataTool and are documented in the Manual's
 [Build history file reference](https://docs.unity3d.com/6000.6/Documentation/Manual/build-history-file-reference.html).
-Two files in the build history are directly relevant here:
+`BuildReportSummary.json` is not imported either, but UnityDataTool reads its build start time to
+pick the most recent build when several build history folders match (and
+[`UnityDataModels`](../UnityDataModels/BuildReportSummary.cs) provides a convenience type for
+reading it in your own code). Two files in the build history are directly relevant here:
 
 * **[`ContentLayout.json`](contentlayout.md)** — maps the built content back to the source assets in
   the project and describes the dependencies between the produced files. It is the key file for

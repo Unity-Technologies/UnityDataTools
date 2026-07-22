@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityDataTools.Models;
 
 namespace UnityDataTools.Analyzer.Util;
 
@@ -76,12 +77,6 @@ public static class BuildHistoryHelper
         }
 
         return selected;
-    }
-
-    // The subset of BuildReportSummary.json needed here.
-    private class BuildReportSummary
-    {
-        public DateTime BuildStartedAt { get; set; }
     }
 
     // Reads the start time of the build from the BuildReportSummary.json of a build history
