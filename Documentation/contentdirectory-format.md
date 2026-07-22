@@ -65,9 +65,10 @@ A Unity object references data inside a `.resS`/`.resource` file by a content-ad
 form `cah:/<hash>`. This, and the way it differs from AssetBundle and Player builds, is covered in
 [References to resource files](#references-to-resource-files) below.
 
-The extensions are informational. The loading system identifies content by its hash (through the
-`cah:/` scheme), not by file extension, so the extension is not required to resolve content. Extensions
-are present both for loose files and for entries packed inside an archive.
+The extensions are informational. The build manifest, content layout and loading system as a whole identifies content by its hash, not by file extension, and the extension is not required to resolve content. 
+
+Currently extensions are present both for loose files and for entries packed inside an archive, but
+it is best to avoid assumption that the extensions are always present.
 
 ### The build manifest
 
