@@ -41,7 +41,9 @@ public static class BuildHistoryHelper
                 .Where(File.Exists));
         }
 
-        return hashFiles.Select(f => File.ReadAllText(f).Trim()).Distinct().ToList();
+        // Hashes are lowercase hex; normalizing here (and in TryReadBuildManifestHash) keeps all
+        // hash comparisons simple, exact matches.
+        return hashFiles.Select(f => File.ReadAllText(f).Trim().ToLowerInvariant()).Distinct().ToList();
     }
 
     // Fallback signal used when no BuildManifestHash.txt is available: a .cf file marks
@@ -118,7 +120,7 @@ public static class BuildHistoryHelper
                 if (reader.TokenType == JsonToken.PropertyName && reader.Depth == 1 &&
                     "BuildManifestHash".Equals(reader.Value))
                 {
-                    return reader.ReadAsString();
+                    return reader.ReadAsString()?.ToLowerInvariant();
                 }
             }
         }
