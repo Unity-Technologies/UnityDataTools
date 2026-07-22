@@ -399,31 +399,34 @@ The `dump` and `serialized-file` commands can be used to inspect serialized file
 If the content is distributed inside archive files (e.g. `content0.archive`) then the `archive` command
 can be used to view or extract the content.
 
-When you run [`analyze`](command-analyze.md) on a content directory build, analyze the **build output
-folder and its matching build history folder together**, in a single `analyze` call, by passing both
-paths:
+When you run [`analyze`](command-analyze.md) on a content directory build, analyze the **build
+output together with its build history** by passing the build history folder with `--build-history`:
 
 ```bash
-UnityDataTool analyze /path/to/ContentDirectory /path/to/Library/BuildHistory/<build-directory>
+UnityDataTool analyze /path/to/ContentDirectory --build-history /path/to/Library/BuildHistory
 ```
+
+Analyze locates the analyzed build's own directory inside the build history — by matching the
+`BuildManifestHash` of each `ContentLayout.json` against the build's `BuildManifestHash.txt` — and
+includes that directory's `ContentLayout.json` and `.buildreport` in the analysis. A stale layout
+from a different build can never be picked up, and there is no need to identify the correct
+build directory by hand.
 
 Analyzing the build output alone records the objects, but not where they came from — and because the
 references between Content Files live in the manifest rather than in the files themselves (see
 [References between Content Files](#references-between-content-files) above), those references end up
-in the `dangling_refs` table and analyze prints a warning. Including the build history folder fixes
-both: the `ContentLayout.json` it contains provides the source-asset mapping (imported as the
+in the `dangling_refs` table and analyze prints a warning. Including the build history fixes
+both: the `ContentLayout.json` provides the source-asset mapping (imported as the
 `content_layout` tables, see [ContentLayout in the Analyze Database](contentlayout-database.md)) and
 the dependency information that analyze uses to resolve the references between Content Files.
 
-Analyze verifies that the `ContentLayout.json` matches the build through the build's
-`BuildManifestHash.txt`, so a stale layout from a different build is rejected rather than producing
-misleading results. See the [`analyze` command](command-analyze.md#contentdirectory-builds) page for
-the exact input combinations.
-
-Note: Passing in the entire build report folder in the build history means that the .buildreport file
-will also be analyzed.  That brings in statistics about the build (how long it took etc).  For
-content directory builds there is no PackedAssets data, but other build_report_* tables will be populated.
-Call `analyze` with the path of the correct ContentLayout.json file, instead of the entire build report folder, if you do not need this extra data.
+The `.buildreport` brings in statistics about the build (how long it took etc). For content
+directory builds there is no PackedAssets data, but other build_report_* tables will be populated.
+If you do not need this extra data, pass the path of the correct `ContentLayout.json` file as a
+regular input instead of using `--build-history`; the same `BuildManifestHash.txt` verification
+applies, so a layout that does not match the build is rejected rather than producing misleading
+results. See the [`analyze` command](command-analyze.md#contentdirectory-builds) page for the exact
+input combinations.
 
 ## Related documentation
 
