@@ -242,17 +242,25 @@ For consistency and clarity, some database columns use different names than the 
 
 UnityDataTool provides low-level access to build reports. Consider these alternatives for easier or more convenient workflows.
 
+### Build Analysis window
+
+Unity 6.6 and later includes a built-in [Build Analysis window](https://docs.unity3d.com/6000.7/Documentation/Manual/build-analysis-window-reference.html) that presents BuildReport information (and the rest of the build history) directly in the Editor. For many cases this is a more convenient UI than the BuildReportInspector package.
+
 ### BuildReportInspector package
 
-View build reports in the Unity Editor using the [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) package.
+The [BuildReportInspector](https://github.com/Unity-Technologies/BuildReportInspector) package renders a build report in the Editor's Inspector. It predates the built-in Build Analysis window, which now covers many of the same needs in Unity 6.6+. For the package's current status and behavior on Unity 6.6, see [New with Unity 6.6](https://github.com/Unity-Technologies/BuildReportInspector/blob/master/com.unity.build-report-inspector/Documentation~/com.unity.build-report-inspector.md#new-with-unity-66).
 
 ### BuildReport API
 
-Access build report data programmatically within Unity using the BuildReport API.
+Access build report data programmatically within Unity using the BuildReport API. How you obtain a report depends on the Unity version.
 
-**Most recent build:** use [BuildPipeline.GetLatestReport()](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.GetLatestReport.html).
+**Unity 6.6 and later (build history):** Player and content directory builds are tracked in the [build history](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/Build.BuildHistory.html). Load any tracked report directly with [BuildHistory.LoadBuildReport](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/Build.BuildHistory.LoadBuildReport.html), which is the simplest way to reach recent builds and to enumerate history. AssetBundle builds are not tracked in the build history, so use the pre-6.6 approaches below for them.
 
-**Build report in the Assets folder:** load via the AssetDatabase API:
+**Prior to Unity 6.6 (and for AssetBundle reports):** the build history API is not available, so load reports one of these ways.
+
+Most recent build: use [BuildPipeline.GetLatestReport()](https://docs.unity3d.com/ScriptReference/Build.Reporting.BuildReport.GetLatestReport.html).
+
+Build report in the Assets folder: load via the AssetDatabase API:
 
 ```csharp
 using UnityEditor;
@@ -273,7 +281,7 @@ public class BuildReportInProjectUtility
 }
 ```
 
-**Build report outside the Assets folder:** for files in Library or elsewhere, use `InternalEditorUtility`:
+Build report outside the Assets folder: for files in Library or elsewhere, use `InternalEditorUtility`:
 
 ```csharp
 using System;
