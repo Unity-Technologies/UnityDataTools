@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using UnityDataTools.Analyzer.SQLite.Handlers;
 using UnityDataTools.Analyzer.SQLite.Parsers;
 using UnityDataTools.Analyzer.SQLite.Writers;
@@ -46,6 +45,9 @@ public class AnalyzerTool
         public bool SkipCrc { get; init; }
         public bool Verbose { get; init; }
         public bool NoRecursion { get; init; }
+        // Build history folder (e.g. Library/BuildHistory); when set, the folder of the analyzed
+        // build is located in it and its ContentLayout.json and build report join the input.
+        public string BuildHistoryPath { get; init; }
     }
 
     public int Analyze(AnalyzeOptions options)
@@ -183,44 +185,21 @@ public class AnalyzerTool
     }
 
     // Validates the ContentDirectory-related inputs and prepares the file list (issue #99):
-    // enforces that a single build is analyzed, selects the ContentLayout.json whose
+    // enforces that a single build is analyzed, adds the files of the matching build history
+    // folder when --build-history is used, selects the ContentLayout.json whose
     // BuildManifestHash matches that build (dropping any others), and moves it to the front of
     // the list so it is imported before the content files whose references it resolves. Returns
     // false, after printing an error, when the input combination is invalid.
     bool PrepareContentDirectoryInputs(List<(string FullPath, string DisplayRoot)> files)
     {
-        const string hashFileName = "BuildManifestHash.txt";
-
-        var layoutCandidates = files.Where(f => ContentLayoutParser.IsContentLayoutFile(f.FullPath)).ToList();
-        var hashFiles = files
-            .Where(f => string.Equals(Path.GetFileName(f.FullPath), hashFileName, StringComparison.OrdinalIgnoreCase))
-            .Select(f => f.FullPath)
-            .ToList();
-
-        // ContentDirectory output is recognized by its .cf content files, or by its archive when
-        // built compressed. The BuildManifestHash.txt identifying the build sits next to them; it
-        // is not always on the input (e.g. when specific files are passed), so pick it up from
-        // the directories containing the content.
-        var contentDirectories = files
-            .Where(f => HasExtension(f.FullPath, ".cf") || HasExtension(f.FullPath, ".archive"))
-            .Select(f => Path.GetDirectoryName(Path.GetFullPath(f.FullPath)))
-            .Distinct(StringComparer.OrdinalIgnoreCase);
-
-        if (hashFiles.Count == 0)
-        {
-            hashFiles.AddRange(contentDirectories
-                .Select(dir => Path.Combine(dir, hashFileName))
-                .Where(File.Exists));
-        }
-
         List<string> buildHashes;
         try
         {
-            buildHashes = hashFiles.Select(f => File.ReadAllText(f).Trim()).Distinct().ToList();
+            buildHashes = BuildHistoryHelper.FindBuildHashes(files.Select(f => f.FullPath));
         }
         catch (Exception e)
         {
-            Console.Error.WriteLine($"Error reading {hashFileName}: {e.Message}");
+            Console.Error.WriteLine($"Error reading {BuildHistoryHelper.HashFileName}: {e.Message}");
             return false;
         }
 
@@ -231,7 +210,14 @@ public class AnalyzerTool
         }
 
         var buildHash = buildHashes.Count == 1 ? buildHashes[0] : null;
-        var hasContentDirectory = buildHash != null || files.Any(f => HasExtension(f.FullPath, ".cf"));
+
+        if (m_Options.BuildHistoryPath != null && !AddBuildHistoryFiles(buildHash, files))
+        {
+            return false;
+        }
+
+        var layoutCandidates = files.Where(f => ContentLayoutParser.IsContentLayoutFile(f.FullPath)).ToList();
+        var hasContentDirectory = buildHash != null || BuildHistoryHelper.HasContentFiles(files.Select(f => f.FullPath));
 
         if (layoutCandidates.Count == 0)
         {
@@ -259,7 +245,7 @@ public class AnalyzerTool
 
             // The hash match guarantees the layout describes exactly this build; a stale or
             // unrelated layout would silently produce misleading results.
-            selected = layoutCandidates.FirstOrDefault(c => TryReadBuildManifestHash(c.FullPath) == buildHash);
+            selected = layoutCandidates.FirstOrDefault(c => BuildHistoryHelper.TryReadBuildManifestHash(c.FullPath) == buildHash);
 
             if (selected.FullPath == null)
             {
@@ -282,7 +268,10 @@ public class AnalyzerTool
         {
             if (candidate != selected)
             {
-                Console.Error.WriteLine($"Ignoring \"{candidate.FullPath}\": its BuildManifestHash does not match the analyzed build.");
+                var reason = BuildHistoryHelper.TryReadBuildManifestHash(candidate.FullPath) == buildHash
+                    ? "it duplicates the selected layout"
+                    : "its BuildManifestHash does not match the analyzed build";
+                Console.Error.WriteLine($"Ignoring \"{candidate.FullPath}\": {reason}.");
                 files.Remove(candidate);
             }
         }
@@ -295,34 +284,48 @@ public class AnalyzerTool
         return true;
     }
 
-    static bool HasExtension(string path, string extension)
+    // --build-history: locate the analyzed build's folder inside the build history and add its
+    // ContentLayout.json and build report to the input. Purely additive — the added layout goes
+    // through the same candidate validation as a manually passed one.
+    bool AddBuildHistoryFiles(string buildHash, List<(string FullPath, string DisplayRoot)> files)
     {
-        return string.Equals(Path.GetExtension(path), extension, StringComparison.OrdinalIgnoreCase);
-    }
+        var historyPath = m_Options.BuildHistoryPath;
 
-    // Reads the top-level BuildManifestHash of a ContentLayout.json without parsing the whole
-    // file (layouts of large builds are big; the hash is one of the first properties). Returns
-    // null when the value cannot be found or the file is not valid json.
-    static string TryReadBuildManifestHash(string path)
-    {
-        try
+        if (!Directory.Exists(historyPath))
         {
-            using var reader = new JsonTextReader(File.OpenText(path));
-
-            for (int i = 0; i < 64 && reader.Read(); ++i)
-            {
-                if (reader.TokenType == JsonToken.PropertyName && reader.Depth == 1 &&
-                    "BuildManifestHash".Equals(reader.Value))
-                {
-                    return reader.ReadAsString();
-                }
-            }
-        }
-        catch (Exception)
-        {
+            Console.Error.WriteLine($"--build-history path not found: {historyPath}");
+            return false;
         }
 
-        return null;
+        if (buildHash == null)
+        {
+            Console.Error.WriteLine("--build-history requires a ContentDirectory build in the input: no BuildManifestHash.txt was found to identify the build to match.");
+            return false;
+        }
+
+        var buildFolder = BuildHistoryHelper.LocateBuildFolder(historyPath, buildHash);
+        if (buildFolder == null)
+        {
+            Console.Error.WriteLine($"No build in \"{historyPath}\" matches the analyzed build (BuildManifestHash {buildHash}).");
+            return false;
+        }
+
+        Console.WriteLine($"Using build history folder \"{buildFolder}\".");
+
+        // Skip files that are already on the input (e.g. the layout was also passed explicitly).
+        var newEntries = new List<(string FullPath, string DisplayRoot)>();
+        foreach (var file in BuildHistoryHelper.CollectBuildFiles(buildFolder))
+        {
+            var alreadyIncluded = files.Any(f => string.Equals(
+                Path.GetFullPath(f.FullPath), Path.GetFullPath(file), StringComparison.OrdinalIgnoreCase));
+
+            if (!alreadyIncluded)
+                newEntries.Add((file, buildFolder));
+        }
+
+        files.InsertRange(0, newEntries);
+
+        return true;
     }
 
     // Expands the input paths into the concrete files to analyze. Each result pairs the file with the
