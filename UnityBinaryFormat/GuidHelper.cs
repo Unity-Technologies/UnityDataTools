@@ -24,6 +24,22 @@ public static class GuidHelper
     }
 
     /// <summary>
+    /// Formats a Unity Hash128 (16 bytes) as a 32-character lowercase hex string, matching
+    /// Unity's Hash128.ToString(). Unlike a GUID, the bytes are emitted in order.
+    /// </summary>
+    public static string FormatUnityHash128(byte[] bytes)
+    {
+        char[] result = new char[32];
+        const string hexChars = "0123456789abcdef";
+        for (int i = 0; i < 16; i++)
+        {
+            result[i * 2] = hexChars[bytes[i] >> 4];
+            result[i * 2 + 1] = hexChars[bytes[i] & 0xF];
+        }
+        return new string(result);
+    }
+
+    /// <summary>
     /// Formats a uint32 as 8 hex digits matching Unity's GUIDToString logic.
     /// Unity's implementation extracts nibbles from most significant to least significant
     /// (j=7 down to j=0) and writes them to output positions in the same order (offset+7 to offset+0),

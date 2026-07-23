@@ -79,6 +79,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         { "MonoScript", new MonoScriptHandler() },
         { "BuildReport", new BuildReportHandler() },
         { "PackedAssets", new PackedAssetsHandler() },
+        { "ContentSummary", new ContentSummaryHandler() },
     };
 
     // serialized files

@@ -359,5 +359,11 @@ namespace UnityDataTools.Analyzer.Properties {
                 return ResourceManager.GetString("PackedAssets", resourceCulture);
             }
         }
+
+        internal static string ContentSummary {
+            get {
+                return ResourceManager.GetString("ContentSummary", resourceCulture);
+            }
+        }
     }
 }

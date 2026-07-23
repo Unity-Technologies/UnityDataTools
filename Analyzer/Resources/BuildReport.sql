@@ -15,6 +15,14 @@ CREATE TABLE IF NOT EXISTS build_reports(
     asset_bundle_options INTEGER,
     output_path TEXT,
     crc INTEGER,
+    -- Fields added in Unity 6.6; left NULL when analyzing reports from older versions.
+    build_name TEXT,
+    build_content_options INTEGER,
+    build_session_guid TEXT,
+    build_manifest_hash TEXT,
+    build_profile_path TEXT,
+    build_profile_guid TEXT,
+    data_path TEXT,
     PRIMARY KEY (id)
 );
 
