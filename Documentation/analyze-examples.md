@@ -70,6 +70,8 @@ Shader Graphs/CustomLightingBuildingsB      113.4 KB     1b2fdfe013c58ffd57d7663
 
 See [buildreport.md](buildreport.md) for information about using analyze to look at BuildReport files.
 
+Example queries against build report data — build summary, size by type, and objects grouped by source asset, file extension, or build file — are collected on a dedicated page: [Example queries for Player build reports](analyze-examples-buildreport.md).
+
 
 
 ## Example: Using AI tools to help write queries

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SerializedObjects;
 using UnityDataTools.FileSystem;
@@ -43,12 +44,14 @@ public class PackedAssetsHandler : ISQLiteHandler
 
         m_InsertSourceAssetCommand = db.CreateCommand();
         m_InsertSourceAssetCommand.CommandText = @"INSERT OR IGNORE INTO build_report_source_assets(
-            source_asset_guid, build_time_asset_path
+            source_asset_guid, build_time_asset_path, asset_name, asset_extension
         ) VALUES(
-            @source_asset_guid, @build_time_asset_path
+            @source_asset_guid, @build_time_asset_path, @asset_name, @asset_extension
         )";
         m_InsertSourceAssetCommand.Parameters.Add("@source_asset_guid", SqliteType.Text);
         m_InsertSourceAssetCommand.Parameters.Add("@build_time_asset_path", SqliteType.Text);
+        m_InsertSourceAssetCommand.Parameters.Add("@asset_name", SqliteType.Text);
+        m_InsertSourceAssetCommand.Parameters.Add("@asset_extension", SqliteType.Text);
 
         m_GetSourceAssetIdCommand = db.CreateCommand();
         m_GetSourceAssetIdCommand.CommandText = @"SELECT id FROM build_report_source_assets 
@@ -117,10 +120,14 @@ public class PackedAssetsHandler : ISQLiteHandler
             var cacheKey = (content.SourceAssetGUID, content.BuildTimeAssetPath);
             if (!m_SourceAssetCache.TryGetValue(cacheKey, out long sourceAssetId))
             {
-                // Insert the source asset (will be ignored if it already exists)
+                // Insert the source asset (will be ignored if it already exists). The name and
+                // extension are precomputed from the path because extracting them in SQLite
+                // queries is awkward (no reverse string search).
                 m_InsertSourceAssetCommand.Transaction = ctx.Transaction;
                 m_InsertSourceAssetCommand.Parameters["@source_asset_guid"].Value = content.SourceAssetGUID;
                 m_InsertSourceAssetCommand.Parameters["@build_time_asset_path"].Value = content.BuildTimeAssetPath;
+                m_InsertSourceAssetCommand.Parameters["@asset_name"].Value = Path.GetFileNameWithoutExtension(content.BuildTimeAssetPath);
+                m_InsertSourceAssetCommand.Parameters["@asset_extension"].Value = Path.GetExtension(content.BuildTimeAssetPath).TrimStart('.').ToLowerInvariant();
                 m_InsertSourceAssetCommand.ExecuteNonQuery();
 
                 // Get the ID (whether just inserted or already existing)

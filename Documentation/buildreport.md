@@ -117,6 +117,8 @@ For more detail on the build history layout, see the Unity Manual's [Build histo
 
 ## Example queries
 
+For a worked set of Player build examples — build summary, size by type, and objects grouped by source asset, file extension, or build file — see [Example queries for Player build reports](analyze-examples-buildreport.md).
+
 Run these after analyzing a build report file.
 
 Show all successful builds recorded in the database:
@@ -198,7 +200,7 @@ Views automatically identify which build report each row belongs to, simplifying
 
 - `build_report_files` and `build_report_archive_contents`: store the BuildReport object `id` for each row (as `build_report_id`).
 - `build_report_packed_asset_info`: stores the PackedAssets object `id` for each row (as `packed_assets_id`).
-- `build_report_source_assets`: normalized table of distinct source asset GUIDs and paths, linked via `build_report_packed_asset_info.source_asset_id`.
+- `build_report_source_assets`: normalized table of distinct source asset GUIDs and paths, linked via `build_report_packed_asset_info.source_asset_id`. The `asset_name` (filename without extension) and `asset_extension` (lower-cased, without the dot) columns are derived from the path for convenient grouping, and are also exposed by `build_report_packed_asset_contents_view`.
 - `build_report_content_type_stats` and `build_report_content_asset_stats`: store the ContentSummary object `id` for each row (as `content_summary_id`).
 
 > **Note:** BuildReport and PackedAssets objects are also linked in the `refs` table (BuildReport references PackedAssets in its appendices array), but this relationship is not used in the built-in views because `refs` population is optional.
