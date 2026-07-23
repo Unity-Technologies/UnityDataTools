@@ -12,9 +12,9 @@ The [`analyze`](command-analyze.md) command extracts build report data into dedi
 
 * **BuildReport** - The primary object containing build inputs and results
 * **PackedAssets** - Describes the contents of each SerializedFile, .resS, or .resource file, including type, size, and source asset for each object or resource blob, enabling object-level analysis
-* **ContentSummary** (class id 330615474) - A high-level content summary added in Unity 6.6: cross-build totals plus per-type and per-source-asset breakdowns. Present in Unity 6.6+ Player, AssetBundle, and ContentDirectory reports (absent from older reports and scripts-only builds).
+* **ContentSummary** - A high-level content summary added in Unity 6.6: cross-build totals plus per-type and per-source-asset breakdowns. Present in Unity 6.6+ Player, AssetBundle, and content directory reports (absent from older reports and scripts-only builds).
 
-**Note:** PackedAssets information is not currently written for scenes in the build.
+**Note:** Prior to Unity 6.6, PackedAssets information was not written for scenes in the build.
 
 ## Examples
 
@@ -50,7 +50,7 @@ SELECT build_time_asset_path from build_report_source_assets WHERE build_time_as
 
 ## Cross-Referencing with Build Output
 
-For comprehensive analysis, run `analyze` on both the build output **and** the matching build report file. Use a clean build to ensure PackedAssets information is fully populated.
+For comprehensive analysis, run `analyze` on both the build output **and** the matching build report file. For Player and AssetBundle builds use a clean build, to ensure PackedAssets information is fully populated. 
 
 `analyze` accepts multiple path arguments, each of which can be a file or a directory, so you can pass the build output directory together with the build report path (or the directory containing it) in a single command:
 
@@ -216,9 +216,8 @@ Build report data is stored in the following tables and views:
 
 The `build_reports` table contains primary build information. Additional tables store detailed content data. Views simplify queries by automatically joining tables, especially when working with multiple build reports.
 
-These tables and views are created on demand, so a database analyzed without any build report does not contain them. The `build_reports`, `build_report_files`, `build_report_archive_contents` group and `build_report_files_view` are created when the first BuildReport object is analyzed; the `build_report_packed_*` tables and views are created when the first PackedAssets object is analyzed (a build report with no PackedAssets objects, such as some scene-only builds, will not have them); the `build_report_content_*` tables and views are created when the first ContentSummary object is analyzed (Unity 6.6+ only).
+These tables and views are created on demand, so a database analyzed without any build report does not contain them. The `build_reports`, `build_report_files`, `build_report_archive_contents` group and `build_report_files_view` are created when the first BuildReport object is analyzed; the `build_report_packed_*` tables and views are created when the first PackedAssets object is analyzed (a build report with no PackedAssets objects, such as some scene-only builds, will not have them); the `build_report_content_*` tables and views are created if the file contains a ContentSummary object (Unity 6.6+ only).
 
-The new-in-6.6 `build_reports` columns (`build_name`, `build_content_options`, `build_session_guid`, `build_manifest_hash`, `build_profile_path`, `build_profile_guid`, `data_path`) are left NULL when analyzing reports from older Unity versions.
 
 Because a ContentSummary object does not itself record which build it belongs to, the `build_report_content_*` tables are linked to their BuildReport the same way PackedAssets are: they store the ContentSummary object's own id, and the `build_report_content_summary_view` / `build_report_content_type_stats_view` resolve `build_report_id` via the BuildReport object (type 1125) in the same serialized file.
 
