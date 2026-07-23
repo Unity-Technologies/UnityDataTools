@@ -76,6 +76,10 @@ public static class Program
         var vOpt = new Option<bool>(aliases: new[] { "--verbose", "-v" }, description: "Verbose output");
         var recurseOpt = new Option<bool>(aliases: new[] { "--no-recurse" }, description: "Do not analyze contents of subdirectories inside scanned directories");
         var dOpt = new Option<FileInfo>(aliases: new[] { "--typetree-data", "-d" }, description: TypeTreeDataDescription);
+        var bhOpt = new Option<DirectoryInfo>(aliases: new[] { "--build-history" },
+            description: "Build history folder of the project (e.g. Library/BuildHistory). The build folder matching the "
+            + "analyzed build is located automatically and its ContentLayout.json and build report are included in the analysis.")
+            .ExistingOnly();
 
         var analyzeCommand = new Command("analyze", "Analyze AssetBundles, SerializedFiles and build reports into a database.")
         {
@@ -87,7 +91,8 @@ public static class Program
             pOpt,
             vOpt,
             recurseOpt,
-            dOpt
+            dOpt,
+            bhOpt
         };
 
         analyzeCommand.AddAlias("analyse");
@@ -111,7 +116,8 @@ public static class Program
                 context.ParseResult.GetValueForOption(rOpt),
                 context.ParseResult.GetValueForOption(pOpt),
                 context.ParseResult.GetValueForOption(vOpt),
-                context.ParseResult.GetValueForOption(recurseOpt));
+                context.ParseResult.GetValueForOption(recurseOpt),
+                context.ParseResult.GetValueForOption(bhOpt));
         });
 
         return analyzeCommand;
@@ -354,7 +360,8 @@ public static class Program
         bool extractReferences,
         string searchPattern,
         bool verbose,
-        bool noRecurse)
+        bool noRecurse,
+        DirectoryInfo buildHistory)
     {
         var analyzer = new AnalyzerTool();
 
@@ -372,6 +379,7 @@ public static class Program
             SkipCrc = skipCrc,
             Verbose = verbose,
             NoRecursion = noRecurse,
+            BuildHistoryPath = buildHistory?.FullName,
         });
     }
 

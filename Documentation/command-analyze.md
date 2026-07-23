@@ -18,6 +18,7 @@ UnityDataTool analyze <paths>... [options]
 | `-v, --verbose` | Show more information during analysis | `false` |
 | `--no-recurse` | Do not recurse into sub-directories when scanning directories | `false` |
 | `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
+| `--build-history <folder>` | Build history folder of the project (e.g. `Library/BuildHistory`). The build folder matching the analyzed build is located automatically and its `ContentLayout.json` and build report are included in the analysis. See [ContentDirectory builds](#contentdirectory-builds) | — |
 
 There is no way to append to an existing database, so every file you want in the results must be
 included in a single `analyze` invocation. Pass multiple paths to combine files from more than one
@@ -38,6 +39,12 @@ UnityDataTool analyze /path/to/asset/bundles/my.bundle
 Combine a build output directory with a build report file kept in a separate location:
 ```bash
 UnityDataTool analyze /path/to/build/output /path/to/Library/LastBuild.buildreport
+```
+
+Analyze a ContentDirectory build together with its build history (the matching layout and build
+report are located automatically):
+```bash
+UnityDataTool analyze /path/to/ContentDirectory --build-history /path/to/Library/BuildHistory
 ```
 
 Analyze only `.bundle` files and specify a custom database name:
@@ -79,7 +86,16 @@ command works with the following types of input:
 ## ContentDirectory builds
 
 Analyze a ContentDirectory build together with its `ContentLayout.json` by passing the build output
-folder and the build report folder (or the layout file itself) in one call:
+folder and the project's build history with `--build-history`:
+
+```bash
+UnityDataTool analyze /path/to/ContentDirectory --build-history /path/to/Library/BuildHistory -o database.db
+```
+
+Analyze locates the build's own folder inside the build history and includes its
+`ContentLayout.json` and `.buildreport` in the analysis, so there is no need to identify the
+correct build folder by hand. Alternatively, pass the build folder (or the layout file itself) as a
+regular input:
 
 ```bash
 UnityDataTool analyze /path/to/ContentDirectory /path/to/Library/BuildHistory/<build-directory> -o database.db
@@ -94,8 +110,10 @@ resolved and are recorded in `dangling_refs`.
 A `ContentLayout.json` is only used when its `BuildManifestHash` matches the analyzed build's
 `BuildManifestHash.txt` (a file guaranteed to exist in the build output folder, which analyze picks
 up automatically). This exact-match rule prevents a stale or unrelated layout from silently
-producing misleading results, and it means you can point analyze at a folder containing several
-layouts (such as `Library/BuildHistory`) and the matching one is selected.
+producing misleading results. It is also how `--build-history` finds the build's folder: the folder
+whose `ContentLayout.json` matches the hash is used (the most recent one, if the same content was
+built several times). `--build-history` does not search recursively — the build folders must be
+direct children of the given path (or the path may be a build folder itself).
 
 How the input combinations behave:
 
@@ -104,6 +122,8 @@ How the input combinations behave:
 | ContentDirectory only | Analyzed, with a warning that the analysis is incomplete (broken references, no source mapping) |
 | Subset of files from a ContentDirectory | Same as above; recognized by the `.cf` extension |
 | ContentDirectory + matching ContentLayout.json | Analyzed with resolved references and source mapping |
+| ContentDirectory + `--build-history` | The build's folder is located in the history; its layout and build report are analyzed too. Error when no folder matches |
+| `--build-history` without a ContentDirectory build in the input | Error — only ContentDirectory builds can be matched against a build history |
 | Subset of ContentDirectory files + ContentLayout.json | Works when a `BuildManifestHash.txt` can be found for the hash match; error when the layout cannot be validated |
 | ContentDirectory + multiple ContentLayout.json | The one matching the build is used, the rest are ignored; error when none match |
 | ContentLayout.json only | Imported on its own (layout tables only) |
