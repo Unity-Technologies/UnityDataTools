@@ -195,10 +195,9 @@ public static class DllWrapper
         EntryPoint = "UFS_GetArchiveNodeCount")]
     public static extern ReturnCode GetArchiveNodeCount(UnityArchiveHandle handle, out int count);
 
-    // Strings returned from native (here and in the other StringBuilder-based calls) come back as
-    // UTF-8 bytes but are marshalled as the system ANSI code page, so only ASCII round-trips correctly.
-    // These are internal archive/serialized-file names, which Unity keeps ASCII, so it's not an issue in
-    // practice. Input paths, by contrast, are marshalled as UTF-8 (LPUTF8Str) to support non-ASCII paths.
+    // Note: Strings returned from native (here and in the other StringBuilder-based calls) come back as
+    // UTF-8 bytes but are marshalled as the system code page which could be lossy, especially on Windows.
+    // For this API these are internal archive/serialized-file names which we expect to be ASCII, so it's not an issue in practice.
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_GetArchiveNode")]
@@ -215,14 +214,19 @@ public static class DllWrapper
     public static ReturnCode CreateArchive(string[] sourceFiles, string[] aliases, bool[] isSerializedFile, int count,
         string archiveFile, CompressionType compression, out int crc)
     {
-        var sourcePtrs = new IntPtr[sourceFiles.Length];
-        var aliasPtrs = new IntPtr[aliases.Length];
+        if (count < 0 || count > sourceFiles.Length || count > aliases.Length || count > isSerializedFile.Length)
+            throw new ArgumentOutOfRangeException(nameof(count));
+
+        // Marshal only the first `count` entries, since that's all the native call consumes.
+        var sourcePtrs = new IntPtr[count];
+        var aliasPtrs = new IntPtr[count];
         try
         {
-            for (int i = 0; i < sourceFiles.Length; ++i)
+            for (int i = 0; i < count; ++i)
+            {
                 sourcePtrs[i] = Marshal.StringToCoTaskMemUTF8(sourceFiles[i]);
-            for (int i = 0; i < aliases.Length; ++i)
                 aliasPtrs[i] = Marshal.StringToCoTaskMemUTF8(aliases[i]);
+            }
 
             return CreateArchiveNative(sourcePtrs, aliasPtrs, isSerializedFile, count, archiveFile, compression, out crc);
         }
