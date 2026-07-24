@@ -14,7 +14,7 @@ UnityDataTool dump <path> [options]
 | `-o, --output-path <path>` | Output folder | Current folder |
 | `--stdout` | Write the dump to stdout (status and errors go to stderr). Mutually exclusive with `-o`. | `false` |
 | `-f, --output-format <format>` | Output format | `text` |
-| `-s, --skip-large-arrays` | Skip dumping large arrays | `false` |
+| `-a, --show-large-arrays` | Dump the full content of large arrays of basic data types, instead of summarizing them with a hash | `false` |
 | `-i, --objectid <id>` | Only dump object with this ID | All objects |
 | `-t, --type <type>` | Filter by object type (ClassID number or type name) | All objects |
 | `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
@@ -36,9 +36,9 @@ Dump a single object by ID:
 UnityDataTool dump /path/to/file -i 1234567890
 ```
 
-Skip large arrays for cleaner output:
+Dump the full content of large arrays (e.g. mesh or texture data):
 ```bash
-UnityDataTool dump /path/to/file -s
+UnityDataTool dump /path/to/file -a
 ```
 
 Dump only MonoBehaviour objects by type name:
@@ -174,6 +174,22 @@ ID: -8138362113332287275 (ClassID: 135) SphereCollider
 ```
 
 **Refer to the [TextDumper documentation](textdumper.md) for detailed output format explanation.**
+
+---
+
+## Large Arrays
+
+Arrays of basic data types with more than 256 elements (e.g. mesh vertex data, texture bytes) are not printed element by element. Instead the content is summarized with a hash (a CRC32 of the raw bytes), similar to the `-largebinaryhashonly` option of Unity's `binary2text` tool:
+
+```
+m_IndexBuffer (vector)
+  Array<UInt8>[2232]
+    ArrayDataHash 3be77a33
+```
+
+This keeps the output readable while still allowing a diff of two dumps to detect content changes. Pass `-a` / `--show-large-arrays` to print every element instead.
+
+(The former `--skip-large-arrays` option is deprecated: it is accepted but ignored, since large arrays are now summarized by default.)
 
 ---
 
