@@ -76,17 +76,10 @@ Example queries against build report data — build summary, size by type, and o
 
 ## Example: Using AI tools to help write queries
 
-This is not a tutorial on using AI tools.  However one useful tip:
-
-Many AI tools let you provide context by uploading a file or copying text.  They are helpful for crafting SQL statements and creating scripts.  However by default they probably do not know what to expect inside a UnityDataTools SQLite database.
-
-To provide this information you could run this command that dumps the current schema into a text file.
-
-```
-sqlite3 Analysis.db ".schema" > schema_dump.sql.txt
-```
-
-Then provide that file as context, prior to asking it to write queries based on the available tables, views and columns.  For example: *Help me write a command line calling sqlite3 for Analysis.db that will print the top 5 shaders by the size column.  It will print the name, pretty_size and serialized_file.*
+AI tools are a good fit for the analyze database, whether that is an AI agent running `analyze` and
+querying the result itself, or a chat AI helping you write SQL. The recommended workflow, the schema
+facts worth knowing up front, and tips for providing schema context to chat-based tools are collected
+in [Using UnityDataTool with an AI Agent](agent-guide.md).
 
 ## Example: Finding AssetBundles containing a certain object type
 

@@ -2,6 +2,9 @@
 
 This file provides guidance to AI agents when working with code in this repository.
 
+> Using the tool rather than working on it? To analyze a Unity build with UnityDataTool, see
+> [Using UnityDataTool with an AI Agent](Documentation/agent-guide.md).
+
 ## Project Overview
 
 UnityDataTools is a .NET 9.0 command-line tool for analyzing Unity build output (AssetBundles, Player builds, Addressables). It extracts data from Unity's proprietary binary formats into SQLite databases and human-readable text files. The tool showcases the UnityFileSystemApi native library and serves as both a production tool and reference implementation.
