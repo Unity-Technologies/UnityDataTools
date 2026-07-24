@@ -34,6 +34,7 @@ public class TextDumperTool
         public string Path { get; init; }
         public string OutputPath { get; init; }
         public bool ShowLargeArrays { get; init; }
+        public bool HexFloat { get; init; }
         public long ObjectId { get; init; }
         public string TypeFilter { get; init; }
         public bool ToStdout { get; init; }
@@ -382,11 +383,11 @@ public class TextDumperTool
                     var array = ReadBasicTypeArray(dataNode, offset, arraySize);
                     offset += dataNode.Size * arraySize;
 
-                    m_StringBuilder.Append(array.GetValue(0));
+                    m_StringBuilder.Append(FormatArrayElement(array.GetValue(0)));
                     for (int i = 1; i < arraySize; ++i)
                     {
                         m_StringBuilder.Append(", ");
-                        m_StringBuilder.Append(array.GetValue(i));
+                        m_StringBuilder.Append(FormatArrayElement(array.GetValue(i)));
                     }
                 }
 
@@ -608,10 +609,10 @@ public class TextDumperTool
                 return m_Reader.ReadUInt32(offset).ToString();
 
             case TypeCode.Single:
-                return m_Reader.ReadFloat(offset).ToString();
+                return FormatFloat(m_Reader.ReadFloat(offset));
 
             case TypeCode.Double:
-                return m_Reader.ReadDouble(offset).ToString();
+                return FormatDouble(m_Reader.ReadDouble(offset));
 
             case TypeCode.Int16:
                 return m_Reader.ReadInt16(offset).ToString();
@@ -639,6 +640,22 @@ public class TextDumperTool
                 throw new Exception($"Can't get value of {node.Type} type");
         }
     }
+
+    // With the HexFloat option, floating point values are followed by their bit-exact hexadecimal
+    // representation (like binary2text -hexfloat), because tiny differences between two values can
+    // be lost when they are converted to decimal.
+    string FormatFloat(float value) =>
+        m_Options.HexFloat ? $"{value}(0x{BitConverter.SingleToUInt32Bits(value):x8})" : value.ToString();
+
+    string FormatDouble(double value) =>
+        m_Options.HexFloat ? $"{value}(0x{BitConverter.DoubleToUInt64Bits(value):x16})" : value.ToString();
+
+    string FormatArrayElement(object value) => value switch
+    {
+        float f => FormatFloat(f),
+        double d => FormatDouble(d),
+        _ => value.ToString(),
+    };
 
     Array ReadBasicTypeArray(TypeTreeNode node, long offset, int arraySize)
     {

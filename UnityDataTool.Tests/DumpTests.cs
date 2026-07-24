@@ -314,6 +314,30 @@ public class DumpTests
         Assert.That(output, Does.Not.Contain("293, 294, 295, 296,"));
     }
 
+    // The expected bit patterns are the well-known IEEE 754 representations of the
+    // SerializationDemo field values (also verified against python struct.pack).
+    [Test]
+    public async Task Dump_Stdout_HexFloat_PrintsBitExactRepresentation(
+        [Values("-x", "--hexfloat")] string options)
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializationDemoBundlePath, "--stdout", "--type", "MonoBehaviour", options }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        var output = sw.ToString();
+
+        Assert.That(output, Does.Contain("floatValue (float) 3.1415927(0x40490fdb)"));
+        Assert.That(output, Does.Contain("doubleValue (double) 2.718281828459045(0x4005bf0a8b145769)"));
+    }
+
     [Test]
     public async Task Dump_Stdout_ShowLargeArrays_PrintsFullArrayContent()
     {

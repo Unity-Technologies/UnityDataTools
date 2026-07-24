@@ -15,6 +15,7 @@ UnityDataTool dump <path> [options]
 | `--stdout` | Write the dump to stdout (status and errors go to stderr). Mutually exclusive with `-o`. | `false` |
 | `-f, --output-format <format>` | Output format | `text` |
 | `-a, --show-large-arrays` | Dump the full content of large arrays of basic data types, instead of summarizing them with a hash | `false` |
+| `-x, --hexfloat` | Print the bit-exact hexadecimal representation after each float and double value | `false` |
 | `-i, --objectid <id>` | Only dump object with this ID | All objects |
 | `-t, --type <type>` | Filter by object type (ClassID number or type name) | All objects |
 | `-d, --typetree-data <file>` | Load an external TypeTree data file before processing (Unity 6.5+) | — |
@@ -39,6 +40,15 @@ UnityDataTool dump /path/to/file -i 1234567890
 Dump the full content of large arrays (e.g. mesh or texture data):
 ```bash
 UnityDataTool dump /path/to/file -a
+```
+
+Include the bit-exact hexadecimal representation of float and double values, useful for seeing tiny differences that get lost when converting to decimal (similar to the `-hexfloat` option of Unity's `binary2text` tool):
+```bash
+UnityDataTool dump /path/to/file -x
+```
+```
+floatValue (float) 3.1415927(0x40490fdb)
+doubleValue (double) 2.718281828459045(0x4005bf0a8b145769)
 ```
 
 Dump only MonoBehaviour objects by type name:
