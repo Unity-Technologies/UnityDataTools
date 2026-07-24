@@ -324,7 +324,7 @@ This confirms our understanding that pixel data inside "red.png" is what caused 
 
 # Special cases
 
-In some rare cases the binary Serialized File is different between two builds, but the text "dump" is identical.  
- 
-* This can happen if the change happens in the header of the file, or in some padding bytes.  Such cases are rare because the Serialized File format is quite stable, but it has happened when performance or stabilities improvements have been introduced that changed the header or padding.
-* Sometimes float or double values might appear to be identical in the text representation, but there could be a difference in the actual binary representation.  binary2text has a "-hexfloat" argument that addresses this issue.
+In some rare cases the binary Serialized File is different between two builds, but the text "dump" is identical.
+
+* This can happen if the change happens in the header of the file, or in some padding bytes.  Such cases are rare because the Serialized File format is quite stable, but is a possibility if comparing files produced by different versions of Unity.
+* Sometimes float or double values might appear to be identical in the decimal text representation, but there could be a difference in the actual binary representation.  Specify the `--hexfloat` argument to dump to address this issue.
