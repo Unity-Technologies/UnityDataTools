@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -316,20 +317,24 @@ public class DumpTests
 
     // The expected bit patterns are the well-known IEEE 754 representations of the
     // SerializationDemo field values (also verified against python struct.pack).
+    // Runs under a comma-decimal locale to confirm the output is culture-invariant.
     [Test]
     public async Task Dump_Stdout_HexFloat_PrintsBitExactRepresentation(
         [Values("-x", "--hexfloat")] string options)
     {
         using var sw = new StringWriter();
         var currentOut = Console.Out;
+        var currentCulture = CultureInfo.CurrentCulture;
         try
         {
             Console.SetOut(sw);
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
             Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializationDemoBundlePath, "--stdout", "--type", "MonoBehaviour", options }));
         }
         finally
         {
             Console.SetOut(currentOut);
+            CultureInfo.CurrentCulture = currentCulture;
         }
 
         var output = sw.ToString();

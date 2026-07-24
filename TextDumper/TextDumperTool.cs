@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityDataTools.BinaryFormat;
@@ -643,12 +644,17 @@ public class TextDumperTool
 
     // With the HexFloat option, floating point values are followed by their bit-exact hexadecimal
     // representation (like binary2text -hexfloat), because tiny differences between two values can
-    // be lost when they are converted to decimal.
+    // be lost when they are converted to decimal. The decimal part always uses the invariant
+    // culture so that dumps are identical (and diffable) across locales.
     string FormatFloat(float value) =>
-        m_Options.HexFloat ? $"{value}(0x{BitConverter.SingleToUInt32Bits(value):x8})" : value.ToString();
+        m_Options.HexFloat
+            ? string.Create(CultureInfo.InvariantCulture, $"{value}(0x{BitConverter.SingleToUInt32Bits(value):x8})")
+            : value.ToString(CultureInfo.InvariantCulture);
 
     string FormatDouble(double value) =>
-        m_Options.HexFloat ? $"{value}(0x{BitConverter.DoubleToUInt64Bits(value):x16})" : value.ToString();
+        m_Options.HexFloat
+            ? string.Create(CultureInfo.InvariantCulture, $"{value}(0x{BitConverter.DoubleToUInt64Bits(value):x16})")
+            : value.ToString(CultureInfo.InvariantCulture);
 
     string FormatArrayElement(object value) => value switch
     {
