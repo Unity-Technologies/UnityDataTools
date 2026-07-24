@@ -16,6 +16,7 @@ public class DumpTests
     private string m_NoTypeTreeSerializedFilePath;
     private string m_NoTypeTreeArchivePath;
     private string m_SerializationDemoBundlePath;
+    private string m_ContentDirectoryBuildReportPath;
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -27,6 +28,7 @@ public class DumpTests
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
         m_NoTypeTreeArchivePath = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
         m_SerializationDemoBundlePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundles", "serializationdemo");
+        m_ContentDirectoryBuildReportPath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f64157fb08bb9f645971d39c1203bd03.buildreport");
     }
 
     [Test]
@@ -308,5 +310,35 @@ public class DumpTests
         // Int array of 512 values (0..511). Check the header and a slice of the sequence.
         Assert.That(output, Does.Contain("Array<int>[512]"));
         Assert.That(output, Does.Contain("293, 294, 295, 296,"));
+    }
+
+    // GUID and Hash128 fields are printed as a single hex string instead of their serialized fields.
+    // The expected values can be verified independently: buildSessionGUID matches the build report
+    // file name, and the Scene1 sourceAssetGUID matches Assets/Scenes/Scene1.unity.meta in the
+    // LeadingEdge project.
+    [Test]
+    public async Task Dump_Stdout_BuildReport_PrintsGuidAndHash128AsHexStrings()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_ContentDirectoryBuildReportPath, "--stdout" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        var output = sw.ToString();
+
+        Assert.That(output, Does.Contain("buildSessionGUID (GUID) f64157fb08bb9f645971d39c1203bd03"));
+        Assert.That(output, Does.Contain("sourceAssetGUID (GUID) 162c015549f8733449ac70ae78ad3aa5"));
+        Assert.That(output, Does.Contain("buildManifestHash (Hash128) baff06b928d147276f2245dd3b19216a"));
+
+        // The individual fields of these compound types are no longer dumped.
+        Assert.That(output, Does.Not.Contain("data[0] (unsigned int)"));
+        Assert.That(output, Does.Not.Contain("bytes[0] (UInt8)"));
     }
 }

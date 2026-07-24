@@ -1479,23 +1479,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[0] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 130
-                      bytes[1] (UInt8) 21
-                      bytes[2] (UInt8) 105
-                      bytes[3] (UInt8) 189
-                      bytes[4] (UInt8) 199
-                      bytes[5] (UInt8) 81
-                      bytes[6] (UInt8) 74
-                      bytes[7] (UInt8) 30
-                      bytes[8] (UInt8) 158
-                      bytes[9] (UInt8) 205
-                      bytes[10] (UInt8) 17
-                      bytes[11] (UInt8) 69
-                      bytes[12] (UInt8) 153
-                      bytes[13] (UInt8) 30
-                      bytes[14] (UInt8) 31
-                      bytes[15] (UInt8) 176
+                    data[0] (Hash128) 821569bdc7514a1e9ecd1145991e1fb0
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -2125,23 +2109,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[1] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 70
-                      bytes[1] (UInt8) 216
-                      bytes[2] (UInt8) 229
-                      bytes[3] (UInt8) 146
-                      bytes[4] (UInt8) 169
-                      bytes[5] (UInt8) 238
-                      bytes[6] (UInt8) 88
-                      bytes[7] (UInt8) 221
-                      bytes[8] (UInt8) 65
-                      bytes[9] (UInt8) 22
-                      bytes[10] (UInt8) 152
-                      bytes[11] (UInt8) 126
-                      bytes[12] (UInt8) 255
-                      bytes[13] (UInt8) 131
-                      bytes[14] (UInt8) 56
-                      bytes[15] (UInt8) 82
+                    data[0] (Hash128) 46d8e592a9ee58dd4116987eff833852
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -2860,23 +2828,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[2] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 2
-                      bytes[1] (UInt8) 69
-                      bytes[2] (UInt8) 211
-                      bytes[3] (UInt8) 212
-                      bytes[4] (UInt8) 78
-                      bytes[5] (UInt8) 179
-                      bytes[6] (UInt8) 34
-                      bytes[7] (UInt8) 158
-                      bytes[8] (UInt8) 103
-                      bytes[9] (UInt8) 198
-                      bytes[10] (UInt8) 160
-                      bytes[11] (UInt8) 247
-                      bytes[12] (UInt8) 30
-                      bytes[13] (UInt8) 117
-                      bytes[14] (UInt8) 212
-                      bytes[15] (UInt8) 100
+                    data[0] (Hash128) 0245d3d44eb3229e67c6a0f71e75d464
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -3470,23 +3422,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[3] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 234
-                      bytes[1] (UInt8) 89
-                      bytes[2] (UInt8) 0
-                      bytes[3] (UInt8) 252
-                      bytes[4] (UInt8) 248
-                      bytes[5] (UInt8) 36
-                      bytes[6] (UInt8) 182
-                      bytes[7] (UInt8) 39
-                      bytes[8] (UInt8) 12
-                      bytes[9] (UInt8) 97
-                      bytes[10] (UInt8) 86
-                      bytes[11] (UInt8) 90
-                      bytes[12] (UInt8) 239
-                      bytes[13] (UInt8) 175
-                      bytes[14] (UInt8) 219
-                      bytes[15] (UInt8) 140
+                    data[0] (Hash128) ea5900fcf824b6270c61565aefafdb8c
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -4087,23 +4023,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[0] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 108
-                      bytes[1] (UInt8) 85
-                      bytes[2] (UInt8) 40
-                      bytes[3] (UInt8) 239
-                      bytes[4] (UInt8) 29
-                      bytes[5] (UInt8) 184
-                      bytes[6] (UInt8) 194
-                      bytes[7] (UInt8) 55
-                      bytes[8] (UInt8) 242
-                      bytes[9] (UInt8) 68
-                      bytes[10] (UInt8) 254
-                      bytes[11] (UInt8) 37
-                      bytes[12] (UInt8) 3
-                      bytes[13] (UInt8) 128
-                      bytes[14] (UInt8) 105
-                      bytes[15] (UInt8) 100
+                    data[0] (Hash128) 6c5528ef1db8c237f244fe2503806964
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -4733,23 +4653,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[1] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 164
-                      bytes[1] (UInt8) 14
-                      bytes[2] (UInt8) 116
-                      bytes[3] (UInt8) 30
-                      bytes[4] (UInt8) 67
-                      bytes[5] (UInt8) 31
-                      bytes[6] (UInt8) 223
-                      bytes[7] (UInt8) 105
-                      bytes[8] (UInt8) 48
-                      bytes[9] (UInt8) 112
-                      bytes[10] (UInt8) 197
-                      bytes[11] (UInt8) 194
-                      bytes[12] (UInt8) 242
-                      bytes[13] (UInt8) 152
-                      bytes[14] (UInt8) 23
-                      bytes[15] (UInt8) 149
+                    data[0] (Hash128) a40e741e431fdf693070c5c2f2981795
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -5426,23 +5330,7 @@ ID: -4850512016903265157 (ClassID: 48) Shader
               data[2] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 219
-                      bytes[1] (UInt8) 11
-                      bytes[2] (UInt8) 248
-                      bytes[3] (UInt8) 138
-                      bytes[4] (UInt8) 211
-                      bytes[5] (UInt8) 221
-                      bytes[6] (UInt8) 82
-                      bytes[7] (UInt8) 98
-                      bytes[8] (UInt8) 177
-                      bytes[9] (UInt8) 128
-                      bytes[10] (UInt8) 197
-                      bytes[11] (UInt8) 221
-                      bytes[12] (UInt8) 213
-                      bytes[13] (UInt8) 37
-                      bytes[14] (UInt8) 104
-                      bytes[15] (UInt8) 85
+                    data[0] (Hash128) db0bf88ad3dd5262b180c5ddd5256855
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -7484,23 +7372,7 @@ ID: -4365321507395843767 (ClassID: 33) MeshFilter
 ID: -4339217461983190205 (ClassID: 115) MonoScript
   m_Name (string) SerializeReferencePolymorphismExample
   m_ExecutionOrder (int) 0
-  m_PropertiesHash (Hash128)
-    bytes[0] (UInt8) 76
-    bytes[1] (UInt8) 226
-    bytes[2] (UInt8) 250
-    bytes[3] (UInt8) 179
-    bytes[4] (UInt8) 193
-    bytes[5] (UInt8) 50
-    bytes[6] (UInt8) 194
-    bytes[7] (UInt8) 103
-    bytes[8] (UInt8) 19
-    bytes[9] (UInt8) 229
-    bytes[10] (UInt8) 205
-    bytes[11] (UInt8) 63
-    bytes[12] (UInt8) 88
-    bytes[13] (UInt8) 242
-    bytes[14] (UInt8) 226
-    bytes[15] (UInt8) 41
+  m_PropertiesHash (Hash128) 4ce2fab3c132c26713e5cd3f58f2e229
   m_ClassName (string) SerializeReferencePolymorphismExample
   m_Namespace (string) 
   m_AssemblyName (string) Assembly-CSharp.dll
@@ -7924,23 +7796,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[0] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 22
-                      bytes[1] (UInt8) 241
-                      bytes[2] (UInt8) 147
-                      bytes[3] (UInt8) 228
-                      bytes[4] (UInt8) 107
-                      bytes[5] (UInt8) 119
-                      bytes[6] (UInt8) 120
-                      bytes[7] (UInt8) 105
-                      bytes[8] (UInt8) 199
-                      bytes[9] (UInt8) 91
-                      bytes[10] (UInt8) 26
-                      bytes[11] (UInt8) 58
-                      bytes[12] (UInt8) 200
-                      bytes[13] (UInt8) 19
-                      bytes[14] (UInt8) 4
-                      bytes[15] (UInt8) 63
+                    data[0] (Hash128) 16f193e46b777869c75b1a3ac813043f
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -8682,23 +8538,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[1] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 99
-                      bytes[1] (UInt8) 167
-                      bytes[2] (UInt8) 249
-                      bytes[3] (UInt8) 161
-                      bytes[4] (UInt8) 249
-                      bytes[5] (UInt8) 170
-                      bytes[6] (UInt8) 14
-                      bytes[7] (UInt8) 200
-                      bytes[8] (UInt8) 208
-                      bytes[9] (UInt8) 233
-                      bytes[10] (UInt8) 175
-                      bytes[11] (UInt8) 111
-                      bytes[12] (UInt8) 161
-                      bytes[13] (UInt8) 248
-                      bytes[14] (UInt8) 87
-                      bytes[15] (UInt8) 188
+                    data[0] (Hash128) 63a7f9a1f9aa0ec8d0e9af6fa1f857bc
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -9599,23 +9439,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[2] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 64
-                      bytes[1] (UInt8) 221
-                      bytes[2] (UInt8) 152
-                      bytes[3] (UInt8) 90
-                      bytes[4] (UInt8) 181
-                      bytes[5] (UInt8) 177
-                      bytes[6] (UInt8) 212
-                      bytes[7] (UInt8) 128
-                      bytes[8] (UInt8) 155
-                      bytes[9] (UInt8) 180
-                      bytes[10] (UInt8) 102
-                      bytes[11] (UInt8) 223
-                      bytes[12] (UInt8) 41
-                      bytes[13] (UInt8) 154
-                      bytes[14] (UInt8) 157
-                      bytes[15] (UInt8) 138
+                    data[0] (Hash128) 40dd985ab5b1d4809bb466df299a9d8a
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -10237,23 +10061,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[3] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 78
-                      bytes[1] (UInt8) 57
-                      bytes[2] (UInt8) 184
-                      bytes[3] (UInt8) 47
-                      bytes[4] (UInt8) 91
-                      bytes[5] (UInt8) 190
-                      bytes[6] (UInt8) 62
-                      bytes[7] (UInt8) 238
-                      bytes[8] (UInt8) 96
-                      bytes[9] (UInt8) 0
-                      bytes[10] (UInt8) 18
-                      bytes[11] (UInt8) 15
-                      bytes[12] (UInt8) 146
-                      bytes[13] (UInt8) 165
-                      bytes[14] (UInt8) 137
-                      bytes[15] (UInt8) 11
+                    data[0] (Hash128) 4e39b82f5bbe3eee6000120f92a5890b
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -10938,23 +10746,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[0] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 222
-                      bytes[1] (UInt8) 207
-                      bytes[2] (UInt8) 12
-                      bytes[3] (UInt8) 99
-                      bytes[4] (UInt8) 14
-                      bytes[5] (UInt8) 58
-                      bytes[6] (UInt8) 206
-                      bytes[7] (UInt8) 189
-                      bytes[8] (UInt8) 129
-                      bytes[9] (UInt8) 171
-                      bytes[10] (UInt8) 51
-                      bytes[11] (UInt8) 106
-                      bytes[12] (UInt8) 253
-                      bytes[13] (UInt8) 53
-                      bytes[14] (UInt8) 239
-                      bytes[15] (UInt8) 249
+                    data[0] (Hash128) decf0c630e3acebd81ab336afd35eff9
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -11687,23 +11479,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[1] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 189
-                      bytes[1] (UInt8) 92
-                      bytes[2] (UInt8) 76
-                      bytes[3] (UInt8) 61
-                      bytes[4] (UInt8) 242
-                      bytes[5] (UInt8) 228
-                      bytes[6] (UInt8) 250
-                      bytes[7] (UInt8) 204
-                      bytes[8] (UInt8) 222
-                      bytes[9] (UInt8) 214
-                      bytes[10] (UInt8) 62
-                      bytes[11] (UInt8) 115
-                      bytes[12] (UInt8) 18
-                      bytes[13] (UInt8) 118
-                      bytes[14] (UInt8) 132
-                      bytes[15] (UInt8) 56
+                    data[0] (Hash128) bd5c4c3df2e4faccded63e7312768438
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14
@@ -12520,23 +12296,7 @@ ID: -4067819952531011990 (ClassID: 48) Shader
               data[2] (SerializedPass)
                 m_EditorDataHash (vector)
                   Array<Hash128>[1]
-                    data[0] (Hash128)
-                      bytes[0] (UInt8) 34
-                      bytes[1] (UInt8) 44
-                      bytes[2] (UInt8) 31
-                      bytes[3] (UInt8) 47
-                      bytes[4] (UInt8) 64
-                      bytes[5] (UInt8) 81
-                      bytes[6] (UInt8) 179
-                      bytes[7] (UInt8) 173
-                      bytes[8] (UInt8) 119
-                      bytes[9] (UInt8) 226
-                      bytes[10] (UInt8) 242
-                      bytes[11] (UInt8) 88
-                      bytes[12] (UInt8) 209
-                      bytes[13] (UInt8) 229
-                      bytes[14] (UInt8) 254
-                      bytes[15] (UInt8) 243
+                    data[0] (Hash128) 222c1f2f4051b3ad77e2f258d1e5fef3
                 m_Platforms (vector)
                   Array<UInt8>[1]
                     14

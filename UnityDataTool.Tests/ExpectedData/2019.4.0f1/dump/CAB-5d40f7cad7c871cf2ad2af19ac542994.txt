@@ -27148,23 +27148,7 @@ ID: -4365321507395843767 (ClassID: 33) MeshFilter
 ID: -4339217461983190205 (ClassID: 115) MonoScript
   m_Name (string) SerializeReferencePolymorphismExample
   m_ExecutionOrder (int) 0
-  m_PropertiesHash (Hash128)
-    bytes[0] (UInt8) 5
-    bytes[1] (UInt8) 61
-    bytes[2] (UInt8) 135
-    bytes[3] (UInt8) 226
-    bytes[4] (UInt8) 11
-    bytes[5] (UInt8) 136
-    bytes[6] (UInt8) 110
-    bytes[7] (UInt8) 198
-    bytes[8] (UInt8) 240
-    bytes[9] (UInt8) 145
-    bytes[10] (UInt8) 18
-    bytes[11] (UInt8) 73
-    bytes[12] (UInt8) 18
-    bytes[13] (UInt8) 65
-    bytes[14] (UInt8) 27
-    bytes[15] (UInt8) 13
+  m_PropertiesHash (Hash128) 053d87e20b886ec6f091124912411b0d
   m_ClassName (string) SerializeReferencePolymorphismExample
   m_Namespace (string) 
   m_AssemblyName (string) Assembly-CSharp.dll

@@ -117,8 +117,7 @@ This is an example MonoScript from a `UnityDataTool dump` of a Serialized File:
 ID: -5763254701832525334 (ClassID: 115) MonoScript
   m_Name (string) SpriteSkin
   m_ExecutionOrder (int) 0
-  m_PropertiesHash (Hash128)
-  ...
+  m_PropertiesHash (Hash128) 4ce2fab3c132c26713e5cd3f58f2e229
   m_ClassName (string) SpriteSkin
   m_Namespace (string) UnityEngine.U2D.Animation
   m_AssemblyName (string) Unity.2D.Animation.Runtime

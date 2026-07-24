@@ -297,6 +297,14 @@ public class TextDumperTool
                 // Skip child nodes as they were already processed here.
                 skipChildren = true;
             }
+            else if (TryReadCompoundValue(node, ref offset, out var compoundValue))
+            {
+                m_StringBuilder.Append(' ');
+                m_StringBuilder.Append(compoundValue);
+
+                // Skip child nodes as they were already processed here.
+                skipChildren = true;
+            }
 
             m_Writer.WriteLine(m_StringBuilder);
             m_StringBuilder.Clear();
@@ -505,6 +513,52 @@ public class TextDumperTool
         foreach (var child in refTypeRoot.Children)
         {
             RecursiveDump(child, ref offset, level + 1);
+        }
+
+        return true;
+    }
+
+    // Compound types that are more readable printed as a single value than as their serialized
+    // fields, similarly to strings. To support another type, add a case matching its type name and
+    // serialized layout, returning the formatted value and advancing offset past the data.
+    bool TryReadCompoundValue(TypeTreeNode node, ref long offset, out string value)
+    {
+        switch (node.Type)
+        {
+            // A GUID is serialized as 4 uint32 values.
+            case "GUID" when HasUniformLeafChildren(node, 4, 4):
+                value = GuidHelper.FormatUnityGuid(
+                    m_Reader.ReadUInt32(offset),
+                    m_Reader.ReadUInt32(offset + 4),
+                    m_Reader.ReadUInt32(offset + 8),
+                    m_Reader.ReadUInt32(offset + 12));
+                offset += 16;
+                return true;
+
+            // A Hash128 is serialized as 16 bytes.
+            case "Hash128" when HasUniformLeafChildren(node, 16, 1):
+                var bytes = new byte[16];
+                m_Reader.ReadArray(offset, 16, bytes);
+                value = GuidHelper.FormatUnityHash128(bytes);
+                offset += 16;
+                return true;
+        }
+
+        value = null;
+        return false;
+    }
+
+    // Confirms a compound type has the exact layout expected by TryReadCompoundValue, so that an
+    // unrelated type reusing the same name falls back to the generic field-by-field dump.
+    static bool HasUniformLeafChildren(TypeTreeNode node, int count, int size)
+    {
+        if (node.Children.Count != count)
+            return false;
+
+        foreach (var child in node.Children)
+        {
+            if (!child.IsLeaf || child.Size != size)
+                return false;
         }
 
         return true;
