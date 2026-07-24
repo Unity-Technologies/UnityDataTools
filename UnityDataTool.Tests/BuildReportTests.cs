@@ -348,11 +348,19 @@ public class BuildReportTests
             "Unexpected source_asset_guid in build_report_packed_asset_contents_view");
 
         SQLTestHelper.AssertQueryString(db,
-            $@"SELECT build_time_asset_path FROM build_report_packed_asset_contents_view 
-               WHERE packed_assets_id = {packedAssetId} 
+            $@"SELECT build_time_asset_path FROM build_report_packed_asset_contents_view
+               WHERE packed_assets_id = {packedAssetId}
                AND object_id = {objectId}",
             "Assets/Sprites/Snow.jpg",
             "Unexpected build_time_asset_path in build_report_packed_asset_contents_view");
+
+        // The name and extension derived from the source asset path.
+        SQLTestHelper.AssertQueryString(db,
+            $@"SELECT asset_name || '|' || asset_extension FROM build_report_packed_asset_contents_view
+               WHERE packed_assets_id = {packedAssetId}
+               AND object_id = {objectId}",
+            "Snow|jpg",
+            "Unexpected asset_name/asset_extension in build_report_packed_asset_contents_view");
 
         SQLTestHelper.AssertQueryString(db,
             $"SELECT path FROM build_report_packed_assets_view WHERE id = {packedAssetId}",
@@ -520,6 +528,80 @@ public class BuildReportTests
               WHERE build_report_filename = 'Player.buildreport' AND archive IS NOT NULL");
         Assert.AreEqual(0, playerPackedAssetsWithNonNullBundle,
             "Expected all PackedAssets from Player.buildreport have NULL archive");
+    }
+
+    // A Unity 6.6 Player build of the Happy Harvest sample project: a larger report with a
+    // ContentSummary and diverse content. The expected values pin down the example query results
+    // shown in Documentation/analyze-examples-buildreport.md (issue #110).
+    [Test]
+    public async Task Analyze_BuildReport_HappyHarvest_MatchesDocumentedExamples()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[]
+            { "analyze", Path.Combine(m_TestDataFolder, "happyHarvest.buildreport") }));
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        // General build information.
+        SQLTestHelper.AssertQueryString(db, "SELECT build_name FROM build_reports", "perf.u6.happy-harvest",
+            "Unexpected build_name");
+        SQLTestHelper.AssertQueryString(db, "SELECT platform_name FROM build_reports", "Win64",
+            "Unexpected platform_name");
+        SQLTestHelper.AssertQueryString(db, "SELECT build_result FROM build_reports", "Succeeded",
+            "Unexpected build_result");
+        SQLTestHelper.AssertQueryInt(db, "SELECT total_time_seconds FROM build_reports", 89,
+            "Unexpected total_time_seconds");
+
+        // Size by runtime type: the largest type from the ContentSummary.
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT type_name || '|' || size || '|' || object_count
+              FROM build_report_content_type_stats_view ORDER BY size DESC LIMIT 1",
+            "Texture2D|106623032|589",
+            "Unexpected largest type in ContentSummary type stats");
+
+        // The same breakdown computed from PackedAssets matches the ContentSummary.
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT COUNT(*) || '|' || SUM(size) FROM build_report_packed_asset_contents_view
+              WHERE type = 'Texture2D'",
+            "589|106623032",
+            "PackedAssets Texture2D breakdown should match the ContentSummary");
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT (SELECT SUM(size) FROM build_report_content_type_stats)
+                    - (SELECT SUM(size) FROM build_report_packed_asset_info)", 0,
+            "ContentSummary and PackedAssets should report the same total content size");
+
+        // Objects grouped by source asset.
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT asset_name || '|' || COUNT(*) || '|' || SUM(size)
+              FROM build_report_packed_asset_contents_view
+              GROUP BY asset_name ORDER BY SUM(size) DESC LIMIT 1",
+            "SpriteAtlas_Tiles|7|50562096",
+            "Unexpected largest source asset group");
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM build_report_packed_asset_contents_view
+              WHERE build_time_asset_path = 'Assets/HappyHarvest/Art/Tiles/Fence/Prefabs/Fence 8.prefab'",
+            6, "Unexpected object count for the Fence 8 prefab");
+
+        // Objects grouped by source file extension.
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT COUNT(*) || '|' || SUM(size) FROM build_report_packed_asset_contents_view
+              WHERE asset_extension = 'png'",
+            "1039|38913212",
+            "Unexpected png extension group");
+
+        // Content without a normal source asset path has an empty name and extension.
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT asset_name || '|' || asset_extension FROM build_report_source_assets
+              WHERE build_time_asset_path = 'Built-in Texture2D: Splash Screen Unity Logo'",
+            "Built-in Texture2D: Splash Screen Unity Logo|",
+            "Expected no extension for a built-in resource");
+
+        // Objects grouped by build file: scene content is covered from Unity 6.6.
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM build_report_packed_assets", 18,
+            "Unexpected number of PackedAssets files");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM build_report_packed_asset_contents_view WHERE path = 'level2'",
+            6521, "Unexpected object count in level2");
     }
 
     // The Unity 6.6 Summary adds several fields (issue #107 Part 1). Verify they land in the new

@@ -9,6 +9,10 @@ CREATE TABLE IF NOT EXISTS build_report_source_assets(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     source_asset_guid TEXT NOT NULL,
     build_time_asset_path TEXT NOT NULL,
+    -- Derived from build_time_asset_path for convenient grouping: the filename without its
+    -- extension, and the lower-cased extension without the dot (empty when there is none).
+    asset_name TEXT NOT NULL,
+    asset_extension TEXT NOT NULL,
     UNIQUE(source_asset_guid, build_time_asset_path)
 );
 
@@ -52,6 +56,8 @@ SELECT
     pac.offset,
     sa.source_asset_guid,
     sa.build_time_asset_path,
+    sa.asset_name,
+    sa.asset_extension,
     br_obj.id as build_report_id
 FROM build_report_packed_asset_info pac
 LEFT JOIN build_report_packed_assets pa ON pac.packed_assets_id = pa.id

@@ -132,6 +132,7 @@ CLI entry point is `UnityDataTool/Program.cs` using System.CommandLine. Per-comm
 ### Extending Analyze
 
 * New Unity types can be added by following the same pattern as the existing types, for example MonoScripts.
+* Any database schema change (new or changed tables, views, or columns) must bump `PRAGMA user_version` in `Analyzer/Resources/Init.sql` and extend the version-history comment above it.
 * Analysis of additional file formats could be added, for example AssetBundle manifest files by following the pattern of Addressables build layout files are handled.
 
 ### Other Extensions

@@ -203,8 +203,10 @@ INSERT INTO types (id, name) VALUES (-1, 'Scene');
 -- assetbundle_assets/preload_dependencies (issue #82); 3 = renamed asset_bundles table to archives
 -- and the asset_bundle column/alias to archive (issue #68); 4 = build_report_packed_asset_contents_view
 -- type column changed from numeric id to type name (issue #55); 5 = added dangling_refs table/view
--- (issue #85); 6 = archives.name is unique (issue #51); databases produced before versioning report 0.
-PRAGMA user_version = 6;
+-- (issue #85); 6 = archives.name is unique (issue #51); 7 = Unity 6.6 build_reports columns and
+-- build_report_content_* tables (issue #107), asset_name/asset_extension columns on
+-- build_report_source_assets (issue #110); databases produced before versioning report 0.
+PRAGMA user_version = 7;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;
