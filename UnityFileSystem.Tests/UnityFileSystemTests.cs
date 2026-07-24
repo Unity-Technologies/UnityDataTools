@@ -11,6 +11,27 @@ namespace UnityDataTools.FileSystem.Tests;
 
 #pragma warning disable NUnit2005, NUnit2006
 
+// Copies a file into a fresh temp directory whose name and file name contain non-ASCII
+// (Japanese) characters, runs the test against it, then removes the directory.
+internal static class NonAsciiPath
+{
+    public static void WithCopy(string source, string fileName, Action<string> test)
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "UnityDataTools_テスト_" + Path.GetRandomFileName());
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var path = Path.Combine(dir, fileName);
+            File.Copy(source, path);
+            test(path);
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+}
+
 public class ArchiveTests : AssetBundleTestFixture
 {
     public ArchiveTests(Context context) : base(context)
@@ -60,6 +81,21 @@ public class ArchiveTests : AssetBundleTestFixture
         Assert.IsNotNull(archive);
 
         archive.Dispose();
+    }
+
+    // Paths are marshalled to the native library as UTF-8, so non-ASCII paths must work.
+    [Test]
+    public void MountArchive_NonAsciiPath_ReturnsArchive()
+    {
+        var source = Path.Combine(Context.UnityDataFolder, "assetbundle");
+
+        NonAsciiPath.WithCopy(source, "アセット.bundle", path =>
+        {
+            UnityArchive archive = null;
+            Assert.DoesNotThrow(() => archive = UnityFileSystem.MountArchive(path, "archive:/"));
+            Assert.IsNotNull(archive);
+            archive.Dispose();
+        });
     }
 
     [Ignore("This test doesn't return the expected error, this condition is probably not handled correctly in Unity")]
@@ -153,6 +189,24 @@ public class UnityFileTests : AssetBundleTestFixture
         Assert.IsNotNull(file);
 
         Assert.DoesNotThrow(() => file.Dispose());
+    }
+
+    // Paths are marshalled to the native library as UTF-8, so a file at a non-ASCII path
+    // must open and read correctly (this failed when paths were marshalled as ANSI).
+    [Test]
+    public void OpenFile_NonAsciiPath_ReadsExpectedData()
+    {
+        var source = Path.Combine(Context.TestDataFolder, "TextFile.txt");
+
+        NonAsciiPath.WithCopy(source, "テキスト.txt", path =>
+        {
+            using var file = UnityFileSystem.OpenFile(path);
+            var buffer = new Byte[1000];
+            var actualSize = file.Read(1000, buffer);
+
+            Assert.AreEqual(21, actualSize);
+            Assert.AreEqual("This is my text file.", Encoding.UTF8.GetString(buffer, 0, (int)actualSize));
+        });
     }
 
     [Test]
