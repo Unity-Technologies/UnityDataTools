@@ -166,7 +166,10 @@ public static class Program
     {
         var pathArg = new Argument<FileInfo>("filename", "The path of the file to dump").ExistingOnly();
         var fOpt = new Option<TextDumperTool.DumpFormat>(aliases: new[] { "--output-format", "-f" }, description: "Output format", getDefaultValue: () => TextDumperTool.DumpFormat.Text);
-        var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }, description: "Do not dump large arrays of basic data types");
+        var aOpt = new Option<bool>(aliases: new[] { "--show-large-arrays", "-a" }, description: "Dump the full content of large arrays of basic data types, instead of summarizing them with a hash");
+        // Former option, kept so that existing scripts don't break. Ignored because skipping
+        // large arrays (with a hash) is now the default behavior.
+        var sOpt = new Option<bool>(aliases: new[] { "--skip-large-arrays", "-s" }) { IsHidden = true };
         var oOpt = new Option<DirectoryInfo>(aliases: new[] { "--output-path", "-o" }, description: "Output folder", getDefaultValue: () => new DirectoryInfo(Environment.CurrentDirectory));
         var objectIdOpt = new Option<long>(aliases: new[] { "--objectid", "-i" }, () => 0, "Only dump the object with this signed 64-bit id (default: 0, dump all objects)");
         var typeOpt = new Option<string>(aliases: new[] { "--type", "-t" }, description: "Filter by object type (ClassID number or type name)");
@@ -178,6 +181,7 @@ public static class Program
         {
             pathArg,
             fOpt,
+            aOpt,
             sOpt,
             oOpt,
             objectIdOpt,
@@ -197,7 +201,7 @@ public static class Program
             }
         });
         dumpCommand.SetHandler(
-            (FileInfo fi, TextDumperTool.DumpFormat f, bool s, DirectoryInfo o, long objectId, string type, FileInfo d, bool toStdout) =>
+            (FileInfo fi, TextDumperTool.DumpFormat f, bool a, DirectoryInfo o, long objectId, string type, FileInfo d, bool toStdout) =>
             {
                 var ttResult = LoadTypeTreeDataFile(d);
                 if (ttResult != 0) return Task.FromResult(ttResult);
@@ -206,14 +210,14 @@ public static class Program
                     Format = f,
                     Path = fi.FullName,
                     OutputPath = o.FullName,
-                    SkipLargeArrays = s,
+                    ShowLargeArrays = a,
                     ObjectId = objectId,
                     TypeFilter = type,
                     ToStdout = toStdout,
                 };
                 return Task.FromResult(HandleDump(options));
             },
-            pathArg, fOpt, sOpt, oOpt, objectIdOpt, typeOpt, dOpt, stdoutOpt);
+            pathArg, fOpt, aOpt, oOpt, objectIdOpt, typeOpt, dOpt, stdoutOpt);
 
         return dumpCommand;
     }

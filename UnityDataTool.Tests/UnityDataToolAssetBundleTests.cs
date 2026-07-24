@@ -129,7 +129,29 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     }
 
     [Test]
-    public async Task DumpText_SkipLargeArrays_TextFileCreatedCorrectly(
+    public async Task DumpText_ShowLargeArrays_TextFileCreatedCorrectly(
+        [Values("-a", "--show-large-arrays")] string options)
+    {
+        var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
+        var outputFile = Path.Combine(m_TestOutputFolder, "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt");
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "dump", path }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+        Assert.IsTrue(File.Exists(outputFile));
+
+        var content = File.ReadAllText(outputFile);
+        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump-a", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
+
+        // Normalize  line endings.
+        content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");
+        expected = Regex.Replace(expected, @"\r\n|\n\r|\r", "\n");
+
+        Assert.AreEqual(expected, content);
+    }
+
+    // The retired --skip-large-arrays option is still accepted (silently ignored) so that
+    // existing scripts don't break. Summarizing large arrays is now the default behavior.
+    [Test]
+    public async Task DumpText_SkipLargeArrays_IgnoredAndProducesDefaultOutput(
         [Values("-s", "--skip-large-arrays")] string options)
     {
         var path = Path.Combine(Context.UnityDataFolder, "assetbundle");
@@ -139,7 +161,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
         Assert.IsTrue(File.Exists(outputFile));
 
         var content = File.ReadAllText(outputFile);
-        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump-s", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
+        var expected = File.ReadAllText(Path.Combine(Context.ExpectedDataFolder, "dump", "CAB-5d40f7cad7c871cf2ad2af19ac542994.txt"));
 
         // Normalize  line endings.
         content = Regex.Replace(content, @"\r\n|\n\r|\r", "\n");

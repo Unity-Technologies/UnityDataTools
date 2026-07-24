@@ -85,8 +85,8 @@ public static class ExpectedDataGenerator
         Directory.CreateDirectory(dumpPath);
         Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "assetbundle"), "-o", dumpPath });
 
-        dumpPath = Path.Combine(outputFolder, "dump-s");
+        dumpPath = Path.Combine(outputFolder, "dump-a");
         Directory.CreateDirectory(dumpPath);
-        Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "assetbundle"), "-o", dumpPath, "-s" });
+        Program.Main(new string[] { "dump", Path.Combine(context.UnityDataFolder, "assetbundle"), "-o", dumpPath, "-a" });
     }
 }

@@ -8,6 +8,10 @@ namespace UnityDataTools.TextDumper;
 
 public class TextDumperTool
 {
+    // Arrays of basic types with more elements than this are summarized with a hash
+    // unless --show-large-arrays is passed.
+    const int MaxInlineArraySize = 256;
+
     StringBuilder m_StringBuilder = new StringBuilder(1024);
     DumpOptions m_Options;
     string m_TypeFilter;     // m_Options.TypeFilter normalized: null when blank/unset, otherwise the user-provided string
@@ -29,7 +33,7 @@ public class TextDumperTool
         public DumpFormat Format { get; init; } = DumpFormat.Text;
         public string Path { get; init; }
         public string OutputPath { get; init; }
-        public bool SkipLargeArrays { get; init; }
+        public bool ShowLargeArrays { get; init; }
         public long ObjectId { get; init; }
         public string TypeFilter { get; init; }
         public bool ToStdout { get; init; }
@@ -365,9 +369,12 @@ public class TextDumperTool
             {
                 AppendIndent(level + 1);
 
-                if (arraySize > 256 && m_Options.SkipLargeArrays)
+                if (arraySize > MaxInlineArraySize && !m_Options.ShowLargeArrays)
                 {
-                    m_StringBuilder.Append("<Skipped>");
+                    // Summarizing with a hash keeps the output readable while a diff of two dumps
+                    // still detects content changes (same idea as binary2text -largebinaryhashonly).
+                    m_StringBuilder.Append("ArrayDataHash ");
+                    m_StringBuilder.Append(m_Reader.ComputeCRC(offset, dataNode.Size * arraySize).ToString("x8"));
                     offset += dataNode.Size * arraySize;
                 }
                 else

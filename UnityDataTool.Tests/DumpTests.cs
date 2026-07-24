@@ -307,9 +307,34 @@ public class DumpTests
         Assert.That(output, Does.Contain("charValue (UInt16) 90"));
         Assert.That(output, Does.Contain("stringValue (string) SerializationDemo string value"));
 
-        // Int array of 512 values (0..511). Check the header and a slice of the sequence.
+        // Int array of 512 values (0..511), above the large-array threshold so it is
+        // summarized with a hash by default (CRC32 of the 2048 little-endian bytes).
+        Assert.That(output, Does.Contain("Array<int>[512]"));
+        Assert.That(output, Does.Contain("ArrayDataHash 6feca6e2"));
+        Assert.That(output, Does.Not.Contain("293, 294, 295, 296,"));
+    }
+
+    [Test]
+    public async Task Dump_Stdout_ShowLargeArrays_PrintsFullArrayContent()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SerializationDemoBundlePath, "--stdout", "--type", "MonoBehaviour", "--show-large-arrays" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        var output = sw.ToString();
+
+        // The 512-element int array (0..511) is fully dumped. Check the header and a slice of the sequence.
         Assert.That(output, Does.Contain("Array<int>[512]"));
         Assert.That(output, Does.Contain("293, 294, 295, 296,"));
+        Assert.That(output, Does.Not.Contain("ArrayDataHash"));
     }
 
     // GUID and Hash128 fields are printed as a single hex string instead of their serialized fields.
