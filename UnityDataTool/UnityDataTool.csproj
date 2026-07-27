@@ -4,10 +4,13 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>2.0.0</Version>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <FileVersion>2.2.0.0</FileVersion>
-    <InformationalVersion>2.2.0</InformationalVersion>
+    <!-- InformationalVersion is the version shown in the help output. On main it carries a
+         "-dev" suffix and the help text links to the docs on main. When releasing: drop the
+         suffix (the docs link then pins to the vX.Y.Z tag), tag, build, then bump to the
+         next "-dev" version. -->
+    <InformationalVersion>2.2.0-dev</InformationalVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

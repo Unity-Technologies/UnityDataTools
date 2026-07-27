@@ -33,6 +33,7 @@ New to Unity's data files or to UnityDataTool? These topics are a good place to 
 | [Command-line tool](./Documentation/unitydatatool.md) | All commands and their options. |
 | [Analyzer & database schema](./Documentation/analyzer.md) | The SQLite database that `analyze` produces, including its tables and views. |
 | [Example queries](./Documentation/analyze-examples.md) | Worked examples of querying the analyze database. |
+| [Using UnityDataTool with an AI agent](./Documentation/agent-guide.md) | The recommended workflow for AI agents (and scripts) analyzing a build. |
 | [Comparing builds](./Documentation/comparing-builds.md) | Finding what changed between two builds. |
 | [Addressables build reports](./Documentation/addressables-build-reports.md) | Analyzing Addressables JSON build reports. |
 | [Build reports](./Documentation/buildreport.md) | Importing a Unity BuildReport to map build output back to source assets. |
@@ -88,8 +89,9 @@ flowchart TD
   database for detailed analysis. It also parses Addressables build reports.
 * [TextDumper](Documentation/textdumper.md): dumps SerializedFiles into a human-readable format
   (similar to Unity's binary2text).
-* [ReferenceFinder](Documentation/referencefinder.md): finds reference chains from one object to
-  another by querying a database produced by the Analyzer (a data dependency rather than a code one).
+* [ReferenceFinder](Documentation/referencefinder.md): experimental; finds reference chains from one
+  object to another by querying a database produced by the Analyzer (a data dependency rather than a
+  code one).
 * [Archive](Documentation/command-archive.md): inspects and extracts the contents of Unity Archives
   (AssetBundles and web platform `.data` files) — the `archive` command.
 * [SerializedFile](Documentation/command-serialized-file.md): inspects the header, metadata, object
@@ -120,13 +122,13 @@ shared test data doubles as convenient sample content for ad hoc use of the tool
 
 ## Downloads
 
-Prebuilt Windows and Mac builds are available in the "Actions" tab. Each update to the main branch triggers a new build.
+Prebuilt Windows and Mac builds are published on the [Releases page](https://github.com/Unity-Technologies/UnityDataTools/releases). Each release includes a zip per platform containing the `UnityDataTool` executable and the native libraries it needs.
 
 To use:
 1. Download and unzip the build for your platform.
-2. Run UnityDataTool from the extracted location, or add it to your system PATH.
+2. Run UnityDataTool from the extracted location, or add that location to your system PATH.
 
-Refer to the [commit history](https://github.com/Unity-Technologies/UnityDataTools/commits/main/) to see the recent improvements to the tool.
+Each release describes what changed; refer to the [commit history](https://github.com/Unity-Technologies/UnityDataTools/commits/main/) for changes since the latest release. To try unreleased changes, [build from source](#how-to-build).
 
 ## Getting UnityFileSystemApi
 

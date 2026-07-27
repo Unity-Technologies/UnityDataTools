@@ -35,8 +35,6 @@ public static class Program
         return r;
     }
 
-    const string DocumentationUrl = "https://github.com/Unity-Technologies/UnityDataTools/blob/main/Documentation/unitydatatool.md";
-
     static string BuildRootDescription()
     {
         var version = Assembly.GetExecutingAssembly()
@@ -49,13 +47,20 @@ public static class Program
         if (plusIndex >= 0)
             version = version.Substring(0, plusIndex);
 
+        // Release builds have a bare version (e.g. "2.1.0") matching a git tag, so their
+        // documentation link can be pinned to the matching docs. Dev builds carry a pre-release
+        // suffix (e.g. "2.2.0-dev") and link to the latest docs on main instead.
+        var docsRef = version.Contains('-') || version == "unknown" ? "main" : $"v{version}";
+        var documentationUrl =
+            $"https://github.com/Unity-Technologies/UnityDataTools/blob/{docsRef}/Documentation/unitydatatool.md";
+
         return
             "UnityDataTool inspects and analyzes Unity file formats, for example the content formats for AssetBundles, " +
             "Player and content directory builds. It can build a database of the Unity objects and their " +
             "references for analysis, dump objects as text, and examine " +
             "archive and SerializedFile internals.\n\n" +
             "Run 'UnityDataTool [command] --help' for detailed help on a specific command.\n\n" +
-            $"Documentation: {DocumentationUrl}\n" +
+            $"Documentation: {documentationUrl}\n" +
             $"Version: {version}";
     }
 
@@ -133,7 +138,8 @@ public static class Program
         var aOpt = new Option<bool>(aliases: new[] { "--find-all", "-a" }, description: "Find all reference chains originating from the same asset (instead of only one), can be very slow");
         var stdoutOpt = new Option<bool>(aliases: new[] { "--stdout" }, description: "Write the reference chains to stdout instead of a file.");
 
-        var findRefsCommand = new Command("find-refs", "Find reference chains to specified object(s).")
+        var findRefsCommand = new Command("find-refs",
+            "Find reference chains to specified object(s) (experimental: results are incomplete for some build types).")
         {
             pathArg,
             oOpt,
