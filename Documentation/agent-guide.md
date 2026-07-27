@@ -58,7 +58,7 @@ the two drill-down commands take different ones:
 
 **One build per database.** `analyze` refuses input where two archives (or two standalone
 SerializedFiles) have the same name, because queries would be ambiguous — this happens when a
-directory contains several builds, or the same bundles built for multiple targets. Analyze each
+directory contains several builds, or the same AssetBundles built for multiple targets. Analyze each
 build into its own database and query them separately ([Comparing Builds](comparing-builds.md)
 shows patterns for diffing them).
 
@@ -87,8 +87,8 @@ a walk should stop — the objects that by themselves explain "this is why it is
 depends on the build type:
 
 * **AssetBundles**: the `assetbundle_assets` table lists the assets explicitly assigned to each
-  bundle. Reaching one of these explains the inclusion, and an object that is itself listed there
-  belongs in the build even when nothing references it.
+  AssetBundle. Reaching one of these explains the inclusion, and an object that is itself listed
+  there belongs in the build even when nothing references it.
 * **Content directory builds**: `content_layout_loadable_objects_view` lists the loadable objects —
   the build's entry points. This requires the `ContentLayout.json` in the analyze input; see
   [ContentLayout in the Analyze Database](contentlayout-database.md).
@@ -101,10 +101,10 @@ experimental: it does not yet produce complete or clearly-explained results for 
 pipelines ([issue #121](https://github.com/Unity-Technologies/UnityDataTools/issues/121)). Prefer
 the direct queries above.
 
-## Worked example: diagnose a build
+## Worked example: diagnose an AssetBundle build
 
-Given the question "what is in this build and does anything look wasteful?", analyze the entire
-build output into one database:
+Given the question "what is in this AssetBundle build and does anything look wasteful?", analyze
+the entire build output into one database:
 
 ```
 UnityDataTool analyze /path/to/build -o Analysis.db
@@ -131,10 +131,10 @@ SELECT * FROM view_potential_duplicates;
 
 Interpretation notes: `rw_enabled = 1` on textures and meshes doubles their runtime memory cost and
 is only needed when scripts access the data on the CPU. `view_potential_duplicates` compares
-objects across the whole build — this is why the full analysis matters — and rows that span
-archives usually mean a shared dependency was not assigned to a common bundle, so it was duplicated
-into each bundle that needs it. To see a suspicious object in full, dump it from the file the query
-reported:
+objects across the whole build (this is why the full analysis matters) and is only expected to have
+results for AssetBundle builds: rows that span archives usually mean a shared dependency was not
+assigned to a common AssetBundle, so it was duplicated into each AssetBundle that needs it. To see
+a suspicious object in full, dump it from the file the query reported:
 
 ```
 UnityDataTool dump /path/to/build/some.bundle -i <object_id> --stdout
@@ -146,10 +146,10 @@ When the question is about a single AssetBundle on its own, it can be analyzed i
 throwaway database (build-wide questions such as duplication still need the full analysis above):
 
 ```
-UnityDataTool analyze /path/to/bundles -o bundle.db -p my.bundle
+UnityDataTool analyze /path/to/assetbundles -o single.db -p my.bundle
 ```
 
-The same per-object queries apply — `view_breakdown_by_type` for what dominates the bundle, then
+The same per-object queries apply — `view_breakdown_by_type` for what dominates the AssetBundle, then
 `object_view ORDER BY size DESC` and a `dump` of the biggest objects to see what makes them large
 (e.g. texture dimensions and format, or mesh vertex counts).
 
