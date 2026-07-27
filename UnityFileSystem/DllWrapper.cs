@@ -183,7 +183,7 @@ public static class DllWrapper
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_MountArchive")]
-    public static extern ReturnCode MountArchive([MarshalAs(UnmanagedType.LPStr)] string path, [MarshalAs(UnmanagedType.LPStr)] string mountPoint, out UnityArchiveHandle handle);
+    public static extern ReturnCode MountArchive([MarshalAs(UnmanagedType.LPUTF8Str)] string path, [MarshalAs(UnmanagedType.LPUTF8Str)] string mountPoint, out UnityArchiveHandle handle);
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
@@ -195,6 +195,9 @@ public static class DllWrapper
         EntryPoint = "UFS_GetArchiveNodeCount")]
     public static extern ReturnCode GetArchiveNodeCount(UnityArchiveHandle handle, out int count);
 
+    // Note: Strings returned from native (here and in the other StringBuilder-based calls) come back as
+    // UTF-8 bytes but are marshalled as the system code page which could be lossy, especially on Windows.
+    // For this API these are internal archive/serialized-file names which we expect to be ASCII, so it's not an issue in practice.
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_GetArchiveNode")]
@@ -203,14 +206,43 @@ public static class DllWrapper
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_CreateArchive")]
-    public static extern ReturnCode CreateArchive([MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] sourceFiles,
-        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] aliases, bool[] isSerializedFile, int count,
-        [MarshalAs(UnmanagedType.LPStr)] string archiveFile, CompressionType compression, out int crc);
+    private static extern ReturnCode CreateArchiveNative(IntPtr[] sourceFiles, IntPtr[] aliases, bool[] isSerializedFile, int count,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string archiveFile, CompressionType compression, out int crc);
+
+    // The native library expects UTF-8 paths. LPUTF8Str handles the scalar strings, but it
+    // can't be used as an array subtype, so the string arrays are marshalled to UTF-8 by hand.
+    public static ReturnCode CreateArchive(string[] sourceFiles, string[] aliases, bool[] isSerializedFile, int count,
+        string archiveFile, CompressionType compression, out int crc)
+    {
+        if (count < 0 || count > sourceFiles.Length || count > aliases.Length || count > isSerializedFile.Length)
+            throw new ArgumentOutOfRangeException(nameof(count));
+
+        // Marshal only the first `count` entries, since that's all the native call consumes.
+        var sourcePtrs = new IntPtr[count];
+        var aliasPtrs = new IntPtr[count];
+        try
+        {
+            for (int i = 0; i < count; ++i)
+            {
+                sourcePtrs[i] = Marshal.StringToCoTaskMemUTF8(sourceFiles[i]);
+                aliasPtrs[i] = Marshal.StringToCoTaskMemUTF8(aliases[i]);
+            }
+
+            return CreateArchiveNative(sourcePtrs, aliasPtrs, isSerializedFile, count, archiveFile, compression, out crc);
+        }
+        finally
+        {
+            foreach (var p in sourcePtrs)
+                Marshal.FreeCoTaskMem(p);
+            foreach (var p in aliasPtrs)
+                Marshal.FreeCoTaskMem(p);
+        }
+    }
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_OpenFile")]
-    public static extern ReturnCode OpenFile([MarshalAs(UnmanagedType.LPStr)] string path, out UnityFileHandle handle);
+    public static extern ReturnCode OpenFile([MarshalAs(UnmanagedType.LPUTF8Str)] string path, out UnityFileHandle handle);
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl, EntryPoint = "UFS_ReadFile")]
@@ -235,7 +267,7 @@ public static class DllWrapper
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_OpenSerializedFile")]
-    public static extern ReturnCode OpenSerializedFile([MarshalAs(UnmanagedType.LPStr)] string path, out SerializedFileHandle handle);
+    public static extern ReturnCode OpenSerializedFile([MarshalAs(UnmanagedType.LPUTF8Str)] string path, out SerializedFileHandle handle);
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
@@ -270,13 +302,13 @@ public static class DllWrapper
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_GetRefTypeTypeTree")]
-    public static extern ReturnCode GetRefTypeTypeTree(SerializedFileHandle handle, [MarshalAs(UnmanagedType.LPStr)] string className,
-        [MarshalAs(UnmanagedType.LPStr)] string namespaceName, [MarshalAs(UnmanagedType.LPStr)] string assemblyName, out TypeTreeHandle typeTree);
+    public static extern ReturnCode GetRefTypeTypeTree(SerializedFileHandle handle, [MarshalAs(UnmanagedType.LPUTF8Str)] string className,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string namespaceName, [MarshalAs(UnmanagedType.LPUTF8Str)] string assemblyName, out TypeTreeHandle typeTree);
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
         EntryPoint = "UFS_AddTypeTreeSourceFromFile")]
-    public static extern ReturnCode AddTypeTreeSourceFromFile([MarshalAs(UnmanagedType.LPStr)] string path, out long handle);
+    public static extern ReturnCode AddTypeTreeSourceFromFile([MarshalAs(UnmanagedType.LPUTF8Str)] string path, out long handle);
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,
