@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,7 +10,7 @@
          "-dev" suffix and the help text links to the docs on main. When releasing: drop the
          suffix (the docs link then pins to the vX.Y.Z tag), tag, build, then bump to the
          next "-dev" version. -->
-    <InformationalVersion>2.2.0-dev</InformationalVersion>
+    <InformationalVersion>2.2.0</InformationalVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
