@@ -138,7 +138,8 @@ public static class Program
         var aOpt = new Option<bool>(aliases: new[] { "--find-all", "-a" }, description: "Find all reference chains originating from the same asset (instead of only one), can be very slow");
         var stdoutOpt = new Option<bool>(aliases: new[] { "--stdout" }, description: "Write the reference chains to stdout instead of a file.");
 
-        var findRefsCommand = new Command("find-refs", "Find reference chains to specified object(s).")
+        var findRefsCommand = new Command("find-refs",
+            "Find reference chains to specified object(s) (experimental: results are incomplete for some build types).")
         {
             pathArg,
             oOpt,

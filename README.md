@@ -89,8 +89,9 @@ flowchart TD
   database for detailed analysis. It also parses Addressables build reports.
 * [TextDumper](Documentation/textdumper.md): dumps SerializedFiles into a human-readable format
   (similar to Unity's binary2text).
-* [ReferenceFinder](Documentation/referencefinder.md): finds reference chains from one object to
-  another by querying a database produced by the Analyzer (a data dependency rather than a code one).
+* [ReferenceFinder](Documentation/referencefinder.md): experimental; finds reference chains from one
+  object to another by querying a database produced by the Analyzer (a data dependency rather than a
+  code one).
 * [Archive](Documentation/command-archive.md): inspects and extracts the contents of Unity Archives
   (AssetBundles and web platform `.data` files) — the `archive` command.
 * [SerializedFile](Documentation/command-serialized-file.md): inspects the header, metadata, object

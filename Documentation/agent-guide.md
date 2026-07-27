@@ -46,9 +46,6 @@ pasted (or linked) into an agent's context, and it is just as useful for humans 
    * [`archive`](command-archive.md) lists or extracts the contents of an AssetBundle or other
      Unity archive.
 
-5. **Trace why something is in the build** with [`find-refs`](command-find-refs.md), which walks the
-   reference graph recorded in the database.
-
 ## Facts that save time
 
 **Two different ids.** `object_view` (and `objects`) has both an `id` and an `object_id` column, and
@@ -72,25 +69,45 @@ run where every file is skipped produces a valid but empty database). To analyze
 with the `ForceAlwaysWriteTypeTrees` diagnostic switch — see
 [Player Build Format](playerbuild-format.md).
 
-**References live in the `refs` table.** Each row records that one object references another:
-`object` is the referencing object's `id`, `referenced_object` is the referenced object's `id`, and
-`refs_view` adds the property path and type as strings. This is the raw data behind `find-refs`,
-and it is often quicker to query it directly, e.g. "what references object 140":
+**Empty names are normal.** Many object types (Transform, GameObject components in general) have no
+`name`; `object_view.game_object` links components back to their named GameObject.
+
+## Tracing why content is in the build
+
+The `refs` table records every object-to-object reference found during analysis: `object` is the
+referencing object's `id`, `referenced_object` is the referenced object's `id`, and `refs_view`
+adds the property path and type as strings. Querying it directly answers "what references X":
 
 ```
 sqlite3 Analysis.db "SELECT object, property_path FROM refs_view WHERE referenced_object = 140;"
 ```
 
-**Empty names are normal.** Many object types (Transform, GameObject components in general) have no
-`name`; `object_view.game_object` links components back to their named GameObject.
+Repeat the query with the returned `object` ids to walk further up the reference graph. Where such
+a walk should stop — the objects that by themselves explain "this is why it is in the build" —
+depends on the build type:
 
-## Worked example: diagnose a bundle
+* **AssetBundles**: the `assetbundle_assets` table lists the assets explicitly assigned to each
+  bundle. Reaching one of these explains the inclusion, and an object that is itself listed there
+  belongs in the build even when nothing references it.
+* **Content directory builds**: `content_layout_loadable_objects_view` lists the loadable objects —
+  the build's entry points. This requires the `ContentLayout.json` in the analyze input; see
+  [ContentLayout in the Analyze Database](contentlayout-database.md).
+* **Player builds**: there is no explicit asset list in the build output. The naming conventions of
+  the serialized files (`level0`, `sharedassets0.assets`, `resources.assets`, ...) tell you which
+  scene or shared pool pulled the content in; see [Player Build Format](playerbuild-format.md).
 
-Given the question "what is in this AssetBundle and does anything look wasteful?", this sequence
-answers it. Analyze just the one file into a throwaway database:
+The [`find-refs`](command-find-refs.md) command automates walking these chains, but it is
+experimental: it does not yet produce complete or clearly-explained results for all supported build
+pipelines ([issue #121](https://github.com/Unity-Technologies/UnityDataTools/issues/121)). Prefer
+the direct queries above.
+
+## Worked example: diagnose a build
+
+Given the question "what is in this build and does anything look wasteful?", analyze the entire
+build output into one database:
 
 ```
-UnityDataTool analyze /path/to/bundles -o bundle.db -p my.bundle
+UnityDataTool analyze /path/to/build -o Analysis.db
 ```
 
 Then look at, in order:
@@ -100,9 +117,9 @@ Then look at, in order:
 SELECT * FROM view_breakdown_by_type;
 
 -- The biggest individual objects
-SELECT object_id, type, name, pretty_size FROM object_view ORDER BY size DESC LIMIT 20;
+SELECT object_id, type, name, archive, pretty_size FROM object_view ORDER BY size DESC LIMIT 20;
 
--- Texture formats, sizes, and Read/Write flags (rw doubles runtime memory when enabled)
+-- Texture formats, sizes, and Read/Write flags
 SELECT name, format, width, height, mip_count, rw_enabled, pretty_size FROM texture_view;
 
 -- Meshes with Read/Write enabled
@@ -113,13 +130,28 @@ SELECT * FROM view_potential_duplicates;
 ```
 
 Interpretation notes: `rw_enabled = 1` on textures and meshes doubles their runtime memory cost and
-is only needed when scripts access the data on the CPU. Rows in `view_potential_duplicates` that
-span archives usually mean a shared dependency was not assigned to a common bundle — expected for
-independent builds, actionable within one build. To see a suspicious object in full, dump it:
+is only needed when scripts access the data on the CPU. `view_potential_duplicates` compares
+objects across the whole build — this is why the full analysis matters — and rows that span
+archives usually mean a shared dependency was not assigned to a common bundle, so it was duplicated
+into each bundle that needs it. To see a suspicious object in full, dump it from the file the query
+reported:
 
 ```
-UnityDataTool dump /path/to/bundles/my.bundle -i <object_id> --stdout
+UnityDataTool dump /path/to/build/some.bundle -i <object_id> --stdout
 ```
+
+## Worked example: why is this one AssetBundle so large?
+
+When the question is about a single AssetBundle on its own, it can be analyzed in isolation into a
+throwaway database (build-wide questions such as duplication still need the full analysis above):
+
+```
+UnityDataTool analyze /path/to/bundles -o bundle.db -p my.bundle
+```
+
+The same per-object queries apply — `view_breakdown_by_type` for what dominates the bundle, then
+`object_view ORDER BY size DESC` and a `dump` of the biggest objects to see what makes them large
+(e.g. texture dimensions and format, or mesh vertex counts).
 
 ## Providing schema context to a chat-based AI
 

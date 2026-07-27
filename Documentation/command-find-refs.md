@@ -1,6 +1,8 @@
-# find-refs Command
+# find-refs Command (Experimental)
 
 The `find-refs` command traces reference chains leading to specific objects. Use it to understand why an asset was included (and potentially duplicated) in a build.
+
+> **Experimental**: `find-refs` does not yet produce complete or clearly-explained results for all supported build pipelines. For example, a Player build database never produces chains, and a "Found 0 reference chain(s)" result does not distinguish an explicitly-included asset from an unreferenced object. See [issue #121](https://github.com/Unity-Technologies/UnityDataTools/issues/121) for the known problems. Until they are addressed, prefer querying the analyze database's `refs_view` directly, as described in [Tracing why content is in the build](agent-guide.md#tracing-why-content-is-in-the-build).
 
 It walks *up* the reference graph from the target object and **stops at the first asset it reaches**. The reported chains therefore end at the immediate containing asset, not at the ultimate root that transitively depends on the target. For example, if `RootAsset` references `LeafAsset` which references a texture, searching for the texture reports the chain ending at `LeafAsset`; to see that `RootAsset` pulls it in, search for `LeafAsset` instead.
 
