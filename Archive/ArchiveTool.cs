@@ -163,6 +163,16 @@ public static class ArchiveTool
             uncompressedDataSize += block.UncompressedSize;
         }
 
+        // The data section can be larger than the sum of the blocks, because of the alignment
+        // padding that separates chunk-based blocks (the BlockPaddingBetweenChunks flag).
+        long paddingSize = 0;
+        if (blocks.Length > 0)
+        {
+            var lastBlock = blocks[blocks.Length - 1];
+            long dataSectionSize = lastBlock.FileOffset + lastBlock.CompressedSize - ArchiveDetector.GetDataOffset(header);
+            paddingSize = dataSectionSize - dataSize;
+        }
+
         // Determine the compression algorithm by finding the first block that uses compression.
         // Individual blocks may be stored uncompressed even when compression is enabled, because
         // compression is skipped when it provides no size reduction. So the first compressed block
@@ -193,6 +203,7 @@ public static class ArchiveTool
                 unityVersion = header.UnityVersion,
                 fileSize = header.Size,
                 dataSize = dataSize,
+                blockPaddingSize = paddingSize,
                 uncompressedDataSize = uncompressedDataSize,
                 compressionRatio = Math.Round(compressionRatio, 2),
                 compression = compression,
@@ -208,6 +219,8 @@ public static class ArchiveTool
             Console.WriteLine($"{"Unity Version",-30} {header.UnityVersion}");
             Console.WriteLine($"{"File Size",-30} {header.Size:N0} bytes");
             Console.WriteLine($"{"Data Size",-30} {dataSize:N0} bytes");
+            if (paddingSize > 0)
+                Console.WriteLine($"{"Block Padding Size",-30} {paddingSize:N0} bytes");
             Console.WriteLine($"{"Uncompressed Data Size",-30} {uncompressedDataSize:N0} bytes");
             Console.WriteLine($"{"Compression Ratio",-30} {compressionRatio:F2}x");
             Console.WriteLine($"{"Compression",-30} {compression}");
@@ -263,10 +276,11 @@ public static class ArchiveTool
 
     static readonly (uint bit, string name)[] KnownArchiveFlags =
     {
-        (0x40,  "BlocksAndDirectoryInfoCombined"),
-        (0x80,  "BlocksInfoAtTheEnd"),
-        (0x100, "OldWebPluginCompatibility"),
-        (0x200, "BlockInfoNeedPaddingAtStart"),
+        (ArchiveFlags.BlocksAndDirectoryInfoCombined, "BlocksAndDirectoryInfoCombined"),
+        (ArchiveFlags.BlocksInfoAtTheEnd,             "BlocksInfoAtTheEnd"),
+        (ArchiveFlags.OldWebPluginCompatibility,      "OldWebPluginCompatibility"),
+        (ArchiveFlags.BlockInfoNeedPaddingAtStart,    "BlockInfoNeedPaddingAtStart"),
+        (ArchiveFlags.BlockPaddingBetweenChunks,      "BlockPaddingBetweenChunks"),
     };
 
     static string[] GetArchiveFlagNames(uint flagBits)

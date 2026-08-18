@@ -1,0 +1,21 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.7.0a6
+CRC: 1054287113
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: ef4548464eae98b6ab651c92a869edc9
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 9a2ca7bdbd1871f7131daf57de908e0c
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 818e83165880f042a3252a52b336d06a
+HashAppended: 0
+ClassTypes:
+- Class: 83
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Audio/6.mp3
+Dependencies: []

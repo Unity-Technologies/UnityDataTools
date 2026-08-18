@@ -8,6 +8,10 @@ using UnityEngine;
 // Assets/Audio. This highly granular layout ensures no asset is duplicated across bundles - shared assets
 // (e.g. a.mp3) live in a single bundle that the others depend on. A scene bundle holds the two scenes (AssetBundles
 // require scenes and assets in separate bundles). The build report is copied alongside the output.
+//
+// Two variants are produced into separate folders: the default LZMA build (a single streamed data block) and an
+// LZ4 chunk-based build (many small blocks), which is the layout that exercises the alignment padding between
+// chunks added in archive format version 9.
 public static class BuildAssetBundles
 {
     const string AudioFolder = "Assets/Audio";
@@ -16,6 +20,7 @@ public static class BuildAssetBundles
     const string TestDataFolder = "../../TestCommon/Data/LeadingEdgeBuilds";
     const string OutputFolder = TestDataFolder + "/AssetBundles";
     const string BuildReportFolder = TestDataFolder + "/BuildReport-AssetBundles";
+    const string Lz4OutputFolder = TestDataFolder + "/AssetBundlesLz4";
 
     static readonly string[] DirectAssets =
     {
@@ -28,7 +33,19 @@ public static class BuildAssetBundles
     [MenuItem("ContentDirectory/Build AssetBundles")]
     public static void Build()
     {
-        Directory.CreateDirectory(OutputFolder);
+        Build(BuildAssetBundleOptions.None, OutputFolder, BuildReportFolder);
+    }
+
+    [MenuItem("ContentDirectory/Build AssetBundles (LZ4)")]
+    public static void BuildLz4()
+    {
+        Build(BuildAssetBundleOptions.ChunkBasedCompression, Lz4OutputFolder, null);
+    }
+
+    // buildReportFolder may be null to skip copying the report.
+    static void Build(BuildAssetBundleOptions options, string outputFolder, string buildReportFolder)
+    {
+        Directory.CreateDirectory(outputFolder);
 
         var bundles = new List<AssetBundleBuild>();
 
@@ -59,9 +76,9 @@ public static class BuildAssetBundles
 
         var parameters = new BuildAssetBundlesParameters
         {
-            outputPath = OutputFolder,
+            outputPath = outputFolder,
             bundleDefinitions = bundles.ToArray(),
-            options = BuildAssetBundleOptions.None,
+            options = options,
             targetPlatform = EditorUserBuildSettings.activeBuildTarget
         };
 
@@ -72,9 +89,12 @@ public static class BuildAssetBundles
             return;
         }
 
-        Directory.CreateDirectory(BuildReportFolder);
-        File.Copy("Library/LastBuild.buildreport", $"{BuildReportFolder}/LastBuild.buildreport", true);
+        if (buildReportFolder != null)
+        {
+            Directory.CreateDirectory(buildReportFolder);
+            File.Copy("Library/LastBuild.buildreport", $"{buildReportFolder}/LastBuild.buildreport", true);
+        }
 
-        Debug.Log($"BuildAssetBundles: built {manifest.GetAllAssetBundles().Length} bundles into {OutputFolder}.");
+        Debug.Log($"BuildAssetBundles: built {manifest.GetAllAssetBundles().Length} bundles into {outputFolder}.");
     }
 }

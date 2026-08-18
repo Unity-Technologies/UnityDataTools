@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.7.0a6
+CRC: 2935431312
+HashAppended: 0
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: assetbundleroot
+      Dependencies:
+        Dependency_0: directaudioclipreference
+        Dependency_1: singleaudioclipdirectreference
+        Dependency_2: serializationdemo
+    Info_1:
+      Name: directaudioclipreference
+      Dependencies:
+        Dependency_0: 6
+        Dependency_1: a
+    Info_2:
+      Name: singleaudioclipdirectreference
+      Dependencies:
+        Dependency_0: a
+    Info_3:
+      Name: serializationdemo
+      Dependencies: {}
+    Info_4:
+      Name: 6
+      Dependencies: {}
+    Info_5:
+      Name: a
+      Dependencies: {}
+    Info_6:
+      Name: scenes
+      Dependencies: {}
