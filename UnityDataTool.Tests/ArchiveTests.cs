@@ -17,12 +17,17 @@ public class ArchiveTests
     private string m_TestDataFolder;
     private string m_ArchivePath;
 
+    // An LZ4 (chunk-based) archive in format version 9, where the BlockPaddingBetweenChunks flag
+    // means the blocks are separated by alignment padding on disk.
+    private string m_PaddedArchivePath;
+
     [OneTimeSetUp]
     public void OneTimeSetup()
     {
         m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "test_folder");
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data");
         m_ArchivePath = Path.Combine(m_TestDataFolder, "AssetBundles", "2023.1.0a16", "scenes");
+        m_PaddedArchivePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundlesLz4", "scenes");
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
     }
@@ -388,5 +393,110 @@ BuildPlayer-OtherScene
         {
             Assert.IsFalse(File.Exists(Path.Combine(m_TestOutputFolder, "archive", file)), $"File should not have been extracted: {file}");
         }
+    }
+
+    [Test]
+    public async Task ArchiveHeader_BlockPaddingBetweenChunks_ReportsVersion9AndFlag()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "header", m_PaddedArchivePath, "-f", "Json" }));
+
+            var json = JsonDocument.Parse(sw.ToString()).RootElement;
+
+            Assert.AreEqual(9u, json.GetProperty("version").GetUInt32());
+
+            var flags = json.GetProperty("flags").EnumerateArray().Select(f => f.GetString()).ToArray();
+            Assert.That(flags, Does.Contain("BlockPaddingBetweenChunks"));
+            Assert.That(flags, Does.Not.Contain("0x400"), "The padding flag bit should be recognized, not reported as a raw hex value.");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    // The block offsets are not stored in the archive, they are accumulated from the block sizes.
+    // With BlockPaddingBetweenChunks each chunk-based block is followed by padding belonging to no
+    // block, so the accumulated offset has to be aligned after every such block. This verifies the
+    // computed offsets against the actual file: the gaps between the blocks must be alignment
+    // padding (all zero bytes) and never larger than the alignment.
+    [Test]
+    public async Task ArchiveBlocks_BlockPaddingBetweenChunks_OffsetsSkipThePadding()
+    {
+        const int alignment = 16;
+
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "blocks", m_PaddedArchivePath, "-f", "Json" }));
+
+            var blocks = JsonDocument.Parse(sw.ToString()).RootElement.GetProperty("blocks").EnumerateArray().ToArray();
+            Assert.Greater(blocks.Length, 1, "The test archive is expected to have several chunks.");
+
+            var archiveBytes = File.ReadAllBytes(m_PaddedArchivePath);
+            var dataSectionStart = blocks[0].GetProperty("fileOffset").GetInt64();
+
+            for (int i = 1; i < blocks.Length; i++)
+            {
+                var previousEnd = blocks[i - 1].GetProperty("fileOffset").GetInt64() +
+                                  blocks[i - 1].GetProperty("compressedSize").GetInt64();
+                var offset = blocks[i].GetProperty("fileOffset").GetInt64();
+
+                Assert.AreEqual(0, (offset - dataSectionStart) % alignment,
+                    $"Block {i} does not start on an alignment boundary of the data section.");
+                Assert.That(offset - previousEnd, Is.InRange(0, alignment - 1),
+                    $"The gap before block {i} is not a plausible amount of alignment padding.");
+
+                for (var p = previousEnd; p < offset; p++)
+                    Assert.AreEqual(0, archiveBytes[p], $"Padding byte at offset {p} is not zero.");
+            }
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveInfo_BlockPaddingBetweenChunks_ReportsPaddingSize()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "info", m_PaddedArchivePath, "-f", "Json" }));
+
+            var json = JsonDocument.Parse(sw.ToString()).RootElement;
+
+            Assert.AreEqual("Lz4HC", json.GetProperty("compression").GetString());
+            Assert.Greater(json.GetProperty("blockPaddingSize").GetInt64(), 0);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    // The native library computes the block offsets independently of the C# parser, so successful
+    // extraction of content spanning several padded chunks confirms the layout is understood.
+    [Test]
+    public async Task ArchiveExtract_BlockPaddingBetweenChunks_FilesExtractedSuccessfully()
+    {
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_PaddedArchivePath }));
+
+        // BuildPlayer-Scene1.sharedAssets is large enough to span several chunks.
+        var extractedFile = new FileInfo(Path.Combine(m_TestOutputFolder, "archive", "BuildPlayer-Scene1.sharedAssets"));
+        Assert.IsTrue(extractedFile.Exists, "Expected file not found: BuildPlayer-Scene1.sharedAssets");
+        Assert.AreEqual(760788, extractedFile.Length);
     }
 }

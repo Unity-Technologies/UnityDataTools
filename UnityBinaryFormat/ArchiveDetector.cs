@@ -16,8 +16,10 @@ namespace UnityDataTools.BinaryFormat;
 /// - Data: One or more blocks of file content. Each block has its own compression type
 ///   recorded in its per-block flags. The metadata section is required to interpret the data.
 ///   A single file can span multiple blocks, and a single block can contain data for multiple files.
-///   The blocks account for every byte of the data (there are no offsets stored - no overlapping or
-///   gaps can be expressed).  However the files could have padding between them.
+///   The blocks account for every byte of the uncompressed data (there are no offsets stored - no
+///   overlapping or gaps can be expressed).  However the files could have padding between them, and
+///   when the BlockPaddingBetweenChunks flag is set the on-disk blocks are separated by alignment
+///   padding that belongs to no block.
 ///
 /// The metadata can appear directly after the header (default layout) or at the end of the
 /// file after the data (indicated by the BlocksInfoAtTheEnd flag).
@@ -47,6 +49,25 @@ public class ArchiveHeaderInfo
     /// Archive flag bits (bits 6+ of Flags), with compression bits masked out.
     /// </summary>
     public uint ArchiveFlagBits => Flags & ~0x3Fu;
+
+    /// <summary>
+    /// True when each chunk-based (non-streamed) block is followed by padding up to the next
+    /// 16-byte boundary of the data section. Introduced with archive format version 9.
+    /// </summary>
+    public bool HasBlockPaddingBetweenChunks => (Flags & ArchiveFlags.BlockPaddingBetweenChunks) != 0;
+}
+
+/// <summary>
+/// Archive header flag bits (bits 6 and up of the header Flags field). Bits 0-5 hold the
+/// metadata CompressionType instead.
+/// </summary>
+public static class ArchiveFlags
+{
+    public const uint BlocksAndDirectoryInfoCombined = 0x40;
+    public const uint BlocksInfoAtTheEnd = 0x80;
+    public const uint OldWebPluginCompatibility = 0x100;
+    public const uint BlockInfoNeedPaddingAtStart = 0x200;
+    public const uint BlockPaddingBetweenChunks = 0x400;
 }
 
 public class ArchiveStorageBlock
@@ -276,10 +297,7 @@ public static class ArchiveDetector
         metadata = null;
         errorMessage = null;
 
-        const uint flagBlocksAndDirectoryInfoCombined = 0x40;
-        const uint flagBlocksInfoAtTheEnd = 0x80;
-
-        if ((header.ArchiveFlagBits & flagBlocksAndDirectoryInfoCombined) == 0)
+        if ((header.ArchiveFlagBits & ArchiveFlags.BlocksAndDirectoryInfoCombined) == 0)
         {
             errorMessage = "This archive does not use the combined BlocksInfo+DirectoryInfo layout. Only the combined layout is supported.";
             return false;
@@ -291,7 +309,7 @@ public static class ArchiveDetector
 
             // Calculate where the metadata section starts.
             long metadataOffset;
-            if ((header.ArchiveFlagBits & flagBlocksInfoAtTheEnd) != 0)
+            if ((header.ArchiveFlagBits & ArchiveFlags.BlocksInfoAtTheEnd) != 0)
                 metadataOffset = (long)(header.Size - header.CompressedMetadataSize);
             else
                 metadataOffset = GetHeaderSize(header);
@@ -337,14 +355,22 @@ public static class ArchiveDetector
             var blocksInfo = ParseBlocksInfo(reader);
             var directoryInfo = ParseDirectoryInfo(reader);
 
-            // Populate calculated offsets on each block.
-            long fileOffset = GetDataOffset(header);
+            // Populate calculated offsets on each block. Block positions are not stored, so they are
+            // accumulated from the block sizes. When BlockPaddingBetweenChunks is set, each chunk-based
+            // block is followed by padding that belongs to no block, so the running offset is aligned
+            // after each such block. The alignment is relative to the start of the data section, which
+            // is itself 16-byte aligned in every version that can set this flag, so the blocks are also
+            // aligned within the file - that is what keeps chunk positions stable for binary patching.
+            long dataSectionStart = GetDataOffset(header);
+            long blockOffset = 0;
             long dataOffset = 0;
             foreach (var block in blocksInfo.Blocks)
             {
-                block.FileOffset = fileOffset;
+                block.FileOffset = dataSectionStart + blockOffset;
                 block.DataOffset = dataOffset;
-                fileOffset += block.CompressedSize;
+                blockOffset += block.CompressedSize;
+                if (header.HasBlockPaddingBetweenChunks && !block.IsStreamed)
+                    blockOffset = AlignTo16(blockOffset);
                 dataOffset += block.UncompressedSize;
             }
 
@@ -371,14 +397,11 @@ public static class ArchiveDetector
     /// </summary>
     public static long GetDataOffset(ArchiveHeaderInfo header)
     {
-        const uint flagBlocksInfoAtTheEnd = 0x80;
-        const uint flagBlockInfoNeedPaddingAtStart = 0x200;
-
         long offset = GetHeaderSize(header);
 
-        if ((header.ArchiveFlagBits & flagBlocksInfoAtTheEnd) == 0)
+        if ((header.ArchiveFlagBits & ArchiveFlags.BlocksInfoAtTheEnd) == 0)
         {
-            if ((header.ArchiveFlagBits & flagBlockInfoNeedPaddingAtStart) != 0)
+            if ((header.ArchiveFlagBits & ArchiveFlags.BlockInfoNeedPaddingAtStart) != 0)
                 offset += AlignTo16(header.CompressedMetadataSize);
             else
                 offset += header.CompressedMetadataSize;
@@ -430,10 +453,8 @@ public static class ArchiveDetector
 
     static int GetHeaderSize(ArchiveHeaderInfo header)
     {
-        const uint flagOldWebPluginCompatibility = 0x100;
-
         int size;
-        if ((header.ArchiveFlagBits & flagOldWebPluginCompatibility) != 0)
+        if ((header.ArchiveFlagBits & ArchiveFlags.OldWebPluginCompatibility) != 0)
             size = 10; // Legacy web plugin signature portion
         else
             size = header.Signature.Length + 1;
@@ -452,7 +473,7 @@ public static class ArchiveDetector
         return size;
     }
 
-    static long AlignTo16(uint value)
+    static long AlignTo16(long value)
     {
         return (value + 15) & ~15L;
     }

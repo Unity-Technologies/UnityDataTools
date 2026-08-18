@@ -15,7 +15,7 @@ Both builds start from a root ScriptableObject whose serialized dictionary maps 
 ## Editor scripts (`Assets/Editor`, `ContentDirectory` menu)
 
 * `GenerateAssets.cs` - creates the ScriptableObject assets in `Assets/ScriptableObjects`, populating the serialized dictionaries before saving so the entries are serialized into the assets.
-* `BuildAssetBundles.cs` - runs the AssetBundle build and copies its build report.
+* `BuildAssetBundles.cs` - runs the AssetBundle build and copies its build report. It has a second entry point, `BuildLz4`, that repeats the build with chunk-based (LZ4) compression into a separate folder.
 * `BuildContentDirectory.cs` - runs the Content Directory build and copies its build report folder.
 
 Both build scripts write directly into `TestCommon/Data/LeadingEdgeBuilds` using paths relative to the project root.
@@ -27,3 +27,5 @@ The root asset is `ContentDirectoryRoot.asset`. It directly references the `Load
 ## AssetBundle Build
 
 The root asset is `AssetBundleRoot.asset`. AssetBundles do not support `Loadable<T>`, so this build uses the direct-reference variants of the assets instead. Each asset is placed in its own bundle (named after the asset) - a highly granular layout that guarantees no content is duplicated across bundles. The two scenes are placed together in a `scenes` bundle, since AssetBundles require scenes and assets in separate bundles.
+
+The default build uses LZMA, which produces a single streamed data block per archive. The `Build AssetBundles (LZ4)` menu item repeats the same bundle layout with chunk-based compression, which produces archives with many small blocks - the layout that exercises the alignment padding between chunks added in archive format version 9.
