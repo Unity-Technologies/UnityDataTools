@@ -103,6 +103,11 @@ flowchart TD
 * UnityBinaryFormat: C# parsers and helpers for reading data out of Unity Archives and SerializedFiles.
 * UnityDataModels: shared C# models for the reading JSON format files produced by the build (Addressables BuildLayout.json, Content Directory ContentLayout.json).
 
+**Skills**
+* [Skills/hybrid-duplication-audit](Skills/hybrid-duplication-audit/SKILL.md): a Claude Code skill
+  that audits asset duplication across the AssetBundle/content-directory boundary in hybrid
+  Addressables builds.
+
 ## Purpose of UnityFileSystemApi
 
 UnityFileSystemApi is compiled from the Unity source code and exposes the core functionality to open and read the Unity Archive and Serialized File formats as a flexible, performant library. It exposes the ability to navigate the TypeTrees inside a SerializedFile so objects can be read generically, without hardcoded type knowledge.

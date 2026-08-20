@@ -138,6 +138,10 @@ CLI entry point is `UnityDataTool/Program.cs` using System.CommandLine. Per-comm
 * Any database schema change (new or changed tables, views, or columns) must bump `PRAGMA user_version` in `Analyzer/Resources/Init.sql` and extend the version-history comment above it.
 * Analysis of additional file formats could be added, for example AssetBundle manifest files by following the pattern of Addressables build layout files are handled.
 
+### Skills
+
+`Skills/` holds portable Claude Code skills (a `SKILL.md` plus any scripts they need) that wrap common analysis tasks. See `Skills/hybrid-duplication-audit/SKILL.md` for an example — it audits asset duplication across the AssetBundle/content-directory boundary in a hybrid Addressables build.
+
 ### Other Extensions
 
 The UnityFileSystem API and UnityBinaryFormat parsing can be useful for other analysis.  The "dump", "analyze" and "serialized-file" commands can be considered reference examples of how to use those lower level tools.
