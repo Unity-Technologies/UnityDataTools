@@ -55,21 +55,32 @@ this; that's what this skill does.
 
 ## Running it
 
+Two equivalent scripts, same defaults, same queries, same output —
+pick the one for your platform:
+
 ```powershell
+# Windows
 Skills/hybrid-duplication-audit/scripts/Compare-HybridDuplication.ps1 -ProjectRoot "<path to the Unity project>"
 ```
 
-By default it locates everything it needs on its own: the mirrored
-`Library/com.unity.addressables/buildlayout.json` (Addressables keeps
-this in sync with its latest build), the one content directory output
-folder under `Library/com.unity.addressables/aa`, and
-`Library/BuildHistory`. Override any of them with `-BuildLayout`,
-`-ContentDirectory`, or `-BuildHistory` — useful for auditing an older
-build, or when more than one platform has been built (the script
-requires `-ContentDirectory` explicitly in that case, since it can't
-guess which platform you mean).
+```bash
+# Linux / macOS
+Skills/hybrid-duplication-audit/scripts/compare-hybrid-duplication.sh --project-root "<path to the Unity project>"
+```
 
-**When overriding, make sure `-BuildLayout` and `-ContentDirectory`
+By default either one locates everything it needs on its own: the
+mirrored `Library/com.unity.addressables/buildlayout.json`
+(Addressables keeps this in sync with its latest build), the one
+content directory output folder under
+`Library/com.unity.addressables/aa`, and `Library/BuildHistory`.
+Override any of them with `-BuildLayout`/`--build-layout`,
+`-ContentDirectory`/`--content-directory`, or
+`-BuildHistory`/`--build-history` — useful for auditing an older
+build, or when more than one platform has been built (the script
+requires the content-directory override explicitly in that case,
+since it can't guess which platform you mean).
+
+**When overriding, make sure the build layout and content directory
 came from the same build.** Addressables can rebuild only some groups
 at a time, so the two can legitimately drift out of sync — nothing
 ties an Addressables build layout to a specific content-directory
@@ -79,9 +90,12 @@ directory (or vice versa) won't error; it'll just report a wrong,
 usually much larger, "duplicate" total. The defaults are always safe
 in this respect, since both point at whatever is currently on disk.
 
-Other flags: `-ToolPath` (if `UnityDataTool` isn't on PATH or set via
-`UNITYDATATOOL_PATH`), `-KeepDatabase` (preserve the generated
-database for follow-up queries), `-MaxRows`.
+Other flags (PowerShell / bash): `-ToolPath`/`--tool-path` (if
+`UnityDataTool` isn't on PATH or set via `UNITYDATATOOL_PATH` — on
+Linux/macOS the built executable has no extension, e.g.
+`UnityDataTool/bin/Release/net9.0/UnityDataTool`),
+`-KeepDatabase`/`--keep-database` (preserve the generated database for
+follow-up queries), `-MaxRows`/`--max-rows`.
 
 ## Reading the output
 
