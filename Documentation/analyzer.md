@@ -59,6 +59,13 @@ duplicated assets. It also lists all the AssetBundles where the asset was found.
 If the `--skip-crc` option is used, there will be a lot of false positives in that view. Otherwise,
 it should be very accurate because CRCs are used to determine if objects are identical.
 
+This view (and Addressables' own `DuplicatedAssetCount`) can under-report for a hybrid build that
+mixes AssetBundle groups with a `ContentDirectoryGroupSchema` group: a source asset built into both
+forms doesn't necessarily produce byte-identical objects (a shader's variants, for example, are
+stripped independently on each side), so CRC matching can miss it entirely. See
+[Skills/hybrid-duplication-audit](../Skills/hybrid-duplication-audit/SKILL.md) for a query that
+matches by source asset path instead, which catches this case.
+
 ## assetbundle_asset_view (AssetBundleProcessor)
 
 Lists the assets that were explicitly assigned to AssetBundles, one row per entry in the AssetBundle
