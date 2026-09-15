@@ -68,6 +68,13 @@ jobs:
           rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb
         shell: bash
 
+      - name: Add documentation to package
+        run: |
+          dest="publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}"
+          cp README.md LICENSE.md "$dest/"
+          cp -R Documentation "$dest/"
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
