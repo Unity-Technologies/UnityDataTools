@@ -18,7 +18,7 @@ public class AnalyzeContentLayoutTests
 {
     private string m_TestOutputFolder;
     private string m_ContentLayoutPath;
-    private string m_AssetBundlePath;
+    private string m_BuildReportPath;
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -26,8 +26,8 @@ public class AnalyzeContentLayoutTests
         m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "content_layout_test_folder");
         m_ContentLayoutPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
             "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "ContentLayout.json");
-        m_AssetBundlePath = Path.Combine(TestContext.CurrentContext.TestDirectory,
-            "Data", "LeadingEdgeBuilds", "AssetBundles", "assetbundleroot");
+        m_BuildReportPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
+            "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f64157fb08bb9f645971d39c1203bd03.buildreport");
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
     }
@@ -411,7 +411,7 @@ public class AnalyzeContentLayoutTests
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_AssetBundlePath, "-o", databasePath }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_BuildReportPath, "-o", databasePath }));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         SQLTestHelper.AssertQueryInt(db,
@@ -427,9 +427,9 @@ public class AnalyzeContentLayoutTests
         File.WriteAllText(Path.Combine(layoutFolder, "ContentLayout.json"), "{\"Version\": 99}");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        // Analyze reports the file as failed but the run itself still completes. The bundle gives
-        // the run something to analyze, so the database is kept and can be inspected (issue #115).
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", layoutFolder, m_AssetBundlePath, "-o", databasePath }));
+        // Analyze reports the layout as failed but the run itself still completes. The build report
+        // gives it something to analyze, so the database is kept and can be inspected (issue #115).
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", layoutFolder, m_BuildReportPath, "-o", databasePath }));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         SQLTestHelper.AssertQueryInt(db,
@@ -445,7 +445,7 @@ public class AnalyzeContentLayoutTests
         File.WriteAllText(Path.Combine(layoutFolder, "ContentLayout.json"), "null");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", layoutFolder, m_AssetBundlePath, "-o", databasePath }));
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", layoutFolder, m_BuildReportPath, "-o", databasePath }));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
         SQLTestHelper.AssertQueryInt(db,

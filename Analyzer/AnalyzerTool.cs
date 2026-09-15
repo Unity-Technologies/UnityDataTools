@@ -191,8 +191,6 @@ public class AnalyzerTool
             return 0;
         }
 
-        // An empty database left behind lets a caller that only checks for the output file mistake
-        // this run for a success.
         Console.Error.WriteLine("Error: no files were successfully analyzed. Discarding the empty database.");
         if (countNoTypeTrees > 0)
         {
@@ -201,6 +199,8 @@ public class AnalyzerTool
 
         try
         {
+            // An empty database left behind lets a caller that only checks for the output file
+            // mistake this run for a success.
             writer.Discard();
         }
         catch (Exception e)
