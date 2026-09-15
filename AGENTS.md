@@ -126,7 +126,7 @@ The feature libraries each build on UnityBinaryFormat and UnityFileSystem. See t
 
 **Handlers**: Type-specific handlers extract specialized properties for Unity object types and populate additional tables. For example Mesh, AnimationClip, Shader, BuildReport, MonoScript.
 
-**Views**: The database schema includes convenient views for seeing the data in useful ways, e.g. `object_view`. See `Documentation/analyzer.md` and `Documentation/addressables-build-reports.md` for schema details.
+**Views**: The database schema includes convenient views for seeing the data in useful ways, e.g. `object_view`. See `Documentation/analyzer-schema.md` for the core schema, and `Documentation/contentlayout-database.md`, `Documentation/buildreport.md` and `Documentation/addressables-build-reports.md` for the parts documented on their own pages.
 
 CLI entry point is `UnityDataTool/Program.cs` using System.CommandLine. Per-command documentation is in `Documentation/`.
 
@@ -135,8 +135,23 @@ CLI entry point is `UnityDataTool/Program.cs` using System.CommandLine. Per-comm
 ### Extending Analyze
 
 * New Unity types can be added by following the same pattern as the existing types, for example MonoScripts.
-* Any database schema change (new or changed tables, views, or columns) must bump `PRAGMA user_version` in `Analyzer/Resources/Init.sql` and extend the version-history comment above it.
+* Any database schema change (new or changed tables, views, or columns) must bump `PRAGMA user_version` in `Analyzer/Resources/Init.sql` and add a row to the version table in `Documentation/analyzer-schema.md`.
 * Analysis of additional file formats could be added, for example AssetBundle manifest files by following the pattern of Addressables build layout files are handled.
+
+#### Commenting the .sql resources
+
+SQLite only keeps the text of the `CREATE` statement itself in `sqlite_master`, so a comment placed
+*above* a statement is discarded and never reaches a produced database. Comments therefore go inside
+the statement:
+
+* One short note on the first line inside the `CREATE TABLE ( ... )` parentheses saying what a row
+  represents, and a trailing `--` note on a column only where the fact is needed to write a correct
+  query and is not guessable from the column name (a foreign key, a sentinel like `''`, an option
+  that leaves the column empty). Views get one purpose line as the first line of the body, after `AS`.
+* Full prose belongs in the documentation, not in the `.sql` file.
+* `CREATE INDEX` has no body, so the only comments left outside a statement are ones that explain the
+  code rather than the schema, such as why the ContentLayout indexes are created after population.
+* Keep `.sql` comments ASCII-only.
 
 ### Other Extensions
 

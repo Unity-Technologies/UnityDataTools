@@ -4,15 +4,7 @@ using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table dangling_refs
-    (
-        id INTEGER,
-        object_id INTEGER,
-        serialized_file INTEGER,
-        PRIMARY KEY (id)
-    );
-    */
+    // Table definition: Analyzer/Resources/Init.sql
     internal class AddDanglingRef : AbstractCommand
     {
         protected override string TableName => "dangling_refs";

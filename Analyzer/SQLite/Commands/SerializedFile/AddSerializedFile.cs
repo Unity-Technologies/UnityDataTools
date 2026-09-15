@@ -4,15 +4,7 @@ using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table serialized_files
-    (
-        id INTEGER,
-        archive INTEGER,
-        name TEXT,
-        PRIMARY KEY (id)
-    );
-    */
+    // Table definition: Analyzer/Resources/Init.sql
     internal class AddSerializedFile : AbstractCommand
     {
         protected override string TableName => "serialized_files";

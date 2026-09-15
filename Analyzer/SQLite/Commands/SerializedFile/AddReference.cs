@@ -4,15 +4,7 @@ using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table refs
-    (
-        object INTEGER,
-        referenced_object INTEGER,
-        property_path INTEGER,   -- id into property_names
-        property_type INTEGER    -- id into property_types
-    );
-    */
+    // Table definition: Analyzer/Resources/Init.sql
     internal class AddReference : AbstractCommand
     {
         protected override string TableName => "refs";

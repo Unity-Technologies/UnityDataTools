@@ -35,8 +35,8 @@ pasted (or linked) into an agent's context, and it is just as useful for humans 
    sqlite3 Analysis.db "SELECT name FROM sqlite_master WHERE type = 'view' ORDER BY name;"
    ```
 
-   The full schema is documented in the [Analyzer database reference](analyzer.md); worked example
-   queries are in [Example usage of Analyze](analyze-examples.md).
+   The full schema is documented in the [Analyzer database schema](analyzer-schema.md); worked
+   example queries are in [Example usage of Analyze](analyze-examples.md).
 
 4. **Drill down into specific files and objects.** Once a query has identified something
    interesting, the other commands show the actual content:
@@ -162,15 +162,16 @@ context. Dump the schema of your database into a text file and attach it before 
 sqlite3 Analysis.db ".schema" > schema_dump.sql.txt
 ```
 
-Note that the produced database's schema shows bare table definitions; the meaning of the columns is
-documented in the [Analyzer database reference](analyzer.md), which is also useful context.
+The dump carries short notes on the non-obvious columns, because they are stored inside the `CREATE`
+statements. That is usually enough to write correct queries. Attach the
+[Analyzer database schema](analyzer-schema.md) as well when you want the full column reference.
 
 ## Related documentation
 
 | Topic | Description |
 |-------|-------------|
 | [Command-line tool](unitydatatool.md) | All commands and their options |
-| [Analyzer database reference](analyzer.md) | Tables, views, and their columns |
+| [Analyzer database schema](analyzer-schema.md) | Tables, views, and their columns |
 | [Example usage of Analyze](analyze-examples.md) | More worked queries |
 | [Comparing builds](comparing-builds.md) | Finding what changed between two builds |
 | [Overview of Unity Content](unity-content-format.md) | SerializedFiles, Archives, and TypeTrees |

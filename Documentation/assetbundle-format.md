@@ -325,7 +325,7 @@ large dependency graphs by loading some assets on demand (via Addressables, Asse
 
 ## How `analyze` represents this
 
-The [`analyze`](analyzer.md) command turns the above into queryable tables:
+The [`analyze`](command-analyze.md) command turns the above into queryable tables:
 
 - Each object is linked to both its `serialized_file` and, when applicable, its containing `archive`
   in `object_view`.
@@ -337,4 +337,4 @@ The [`analyze`](analyzer.md) command turns the above into queryable tables:
   for it, so scenes appear in `assetbundle_asset_view` and their PreloadData dependencies appear in
   `preload_dependencies_view`.
 
-See [Analyzer](analyzer.md) for the full schema and the exact behaviour of those views.
+See the [Analyzer Database Schema](analyzer-schema.md) for the full schema and the exact behaviour of those views.

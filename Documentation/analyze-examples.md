@@ -2,9 +2,9 @@
 
 This topic gives some examples of using the SQLite output of the UnityDataTools Analyze command.
 
-The command line arguments to invoke Analyze are documented [here](unitydatatool.md#analyzeanalyse).
+The command line arguments to invoke Analyze are documented [here](command-analyze.md).
 
-The definition of the views, and some internal details about how Analyze is implemented, can be found [here](analyzer.md).
+The definition of the views is in the [Analyzer Database Schema](analyzer-schema.md); internal details about how Analyze is implemented are in the [Analyzer documentation](analyzer.md).
 
 Queries specific to ContentDirectory builds and `ContentLayout.json` are collected on a dedicated page: [Example queries for ContentDirectory builds](analyze-examples-contentlayout.md).
 
@@ -18,7 +18,7 @@ However often it is useful to run queries from the command line, and to incorpor
 
 These examples assume you have `sqlite3` available in the path for your command prompt or terminal. On Windows that means that a directory containing `sqlite3.exe` is included in your PATH environmental variable.
 
-On Windows, sqlite3.exe is available as part of the "SQLite command line tools", published from [www.sqlite.org](www.sqlite.org).
+On Windows, sqlite3.exe is available as part of the "SQLite command line tools", published from [www.sqlite.org](https://www.sqlite.org).
 
 Note: Many of the examples in this topic assume that your database file is named `Analysis.db` in your current working directory.  
 

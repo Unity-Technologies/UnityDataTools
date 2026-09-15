@@ -3,16 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table archives
-    (
-        id INTEGER,
-        name TEXT,
-        file_size INTEGER,
-        PRIMARY KEY (id),
-        UNIQUE (name)
-    );
-    */
+    // Table definition: Analyzer/Resources/Init.sql
     internal class AddArchive : AbstractCommand
     {
         protected override string TableName => "archives";

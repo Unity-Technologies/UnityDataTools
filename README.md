@@ -31,7 +31,8 @@ New to Unity's data files or to UnityDataTool? These topics are a good place to 
 | Topic | Description |
 | --- | --- |
 | [Command-line tool](./Documentation/unitydatatool.md) | All commands and their options. |
-| [Analyzer & database schema](./Documentation/analyzer.md) | The SQLite database that `analyze` produces, including its tables and views. |
+| [Analyzer](./Documentation/analyzer.md) | The library behind `analyze`, and where each part of the database is documented. |
+| [Database schema](./Documentation/analyzer-schema.md) | Reference for the tables and views that `analyze` produces. |
 | [Example queries](./Documentation/analyze-examples.md) | Worked examples of querying the analyze database. |
 | [Using UnityDataTool with an AI agent](./Documentation/agent-guide.md) | The recommended workflow for AI agents (and scripts) analyzing a build. |
 | [Comparing builds](./Documentation/comparing-builds.md) | Finding what changed between two builds. |

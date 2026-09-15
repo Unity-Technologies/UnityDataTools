@@ -93,7 +93,8 @@ If you see a warning about `UnityFileSystemApi.dylib` not being verified, go to 
 
 | Topic | Description |
 |-------|-------------|
-| [Analyzer Database Reference](analyzer.md) | SQLite schema, views, and extending the analyzer |
+| [Analyzer Database Schema](analyzer-schema.md) | Reference for the tables and views |
+| [Analyzer Library](analyzer.md) | Using and extending the analyzer |
 | [TextDumper Output Format](textdumper.md) | Understanding dump output |
 | [ReferenceFinder Details](referencefinder.md) | Reference chain output format |
 | [Analyze Examples](analyze-examples.md) | Practical database queries |
