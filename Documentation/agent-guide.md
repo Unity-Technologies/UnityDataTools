@@ -7,6 +7,30 @@ individual files and objects. This page is the recommended workflow, plus the ha
 are not obvious from `--help` and tend to cost the most discovery time. It is written so it can be
 pasted (or linked) into an agent's context, and it is just as useful for humans writing scripts.
 
+## Getting the tool
+
+If `UnityDataTool` is not already on the `PATH`, the latest release can be downloaded and unzipped
+in one step. The asset name selects the platform: `UnityDataTool-windows-x64.zip`,
+`UnityDataTool-macos-arm64.zip`, or `UnityDataTool-linux-x64.zip`.
+
+```bash
+dest=~/UnityDataTool
+curl -fsSL -o /tmp/UnityDataTool.zip https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-linux-x64.zip
+unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
+```
+
+```powershell
+$dest = "$env:LOCALAPPDATA\Programs\UnityDataTool"
+Invoke-WebRequest https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-windows-x64.zip -OutFile "$env:TEMP\UnityDataTool.zip"
+Expand-Archive "$env:TEMP\UnityDataTool.zip" -DestinationPath $dest -Force
+& "$dest\UnityDataTool.exe" --version
+```
+
+The zip is self-contained (the executable, the native library it loads, and an offline copy of this
+documentation), so a successful `--version` means the tool is ready to use. Re-running the same
+commands upgrades an existing install. See the
+[Install section of the README](../README.md#install) for PATH and macOS notes.
+
 ## The core loop
 
 1. **Analyze the build output into a database.** One build per database (see below).

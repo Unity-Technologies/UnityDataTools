@@ -25,6 +25,9 @@ dotnet build UnityDataTool/UnityDataTool.csproj -c Release
 
 Output location (Windows): `UnityDataTool\bin\Release\net9.0\UnityDataTool.exe`
 
+Releases are built and published by the "Build UnityDataTool" action when a `vX.Y.Z` tag is pushed;
+the process is described in `Documentation/releasing.md`.
+
 ### Publishing (Mac-specific)
 ```bash
 # Intel Mac
