@@ -24,11 +24,7 @@ There is no way to append to an existing database, so every file you want in the
 included in a single `analyze` invocation. Pass multiple paths to combine files from more than one
 location into the same database.
 
-If the output file already exists it is replaced, and a notice is printed to say so:
-
-```
-Overwriting existing database "build1.db" (previous contents are discarded).
-```
+If the output file already exists it is replaced.
 
 When comparing builds, give each one its own `-o` path so an earlier build's database is not lost.
 See [Comparing builds](comparing-builds.md).
