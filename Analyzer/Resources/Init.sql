@@ -1,121 +1,89 @@
 CREATE TABLE IF NOT EXISTS types
 (
-    id INTEGER,
+    -- Unity type names, referenced by objects.type.
+    id INTEGER,   -- Unity class id; -1 is the synthetic Scene type analyze adds for scenes
     name TEXT,
     PRIMARY KEY (id)
 );
 
--- Describes a unity archive that contains serialized files and other built content.
--- A common use of the unity archive is for AssetBundles but it can also be used for
--- Player, Content Archive and ContentDirectory builds.
--- name is UNIQUE (case-sensitive, matching the name on the file system): analyze only supports a
--- single build, so two archives with the same name would make queries ambiguous. A duplicate is
--- caught in code and reported (see AnalyzeDuplicateException); the constraint is the durable
--- backstop for that invariant.
 CREATE TABLE IF NOT EXISTS archives
 (
+    -- One row per Unity Archive: AssetBundles, and the archives inside Player and
+    -- ContentDirectory builds. Full reference: Documentation/analyzer-schema.md.
     id INTEGER,
-    name TEXT,
+    name TEXT,          -- UNIQUE: analyze covers a single build, so names must not collide
     file_size INTEGER,
     PRIMARY KEY (id),
     UNIQUE (name)
 );
 
--- One row per SerializedFile encountered during analysis. The name is often a technical,
--- hash-based string rather than a readable path, because that is how the file is named on disk:
---   * Regular AssetBundles: "CAB-<MD4 hash of the AssetBundle name>". This is MD4, not Unity's
---     Hash128 (spooky hash), and the optional AssetBundle-filename hash is not part of it.
---   * Scene bundles vary by build pipeline: BuildPipeline.BuildAssetBundles uses
---     "BuildPlayer-<SceneName>"; the Scriptable Build Pipeline / Addressables uses
---     "CAB-<hash of scene path>"; the Multi-Process Build Pipeline uses "CAB-<scene GUID>".
---   * Player builds name scenes "level0", "level1", ... in scene-list order.
--- archive references the row from archives table of the unity archive containing this file,
--- or is '' when the file is not inside an unity archive; object_view turns that '' into NULL.
 CREATE TABLE IF NOT EXISTS serialized_files
 (
+    -- One row per SerializedFile analyzed.
     id INTEGER,
-    archive INTEGER,
-    name TEXT,
+    archive INTEGER,    -- archives.id, or '' when the file is not inside an archive
+    name TEXT,          -- on-disk name, usually hash-based: CAB-<hash>, BuildPlayer-<scene>, levelN
     PRIMARY KEY (id)
 );
 
--- Records information about each Unity Object discovered in the analyze process.
--- id - unique id for the object (assigned while populating the database, this value does not exist in the serialized content)
--- object_id - Local file id for the object, serialized as m_PathID in the object references (PPTRs). signed 64 bit.
---        This is unique within a serialized file, but not across files.
--- type - references the row in the types table.
--- name - the Object.name property.  In many case this is empty.
--- game_object - only applies to components in a game object hierarchy, otherwise it is not set.
--- crc32 - the CRC of the serialized state of the object, including any external .resS or .resource content.
---        Useful for comparing builds to detect differences
 CREATE TABLE IF NOT EXISTS objects
 (
-    id INTEGER,
-    object_id INTEGER,
-    serialized_file INTEGER,
-    type INTEGER,
-    name TEXT,
-    game_object INTEGER,
-    size INTEGER,
-    crc32 INTEGER,
+    -- One row per Unity object found. Query object_view for the resolved type, file and
+    -- archive names.
+    id INTEGER,              -- analyzer-assigned; does not exist in the serialized data
+    object_id INTEGER,       -- Unity local file id (m_PathID), signed 64-bit, unique only within its file
+    serialized_file INTEGER, -- serialized_files.id
+    type INTEGER,            -- types.id
+    name TEXT,               -- Object.name; often empty
+    game_object INTEGER,     -- objects.id of the owning GameObject; '' when not a component
+    size INTEGER,            -- includes external .resS / .resource bytes
+    crc32 INTEGER,           -- CRC of the serialized state incl. stream data; 0 when --skip-crc was used
     PRIMARY KEY (id)
 );
 
--- Deduplicated lookup tables for the strings referenced by the refs table.
--- refs stores ids into these instead of repeating the strings on every row.
 CREATE TABLE IF NOT EXISTS property_names
 (
+    -- Distinct property paths referenced by refs.property_path. Join through refs_view.
     id INTEGER PRIMARY KEY,
-    name TEXT
+    name TEXT               -- e.g. m_Shader, m_Materials[0]
 );
 
 CREATE TABLE IF NOT EXISTS property_types
 (
+    -- Distinct referenced type names referenced by refs.property_type. Join through refs_view.
     id INTEGER PRIMARY KEY,
-    name TEXT
+    name TEXT               -- e.g. Texture2D, MonoScript
 );
 
--- Tracks all references between Unity Objects (e.g. PPTRs)
--- These references can exist between objects together inside the same serialized file, or they can
--- span between serialized files.
 CREATE TABLE IF NOT EXISTS refs
 (
-    object INTEGER,
-    referenced_object INTEGER,
-    property_path INTEGER,
-    property_type INTEGER
+    -- References between Unity objects (PPtrs), within and across serialized files.
+    -- Empty when analyze was run with --skip-references.
+    object INTEGER,             -- objects.id
+    referenced_object INTEGER,  -- objects.id, or dangling_refs.id when the target was not analyzed
+    property_path INTEGER,      -- property_names.id
+    property_type INTEGER       -- property_types.id
 );
 
--- One row per referenced object that analyze assigned an id to but never wrote an objects row
--- for (its serialized file was not part of the analyzed input). Written after all files are
--- processed, once we can tell which assigned ids never became objects. Common causes: analyzing a
--- partial set of AssetBundles, references into "unity default resources" (shipped without
--- TypeTrees), or a ContentDirectory build analyzed without ContentLayout.json.
--- Columns mirror the objects table so every object id resolves to exactly one of objects or
--- dangling_refs:
---   id - the analyzer object id (no row in objects has this id).
---   object_id - the target's local file id (LFID / m_PathID) within its serialized file.
---   serialized_file - references the serialized_files row of the (un-analyzed) file the target
---        lives in. That row has archive NULL and no objects of its own.
 CREATE TABLE IF NOT EXISTS dangling_refs
 (
-    id INTEGER,
-    object_id INTEGER,
-    serialized_file INTEGER,
+    -- Reference targets that were never analyzed because their serialized file was not part of the
+    -- input. Every id used by refs resolves to exactly one of objects or dangling_refs.
+    id INTEGER,                 -- the assigned object id; no objects row has it
+    object_id INTEGER,          -- the target's local file id (m_PathID) within its file
+    serialized_file INTEGER,    -- serialized_files.id of the un-analyzed file; it has no objects
     PRIMARY KEY (id)
 );
 
--- Resolves the property_path and property_type ids in the refs table to their string values.
 CREATE VIEW refs_view AS
+-- refs with the property_path and property_type ids resolved to their strings.
 SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
 FROM refs r
 INNER JOIN property_names pn ON r.property_path = pn.id
 INNER JOIN property_types pt ON r.property_type = pt.id;
 
--- Resolves dangling_refs to the source object(s) that reference each missing target, one row per
--- (referencing object -> dangling target) reference. Not populated when analyze is run with
--- --skip-references (neither refs nor dangling_refs are populated in that mode).
 CREATE VIEW dangling_refs_view AS
+-- One row per reference to an un-analyzed target. Empty with --skip-references.
 SELECT
     r.object AS source_id,
     src_sf.name AS source_serialized_file,
@@ -134,6 +102,7 @@ LEFT JOIN property_names pn ON r.property_path = pn.id
 LEFT JOIN property_types pt ON r.property_type = pt.id;
 
 CREATE VIEW object_view AS
+-- The main view: every analyzed object with its type, file and archive names resolved. Start here.
 SELECT o.id, o.object_id, ab.name AS archive, sf.name AS serialized_file, t.name AS type, o.name, o.game_object, o.size,
 CASE
     WHEN size < 1024 THEN printf('%!5.1f B', size * 1.0)
@@ -147,6 +116,7 @@ INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN archives ab ON sf.archive = ab.id;
 
 CREATE VIEW view_breakdown_by_type AS
+-- Object count and total size per type, largest first.
 SELECT *,
 CASE
 	WHEN byte_size < 1024 THEN printf('%!5.1f B', byte_size * 1.0)
@@ -161,6 +131,8 @@ GROUP BY type
 ORDER BY byte_size DESC, count DESC);
 
 CREATE VIEW view_potential_duplicates AS
+-- Objects with identical name, type, size and crc32 found in more than one file. --skip-crc sets
+-- every crc32 to 0, which makes this view produce many false positives.
 SELECT COUNT(name) AS instances, name, type,
 CASE
 	WHEN sum(size) < 1024 THEN printf('%!5.1f B', sum(size) * 1.0)
@@ -178,6 +150,7 @@ HAVING instances > 1
 ORDER BY size DESC, instances DESC;
 
 CREATE VIEW view_material_shader_refs AS
+-- Each Material and the Shader it references, with the AssetBundle path when there is one.
 SELECT m.id material_id, m.name material_name, a.name material_path, m.archive material_archive, s.id shader_id, s.name shader_name, s.archive shader_archive
 FROM object_view m
 INNER JOIN refs_view r ON m.id = r.object AND r.property_path = 'm_Shader'
@@ -185,6 +158,7 @@ INNER JOIN object_view s ON r.referenced_object = s.id
 LEFT JOIN assetbundle_assets a ON m.id = a.object;
 
 CREATE VIEW view_material_texture_refs AS
+-- Each Material and the Textures it references, with the AssetBundle path when there is one.
 SELECT m.id material_id, m.name material_name, a.name material_path, m.archive material_archive, t.id texture_id, t.name texture_name, t.archive texture_archive
 FROM object_view m
 INNER JOIN refs_view r ON r.object = m.id AND property_type = 'Texture'
@@ -192,20 +166,8 @@ INNER JOIN object_view t ON r.referenced_object = t.id
 LEFT JOIN assetbundle_assets a ON m.id = a.object
 WHERE m.type = 'Material';
 
--- Special-case type value for the fake Scene object that is sometimes inserted into the object table,
--- see SerializedFileSQLiteWriter for details
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
--- Database schema version. Bump on any schema change so the version records which schema a given
--- analyze.db was produced with. Commands that read an existing database (currently only find-refs)
--- can compare against it to give a clean error instead of failing on a missing table or column.
--- 1 = normalized refs table (issue #44); 2 = renamed assets/asset_dependencies tables to
--- assetbundle_assets/preload_dependencies (issue #82); 3 = renamed asset_bundles table to archives
--- and the asset_bundle column/alias to archive (issue #68); 4 = build_report_packed_asset_contents_view
--- type column changed from numeric id to type name (issue #55); 5 = added dangling_refs table/view
--- (issue #85); 6 = archives.name is unique (issue #51); 7 = Unity 6.6 build_reports columns and
--- build_report_content_* tables (issue #107), asset_name/asset_extension columns on
--- build_report_source_assets (issue #110); databases produced before versioning report 0.
 PRAGMA user_version = 7;
 
 PRAGMA synchronous = OFF;

@@ -4,20 +4,7 @@ using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table objects
-    (
-        id INTEGER,
-        object_id INTEGER,
-        serialized_file INTEGER,
-        type INTEGER,
-        name TEXT,
-        game_object INTEGER,
-        size INTEGER,
-        crc32 INTEGER,
-        PRIMARY KEY (id)
-    );
-    */
+    // Table definition: Analyzer/Resources/Init.sql
     internal class AddObject : AbstractCommand
     {
         protected override string TableName => "objects";

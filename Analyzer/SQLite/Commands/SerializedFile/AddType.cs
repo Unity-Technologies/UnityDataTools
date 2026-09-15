@@ -4,14 +4,7 @@ using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table types
-    (
-        id INTEGER,
-        name TEXT,
-        PRIMARY KEY (id)
-    );
-    */
+    // Table definition: Analyzer/Resources/Init.sql
     internal class AddType : AbstractCommand
     {
         protected override string TableName => "types";

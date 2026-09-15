@@ -4,14 +4,7 @@ using UnityDataTools.Analyzer.SQLite.Commands;
 
 namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
 {
-    /* TABLE DEFINITION:
-    create table preload_dependencies
-    (
-        object INTEGER,
-        dependency INTEGER,
-        PRIMARY KEY (object, dependency)
-    );
-    */
+    // Table definition: Analyzer/Resources/AssetBundle.sql
     internal class AddPreloadDependency : AbstractCommand
     {
         protected override string TableName => "preload_dependencies";

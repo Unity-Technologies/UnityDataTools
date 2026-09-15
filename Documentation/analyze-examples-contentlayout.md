@@ -81,7 +81,7 @@ WHERE filename = 'c0152db4dd710be51b2decb997325f34.cf';
 ## Checking reference resolution (layout + content)
 
 When the layout was part of the analyze, the references between Content Files are resolved, so the
-only expected entries in [`dangling_refs`](analyzer.md#dangling_refs--dangling_refs_view) are the
+only expected entries in [`dangling_refs`](analyzer-schema.md#dangling_refs) are the
 references into Unity's built-in resources:
 
 ```sql

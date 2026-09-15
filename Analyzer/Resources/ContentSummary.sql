@@ -31,10 +31,9 @@ CREATE TABLE IF NOT EXISTS build_report_content_asset_stats(
     FOREIGN KEY (content_summary_id) REFERENCES build_report_content_summary(id)
 );
 
--- Cross-build statistics with the owning BuildReport resolved. build_report_id is the id of the
--- BuildReport object (type 1125) in the same serialized file as the ContentSummary; it is not
--- stored on the table, so this view computes it the same way build_report_packed_assets_view does.
 CREATE VIEW build_report_content_summary_view AS
+-- Cross-build content statistics with the owning BuildReport resolved, so one build can be
+-- selected by build_report_id.
 SELECT
     cs.id AS content_summary_id,
     br_obj.id AS build_report_id,
@@ -52,9 +51,9 @@ INNER JOIN objects o ON cs.id = o.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN objects br_obj ON o.serialized_file = br_obj.serialized_file AND br_obj.type = 1125;
 
--- Per-type statistics with the type name resolved (from TypeIdRegistry or TypeTree analysis) and
--- the owning BuildReport, so a single build's type breakdown can be selected by build_report_id.
 CREATE VIEW build_report_content_type_stats_view AS
+-- Per-type statistics with the type name and the owning BuildReport resolved, so a single build's
+-- type breakdown can be selected by build_report_id.
 SELECT
     cs.id AS content_summary_id,
     br_obj.id AS build_report_id,

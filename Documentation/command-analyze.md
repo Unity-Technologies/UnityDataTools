@@ -62,7 +62,7 @@ Fastest analysis (skip both reference extraction and CRC):
 UnityDataTool analyze /path/to/bundles --skip-references --skip-crc
 ```
 
-See also [Analyze Examples](../../Documentation/analyze-examples.md).
+See also [Analyze Examples](analyze-examples.md).
 
 ---
 
@@ -141,7 +141,7 @@ How the input combinations behave:
 
 The analysis creates a SQLite database that can be explored using tools like [DB Browser for SQLite](https://sqlitebrowser.org/) or the command line `sqlite3` tool.
 
-**Refer to the [Analyzer documentation](analyzer.md) for the database schema reference and information about extending this command.**
+**Refer to the [Analyzer Database Schema](analyzer-schema.md) for the tables and views, and to the [Analyzer documentation](analyzer.md) for information about extending this command.**
 
 ---
 
@@ -172,7 +172,7 @@ System.ArgumentException: Invalid object id.
 This error occurs when SerializedFiles are built without TypeTrees. The command will skip these files and continue.
 
 **Solutions:**
-- Enable **ForceAlwaysWriteTypeTrees** in your Unity build settings. See [Unity Content Format](../../Documentation/unity-content-format.md) for details.
+- Enable **ForceAlwaysWriteTypeTrees** in your Unity build settings. See [Unity Content Format](unity-content-format.md) for details.
 - If your bundles were built with external TypeTree data (Unity 6.5+), use the `--typetree-data` option to load the TypeTree data file before analysis:
 
 ```bash
@@ -234,6 +234,6 @@ When `--skip-references` is used, some functionality is lost:
 
 When `--skip-crc` is used, the `objects.crc32` column will be 0 for all objects. This means:
 
-* No detection of identical objects by content hash (See [Comparing Builds](../../Documentation/comparing-builds.md))
+* No detection of identical objects by content hash (See [Comparing Builds](comparing-builds.md))
 * The `view_potential_duplicates` view relies partially on CRC32 to distinguish true duplicates
 
