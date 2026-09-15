@@ -63,6 +63,14 @@ public class AnalyzerTool
             return 1;
         }
 
+        // A single database holds a single build, so replacing it is the expected behaviour, but it
+        // has to be announced: overwriting the database of a previous build is easy to do by
+        // accident when comparing builds (issue #117).
+        if (File.Exists(m_Options.DatabaseName))
+        {
+            Console.Error.WriteLine($"Overwriting existing database \"{m_Options.DatabaseName}\" (previous contents are discarded).");
+        }
+
         using SQLiteWriter writer = new(m_Options.DatabaseName);
 
         try
