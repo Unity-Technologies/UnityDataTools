@@ -13,16 +13,19 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [windows, macos]
-        arch: [x64, arm64]
-        exclude:
+        include:
           - os: windows
-            arch: arm64
-          - os: macos
             arch: x64
+            runner: windows-latest
+          - os: macos
+            arch: arm64
+            runner: macos-latest
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
       fail-fast: false
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout repository

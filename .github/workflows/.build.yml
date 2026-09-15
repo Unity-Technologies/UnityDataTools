@@ -24,15 +24,21 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows, macos]
-        arch: [x64, arm64]
-        exclude:
+        include:
           - os: windows
-            arch: arm64
-          - os: macos
             arch: x64
+            runner: windows-latest
+            nativelib: UnityFileSystemApi.dll
+          - os: macos
+            arch: arm64
+            runner: macos-latest
+            nativelib: UnityFileSystemApi.dylib
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+            nativelib: UnityFileSystemApi.so
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout repository
@@ -52,20 +58,13 @@ jobs:
           -p:UseAppHost=true
           -o publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}
 
-      - name: Remove platform-specific and debug files (Windows)
-        if: matrix.os == 'windows'
+      - name: Remove other platforms' native libraries and debug files
         run: |
-          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.dylib" -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.so" -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb" -Force -ErrorAction SilentlyContinue
-        shell: pwsh
-
-      - name: Remove platform-specific and debug files (macOS)
-        if: matrix.os == 'macos'
-        run: |
-          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/UnityFileSystemApi.dll
-          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.so
-          rm -f publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*.pdb
+          dest="publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}"
+          rm -f "$dest"/*.pdb
+          for lib in UnityFileSystemApi.dll UnityFileSystemApi.dylib UnityFileSystemApi.so; do
+            [ "$lib" = "${{ matrix.nativelib }}" ] || rm -f "$dest/$lib"
+          done
         shell: bash
 
       - name: Add documentation to package
