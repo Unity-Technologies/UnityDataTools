@@ -20,8 +20,9 @@ a zip holds the `UnityDataTool` executable, the native `UnityFileSystemApi` libr
 offline copy of this README and the `Documentation/` folder. Nothing else needs to be installed, not
 even a .NET runtime.
 
-The commands below download the latest release, unzip it into a directory, and print the version.
-Run them again later to upgrade.
+The commands below download the latest release, unzip it, and print the version. They install into
+`%LOCALAPPDATA%\Programs\UnityDataTool` on Windows and `~/.local/share/UnityDataTool` on macOS and
+Linux; set `dest` to something else to install anywhere you like, such as a shared tools directory.
 
 **Windows** (PowerShell)
 
@@ -35,7 +36,7 @@ Expand-Archive "$env:TEMP\UnityDataTool.zip" -DestinationPath $dest -Force
 **macOS** (Apple Silicon)
 
 ```bash
-dest=~/UnityDataTool
+dest=~/.local/share/UnityDataTool
 curl -fsSL -o /tmp/UnityDataTool.zip https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-macos-arm64.zip
 unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
 ```
@@ -43,17 +44,20 @@ unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
 **Linux** (x64)
 
 ```bash
-dest=~/UnityDataTool
+dest=~/.local/share/UnityDataTool
 curl -fsSL -o /tmp/UnityDataTool.zip https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-linux-x64.zip
 unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
 ```
 
-Add that directory to your `PATH` to run the tool as `UnityDataTool` from anywhere. The
+Add the install directory to your `PATH` to run the tool as `UnityDataTool` from anywhere. The
 `releases/latest/download/` links always resolve to the newest release, and `checksums.txt` on the
 release page holds the SHA-256 of each zip.
 
 A few things worth knowing:
 
+* To upgrade, run the same commands again. They overwrite everything the new release ships, but they
+  do not remove a file that it has dropped, so a renamed documentation page can survive as a stale
+  copy. Delete the install directory first for an install that matches the release exactly.
 * On macOS, downloading with `curl` avoids the quarantine flag that a browser download sets. After a
   browser download, macOS may refuse to load `UnityFileSystemApi.dylib` until it is allowed under
   System Settings > Privacy & Security.

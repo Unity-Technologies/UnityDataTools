@@ -14,7 +14,7 @@ in one step. The asset name selects the platform: `UnityDataTool-windows-x64.zip
 `UnityDataTool-macos-arm64.zip`, or `UnityDataTool-linux-x64.zip`.
 
 ```bash
-dest=~/UnityDataTool
+dest=~/.local/share/UnityDataTool
 curl -fsSL -o /tmp/UnityDataTool.zip https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-linux-x64.zip
 unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
 ```
@@ -28,8 +28,9 @@ Expand-Archive "$env:TEMP\UnityDataTool.zip" -DestinationPath $dest -Force
 
 The zip is self-contained (the executable, the native library it loads, and an offline copy of this
 documentation), so a successful `--version` means the tool is ready to use. Re-running the same
-commands upgrades an existing install. See the
-[Install section of the README](../README.md#install) for PATH and macOS notes.
+commands upgrades an existing install, overwriting what the new release ships without removing files
+it has dropped. See the [Install section of the README](../README.md#install) for PATH and macOS
+notes.
 
 ## The core loop
 
