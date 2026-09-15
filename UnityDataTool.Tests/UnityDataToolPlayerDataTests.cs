@@ -175,8 +175,9 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             Console.SetOut(swOut);
             Console.SetError(swErr);
 
-            // Analyze should return 0 even if files fail (non-zero would be a critical error)
-            Assert.AreEqual(0, await Program.Main(new string[] { "analyze", Path.Combine(testDataFolder, "level0") }));
+            // Nothing could be analyzed, so the run fails (issue #115). A run with both successes
+            // and failures still returns 0.
+            Assert.AreEqual(1, await Program.Main(new string[] { "analyze", Path.Combine(testDataFolder, "level0") }));
 
             var output = swOut.ToString() + swErr.ToString();
 
@@ -186,6 +187,8 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             // Check that the summary line categorizes the file as missing TypeTrees, not a success.
             Assert.That(output, Does.Contain("Files without TypeTrees: 1"), "Expected 'Files without TypeTrees: 1' in summary");
             Assert.That(output, Does.Contain("Successfully processed files: 0"), "Expected 'Successfully processed files: 0' in summary");
+            Assert.That(output, Does.Contain("no files were successfully analyzed"), "Expected an explicit error message");
+            Assert.That(File.Exists(Path.Combine(m_TestOutputFolder, "database.db")), Is.False, "Expected the empty database to be deleted");
         }
         finally
         {
@@ -212,14 +215,15 @@ public class UnityDataToolPlayerDataTests : PlayerDataTestFixture
             Console.SetOut(swOut);
             Console.SetError(swErr);
 
-            // Analyze should return 0 even when a bundle has no TypeTrees (no crash, no critical error).
-            Assert.AreEqual(0, await Program.Main(new string[] { "analyze", bundlePath }));
+            // The bundle is skipped cleanly, which leaves nothing analyzed: the run fails (issue #115).
+            Assert.AreEqual(1, await Program.Main(new string[] { "analyze", bundlePath }));
 
             var output = swOut.ToString() + swErr.ToString();
 
             Assert.That(output, Does.Contain("Skipped (no TypeTrees)"), "Expected the file to be reported as skipped");
             Assert.That(output, Does.Contain("Files without TypeTrees: 1"), "Expected 'Files without TypeTrees: 1' in summary");
             Assert.That(output, Does.Contain("Successfully processed files: 0"), "Expected 'Successfully processed files: 0' in summary");
+            Assert.That(output, Does.Contain("no TypeTrees"), "Expected the summary error to name the missing TypeTrees");
         }
         finally
         {

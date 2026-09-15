@@ -277,22 +277,16 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
     }
 
     [Test]
-    public async Task Analyze_WithPatternNoMatch_DatabaseEmpty(
+    public async Task Analyze_WithPatternNoMatch_FailsWithoutDatabase(
         [Values("-p *.x", "--search-pattern *.x")] string options)
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         var analyzePath = Path.Combine(Context.UnityDataFolder);
 
-        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
+        // A pattern matching no file analyzes nothing, which is a failed run (issue #115).
+        Assert.AreEqual(1, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ")).ToArray()));
 
-        using var db = SQLTestHelper.OpenDatabase(databasePath);
-
-        using (var cmd = db.CreateCommand())
-        {
-            cmd.CommandText = "SELECT COUNT(*) FROM objects";
-
-            Assert.AreEqual(0, cmd.ExecuteScalar());
-        }
+        Assert.That(File.Exists(databasePath), Is.False);
     }
 
     [Test]

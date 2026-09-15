@@ -29,6 +29,8 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             SqliteConnectionStringBuilder builder = new();
             builder.DataSource = m_DatabaseName;
             builder.Mode = SqliteOpenMode.ReadWriteCreate;
+            // A pooled connection keeps the file open after Dispose, which blocks deleting it.
+            builder.Pooling = false;
             m_Database = new SqliteConnection(builder.ConnectionString);
             File.WriteAllBytes(m_DatabaseName, Array.Empty<byte>());
             try
@@ -56,6 +58,13 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             using var finalizeCommand = m_Database.CreateCommand();
             finalizeCommand.CommandText = Resources.Finalize;
             finalizeCommand.ExecuteNonQuery();
+        }
+
+        // Closes the database and deletes its file, for a run whose result is not worth keeping.
+        public void Discard()
+        {
+            Dispose();
+            File.Delete(m_DatabaseName);
         }
 
         public void Dispose()

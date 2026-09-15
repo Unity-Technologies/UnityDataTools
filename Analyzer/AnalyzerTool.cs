@@ -186,7 +186,29 @@ public class AnalyzerTool
         Console.WriteLine();
         Console.WriteLine($"Total time: {(timer.Elapsed.TotalMilliseconds / 1000.0):F3} s");
 
-        return 0;
+        if (countSuccess > 0)
+        {
+            return 0;
+        }
+
+        // An empty database left behind lets a caller that only checks for the output file mistake
+        // this run for a success.
+        Console.Error.WriteLine("Error: no files were successfully analyzed. Discarding the empty database.");
+        if (countNoTypeTrees > 0)
+        {
+            Console.Error.WriteLine($"{countNoTypeTrees} SerializedFiles were skipped because they have no TypeTrees.");
+        }
+
+        try
+        {
+            writer.Discard();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Warning: could not delete \"{m_Options.DatabaseName}\": {e.Message}");
+        }
+
+        return 1;
     }
 
     // Validates the ContentDirectory-related inputs and prepares the file list (issue #99):
