@@ -122,7 +122,7 @@ shared test data doubles as convenient sample content for ad hoc use of the tool
 
 ## Downloads
 
-Prebuilt Windows and Mac builds are published on the [Releases page](https://github.com/Unity-Technologies/UnityDataTools/releases). Each release includes a zip per platform containing the `UnityDataTool` executable and the native libraries it needs.
+Prebuilt Windows and Mac builds are published on the [Releases page](https://github.com/Unity-Technologies/UnityDataTools/releases). Each release includes a zip per platform containing the `UnityDataTool` executable, the native libraries it needs, and this README plus the matching `Documentation/` folder so the docs are available offline.
 
 To use:
 1. Download and unzip the build for your platform.
