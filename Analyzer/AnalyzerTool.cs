@@ -63,6 +63,11 @@ public class AnalyzerTool
             return 1;
         }
 
+        if (File.Exists(m_Options.DatabaseName))
+        {
+            Console.Error.WriteLine($"Overwriting existing database \"{m_Options.DatabaseName}\" (previous contents are discarded).");
+        }
+
         using SQLiteWriter writer = new(m_Options.DatabaseName);
 
         try
