@@ -74,8 +74,60 @@ jobs:
           cp -R Documentation "$dest/"
         shell: bash
 
+      # The zip is built here rather than relying on the one upload-artifact produces, because
+      # that one drops the executable permission bit on macOS and Linux.
+      - name: Package (Windows)
+        if: matrix.os == 'windows'
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}/*" -DestinationPath "dist/UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}.zip"
+        shell: pwsh
+
+      - name: Package (macOS / Linux)
+        if: matrix.os != 'windows'
+        run: |
+          mkdir -p dist
+          package="$GITHUB_WORKSPACE/dist/UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}.zip"
+          (cd "publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}" && zip -qr "$package" .)
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}-${{ env.environment }}
-          path: publish/${{ matrix.os }}/${{ matrix.arch }}-${{ env.environment }}
+          path: dist/UnityDataTool-${{ matrix.os }}-${{ matrix.arch }}.zip
+
+  # Pushing a vX.Y.Z tag assembles the release, so the zips always come from a reproducible
+  # build of the tagged commit and no platform can be left out by hand. The release is left as
+  # a draft: the remaining step is to write its title and notes, then publish it.
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download the platform packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: UnityDataTool-*-release
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          (cd dist && sha256sum *.zip | tee checksums.txt)
+        shell: bash
+
+      - name: Create or update the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --draft --generate-notes --title "$TAG"
+          fi
+        shell: bash

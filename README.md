@@ -12,6 +12,60 @@ The tool also provides comprehensive analysis of **Unity Addressables build repo
 
 The command line tool uses the UnityFileSystemApi library to access the content of Unity Archives and Serialized files, which are Unity's primary binary formats. This repository also serves as a reference for how this library could be used as part of incorporating functionality into your own tools.
 
+## Install
+
+Builds for Windows, macOS (Apple Silicon) and Linux are attached to every
+[release](https://github.com/Unity-Technologies/UnityDataTools/releases). They are self-contained:
+a zip holds the `UnityDataTool` executable, the native `UnityFileSystemApi` library it uses, and an
+offline copy of this README and the `Documentation/` folder. Nothing else needs to be installed, not
+even a .NET runtime.
+
+The commands below download the latest release, unzip it, and print the version. They install into
+`%LOCALAPPDATA%\Programs\UnityDataTool` on Windows and `~/.local/share/UnityDataTool` on macOS and
+Linux; set `dest` to something else to install anywhere you like, such as a shared tools directory.
+
+**Windows** (PowerShell)
+
+```powershell
+$dest = "$env:LOCALAPPDATA\Programs\UnityDataTool"
+Invoke-WebRequest https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-windows-x64.zip -OutFile "$env:TEMP\UnityDataTool.zip"
+Expand-Archive "$env:TEMP\UnityDataTool.zip" -DestinationPath $dest -Force
+& "$dest\UnityDataTool.exe" --version
+```
+
+**macOS** (Apple Silicon)
+
+```bash
+dest=~/.local/share/UnityDataTool
+curl -fsSL -o /tmp/UnityDataTool.zip https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-macos-arm64.zip
+unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
+```
+
+**Linux** (x64)
+
+```bash
+dest=~/.local/share/UnityDataTool
+curl -fsSL -o /tmp/UnityDataTool.zip https://github.com/Unity-Technologies/UnityDataTools/releases/latest/download/UnityDataTool-linux-x64.zip
+unzip -oq /tmp/UnityDataTool.zip -d "$dest" && "$dest/UnityDataTool" --version
+```
+
+Add the install directory to your `PATH` to run the tool as `UnityDataTool` from anywhere. The
+`releases/latest/download/` links always resolve to the newest release, and `checksums.txt` on the
+release page holds the SHA-256 of each zip.
+
+A few things worth knowing:
+
+* To upgrade, run the same commands again. They overwrite everything the new release ships, but they
+  do not remove a file that it has dropped, so a renamed documentation page can survive as a stale
+  copy. Delete the install directory first for an install that matches the release exactly.
+* On macOS, downloading with `curl` avoids the quarantine flag that a browser download sets. After a
+  browser download, macOS may refuse to load `UnityFileSystemApi.dylib` until it is allowed under
+  System Settings > Privacy & Security.
+* Intel Macs have no published build; [build from source](#how-to-build) instead.
+* Each release describes what changed. For changes that are not in a release yet, see the
+  [commit history](https://github.com/Unity-Technologies/UnityDataTools/commits/main/) and
+  [build from source](#how-to-build).
+
 ## Documentation
 
 New to Unity's data files or to UnityDataTool? These topics are a good place to start.
@@ -121,16 +175,6 @@ shared test data doubles as convenient sample content for ad hoc use of the tool
 * UnityProjects: two Unity projects (`Baseline` and `LeadingEdge`) used to regenerate some of the test
   data as Unity evolves.
 
-## Downloads
-
-Prebuilt Windows, Mac, and Linux builds are published on the [Releases page](https://github.com/Unity-Technologies/UnityDataTools/releases). Each release includes a zip per platform containing the `UnityDataTool` executable, the native libraries it needs, and this README plus the matching `Documentation/` folder so the docs are available offline.
-
-To use:
-1. Download and unzip the build for your platform.
-2. Run UnityDataTool from the extracted location, or add that location to your system PATH.
-
-Each release describes what changed; refer to the [commit history](https://github.com/Unity-Technologies/UnityDataTools/commits/main/) for changes since the latest release. To try unreleased changes, [build from source](#how-to-build).
-
 ## Getting UnityFileSystemApi
 
 UnityDataTool uses the pre-compiled `UnityFileSystemApi` library to read Unity Archives and SerializedFiles. **Normally you don't need to do anything with this library.** The repository already includes a recent Windows, Mac, and Linux copy in the [`UnityFileSystem/`](https://github.com/Unity-Technologies/UnityDataTools/tree/main/UnityFileSystem) directory, and using that bundled copy is the recommended way to run the tool.
@@ -153,6 +197,9 @@ The library is backward compatible but not forward compatible: a given version c
 On Windows, the executable is written to `UnityDataTool\bin\Release\net9.0`. Add this location to your system PATH for convenient access.
 
 See the [command-line tool documentation](./Documentation/unitydatatool.md) for usage instructions.
+
+Maintainers: see [Releasing UnityDataTool](./Documentation/releasing.md) for how a release is cut
+and published.
 
 ## Origins
 
