@@ -27,8 +27,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
     Dictionary<string, RandomAccessReader> m_ChildrenCacheObject;
     List<RandomAccessReader> m_ChildrenCacheArray;
     private TypeTreeNode m_TypeTreeNode;
-    // Only an object's root data carries a [SerializeReference] registry frame; the same type tree
-    // read as a registry blob does not, so the frame is honoured in root context only.
+    // A registry frame is honoured in root context only; a referenced instance's data has none.
     bool m_IsRoot;
     ManagedReferenceRegistry m_Registry;
     // Where this object's registry frame starts, once the field walk has passed it. -1 until then,
@@ -351,9 +350,8 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
         {
             var child = m_TypeTreeNode.Children[i];
 
-            // From SerializedFile version 25 the registry is a frame leading the C# class's data,
-            // described by no node, so the marked field's data starts past it. Only its size is
-            // needed to get there; Registry reads the tables if anyone asks for them.
+            // A version 3 registry sits in the data before this field, so the field starts past
+            // it. Only its size is needed to get there; Registry reads the tables on demand.
             if (m_IsRoot && child.HasSerializedRefs)
             {
                 m_RegistryFrameOffset = offset;

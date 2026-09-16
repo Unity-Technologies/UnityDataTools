@@ -49,9 +49,9 @@ public class TypeTreeNode
     // True if the field is a ManagedReferenceRegistry
     public bool IsManagedReferenceRegistry => ((int)Flags & (int)TypeTreeFlags.IsManagedReferenceRegistry) != 0;
 
-    // True if the [SerializeReference] registry frame precedes this field's data. The flag rides
-    // the first field of the declaring class, whether or not that field is itself a reference. Only
-    // set on a root object's fields; the same tree read as a registry blob carries no frame.
+    // True if a version 3 [SerializeReference] registry sits in the data immediately before this
+    // field. The flag rides the declaring class's first field, reference or not, and is meaningful
+    // only when the tree is read as an object root. See ManagedReferenceRegistry.
     public bool HasSerializedRefs => ((int)Flags & (int)TypeTreeFlags.HasSerializedRefs) != 0;
 
     // True if the node stands in for a compound the file stores once and shares between types

@@ -99,10 +99,9 @@ public class PPtrAndCrcProcessor : IDisposable
 
         foreach (var child in node.Children)
         {
-            // From SerializedFile version 25 the registry is a frame leading the C# class's data,
-            // which no node describes; the flag marks the field it precedes. Only a root object's
-            // fields carry one. The frame is not part of that field, so its references get their own
-            // path root, named after the registry as the node-described versions are.
+            // A version 3 registry sits here rather than in a node (see
+            // ProcessManagedReferenceRegistry). It is not part of the field that follows it, so its
+            // references get their own path root, named as the node-described versions are.
             if (child.HasSerializedRefs)
             {
                 m_StringBuilder.Clear();
@@ -345,10 +344,17 @@ public class PPtrAndCrcProcessor : IDisposable
     //   version 1 - entries stored back to back and terminated by a sentinel type (see
     //               ProcessManagedReferenceData); the rid is implied by position.
     //   version 2 - entries stored as a "RefIds" array, each element carrying its own rid.
-    //   version 3 - from SerializedFile version 25 (Unity 6.7). No longer a node at all: the
-    //               registry is a self-delimiting frame in the object's data, ahead of the field
-    //               flagged HasSerializedRefs, holding a table of type names and a table of
-    //               records that index it. See ProcessManagedReferenceFrame.
+    //   version 3 - from SerializedFile version 25 (Unity 6.7). No node describes it at all: the
+    //               registry is a self-delimiting frame of raw bytes leading the C# class's own
+    //               data, so it sits after the built-in fields (m_GameObject, m_Name, ...) and
+    //               before the first field the script declares - which is the field flagged
+    //               HasSerializedRefs, whether or not that field is itself a reference. It holds a
+    //               table of type names and a table of records indexing into it; a record can be a
+    //               null entry, which v1 and v2 could not express. Only a root object's data
+    //               carries a frame: the same TypeTree used to lay out an instance's data inside
+    //               the registry keeps the flag but has no frame, which is why every walker honours
+    //               it only while iterating a root object's fields.
+    //               ManagedReferenceRegistry reads it; see ProcessManagedReferenceFrame here.
     private void ProcessManagedReferenceRegistry(TypeTreeNode node)
     {
         if (node.Children.Count < 2)

@@ -183,30 +183,80 @@ ID: -8138362113332287275 (ClassID: 135) SphereCollider
     z float 0
 ```
 
-A MonoBehaviour or ScriptableObject with `[SerializeReference]` fields also gets a `references`
-section. The fields themselves only store a `rid`; the instance each one points at is listed once in
-`references`, with its concrete C# type and its values:
+### `[SerializeReference]` fields
+
+A field marked `[SerializeReference]` in C# appears in the dump with the type **`managedReference`**,
+and its value is not the object - it is a number called a **`rid`** (reference id). The objects
+themselves are listed together in a `references` section, once each, with their concrete C# type and
+their field values.
+
+Take this script:
+
+```csharp
+public class Inventory : MonoBehaviour
+{
+    [Serializable]
+    public class Item
+    {
+        public string name;
+        public int count;
+    }
+
+    [SerializeReference] public Item primary;
+    [SerializeReference] public Item backup;
+    [SerializeReference] public Item spare;
+}
+```
+
+with `primary` and `backup` both assigned the *same* `Item`, and `spare` left null. Dumping it:
 
 ```
-  m_Name (string) ScriptableObjectWIthSerializeReference
+ID: 3862108129085620391 (ClassID: 114) MonoBehaviour
+  m_GameObject (PPtr<GameObject>)
+    m_FileID (int) 0
+    m_PathID (SInt64) -5904263129458716409
+  m_Enabled (UInt8) 1
+  m_Script (PPtr<MonoScript>)
+    m_FileID (int) 1
+    m_PathID (SInt64) 1197423208934291241
+  m_Name (string)
   references (ManagedReferenceRegistry)
     version (int) 3
-    rid(6911265806470873295) ReferencedObject
+    rid(-2) ReferencedObject
+      null
+    rid(3218405420927320064) ReferencedObject
       type (ReferencedManagedType)
-        class (string) Data
-        ns (string) MyNamespace
+        class (string) Inventory/Item
+        ns (string)
         asm (string) Assembly-CSharp
       data ReferencedObjectData
-        Info (string) Some info
-        Flag (UInt8) 1
-  reference (managedReference)
-    rid (SInt64) 6911265806470873295
+        name (string) Health potion
+        count (int) 3
+  primary (managedReference)
+    rid (SInt64) 3218405420927320064
+  backup (managedReference)
+    rid (SInt64) 3218405420927320064
+  spare (managedReference)
+    rid (SInt64) -2
 ```
 
-Two fields assigned the same instance share a `rid`, so it still appears only once. A field set to
-null shows `rid (SInt64) -2`, listed as a `null` entry. The `version` line reflects how the registry
-is stored, which changed in Unity 6.7 - the entries mean the same thing either way, but the section
-appears after the referencing fields in older files and before them in 6.7 and later.
+Reading it:
+
+* **`primary` and `backup` show the same `rid`.** They are two references to one object, so the
+  object is listed once and the sharing is visible - this is the whole point of
+  `[SerializeReference]` over a plain serialized field, which would have stored two independent
+  copies.
+* **`spare` shows `rid (SInt64) -2`**, the marker for null, and the matching entry is listed as
+  `null` with no type or data.
+* **`class` is the concrete runtime type**, which can be a subclass of the field's declared type -
+  that is what `[SerializeReference]` is for. Nested classes use a `/`, as in `Inventory/Item`.
+* The entries are listed in the order the file stores them, which is not necessarily the order the
+  fields appear in.
+
+The `version` line describes how the registry is stored rather than anything about your data. It is
+`3` for content built with Unity 6.7 or newer and `2` before that, and in older files the
+`references` section appears *after* the fields instead of before them. The entries mean the same
+thing either way.
 
 **Refer to the [TextDumper documentation](textdumper.md) for detailed output format explanation.**
 

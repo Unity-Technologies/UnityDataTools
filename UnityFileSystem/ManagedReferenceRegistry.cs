@@ -23,20 +23,16 @@ public sealed class ManagedReferenceEntry
     public long DataOffset { get; init; }
 }
 
-// The [SerializeReference] instances owned by one serialized object.
+// The [SerializeReference] instances owned by one serialized object, however the file stores them.
 //
-// From SerializedFile version 25 the registry is a self-delimiting frame leading the C# class's own
-// data - after the built-in fields, before the first field the script declares, which is the one
-// flagged HasSerializedRefs. It is the first piece of object layout no TypeTree node describes, so
-// the tables inside it cannot be walked the way every other field is.
+// From SerializedFile version 25 they live in a self-delimiting frame of raw bytes that no TypeTree
+// node describes, sitting immediately before the field flagged HasSerializedRefs. Earlier files
+// describe the registry with nodes, and callers read those through the node walk into these same
+// entries.
 //
-// They are not parsed here either: UFS_GetRegistryFrame* wraps the engine's own frame parser, so
-// this class calls into the one implementation that exists rather than becoming a second one. Only
-// the 8-byte header is read directly, in GetFrameSize, which is all a walker needs to step over a
-// frame it does not want to read.
-//
-// Earlier files describe the registry with TypeTree nodes instead (versions 1 and 2 of the registry
-// itself), which the callers read through the node walk and present as the same entries.
+// The frame's tables are not parsed here: UFS_GetRegistryFrame* wraps the engine's own parser, so
+// this calls the one implementation that exists rather than becoming a second one. Only the 8-byte
+// header is read directly, in GetFrameSize.
 public sealed class ManagedReferenceRegistry
 {
     // The only frame layout the native parser accepts. Unrelated to the serialized file version.
