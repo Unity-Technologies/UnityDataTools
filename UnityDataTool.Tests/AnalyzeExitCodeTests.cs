@@ -1,3 +1,5 @@
+using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -93,5 +95,26 @@ public class AnalyzeExitCodeTests
         StringAssert.Contains("Files without TypeTrees: 1", output);
         StringAssert.DoesNotContain(NothingAnalyzedMessage, output);
         Assert.That(File.Exists(databasePath), Is.True);
+    }
+
+    // A file from a newer Unity than this build understands used to surface as whatever went wrong
+    // first, which sent the reader looking for a corrupt file. The version is known before the file
+    // is opened, so it is reported (issue #130).
+    [Test]
+    public async Task Analyze_VersionNewerThanSupported_ReportsTheVersion()
+    {
+        var newerFile = Path.Combine(m_TestOutputFolder, "future.assets");
+        var bytes = File.ReadAllBytes(Path.Combine(TestContext.CurrentContext.TestDirectory,
+            "Data", "PlayerWithTypeTreesV26", "sharedassets1.assets"));
+
+        // The version is a big-endian uint32 at offset 8 of the header.
+        BinaryPrimitives.WriteUInt32BigEndian(bytes.AsSpan(8), 27);
+        File.WriteAllBytes(newerFile, bytes);
+
+        var (exitCode, output) = await RunAnalyze(newerFile, "-o", SQLTestHelper.GetDatabasePath(m_TestOutputFolder));
+
+        Assert.AreEqual(1, exitCode);
+        StringAssert.Contains("version 27", output);
+        StringAssert.Contains("UnityDataTool supports up to version 26", output);
     }
 }

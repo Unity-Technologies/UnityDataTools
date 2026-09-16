@@ -12,6 +12,8 @@ public class DumpTests
 {
     private string m_TestDataFolder;
     private string m_SerializedFilePath;
+    private string m_SerializeReferenceV22Path;
+    private string m_SerializeReferenceV26Path;
     private string m_ResourceFilePath;
     private string m_MultiSerializedFileArchivePath;
     private string m_NoTypeTreeSerializedFilePath;
@@ -24,6 +26,8 @@ public class DumpTests
     {
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data");
         m_SerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "level0");
+        m_SerializeReferenceV22Path = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets1.assets");
+        m_SerializeReferenceV26Path = Path.Combine(m_TestDataFolder, "PlayerWithTypeTreesV26", "sharedassets1.assets");
         m_ResourceFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets0.assets.resS");
         m_MultiSerializedFileArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
@@ -313,6 +317,66 @@ public class DumpTests
         Assert.That(output, Does.Contain("Array<int>[512]"));
         Assert.That(output, Does.Contain("ArrayDataHash 6feca6e2"));
         Assert.That(output, Does.Not.Contain("293, 294, 295, 296,"));
+    }
+
+    static async Task<string> DumpToString(params string[] args)
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(args));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        return sw.ToString();
+    }
+
+    // The same asset built by Unity 6.0 and 6.7. From SerializedFile version 25 its
+    // [SerializeReference] registry is a frame in the object's data rather than a TypeTree node, so
+    // the two dumps are the reference for that change: the registry version differs, the instance
+    // it holds does not.
+    [TestCase(22)]
+    [TestCase(26)]
+    public async Task Dump_Stdout_SerializeReference_ReadsRegistryWhicheverVersion(int fileVersion)
+    {
+        var path = fileVersion == 26 ? m_SerializeReferenceV26Path : m_SerializeReferenceV22Path;
+        var expectedRegistryVersion = fileVersion == 26 ? 3 : 2;
+
+        var output = await DumpToString("dump", path, "--stdout", "--type", "MonoBehaviour");
+
+        Assert.That(output, Does.Contain("m_Name (string) ScriptableObjectWIthSerializeReference"));
+        Assert.That(output, Does.Contain($"version (int) {expectedRegistryVersion}"));
+        Assert.That(output, Does.Contain("rid(6911265806470873295) ReferencedObject"));
+        Assert.That(output, Does.Contain("class (string) Data"));
+        Assert.That(output, Does.Contain("ns (string) MyNamespace"));
+        Assert.That(output, Does.Contain("Info (string) Some info"));
+        Assert.That(output, Does.Contain("Flag (UInt8) 1"));
+
+        // The field pointing at the instance carries its rid. A reader that does not step over the
+        // registry frame reads the frame header here instead, which is a plausible-looking number
+        // rather than an outright failure.
+        Assert.That(output, Does.Contain("rid (SInt64) 6911265806470873295"));
+    }
+
+    // Shared subtrees (version 26) replace a repeated compound with a single node that has a byte
+    // size and no children of its own - the shape of a basic type. A reader that takes them at face
+    // value drops the compound's fields silently, so the check is that they are still dumped.
+    [Test]
+    public async Task Dump_Stdout_Version26_ExpandsSharedSubtrees()
+    {
+        var path = Path.Combine(m_TestDataFolder, "PlayerWithTypeTreesV26", "level0");
+
+        var output = await DumpToString("dump", path, "--stdout", "--type", "Transform");
+
+        Assert.That(output, Does.Contain("m_LocalPosition (Vector3f)"));
+        Assert.That(output, Does.Contain("m_GameObject (PPtr<GameObject>)"));
+        Assert.That(output, Does.Contain("m_FileID (int)"));
+        Assert.That(output, Does.Contain("m_PathID (SInt64)"));
     }
 
     // The expected bit patterns are the well-known IEEE 754 representations of the
