@@ -22,6 +22,8 @@ public class TextDumperTool
 
     // Set during the processed of each Serialized File
     UnityFileReader m_Reader;
+    // End of the object currently being dumped; bounds the registry frame read.
+    long m_ObjectEnd;
     SerializedFile m_SerializedFile;
 
     public enum DumpFormat
@@ -227,6 +229,7 @@ public class TextDumperTool
                     continue;
 
                 var offset = obj.Offset;
+                m_ObjectEnd = obj.Offset + obj.Size;
 
                 m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
                 RecursiveDump(root, ref offset, 0);
@@ -247,6 +250,14 @@ public class TextDumperTool
     void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1)
     {
         bool skipChildren = false;
+
+        // From SerializedFile version 25 the registry is a frame in the data ahead of the marked
+        // field, described by no node. Only a root object's fields carry one, so the same type tree
+        // read as a registry blob (always deeper than level 1) is left alone.
+        if (level == 1 && node.HasSerializedRefs)
+        {
+            DumpManagedReferenceFrame(ref offset, level);
+        }
 
         if (level > 1 && node.IsManagedReferenceRegistry)
         {
@@ -468,6 +479,80 @@ public class TextDumperTool
         {
             throw new Exception($"Unsupported ManagedReferenceRegistry version {version}");
         }
+    }
+
+    // Dumps a version 3 registry, which is a frame in the object's data rather than a node. The
+    // output is shaped like the version 1 and 2 dumps above so the three stay comparable.
+    void DumpManagedReferenceFrame(ref long offset, int level)
+    {
+        var registry = ManagedReferenceRegistry.ReadFrame(m_Reader, offset, m_ObjectEnd - offset);
+
+        if (registry == null)
+            throw new Exception($"Invalid [SerializeReference] registry frame at offset {offset}");
+
+        AppendIndent(level);
+        m_StringBuilder.Append("references (ManagedReferenceRegistry)");
+        m_Writer.WriteLine(m_StringBuilder);
+        m_StringBuilder.Clear();
+
+        AppendIndent(level + 1);
+        m_StringBuilder.Append("version (int) ");
+        m_StringBuilder.Append(registry.Version);
+        m_Writer.WriteLine(m_StringBuilder);
+        m_StringBuilder.Clear();
+
+        foreach (var entry in registry.Entries)
+        {
+            AppendIndent(level + 1);
+            m_StringBuilder.Append("rid(");
+            m_StringBuilder.Append(entry.Rid);
+            m_StringBuilder.Append(") ReferencedObject");
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            if (entry.IsNull)
+            {
+                AppendIndent(level + 2);
+                m_StringBuilder.Append("null");
+                m_Writer.WriteLine(m_StringBuilder);
+                m_StringBuilder.Clear();
+                continue;
+            }
+
+            AppendIndent(level + 2);
+            m_StringBuilder.Append("type (ReferencedManagedType)");
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            DumpReferencedTypeName("class", entry.ClassName, level + 3);
+            DumpReferencedTypeName("ns", entry.Namespace, level + 3);
+            DumpReferencedTypeName("asm", entry.AssemblyName, level + 3);
+
+            AppendIndent(level + 2);
+            m_StringBuilder.Append("data ReferencedObjectData ");
+            m_Writer.WriteLine(m_StringBuilder);
+            m_StringBuilder.Clear();
+
+            var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(entry.ClassName, entry.Namespace, entry.AssemblyName);
+            var dataOffset = entry.DataOffset;
+
+            foreach (var child in refTypeRoot.Children)
+            {
+                RecursiveDump(child, ref dataOffset, level + 3);
+            }
+        }
+
+        offset += registry.FrameSize;
+    }
+
+    void DumpReferencedTypeName(string name, string value, int level)
+    {
+        AppendIndent(level);
+        m_StringBuilder.Append(name);
+        m_StringBuilder.Append(" (string) ");
+        m_StringBuilder.Append(value);
+        m_Writer.WriteLine(m_StringBuilder);
+        m_StringBuilder.Clear();
     }
 
     bool DumpManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, ref long offset, int level, long id)

@@ -51,6 +51,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
     // State for the object currently being processed, (re)initialized by each Process() call.
     private long m_Offset;       // current read position within m_Reader
+    private long m_ObjectEnd;    // end of the object being processed; bounds the registry frame read
     private long m_ObjectId;     // analyzer id of the object being processed, passed to the callback
     private uint m_Crc32;        // CRC accumulated so far for this object
 
@@ -85,12 +86,14 @@ public class PPtrAndCrcProcessor : IDisposable
         m_resourceReaders.Clear();
     }
 
-    // Walks the serialized object rooted at `node`, whose data starts at `offset` in the reader,
-    // emitting every PPtr through the callback. Returns a CRC32 fingerprint of the object's content
-    // (0 when CRC is disabled). `objectId` is the analyzer id of this object, forwarded to the callback.
-    public uint Process(long objectId, long offset, TypeTreeNode node)
+    // Walks the serialized object rooted at `node`, whose data starts at `offset` in the reader and
+    // is `size` bytes long, emitting every PPtr through the callback. Returns a CRC32 fingerprint of
+    // the object's content (0 when CRC is disabled). `objectId` is the analyzer id of this object,
+    // forwarded to the callback.
+    public uint Process(long objectId, long offset, long size, TypeTreeNode node)
     {
         m_Offset = offset;
+        m_ObjectEnd = offset + size;
         m_ObjectId = objectId;
         m_Crc32 = 0;
 
@@ -98,10 +101,53 @@ public class PPtrAndCrcProcessor : IDisposable
         {
             m_StringBuilder.Clear();
             m_StringBuilder.Append(child.Name);
+
+            // From SerializedFile version 25 the registry is a frame in the data ahead of the
+            // marked field, which no node describes. Only a root object's fields carry one.
+            if (child.HasSerializedRefs)
+                ProcessManagedReferenceFrame();
+
             ProcessNode(child, false);
         }
 
         return m_Crc32;
+    }
+
+    // Walks a version 3 registry: the frame's header and tables are CRC'd as the raw bytes they
+    // are, then each entry's data is walked through its own type tree, exactly as the node-described
+    // versions are.
+    private void ProcessManagedReferenceFrame()
+    {
+        var registry = ManagedReferenceRegistry.ReadFrame(m_Reader, m_Offset, m_ObjectEnd - m_Offset);
+
+        if (registry == null)
+            throw new Exception($"Invalid [SerializeReference] registry frame at offset {m_Offset}");
+
+        var frameStart = m_Offset;
+
+        // Everything ahead of the first blob is the header and the two tables.
+        AppendCrc(frameStart, (int)(registry.BlobsOffset - frameStart));
+
+        var pathLength = m_StringBuilder.Length;
+
+        foreach (var entry in registry.Entries)
+        {
+            if (entry.IsNull)
+                continue;
+
+            var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(entry.ClassName, entry.Namespace, entry.AssemblyName);
+
+            m_StringBuilder.Append(".rid(");
+            m_StringBuilder.Append(entry.Rid);
+            m_StringBuilder.Append(").data");
+
+            m_Offset = entry.DataOffset;
+            ProcessNode(refTypeTypeTree, true);
+
+            m_StringBuilder.Remove(pathLength, m_StringBuilder.Length - pathLength);
+        }
+
+        m_Offset = frameStart + registry.FrameSize;
     }
 
     private void ProcessNode(TypeTreeNode node, bool isInManagedReferenceRegistry)

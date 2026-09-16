@@ -11,6 +11,10 @@ public class TypeTreeNode
     int m_FirstChildNodeIndex;
     int m_NextNodeIndex;
     TypeTreeHandle m_Handle;
+    // The shared subtree this node lives in, or IntPtr.Zero for the type tree's own nodes.
+    // Only meaningful together with m_Handle, which owns it.
+    IntPtr m_Subtree;
+    int m_NodeIndex;
     Lazy<List<TypeTreeNode>> m_Children;
     Lazy<Type> m_CSharpType;
     Lazy<bool> m_hasConstantSize;
@@ -30,17 +34,28 @@ public class TypeTreeNode
     // Child nodes container.
     public List<TypeTreeNode> Children => m_Children.Value;
 
-    // True if the field has no child.
-    public bool IsLeaf => m_FirstChildNodeIndex == 0;
+    // True if the field has no child. A shared subtree reference has to resolve its subtree to
+    // answer, since its children live there rather than at m_FirstChildNodeIndex.
+    public bool IsLeaf => IsSharedSubtreeRef ? Children.Count == 0 : m_FirstChildNodeIndex == 0;
 
     // True if the field is a basic type. (int, float, char, etc.)
-    public bool IsBasicType => IsLeaf && Size > 0;
+    // A shared subtree reference is never one, whatever its size: that is exactly the shape a
+    // reader cannot otherwise tell from a primitive of the same width.
+    public bool IsBasicType => !IsSharedSubtreeRef && IsLeaf && Size > 0;
 
     // True if the field is an array.
     public bool IsArray => ((int)Flags & (int)TypeTreeFlags.IsArray) != 0;
 
     // True if the field is a ManagedReferenceRegistry
     public bool IsManagedReferenceRegistry => ((int)Flags & (int)TypeTreeFlags.IsManagedReferenceRegistry) != 0;
+
+    // True if the [SerializeReference] registry frame precedes this field's data. Only set on a
+    // root object's fields; the same type tree read as a registry blob carries no frame.
+    public bool HasSerializedRefs => ((int)Flags & (int)TypeTreeFlags.HasSerializedRefs) != 0;
+
+    // True if the node stands in for a compound the file stores once and shares between types
+    // (SerializedFile version 26 and later). Its children come from that shared subtree.
+    public bool IsSharedSubtreeRef => ((int)Flags & (int)TypeTreeFlags.IsSharedSubtreeRef) != 0;
 
     // C# type corresponding to the node type
     public Type CSharpType => m_CSharpType.Value;
@@ -79,10 +94,17 @@ public class TypeTreeNode
     }
 
     internal TypeTreeNode(TypeTreeHandle typeTreeHandle, int nodeIndex)
+        : this(typeTreeHandle, IntPtr.Zero, nodeIndex)
+    {
+    }
+
+    internal TypeTreeNode(TypeTreeHandle typeTreeHandle, IntPtr subtree, int nodeIndex)
     {
         m_Handle = typeTreeHandle;
+        m_Subtree = subtree;
+        m_NodeIndex = nodeIndex;
 
-        var r = DllWrapper.GetTypeTreeNodeInfo(m_Handle, nodeIndex, NodeTypeBuilder, NodeTypeBuilder.Capacity, NodeNameBuilder, NodeNameBuilder.Capacity, out Offset, out Size, out Flags, out MetaFlags, out m_FirstChildNodeIndex, out m_NextNodeIndex);
+        var r = DllWrapper.GetTypeTreeSubtreeNodeInfo(m_Handle, m_Subtree, nodeIndex, NodeTypeBuilder, NodeTypeBuilder.Capacity, NodeNameBuilder, NodeNameBuilder.Capacity, out Offset, out Size, out Flags, out MetaFlags, out m_FirstChildNodeIndex, out m_NextNodeIndex);
         UnityFileSystem.HandleErrors(r);
 
         Type = NodeTypeBuilder.ToString();
@@ -96,11 +118,20 @@ public class TypeTreeNode
     internal List<TypeTreeNode> GetChildren()
     {
         var children = new List<TypeTreeNode>();
+        var subtree = m_Subtree;
         var current = m_FirstChildNodeIndex;
+
+        if (IsSharedSubtreeRef)
+        {
+            // The reference stands in for the shared subtree's root, so the nodes that replace it
+            // are that root's children, numbered within the subtree it returns.
+            var r = DllWrapper.GetTypeTreeRefSubtree(m_Handle, m_Subtree, m_NodeIndex, out subtree, out current);
+            UnityFileSystem.HandleErrors(r);
+        }
 
         while (current != 0)
         {
-            var child = new TypeTreeNode(m_Handle, current);
+            var child = new TypeTreeNode(m_Handle, subtree, current);
             children.Add(child);
             current = child.m_NextNodeIndex;
         }
@@ -169,6 +200,13 @@ public class TypeTreeNode
 
             default:
             {
+                // A shared subtree reference carries a real byte size, so the size-based guesses
+                // below would read a compound as the primitive of that width.
+                if (IsSharedSubtreeRef)
+                {
+                    return typeof(object);
+                }
+
                 if (Size == 8)
                 {
                     return typeof(long);

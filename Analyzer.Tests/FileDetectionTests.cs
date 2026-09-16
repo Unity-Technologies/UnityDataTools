@@ -188,15 +188,15 @@ public class FileDetectionTests
     [Test]
     public void TryParseMetadata_VersionTooNew_ReturnsFalseWithMessage()
     {
-        var headerInfo = new SerializedFileInfo { Version = 24 };
+        var headerInfo = new SerializedFileInfo { Version = 27 };
 
         bool result = SerializedFileDetector.TryParseMetadata("irrelevant", headerInfo, out var metadata, out var errorMessage);
 
         Assert.IsFalse(result);
         Assert.IsNull(metadata);
         Assert.IsNotNull(errorMessage);
-        Assert.That(errorMessage, Does.Contain("24"), "Error should mention the actual version");
-        Assert.That(errorMessage, Does.Contain("23"), "Error should mention the maximum supported version");
+        Assert.That(errorMessage, Does.Contain("27"), "Error should mention the actual version");
+        Assert.That(errorMessage, Does.Contain("26"), "Error should mention the maximum supported version");
         Assert.That(errorMessage, Does.Contain("UnityDataTool"), "Error should mention UnityDataTool");
     }
 

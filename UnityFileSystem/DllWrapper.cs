@@ -78,6 +78,8 @@ public enum ReturnCode
     ErrorCreatingArchiveFile,
     ErrorAddingFileToArchive,
     TypeNotFound,
+    HigherTypeTreeVersion,
+    RequiresSubtreeApi,
 }
 
 [Flags]
@@ -136,6 +138,9 @@ public enum TypeTreeFlags
     IsManagedReference = 1 << 1,
     IsManagedReferenceRegistry = 1 << 2,
     IsArrayOfRefs = 1 << 3,
+    // The registry frame precedes this node's data when its type tree is used as a root.
+    HasSerializedRefs = 1 << 4,
+    IsSharedSubtreeRef = 1 << 5,
 }
 
 [Flags]
@@ -166,6 +171,40 @@ public struct TypeTreeInfo
     public readonly string NamespaceName;
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
     public readonly string AssemblyName;
+}
+
+// Parsed header of a [SerializeReference] registry frame. Every offset is relative to the frame's
+// first byte, which is the byte passed to the GetRegistryFrame* calls as the frame data.
+[StructLayout(LayoutKind.Sequential)]
+public struct RegistryFrameInfo
+{
+    public int Version;
+    public int TypeCount;
+    public int RecordCount;
+    public ulong FrameSize;
+    public ulong BlobsOffset;
+}
+
+// One entry of the frame's Types table: the fully qualified name of a concrete [SerializeReference]
+// type, in the form GetRefTypeTypeTree matches against.
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+public struct RegistryFrameType
+{
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public string ClassName;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public string NamespaceName;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public string AssemblyName;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct RegistryFrameRecord
+{
+    public long Rid;
+    public int TypeIndex;   // index into the Types table, or -1 for a null entry, which carries no blob
+    public uint ByteSize;
+    public ulong BlobOffset;
 }
 
 public static class DllWrapper
@@ -317,6 +356,44 @@ public static class DllWrapper
         StringBuilder name, int nameLen, out int offset, out int size, [MarshalAs(UnmanagedType.U4)] out TypeTreeFlags flags,
         [MarshalAs(UnmanagedType.U4)] out TypeTreeMetaFlags metaFlags, out int firstChildNode,
         out int nextNode);
+
+    // As GetTypeTreeNodeInfo, but for a node inside a shared subtree. A null subtree means the type
+    // tree's own nodes, so this call alone covers both sides. offset is unset inside a subtree.
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetTypeTreeSubtreeNodeInfo")]
+    public static extern ReturnCode GetTypeTreeSubtreeNodeInfo(TypeTreeHandle handle, IntPtr subtree, int node,
+        StringBuilder type, int typeLen, StringBuilder name, int nameLen, out int offset, out int size,
+        [MarshalAs(UnmanagedType.U4)] out TypeTreeFlags flags, [MarshalAs(UnmanagedType.U4)] out TypeTreeMetaFlags metaFlags,
+        out int firstChildNode, out int nextNode);
+
+    // Resolves an IsSharedSubtreeRef node. The reference stands in for the subtree's root, so
+    // firstChildNode is that root's first child; 0 means the compound has no fields.
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetTypeTreeRefSubtree")]
+    public static extern ReturnCode GetTypeTreeRefSubtree(TypeTreeHandle handle, IntPtr subtree, int node,
+        out IntPtr refSubtree, out int firstChildNode);
+
+    // The registry frame is object data rather than type information, so these take the frame's bytes
+    // and a bound on them. The frame's own length field is untrusted, so size must be what the caller
+    // actually holds.
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetRegistryFrameInfo")]
+    public static extern ReturnCode GetRegistryFrameInfo(IntPtr data, ulong size, out RegistryFrameInfo info);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetRegistryFrameTypes")]
+    public static extern ReturnCode GetRegistryFrameTypes(IntPtr data, ulong size,
+        [Out] RegistryFrameType[] types, int len);
+
+    [DllImport("UnityFileSystemApi",
+        CallingConvention = CallingConvention.Cdecl,
+        EntryPoint = "UFS_GetRegistryFrameRecords")]
+    public static extern ReturnCode GetRegistryFrameRecords(IntPtr data, ulong size,
+        [Out] RegistryFrameRecord[] records, int len);
 
     [DllImport("UnityFileSystemApi",
         CallingConvention = CallingConvention.Cdecl,

@@ -51,6 +51,20 @@ public class UnityFileReader : IDisposable
         Buffer.BlockCopy(m_Buffer, offset, dest, 0, size);
     }
 
+    // Reads a range that may be larger than the internal buffer, in buffer-sized chunks.
+    public void ReadRange(long fileOffset, int size, byte[] dest)
+    {
+        var written = 0;
+
+        while (written < size)
+        {
+            var chunk = Math.Min(m_Buffer.Length, size - written);
+            var offset = GetBufferOffset(fileOffset + written, chunk);
+            Buffer.BlockCopy(m_Buffer, offset, dest, written, chunk);
+            written += chunk;
+        }
+    }
+
     public string ReadString(long fileOffset, int size)
     {
         var offset = GetBufferOffset(fileOffset, size);
