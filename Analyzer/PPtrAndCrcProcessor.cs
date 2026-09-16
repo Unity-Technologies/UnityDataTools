@@ -99,14 +99,19 @@ public class PPtrAndCrcProcessor : IDisposable
 
         foreach (var child in node.Children)
         {
+            // From SerializedFile version 25 the registry is a frame in the data ahead of the
+            // marked field, which no node describes. Only a root object's fields carry one. The
+            // frame is not part of that field, so its references get their own path root, named
+            // after the registry as the node-described versions are.
+            if (child.HasSerializedRefs)
+            {
+                m_StringBuilder.Clear();
+                m_StringBuilder.Append("references");
+                ProcessManagedReferenceFrame();
+            }
+
             m_StringBuilder.Clear();
             m_StringBuilder.Append(child.Name);
-
-            // From SerializedFile version 25 the registry is a frame in the data ahead of the
-            // marked field, which no node describes. Only a root object's fields carry one.
-            if (child.HasSerializedRefs)
-                ProcessManagedReferenceFrame();
-
             ProcessNode(child, false);
         }
 
