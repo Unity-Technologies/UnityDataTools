@@ -183,6 +183,12 @@ ID: -8138362113332287275 (ClassID: 135) SphereCollider
     z float 0
 ```
 
+An object holding `[SerializeReference]` instances also gets a `references` section listing each
+instance by its `rid`, its concrete C# type and its data. Where that section appears depends on the
+Unity version: up to Unity 6.6 the registry is the last field of the object, and from Unity 6.7 it
+precedes the first field that can hold a reference. The reported `version` is `2` before 6.7 and `3`
+from 6.7. See [TypeTrees](unity-content-format.md#typetrees) for what changed.
+
 **Refer to the [TextDumper documentation](textdumper.md) for detailed output format explanation.**
 
 ---

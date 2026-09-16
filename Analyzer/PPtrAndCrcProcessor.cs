@@ -314,8 +314,8 @@ public class PPtrAndCrcProcessor : IDisposable
     }
 
     // A ManagedReferenceRegistry holds the [SerializeReference] instances owned by this object.
-    // In YAML/JSON it is the "references:" section that always appears at the end of a
-    // MonoBehaviour/ScriptableObject. Each instance is stored here exactly once; the fields that
+    // In YAML/JSON it is the "references:" section of a MonoBehaviour/ScriptableObject, which
+    // appears at the end of the object up to Unity 6.6 and ahead of the referencing fields from 6.7. Each instance is stored here exactly once; the fields that
     // point at it (elsewhere in the object) only store its "rid", so shared instances and cycles
     // collapse to the same rid.
     //
@@ -350,10 +350,14 @@ public class PPtrAndCrcProcessor : IDisposable
     // a different TypeTree for every entry (see ProcessManagedReferenceData) - which is exactly why
     // finding references inside the registry is so much more involved than for the rest of the object.
     //
-    // Two on-disk versions exist:
+    // Three on-disk versions exist:
     //   version 1 - entries stored back to back and terminated by a sentinel type (see
     //               ProcessManagedReferenceData); the rid is implied by position.
     //   version 2 - entries stored as a "RefIds" array, each element carrying its own rid.
+    //   version 3 - from SerializedFile version 25 (Unity 6.7). No longer a node at all: the
+    //               registry is a self-delimiting frame in the object's data, ahead of the field
+    //               flagged HasSerializedRefs, holding a table of type names and a table of
+    //               records that index it. See ProcessManagedReferenceFrame.
     private void ProcessManagedReferenceRegistry(TypeTreeNode node)
     {
         if (node.Children.Count < 2)

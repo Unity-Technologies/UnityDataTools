@@ -209,7 +209,9 @@ UnityDataTool serialized-file header level0 --format json
 
 Shows information from the metadata section of a SerializedFile. This includes the Unity version, target platform, TypeTree storage mode (inline, external, or absent), and counts of the type entries recorded in the file. The JSON output includes additional per-type details; see the notes below.
 
-Requires SerializedFile version 19 (Unity 2019.1) or newer. Files older than version 19 are not supported by this subcommand.
+Requires SerializedFile version 19 (Unity 2019.1) or newer, up to version 26 (Unity 6.7). Files
+outside that range are not supported by this subcommand, which reports the version it found and the
+highest one it understands; `header` still works on any version.
 
 ### Quick Reference
 
@@ -254,7 +256,9 @@ UnityDataTool serialized-file metadata level0 --format json
   "serializedReferenceTypeTreeCount": 0,
   "typeTrees": [ ... ],
   "serializedReferenceTypeTrees": [ ... ],
-  "scriptTypes": [ ... ]
+  "scriptTypes": [ ... ],
+  "sharedSubtreeCount": 7,
+  "sharedSubtrees": [ ... ]
 }
 ```
 
@@ -274,6 +278,8 @@ The text and JSON outputs use different field names and representations for some
 | *(JSON only)* | `typeTrees` | Array of per-type detail objects for the regular type entries. `null` when parsing failed or was not attempted. See **Per-Type Entry Fields** below. |
 | *(JSON only)* | `serializedReferenceTypeTrees` | Array of per-type detail objects for the `[SerializeReference]` type entries. Empty array for files with version < 20. See **Per-Type Entry Fields** below. |
 | *(JSON only)* | `scriptTypes` | Array of MonoScript references for the C# types used in this file. Each entry's index corresponds to the `scriptTypeIndex` field of a type entry in `typeTrees`. See **Script Type Entry Fields** below. |
+| **Shared Subtrees** | `sharedSubtreeCount` | Number of shared sub-TypeTrees the file stores, each referenced by one or more of its types. Always `0` for files with version < 26 (Unity 6.7), and omitted from the text output when `0`. |
+| *(JSON only)* | `sharedSubtrees` | Array of per-subtree detail objects. Empty array for files with version < 26. See **Shared Subtree Entry Fields** below. |
 
 ### Per-Type Entry Fields
 
@@ -288,11 +294,22 @@ Each element of `typeTrees` and `serializedReferenceTypeTrees` in the JSON outpu
 | `typeTreeStructureHash` | MD4 hash of the TypeTree structure as originally written; used for compatibility checking at load time. |
 | `typeTreeContentHash` | XXH3 hash of the TypeTree blob. All-zeros for files with version < 23. |
 | `typeTreeSerializedSize` | Byte size of the TypeTree blob for this entry. `0` when `inlineTypeTree` is false. |
+| `typeTreeFormatVersion` | Format version stamped into the TypeTree blob itself. `0` for files with version < 23, whose blobs carry no stamp. Up to and including 23 the stamp repeats the SerializedFile version; from version 24 (Unity 6.7) TypeTrees are versioned independently, starting at 32. |
 | `inlineTypeTree` | `true` when the TypeTree blob is present inline in the file's metadata. |
 | `className` | C# class name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
 | `namespaceName` | C# namespace; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
 | `assemblyName` | Assembly name; non-empty only for `[SerializeReference]` entries (version ≥ 21). |
 | `typeDependencies` | Array of indices into `serializedReferenceTypeTrees` listing which `[SerializeReference]` types objects of this type may hold. Empty for `[SerializeReference]` entries or files with version < 21. |
+
+### Shared Subtree Entry Fields
+
+Each element of `sharedSubtrees` in the JSON output contains:
+
+| JSON Field | Description |
+|------------|-------------|
+| `contentHash` | Hash identifying the subtree's content, which is both the key its types reference it by and the key used to fetch it from an external TypeTree store. |
+| `serializedSize` | Byte size of the subtree blob. `0` when the blob was extracted to an external store. |
+| `inline` | `true` when the blob is stored in this file rather than an external TypeTree store. |
 
 ### Script Type Entry Fields
 
