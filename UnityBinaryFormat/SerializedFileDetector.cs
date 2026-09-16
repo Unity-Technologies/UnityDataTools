@@ -192,7 +192,7 @@ public class SharedSubtreeInfo
     /// <summary>
     /// True when the blob is stored in this file rather than an external TypeTree store.
     /// </summary>
-    public bool Inline { get; set; }
+    public bool Inline => SerializedSize > 0;
 }
 
 /// <summary>
@@ -322,10 +322,9 @@ public static class SerializedFileDetector
     private const uint SupportsRefObjectVersion = 20;        // m_RefTypes list (appears after externals)
     private const uint StoresTypeDependenciesVersion = 21;   // Per-type dependency list added
     private const uint ExtractedTypeTreeSupportVersion = 23; // TypeTree blob may be extracted externally
-    // 24 and 25 change the TypeTree blob and the object data respectively, leaving the metadata
-    // layout alone; they are listed because the version numbers are cumulative.
-    private const uint IndependentTypeTreeVersion = 24;      // Blobs carry their own TypeTreeFormatVersion
-    private const uint SerializeReferenceRegistryFirstVersion = 25; // Registry moved into the object data
+    // 24 and 25 have no constant here because they leave the metadata layout alone: 24 moves the
+    // TypeTree blob onto its own version number space and 25 moves the [SerializeReference] registry
+    // into the object's data, neither of which this parser reads.
     private const uint SharedSubtreeSupportVersion = 26;     // Shared subtree table follows m_RefTypes
 
     // Per-type-entry constants
@@ -860,7 +859,6 @@ public static class SerializedFileDetector
                 {
                     ContentHash = contentHash,
                     SerializedSize = blobSize,
-                    Inline = blobSize > 0,
                 };
             }
             metadata.SharedSubtrees = subtrees;

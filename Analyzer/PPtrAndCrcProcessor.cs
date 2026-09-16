@@ -106,7 +106,7 @@ public class PPtrAndCrcProcessor : IDisposable
             if (child.HasSerializedRefs)
             {
                 m_StringBuilder.Clear();
-                m_StringBuilder.Append("references");
+                m_StringBuilder.Append("references.");
                 ProcessManagedReferenceFrame();
             }
 
@@ -124,32 +124,18 @@ public class PPtrAndCrcProcessor : IDisposable
     private void ProcessManagedReferenceFrame()
     {
         var registry = ManagedReferenceRegistry.ReadFrame(m_Reader, m_Offset, m_ObjectEnd - m_Offset);
-
-        if (registry == null)
-            throw new Exception($"Invalid [SerializeReference] registry frame at offset {m_Offset}");
-
         var frameStart = m_Offset;
 
         // Everything ahead of the first blob is the header and the two tables.
         AppendCrc(frameStart, (int)(registry.BlobsOffset - frameStart));
-
-        var pathLength = m_StringBuilder.Length;
 
         foreach (var entry in registry.Entries)
         {
             if (entry.IsNull)
                 continue;
 
-            var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(entry.ClassName, entry.Namespace, entry.AssemblyName);
-
-            m_StringBuilder.Append(".rid(");
-            m_StringBuilder.Append(entry.Rid);
-            m_StringBuilder.Append(").data");
-
             m_Offset = entry.DataOffset;
-            ProcessNode(refTypeTypeTree, true);
-
-            m_StringBuilder.Remove(pathLength, m_StringBuilder.Length - pathLength);
+            ProcessRefTypeData(entry.Rid, entry.ClassName, entry.Namespace, entry.AssemblyName);
         }
 
         m_Offset = frameStart + registry.FrameSize;
@@ -320,9 +306,9 @@ public class PPtrAndCrcProcessor : IDisposable
 
     // A ManagedReferenceRegistry holds the [SerializeReference] instances owned by this object.
     // In YAML/JSON it is the "references:" section of a MonoBehaviour/ScriptableObject, which
-    // appears at the end of the object up to Unity 6.6 and ahead of the referencing fields from 6.7. Each instance is stored here exactly once; the fields that
-    // point at it (elsewhere in the object) only store its "rid", so shared instances and cycles
-    // collapse to the same rid.
+    // appears at the end of the object up to Unity 6.6 and ahead of the referencing fields from
+    // 6.7. Each instance is stored here exactly once; the fields that point at it (elsewhere in the
+    // object) only store its "rid", so shared instances and cycles collapse to the same rid.
     //
     // Given this C# source:
     //
@@ -448,18 +434,24 @@ public class PPtrAndCrcProcessor : IDisposable
             return false;
         }
 
-        // The data block follows the referenced type's own TypeTree, not this object's, so look it
-        // up by FQN and walk it (isInManagedReferenceRegistry = true so we don't re-enter the registry).
+        ProcessRefTypeData(rid, className, namespaceName, assemblyName);
+
+        return true;
+    }
+
+    // The data block follows the referenced type's own TypeTree, not the containing object's, so it
+    // is looked up by FQN and walked with isInManagedReferenceRegistry set, which keeps the walk
+    // from re-entering the registry.
+    private void ProcessRefTypeData(long rid, string className, string namespaceName, string assemblyName)
+    {
         var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
 
-        var size = m_StringBuilder.Length;
+        var pathLength = m_StringBuilder.Length;
         m_StringBuilder.Append("rid(");
         m_StringBuilder.Append(rid);
         m_StringBuilder.Append(").data");
         ProcessNode(refTypeTypeTree, true);
-        m_StringBuilder.Remove(size, m_StringBuilder.Length - size);
-
-        return true;
+        m_StringBuilder.Remove(pathLength, m_StringBuilder.Length - pathLength);
     }
 
     private void ExtractPPtr(string referencedType)

@@ -12,8 +12,6 @@ public class DumpTests
 {
     private string m_TestDataFolder;
     private string m_SerializedFilePath;
-    private string m_SerializeReferenceV22Path;
-    private string m_SerializeReferenceV26Path;
     private string m_ResourceFilePath;
     private string m_MultiSerializedFileArchivePath;
     private string m_NoTypeTreeSerializedFilePath;
@@ -26,8 +24,6 @@ public class DumpTests
     {
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data");
         m_SerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "level0");
-        m_SerializeReferenceV22Path = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets1.assets");
-        m_SerializeReferenceV26Path = Path.Combine(m_TestDataFolder, "PlayerWithTypeTreesV26", "sharedassets1.assets");
         m_ResourceFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets0.assets.resS");
         m_MultiSerializedFileArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
@@ -340,12 +336,11 @@ public class DumpTests
     // [SerializeReference] registry is a frame in the object's data rather than a TypeTree node, so
     // the two dumps are the reference for that change: the registry version differs, the instance
     // it holds does not.
-    [TestCase(22)]
-    [TestCase(26)]
-    public async Task Dump_Stdout_SerializeReference_ReadsRegistryWhicheverVersion(int fileVersion)
+    [TestCase("PlayerWithTypeTrees", 2)]
+    [TestCase("PlayerWithTypeTreesV26", 3)]
+    public async Task Dump_Stdout_SerializeReference_ReadsRegistryWhicheverVersion(string folder, int expectedRegistryVersion)
     {
-        var path = fileVersion == 26 ? m_SerializeReferenceV26Path : m_SerializeReferenceV22Path;
-        var expectedRegistryVersion = fileVersion == 26 ? 3 : 2;
+        var path = Path.Combine(m_TestDataFolder, folder, "sharedassets1.assets");
 
         var output = await DumpToString("dump", path, "--stdout", "--type", "MonoBehaviour");
 

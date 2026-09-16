@@ -39,8 +39,8 @@ public class TypeTreeNode
     public bool IsLeaf => IsSharedSubtreeRef ? Children.Count == 0 : m_FirstChildNodeIndex == 0;
 
     // True if the field is a basic type. (int, float, char, etc.)
-    // A shared subtree reference is never one, whatever its size: that is exactly the shape a
-    // reader cannot otherwise tell from a primitive of the same width.
+    // The IsSharedSubtreeRef test covers the one case IsLeaf cannot: a shared compound with no
+    // fields is a leaf with a byte size, which is indistinguishable from a primitive of that width.
     public bool IsBasicType => !IsSharedSubtreeRef && IsLeaf && Size > 0;
 
     // True if the field is an array.

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace UnityDataTools.FileSystem;
@@ -18,9 +19,8 @@ public sealed class ManagedReferenceEntry
     public string Namespace { get; init; } = "";
     public string AssemblyName { get; init; } = "";
 
-    // Absolute position and size of the instance's data in the file. Zero when IsNull.
+    // Absolute position of the instance's data in the file. Zero when IsNull.
     public long DataOffset { get; init; }
-    public long DataSize { get; init; }
 }
 
 // The [SerializeReference] instances owned by one serialized object.
@@ -59,19 +59,33 @@ public sealed class ManagedReferenceRegistry
         return new ManagedReferenceRegistry { Version = version, Entries = entries };
     }
 
-    // Reads the frame at `offset`. `availableBytes` is what the caller actually holds from there,
-    // normally to the end of the object - the frame's own length field is untrusted and must never
-    // be used as the bound. Returns null when there is no readable frame, in which case the
-    // position is ordinary field data.
-    public static ManagedReferenceRegistry ReadFrame(UnityFileReader reader, long offset, long availableBytes)
+    // Bytes the frame at `offset` occupies, read from its header alone. This is how a walker that
+    // only needs to step over the frame avoids parsing its tables.
+    //
+    // `availableBytes` is what the caller actually holds from `offset`, normally to the end of the
+    // object. The frame's own length field is untrusted and must never be used as the bound.
+    public static long GetFrameSize(UnityFileReader reader, long offset, long availableBytes)
     {
-        if (availableBytes < FrameHeaderSize || reader.ReadInt32(offset) != FrameVersion)
-            return null;
+        if (availableBytes < FrameHeaderSize)
+            throw new InvalidDataException($"No room for a [SerializeReference] registry frame at offset {offset}");
+
+        var version = reader.ReadInt32(offset);
+        if (version != FrameVersion)
+            throw new InvalidDataException($"Unsupported [SerializeReference] registry version {version} at offset {offset}");
 
         var frameSize = FrameHeaderSize + (long)reader.ReadUInt32(offset + 4);
         if (frameSize > availableBytes)
-            return null;
+            throw new InvalidDataException($"[SerializeReference] registry frame at offset {offset} runs past the end of the object");
 
+        return frameSize;
+    }
+
+    // Reads the frame at `offset`, including its tables. `availableBytes` is bounded as it is for
+    // GetFrameSize. Throws when there is no readable frame, which callers reach only where a node
+    // flagged HasSerializedRefs says one is present.
+    public static ManagedReferenceRegistry ReadFrame(UnityFileReader reader, long offset, long availableBytes)
+    {
+        var frameSize = GetFrameSize(reader, offset, availableBytes);
         var bytes = new byte[frameSize];
         reader.ReadRange(offset, (int)frameSize, bytes);
 
@@ -83,7 +97,7 @@ public sealed class ManagedReferenceRegistry
 
             var r = DllWrapper.GetRegistryFrameInfo(data, size, out var info);
             if (r == ReturnCode.FileFormatError)
-                return null;
+                throw new InvalidDataException($"Malformed [SerializeReference] registry frame at offset {offset}");
             UnityFileSystem.HandleErrors(r);
 
             var types = new RegistryFrameType[info.TypeCount];
@@ -112,7 +126,6 @@ public sealed class ManagedReferenceRegistry
                     AssemblyName = type.AssemblyName,
                     // Frame offsets are relative to its first byte.
                     DataOffset = offset + (long)record.BlobOffset,
-                    DataSize = record.ByteSize,
                 });
             }
 

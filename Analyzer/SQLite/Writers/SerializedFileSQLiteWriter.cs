@@ -324,7 +324,7 @@ public class SerializedFileSQLiteWriter : IDisposable
                     m_TypeSet.Add(obj.TypeId);
                 }
 
-                var randomAccessReader = new RandomAccessReader(sf, root, reader, offset);
+                var randomAccessReader = new RandomAccessReader(sf, root, reader, offset, objectSize: obj.Size);
 
                 string name = string.Empty;
                 long streamDataSize = 0;
