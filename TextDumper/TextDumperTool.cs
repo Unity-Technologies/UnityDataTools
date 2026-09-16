@@ -340,9 +340,9 @@ public class TextDumperTool
         {
             foreach (var child in node.Children)
             {
-                // From SerializedFile version 25 the registry is a frame in the data ahead of the
-                // marked field, described by no node. Only a root object's data carries one; the
-                // same type tree read as a registry blob is frameless.
+                // From SerializedFile version 25 the registry is a frame leading the C# class's
+                // data, described by no node; the flag marks the field it precedes. Only a root
+                // object's data carries one; the same tree read as a registry blob is frameless.
                 if (isRootObject && child.HasSerializedRefs)
                     DumpManagedReferenceFrame(ref offset, level + 1);
 

@@ -164,6 +164,38 @@ public class SerializedFileV26Tests
         AssertRegistryContents(m_V22Folder, 2);
     }
 
+    // ManagedReferenceTestBehaviour carries a plain int either side of its [SerializeReference]
+    // fields, and a [Serializable] class with no fields at all. Reading the fields after those is
+    // what catches a reader that mis-sizes either: it reads them shifted rather than failing.
+    [Test]
+    public void Registry_Version26_ReadsFieldsAroundTheFrameAndAFieldLessCompound()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data",
+            "AssetBundleTypeTreeVariations", "v26", "managedreferences.bundle");
+
+        using var archive = UnityFileSystem.MountArchive(path, "archive:/");
+        var cab = "archive:/" + archive.Nodes.First(n => n.Flags.HasFlag(ArchiveNodeFlags.SerializedFile)).Path;
+
+        using var sf = UnityFileSystem.OpenSerializedFile(cab);
+        using var fileReader = new UnityFileReader(cab, 1024 * 1024);
+
+        var obj = sf.Objects.First(o => o.TypeId == MonoBehaviourClassId && o.Size > 500);
+        var reader = new RandomAccessReader(sf, sf.GetTypeTreeRoot(obj.Id), fileReader, obj.Offset, objectSize: obj.Size);
+
+        // "before" is the field the frame precedes, so it is read past the whole frame.
+        Assert.That(reader["before"].GetValue<int>(), Is.EqualTo(11));
+
+        // "after" follows both the reference fields and the field-less compound.
+        Assert.That(reader["noData"].Size, Is.EqualTo(0));
+        Assert.That(reader["after"].GetValue<int>(), Is.EqualTo(22));
+
+        var registry = reader.Registry;
+        Assert.That(registry.Version, Is.EqualTo(ManagedReferenceRegistry.FrameVersion));
+        Assert.That(registry.Entries.Any(e => e.IsNull), Is.True, "Expected a null reference entry");
+        Assert.That(registry.Entries.Count(e => e.ClassName.EndsWith("Shape")), Is.GreaterThan(1),
+            "Expected several instances of one type, sharing a Types table entry");
+    }
+
     [Test]
     public void Registry_ObjectWithoutReferences_IsNull()
     {

@@ -96,8 +96,10 @@ metadata` reports the table as `Shared Subtrees`.
 
 **The `[SerializeReference]` registry.** Up to Unity 6.6 the registry was described by TypeTree
 nodes like any other field, and appeared at the end of the object. From 6.7 it is a self-contained
-frame in the object's data, ahead of the first field that can hold a reference, and no TypeTree node
-describes it. `dump` prints its contents in the same shape either way, so the visible difference is
+frame that leads the C# class's own data - after the built-in fields such as `m_GameObject` and
+`m_Name`, and before the first field declared by the script - and no TypeTree node describes it.
+Putting the registry first is what lets a reader assign each reference as it reads the field,
+instead of patching it afterwards. `dump` prints its contents in the same shape either way, so the visible difference is
 the reported registry `version` (2 before, 3 from 6.7) and where it appears in the output. The new
 format can also express a null reference, which the older ones could not.
 

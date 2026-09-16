@@ -297,6 +297,12 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
         {
             size = m_Reader.ReadInt32(Offset) + 4;
         }
+        else if (m_TypeTreeNode.Children.Count == 0)
+        {
+            // A compound with no fields, which a [Serializable] class with nothing serialized
+            // reaches. It occupies whatever its own node says, normally nothing.
+            size = Math.Max(m_TypeTreeNode.Size, 0);
+        }
         else
         {
             var lastChild = GetChild(m_TypeTreeNode.Children.Last().Name);
@@ -345,8 +351,8 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
         {
             var child = m_TypeTreeNode.Children[i];
 
-            // From SerializedFile version 25 the registry is a frame in the data ahead of the marked
-            // field, described by no node, so the field's data starts past it. Only its size is
+            // From SerializedFile version 25 the registry is a frame leading the C# class's data,
+            // described by no node, so the marked field's data starts past it. Only its size is
             // needed to get there; Registry reads the tables if anyone asks for them.
             if (m_IsRoot && child.HasSerializedRefs)
             {

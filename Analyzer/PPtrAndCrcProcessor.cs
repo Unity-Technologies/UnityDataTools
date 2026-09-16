@@ -99,10 +99,10 @@ public class PPtrAndCrcProcessor : IDisposable
 
         foreach (var child in node.Children)
         {
-            // From SerializedFile version 25 the registry is a frame in the data ahead of the
-            // marked field, which no node describes. Only a root object's fields carry one. The
-            // frame is not part of that field, so its references get their own path root, named
-            // after the registry as the node-described versions are.
+            // From SerializedFile version 25 the registry is a frame leading the C# class's data,
+            // which no node describes; the flag marks the field it precedes. Only a root object's
+            // fields carry one. The frame is not part of that field, so its references get their own
+            // path root, named after the registry as the node-described versions are.
             if (child.HasSerializedRefs)
             {
                 m_StringBuilder.Clear();
