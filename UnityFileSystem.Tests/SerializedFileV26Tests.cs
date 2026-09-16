@@ -42,16 +42,12 @@ public class SerializedFileV26Tests
         return obj;
     }
 
-    static void ForEachNode(TypeTreeNode node, int depth, System.Action<TypeTreeNode> action)
+    static void ForEachNode(TypeTreeNode node, System.Action<TypeTreeNode> action)
     {
         action(node);
 
-        // The trees are recursive through shared subtrees, so the walk is depth limited.
-        if (depth == 0)
-            return;
-
         foreach (var child in node.Children)
-            ForEachNode(child, depth - 1, action);
+            ForEachNode(child, action);
     }
 
     [Test]
@@ -63,7 +59,7 @@ public class SerializedFileV26Tests
 
         foreach (var obj in sf.Objects)
         {
-            ForEachNode(sf.GetTypeTreeRoot(obj.Id), 6, node =>
+            ForEachNode(sf.GetTypeTreeRoot(obj.Id), node =>
             {
                 if (!node.IsSharedSubtreeRef)
                     return;
@@ -90,7 +86,7 @@ public class SerializedFileV26Tests
 
         foreach (var obj in sf.Objects)
         {
-            ForEachNode(sf.GetTypeTreeRoot(obj.Id), 6, node =>
+            ForEachNode(sf.GetTypeTreeRoot(obj.Id), node =>
             {
                 if (pptr == null && node.IsSharedSubtreeRef && node.Type.StartsWith("PPtr<"))
                     pptr = node;
@@ -110,7 +106,7 @@ public class SerializedFileV26Tests
 
         foreach (var obj in sf.Objects)
         {
-            ForEachNode(sf.GetTypeTreeRoot(obj.Id), 6, node =>
+            ForEachNode(sf.GetTypeTreeRoot(obj.Id), node =>
                 Assert.That(node.IsSharedSubtreeRef, Is.False, $"{node.Name} ({node.Type}) in a version 22 file"));
         }
     }
