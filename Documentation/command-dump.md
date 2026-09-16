@@ -183,11 +183,30 @@ ID: -8138362113332287275 (ClassID: 135) SphereCollider
     z float 0
 ```
 
-An object holding `[SerializeReference]` instances also gets a `references` section listing each
-instance by its `rid`, its concrete C# type and its data. Where that section appears depends on the
-Unity version: up to Unity 6.6 the registry is the last field of the object, and from Unity 6.7 it
-precedes the first field that can hold a reference. The reported `version` is `2` before 6.7 and `3`
-from 6.7. See [TypeTrees](unity-content-format.md#typetrees) for what changed.
+A MonoBehaviour or ScriptableObject with `[SerializeReference]` fields also gets a `references`
+section. The fields themselves only store a `rid`; the instance each one points at is listed once in
+`references`, with its concrete C# type and its values:
+
+```
+  m_Name (string) ScriptableObjectWIthSerializeReference
+  references (ManagedReferenceRegistry)
+    version (int) 3
+    rid(6911265806470873295) ReferencedObject
+      type (ReferencedManagedType)
+        class (string) Data
+        ns (string) MyNamespace
+        asm (string) Assembly-CSharp
+      data ReferencedObjectData
+        Info (string) Some info
+        Flag (UInt8) 1
+  reference (managedReference)
+    rid (SInt64) 6911265806470873295
+```
+
+Two fields assigned the same instance share a `rid`, so it still appears only once. A field set to
+null shows `rid (SInt64) -2`, listed as a `null` entry. The `version` line reflects how the registry
+is stored, which changed in Unity 6.7 - the entries mean the same thing either way, but the section
+appears after the referencing fields in older files and before them in 6.7 and later.
 
 **Refer to the [TextDumper documentation](textdumper.md) for detailed output format explanation.**
 

@@ -303,7 +303,8 @@ public static class SerializedFileDetector
 
     // Maximum version for metadata section parsing (kSharedSubtreeSupport = 26, Unity 6000.7).
     // Files newer than this version may have an unknown format and cannot be parsed safely.
-    private const uint MaxMetadataParseVersion = 26;
+    // Public so that callers and tests can report or check the ceiling without repeating the number.
+    public const uint MaxMetadataParseVersion = 26;
 
     // Reasonable version range for SerializedFiles
     // Unity versions currently use values in the 20s-30s range

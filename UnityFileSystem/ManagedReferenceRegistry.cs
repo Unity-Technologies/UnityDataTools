@@ -26,10 +26,14 @@ public sealed class ManagedReferenceEntry
 // The [SerializeReference] instances owned by one serialized object.
 //
 // From SerializedFile version 25 the registry is a self-delimiting frame in the object's data,
-// sitting immediately before the data of the field flagged HasSerializedRefs. No TypeTree node
-// describes it, so it is read through the native parser rather than reimplemented here - it is the
-// first piece of object layout a TypeTree cannot express, and a second implementation of a layout
-// documented only in the engine source would drift from it.
+// sitting immediately before the data of the field flagged HasSerializedRefs. It is the first piece
+// of object layout no TypeTree node describes, so the tables inside it cannot be walked the way
+// every other field is.
+//
+// They are not parsed here either: UFS_GetRegistryFrame* wraps the engine's own frame parser, so
+// this class calls into the one implementation that exists rather than becoming a second one. Only
+// the 8-byte header is read directly, in GetFrameSize, which is all a walker needs to step over a
+// frame it does not want to read.
 //
 // Earlier files describe the registry with TypeTree nodes instead (versions 1 and 2 of the registry
 // itself), which the callers read through the node walk and present as the same entries.

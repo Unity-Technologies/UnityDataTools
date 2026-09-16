@@ -209,9 +209,10 @@ UnityDataTool serialized-file header level0 --format json
 
 Shows information from the metadata section of a SerializedFile. This includes the Unity version, target platform, TypeTree storage mode (inline, external, or absent), and counts of the type entries recorded in the file. The JSON output includes additional per-type details; see the notes below.
 
-Requires SerializedFile version 19 (Unity 2019.1) or newer, up to version 26 (Unity 6.7). Files
-outside that range are not supported by this subcommand, which reports the version it found and the
-highest one it understands; `header` still works on any version.
+Requires SerializedFile version 19 (Unity 2019.1) or newer. There is also an upper bound: a file
+written by a Unity version newer than this build of UnityDataTool knows about is refused rather than
+misread, with a message naming the version it found and the highest one it understands. `header`
+still works on any version, so it is the way to check what you have.
 
 ### Quick Reference
 

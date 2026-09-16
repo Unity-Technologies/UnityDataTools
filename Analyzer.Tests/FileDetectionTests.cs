@@ -188,15 +188,19 @@ public class FileDetectionTests
     [Test]
     public void TryParseMetadata_VersionTooNew_ReturnsFalseWithMessage()
     {
-        var headerInfo = new SerializedFileInfo { Version = 27 };
+        // Far enough ahead that this does not need revisiting every time a Unity release adds a
+        // version. TryParseMetadata is given the header directly, so the detector's own plausibility
+        // range does not apply here.
+        var headerInfo = new SerializedFileInfo { Version = 99 };
 
         bool result = SerializedFileDetector.TryParseMetadata("irrelevant", headerInfo, out var metadata, out var errorMessage);
 
         Assert.IsFalse(result);
         Assert.IsNull(metadata);
         Assert.IsNotNull(errorMessage);
-        Assert.That(errorMessage, Does.Contain("27"), "Error should mention the actual version");
-        Assert.That(errorMessage, Does.Contain("26"), "Error should mention the maximum supported version");
+        Assert.That(errorMessage, Does.Contain("99"), "Error should mention the actual version");
+        Assert.That(errorMessage, Does.Contain(SerializedFileDetector.MaxMetadataParseVersion.ToString()),
+            "Error should mention the maximum supported version");
         Assert.That(errorMessage, Does.Contain("UnityDataTool"), "Error should mention UnityDataTool");
     }
 
