@@ -16,8 +16,9 @@ namespace UnityDataTools.BinaryFormat;
 /// - Data: One or more blocks of file content. Each block has its own compression type
 ///   recorded in its per-block flags. The metadata section is required to interpret the data.
 ///   A single file can span multiple blocks, and a single block can contain data for multiple files.
-///   The blocks account for every byte of the data (there are no offsets stored - no overlapping or
-///   gaps can be expressed).  However the files could have padding between them.
+///   The blocks account for every byte of the uncompressed data, which has no gaps. On disk the
+///   writer may leave padding between the blocks; from format version 9 each block records its own
+///   position so a reader never has to assume a padding rule.
 ///
 /// The metadata can appear directly after the header (default layout) or at the end of the
 /// file after the data (indicated by the BlocksInfoAtTheEnd flag).
@@ -47,6 +48,24 @@ public class ArchiveHeaderInfo
     /// Archive flag bits (bits 6+ of Flags), with compression bits masked out.
     /// </summary>
     public uint ArchiveFlagBits => Flags & ~0x3Fu;
+
+    /// <summary>
+    /// True when each StorageBlock records its own offset within the data section. Older archives
+    /// don't, and their blocks are stored contiguously.
+    /// </summary>
+    public bool HasStorageBlockOffsets => Signature == "UnityFS" && Version >= 9;
+}
+
+/// <summary>
+/// Archive header flag bits (bits 6 and up of the header Flags field). Bits 0-5 hold the
+/// metadata CompressionType instead.
+/// </summary>
+public static class ArchiveFlags
+{
+    public const uint BlocksAndDirectoryInfoCombined = 0x40;
+    public const uint BlocksInfoAtTheEnd = 0x80;
+    public const uint OldWebPluginCompatibility = 0x100;
+    public const uint BlockInfoNeedPaddingAtStart = 0x200;
 }
 
 public class ArchiveStorageBlock
@@ -56,6 +75,13 @@ public class ArchiveStorageBlock
     public ushort Flags { get; set; }
     public int CompressionType => Flags & 0x3F;
     public bool IsStreamed => (Flags & 0x40) != 0;
+
+    /// <summary>
+    /// Offset of this block's stored bytes from the start of the data section. Serialized from
+    /// format version 9; for older archives the blocks are contiguous and this is accumulated
+    /// from the preceding compressed sizes.
+    /// </summary>
+    public long Offset { get; set; }
 
     /// <summary>
     /// Offset of this block from the start of the archive file.
@@ -276,10 +302,7 @@ public static class ArchiveDetector
         metadata = null;
         errorMessage = null;
 
-        const uint flagBlocksAndDirectoryInfoCombined = 0x40;
-        const uint flagBlocksInfoAtTheEnd = 0x80;
-
-        if ((header.ArchiveFlagBits & flagBlocksAndDirectoryInfoCombined) == 0)
+        if ((header.ArchiveFlagBits & ArchiveFlags.BlocksAndDirectoryInfoCombined) == 0)
         {
             errorMessage = "This archive does not use the combined BlocksInfo+DirectoryInfo layout. Only the combined layout is supported.";
             return false;
@@ -291,7 +314,7 @@ public static class ArchiveDetector
 
             // Calculate where the metadata section starts.
             long metadataOffset;
-            if ((header.ArchiveFlagBits & flagBlocksInfoAtTheEnd) != 0)
+            if ((header.ArchiveFlagBits & ArchiveFlags.BlocksInfoAtTheEnd) != 0)
                 metadataOffset = (long)(header.Size - header.CompressedMetadataSize);
             else
                 metadataOffset = GetHeaderSize(header);
@@ -334,17 +357,17 @@ public static class ArchiveDetector
             using var memStream = new MemoryStream(uncompressedData);
             using var reader = new BinaryReader(memStream);
 
-            var blocksInfo = ParseBlocksInfo(reader);
+            var blocksInfo = ParseBlocksInfo(reader, header);
             var directoryInfo = ParseDirectoryInfo(reader);
 
-            // Populate calculated offsets on each block.
-            long fileOffset = GetDataOffset(header);
+            // Convert each block's data-section-relative Offset into a file position, and accumulate
+            // the offsets into the uncompressed data, which is contiguous.
+            long dataSectionStart = GetDataOffset(header);
             long dataOffset = 0;
             foreach (var block in blocksInfo.Blocks)
             {
-                block.FileOffset = fileOffset;
+                block.FileOffset = dataSectionStart + block.Offset;
                 block.DataOffset = dataOffset;
-                fileOffset += block.CompressedSize;
                 dataOffset += block.UncompressedSize;
             }
 
@@ -371,14 +394,11 @@ public static class ArchiveDetector
     /// </summary>
     public static long GetDataOffset(ArchiveHeaderInfo header)
     {
-        const uint flagBlocksInfoAtTheEnd = 0x80;
-        const uint flagBlockInfoNeedPaddingAtStart = 0x200;
-
         long offset = GetHeaderSize(header);
 
-        if ((header.ArchiveFlagBits & flagBlocksInfoAtTheEnd) == 0)
+        if ((header.ArchiveFlagBits & ArchiveFlags.BlocksInfoAtTheEnd) == 0)
         {
-            if ((header.ArchiveFlagBits & flagBlockInfoNeedPaddingAtStart) != 0)
+            if ((header.ArchiveFlagBits & ArchiveFlags.BlockInfoNeedPaddingAtStart) != 0)
                 offset += AlignTo16(header.CompressedMetadataSize);
             else
                 offset += header.CompressedMetadataSize;
@@ -430,10 +450,8 @@ public static class ArchiveDetector
 
     static int GetHeaderSize(ArchiveHeaderInfo header)
     {
-        const uint flagOldWebPluginCompatibility = 0x100;
-
         int size;
-        if ((header.ArchiveFlagBits & flagOldWebPluginCompatibility) != 0)
+        if ((header.ArchiveFlagBits & ArchiveFlags.OldWebPluginCompatibility) != 0)
             size = 10; // Legacy web plugin signature portion
         else
             size = header.Signature.Length + 1;
@@ -452,25 +470,45 @@ public static class ArchiveDetector
         return size;
     }
 
-    static long AlignTo16(uint value)
+    static long AlignTo16(long value)
     {
         return (value + 15) & ~15L;
     }
 
-    static ArchiveBlocksInfo ParseBlocksInfo(BinaryReader reader)
+    static ArchiveBlocksInfo ParseBlocksInfo(BinaryReader reader, ArchiveHeaderInfo header)
     {
         var hash = reader.ReadBytes(16);
         var blockCount = BinaryFileHelper.ReadUInt32(reader, true);
+        var hasOffsets = header.HasStorageBlockOffsets;
 
         var blocks = new ArchiveStorageBlock[blockCount];
+        long contiguousOffset = 0;
         for (int i = 0; i < blockCount; i++)
         {
-            blocks[i] = new ArchiveStorageBlock
+            var block = new ArchiveStorageBlock
             {
                 UncompressedSize = BinaryFileHelper.ReadUInt32(reader, true),
                 CompressedSize = BinaryFileHelper.ReadUInt32(reader, true),
                 Flags = BinaryFileHelper.ReadUInt16(reader, true),
             };
+
+            if (hasOffsets)
+            {
+                block.Offset = (long)BinaryFileHelper.ReadUInt64(reader, true);
+
+                // Blocks are stored in order and must not overlap. Padding between them is allowed.
+                if (block.Offset < contiguousOffset)
+                    throw new InvalidDataException(
+                        $"Block {i} is stored at data offset {block.Offset}, which overlaps the preceding " +
+                        $"block ending at {contiguousOffset}. The file may be corrupt.");
+            }
+            else
+            {
+                block.Offset = contiguousOffset;
+            }
+
+            contiguousOffset = block.Offset + block.CompressedSize;
+            blocks[i] = block;
         }
 
         return new ArchiveBlocksInfo

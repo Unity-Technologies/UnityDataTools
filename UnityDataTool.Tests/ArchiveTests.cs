@@ -17,12 +17,21 @@ public class ArchiveTests
     private string m_TestDataFolder;
     private string m_ArchivePath;
 
+    // An LZ4 (chunk-based) archive in format version 9, where each block records its own offset
+    // and the writer left padding between them.
+    private string m_Version9ArchivePath;
+
+    // A version 8 archive with several blocks, which has no stored offsets.
+    private string m_LegacyMultiBlockArchivePath;
+
     [OneTimeSetUp]
     public void OneTimeSetup()
     {
         m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "test_folder");
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data");
         m_ArchivePath = Path.Combine(m_TestDataFolder, "AssetBundles", "2023.1.0a16", "scenes");
+        m_Version9ArchivePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundlesLz4", "scenes");
+        m_LegacyMultiBlockArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
     }
@@ -388,5 +397,141 @@ BuildPlayer-OtherScene
         {
             Assert.IsFalse(File.Exists(Path.Combine(m_TestOutputFolder, "archive", file)), $"File should not have been extracted: {file}");
         }
+    }
+
+    [Test]
+    public async Task ArchiveHeader_Version9_AllFlagsRecognized()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "header", m_Version9ArchivePath, "-f", "Json" }));
+
+            var json = JsonDocument.Parse(sw.ToString()).RootElement;
+
+            Assert.AreEqual(9u, json.GetProperty("version").GetUInt32());
+
+            // Unrecognized bits are reported as raw hex, so this catches a flag we don't know about.
+            var flags = json.GetProperty("flags").EnumerateArray().Select(f => f.GetString()).ToArray();
+            Assert.That(flags, Has.None.StartsWith("0x"), $"Unrecognized archive flag bits: {string.Join(", ", flags)}");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    // From version 9 each block records where its stored bytes start, so the reader must take the
+    // position from the block list rather than accumulating the compressed sizes. This checks the
+    // parsed offsets against the actual file: the blocks are in order, the gaps between them are
+    // padding that belongs to no block (all zero bytes), and at least one block sits somewhere
+    // accumulation would not have put it - which is what proves the stored offset is being used.
+    [Test]
+    public async Task ArchiveBlocks_Version9_OffsetsComeFromTheBlockList()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "blocks", m_Version9ArchivePath, "-f", "Json" }));
+
+            var blocks = JsonDocument.Parse(sw.ToString()).RootElement.GetProperty("blocks").EnumerateArray().ToArray();
+            Assert.Greater(blocks.Length, 1, "The test archive is expected to have several chunks.");
+
+            var archiveBytes = File.ReadAllBytes(m_Version9ArchivePath);
+            long totalPadding = 0;
+
+            for (int i = 1; i < blocks.Length; i++)
+            {
+                var previousEnd = blocks[i - 1].GetProperty("fileOffset").GetInt64() +
+                                  blocks[i - 1].GetProperty("compressedSize").GetInt64();
+                var offset = blocks[i].GetProperty("fileOffset").GetInt64();
+
+                Assert.GreaterOrEqual(offset, previousEnd, $"Block {i} overlaps the preceding block.");
+
+                for (var p = previousEnd; p < offset; p++)
+                    Assert.AreEqual(0, archiveBytes[p], $"Padding byte at offset {p} is not zero.");
+
+                totalPadding += offset - previousEnd;
+            }
+
+            Assert.Greater(totalPadding, 0,
+                "The archive's blocks are contiguous, so this test would pass even if the stored offsets were ignored. " +
+                "The fixture needs to be an archive the writer left padding in.");
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    // Version 8 and earlier don't store block offsets; their blocks are contiguous and the parser
+    // has to fall back to accumulating the compressed sizes.
+    [Test]
+    public async Task ArchiveBlocks_LegacyVersion8_BlocksAreContiguous()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "blocks", m_LegacyMultiBlockArchivePath, "-f", "Json" }));
+
+            var blocks = JsonDocument.Parse(sw.ToString()).RootElement.GetProperty("blocks").EnumerateArray().ToArray();
+            Assert.Greater(blocks.Length, 1, "The legacy test archive is expected to have several blocks.");
+
+            for (int i = 1; i < blocks.Length; i++)
+            {
+                var previousEnd = blocks[i - 1].GetProperty("fileOffset").GetInt64() +
+                                  blocks[i - 1].GetProperty("compressedSize").GetInt64();
+                Assert.AreEqual(previousEnd, blocks[i].GetProperty("fileOffset").GetInt64(),
+                    $"Block {i} of a version 8 archive should directly follow the preceding block.");
+            }
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    [Test]
+    public async Task ArchiveInfo_Version9_ReportsPaddingSize()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+
+            Assert.AreEqual(0, await Program.Main(new string[] { "archive", "info", m_Version9ArchivePath, "-f", "Json" }));
+
+            var json = JsonDocument.Parse(sw.ToString()).RootElement;
+
+            Assert.AreEqual("Lz4HC", json.GetProperty("compression").GetString());
+            Assert.Greater(json.GetProperty("blockPaddingSize").GetInt64(), 0);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+    }
+
+    // The native library reads the block offsets independently of the C# parser, so successful
+    // extraction of content spanning several non-contiguous blocks confirms the layout is understood.
+    [Test]
+    public async Task ArchiveExtract_Version9_FilesExtractedSuccessfully()
+    {
+        Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_Version9ArchivePath }));
+
+        // BuildPlayer-Scene1.sharedAssets spans the first eight blocks of the archive.
+        var extractedFile = new FileInfo(Path.Combine(m_TestOutputFolder, "archive", "BuildPlayer-Scene1.sharedAssets"));
+        Assert.IsTrue(extractedFile.Exists, "Expected file not found: BuildPlayer-Scene1.sharedAssets");
+        Assert.AreEqual(761460, extractedFile.Length);
     }
 }
