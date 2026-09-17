@@ -315,6 +315,97 @@ public class DumpTests
         Assert.That(output, Does.Not.Contain("293, 294, 295, 296,"));
     }
 
+    static async Task<string> DumpToString(params string[] args)
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(args));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        return sw.ToString();
+    }
+
+    // The same asset built by Unity 6.0 and 6.7. From SerializedFile version 25 its
+    // [SerializeReference] registry is a frame in the object's data rather than a TypeTree node, so
+    // the two dumps are the reference for that change: the registry version differs, the instance
+    // it holds does not.
+    [TestCase("PlayerWithTypeTrees", 2)]
+    [TestCase("PlayerWithTypeTreesV26", 3)]
+    public async Task Dump_Stdout_SerializeReference_ReadsRegistryWhicheverVersion(string folder, int expectedRegistryVersion)
+    {
+        var path = Path.Combine(m_TestDataFolder, folder, "sharedassets1.assets");
+
+        var output = await DumpToString("dump", path, "--stdout", "--type", "MonoBehaviour");
+
+        Assert.That(output, Does.Contain("m_Name (string) ScriptableObjectWIthSerializeReference"));
+        Assert.That(output, Does.Contain($"version (int) {expectedRegistryVersion}"));
+        Assert.That(output, Does.Contain("rid(6911265806470873295) ReferencedObject"));
+        Assert.That(output, Does.Contain("class (string) Data"));
+        Assert.That(output, Does.Contain("ns (string) MyNamespace"));
+        Assert.That(output, Does.Contain("Info (string) Some info"));
+        Assert.That(output, Does.Contain("Flag (UInt8) 1"));
+
+        // The field pointing at the instance carries its rid. A reader that does not step over the
+        // registry frame reads the frame header here instead, which is a plausible-looking number
+        // rather than an outright failure.
+        Assert.That(output, Does.Contain("rid (SInt64) 6911265806470873295"));
+    }
+
+    // Unity's own version 26 fixture, which carries the [SerializeReference] shapes the rest of the
+    // test data does not. See TestCommon/Data/AssetBundleTypeTreeVariations/README.md.
+    [Test]
+    public async Task Dump_Stdout_Version26_ReadsEveryRegistryShape()
+    {
+        var path = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "v26", "managedreferences.bundle");
+
+        var output = await DumpToString("dump", path, "--stdout", "--type", "MonoBehaviour");
+
+        // A null reference: a record with no type and no data, which only the version 3 registry
+        // can express.
+        Assert.That(output, Does.Contain("rid(-2) ReferencedObject"));
+        Assert.That(output, Does.Contain("empty (managedReference)"));
+
+        // A PPtr inside a referenced object's data.
+        Assert.That(output, Does.Contain("class (string) ManagedReferenceTestBehaviour/TexturedShape"));
+        Assert.That(output, Does.Contain("material (PPtr<$Material>)"));
+
+        // A reference nested inside another, and a collection of references.
+        Assert.That(output, Does.Contain("class (string) ManagedReferenceTestBehaviour/GroupedShape"));
+        Assert.That(output, Does.Contain("inner (managedReference)"));
+        Assert.That(output, Does.Contain("Array<managedRefArrayItem>[4]"));
+
+        // A [Serializable] class with no fields is a compound of no size, not an unresolvable one.
+        Assert.That(output, Does.Contain("noData (ShapeNoData)"));
+
+        // The plain fields either side of the references. A reader that does not step over the
+        // registry frame reads these shifted rather than failing, so they are the real check.
+        Assert.That(output, Does.Contain("before (int) 11"));
+        Assert.That(output, Does.Contain("after (int) 22"));
+    }
+
+    // Shared subtrees (version 26) replace a repeated compound with a single node that has a byte
+    // size and no children of its own - the shape of a basic type. A reader that takes them at face
+    // value drops the compound's fields silently, so the check is that they are still dumped.
+    [Test]
+    public async Task Dump_Stdout_Version26_ExpandsSharedSubtrees()
+    {
+        var path = Path.Combine(m_TestDataFolder, "PlayerWithTypeTreesV26", "level0");
+
+        var output = await DumpToString("dump", path, "--stdout", "--type", "Transform");
+
+        Assert.That(output, Does.Contain("m_LocalPosition (Vector3f)"));
+        Assert.That(output, Does.Contain("m_GameObject (PPtr<GameObject>)"));
+        Assert.That(output, Does.Contain("m_FileID (int)"));
+        Assert.That(output, Does.Contain("m_PathID (SInt64)"));
+    }
+
     // The expected bit patterns are the well-known IEEE 754 representations of the
     // SerializationDemo field values (also verified against python struct.pack).
     // Runs under a comma-decimal locale to confirm the output is culture-invariant.

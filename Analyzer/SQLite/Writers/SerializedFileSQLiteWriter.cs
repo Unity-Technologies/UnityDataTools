@@ -180,6 +180,11 @@ public class SerializedFileSQLiteWriter : IDisposable
         // VFS path here may be a real file or an entry inside a mounted archive.
         using (var detectStream = new UnityFileStream(fullPath))
         {
+            // A version this build cannot read reaches the native loader as a generic failure, so
+            // say which version it is here rather than leaving the user with "may be corrupted".
+            if (SerializedFileDetector.IsVersionUnsupported(detectStream, out var versionError))
+                throw new SerializedFileOpenException(fullPath, versionError);
+
             if (SerializedFileDetector.IsMissingTypeTrees(detectStream))
                 throw new SerializedFileOpenException(fullPath, missingTypeTrees: true);
         }
@@ -319,7 +324,7 @@ public class SerializedFileSQLiteWriter : IDisposable
                     m_TypeSet.Add(obj.TypeId);
                 }
 
-                var randomAccessReader = new RandomAccessReader(sf, root, reader, offset);
+                var randomAccessReader = new RandomAccessReader(sf, root, reader, offset, objectSize: obj.Size);
 
                 string name = string.Empty;
                 long streamDataSize = 0;
@@ -356,7 +361,7 @@ public class SerializedFileSQLiteWriter : IDisposable
                 // still resolves referenced object ids (AddReference skips the insert).
                 if (!m_SkipReferences || !m_SkipCrc)
                 {
-                    crc32 = pptrReader.Process(currentObjectId, offset, root);
+                    crc32 = pptrReader.Process(currentObjectId, offset, obj.Size, root);
                 }
 
                 // convert this to the new syntax

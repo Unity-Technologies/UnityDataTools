@@ -27,6 +27,15 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
     Dictionary<string, RandomAccessReader> m_ChildrenCacheObject;
     List<RandomAccessReader> m_ChildrenCacheArray;
     private TypeTreeNode m_TypeTreeNode;
+    // A registry frame is honoured in root context only; a referenced instance's data has none.
+    bool m_IsRoot;
+    ManagedReferenceRegistry m_Registry;
+    // Where this object's registry frame starts, once the field walk has passed it. -1 until then,
+    // and for the versions that describe the registry with nodes instead.
+    long m_RegistryFrameOffset = -1;
+    // End of the object being read, when the caller knew it. The frame's own length field is
+    // untrusted, so it must be bounded by something the caller actually holds.
+    long m_ObjectEnd;
 
     public int Size => m_Size.Value;
     public long Offset { get; }
@@ -36,9 +45,21 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
     public bool IsArrayOfBasicTypes => m_TypeTreeNode.IsArray && m_TypeTreeNode.Children[1].IsBasicType;
     public bool IsArray => m_TypeTreeNode.IsArray;
 
-    public RandomAccessReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset, bool isReferencedObject = false)
+    // objectSize is the size of the object at `offset`, from its ObjectInfo. It bounds the
+    // [SerializeReference] registry frame read, whose own length field cannot be trusted; pass it
+    // whenever it is known. Without it the bound is the rest of the file.
+    public RandomAccessReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset,
+        bool isReferencedObject = false, long objectSize = 0)
+        : this(serializedFile, node, reader, offset, isReferencedObject, isRoot: true, objectSize)
+    {
+    }
+
+    RandomAccessReader(SerializedFile serializedFile, TypeTreeNode node, UnityFileReader reader, long offset,
+        bool isReferencedObject, bool isRoot, long objectSize = 0)
     {
         m_SerializedFile = serializedFile;
+        m_IsRoot = isRoot;
+        m_ObjectEnd = objectSize > 0 ? offset + objectSize : 0;
 
         // Special case for vector and map objects, they always have a single Array child so we skip it.
         if (node.Type == "vector" || node.Type == "map" || node.Type == "staticvector")
@@ -63,10 +84,12 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
             // created and don't match the TypeTree.
             if (m_TypeTreeNode.IsManagedReferenceRegistry)
             {
-                var versionReader = new RandomAccessReader(m_SerializedFile, node.Children[0], reader, offset);
+                var versionReader = new RandomAccessReader(m_SerializedFile, node.Children[0], reader, offset, isReferencedObject: false, isRoot: false);
                 m_ChildrenCacheObject["version"] = versionReader;
                 int version = versionReader.GetValue<int>();
                 long curOffset = versionReader.Offset + versionReader.Size;
+
+                var entries = new List<ManagedReferenceEntry>();
 
                 if (version == 1)
                 {
@@ -78,7 +101,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                     do
                     {
                         // Create the referenced object reader.
-                        var refObjReader = new RandomAccessReader(m_SerializedFile, refObjNode, reader, curOffset, true);
+                        var refObjReader = new RandomAccessReader(m_SerializedFile, refObjNode, reader, curOffset, isReferencedObject: true, isRoot: false);
 
                         // A referenced object with null data means that we reached the end of the referenced objects.
                         if (refObjReader["data"] == null)
@@ -87,7 +110,8 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                         }
 
                         // Add the reader to cache.
-                        m_ChildrenCacheObject[$"rid({i++})"] = refObjReader;
+                        m_ChildrenCacheObject[$"rid({i})"] = refObjReader;
+                        entries.Add(MakeEntry(refObjReader, i++));
                         curOffset += refObjReader.Size;
                     } while (true);
                 }
@@ -110,8 +134,10 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                     for (int i = 0; i < arraySize; ++i)
                     {
                         // Create and cache the referenced object.
-                        var refObjReader = new RandomAccessReader(m_SerializedFile, refObjNode, reader, curOffset, true);
-                        m_ChildrenCacheObject[$"rid({refObjReader["rid"].GetValue<long>()})"] = refObjReader;
+                        var refObjReader = new RandomAccessReader(m_SerializedFile, refObjNode, reader, curOffset, isReferencedObject: true, isRoot: false);
+                        var rid = refObjReader["rid"].GetValue<long>();
+                        m_ChildrenCacheObject[$"rid({rid})"] = refObjReader;
+                        entries.Add(MakeEntry(refObjReader, rid));
                         curOffset += refObjReader.Size;
                     }
                 }
@@ -119,6 +145,8 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
                 {
                     throw new Exception($"Unsupported ManagedReferenceRegistry version {version}");
                 }
+
+                m_Registry = ManagedReferenceRegistry.FromEntries(version, entries);
             }
             else if (isReferencedObject)
             {
@@ -152,11 +180,69 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
 
                     // Manually create and cache a reader for the referenced type data, using its own TypeTree.
                     var refTypeDataReader = new RandomAccessReader(m_SerializedFile, refTypeRoot, reader,
-                        referencedManagedType.Offset + referencedManagedType.Size);
+                        referencedManagedType.Offset + referencedManagedType.Size, isReferencedObject: false, isRoot: false);
                     m_ChildrenCacheObject["data"] = refTypeDataReader;
                 }
             }
         }
+    }
+
+    // The [SerializeReference] instances this object owns, or null when it has none. Reading it
+    // walks the object's fields, since that is what locates the registry in either layout.
+    public ManagedReferenceRegistry Registry
+    {
+        get
+        {
+            if (m_Registry != null)
+                return m_Registry;
+
+            if (!m_IsRoot || !IsObject)
+                return null;
+
+            foreach (var child in m_TypeTreeNode.Children)
+            {
+                // Versions 1 and 2 describe the registry with a node of its own.
+                if (child.IsManagedReferenceRegistry)
+                    return GetChild(child.Name).m_Registry;
+
+                // Version 3 has no node; reading the field the frame precedes walks past it, which
+                // is what records where it starts.
+                if (child.HasSerializedRefs)
+                {
+                    GetChild(child.Name);
+                    m_Registry = ManagedReferenceRegistry.ReadFrame(m_Reader, m_RegistryFrameOffset,
+                        RemainingBytes(m_RegistryFrameOffset));
+                    return m_Registry;
+                }
+            }
+
+            return null;
+        }
+    }
+
+    // What the caller holds from `offset`: the object's own bytes when its size was given, and the
+    // rest of the file otherwise.
+    long RemainingBytes(long offset) => (m_ObjectEnd > 0 ? m_ObjectEnd : m_Reader.Length) - offset;
+
+    // Maps one version 1 or 2 registry entry, already read through its TypeTree nodes, onto the
+    // shared entry shape.
+    static ManagedReferenceEntry MakeEntry(RandomAccessReader referencedObject, long rid)
+    {
+        var data = referencedObject["data"];
+
+        if (data == null)
+            return new ManagedReferenceEntry { Rid = rid, IsNull = true };
+
+        var type = referencedObject["type"];
+
+        return new ManagedReferenceEntry
+        {
+            Rid = rid,
+            ClassName = type["class"].GetValue<string>(),
+            Namespace = type["ns"].GetValue<string>(),
+            AssemblyName = type["asm"].GetValue<string>(),
+            DataOffset = data.Offset,
+        };
     }
 
     public bool HasChild(string name)
@@ -210,6 +296,12 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
         {
             size = m_Reader.ReadInt32(Offset) + 4;
         }
+        else if (m_TypeTreeNode.Children.Count == 0)
+        {
+            // A compound with no fields, which a [Serializable] class with nothing serialized
+            // reaches. It occupies whatever its own node says, normally nothing.
+            size = Math.Max(m_TypeTreeNode.Size, 0);
+        }
         else
         {
             var lastChild = GetChild(m_TypeTreeNode.Children.Last().Name);
@@ -258,7 +350,15 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
         {
             var child = m_TypeTreeNode.Children[i];
 
-            nodeReader = new RandomAccessReader(m_SerializedFile, child, m_Reader, offset);
+            // A version 3 registry sits in the data before this field, so the field starts past
+            // it. Only its size is needed to get there; Registry reads the tables on demand.
+            if (m_IsRoot && child.HasSerializedRefs)
+            {
+                m_RegistryFrameOffset = offset;
+                offset += ManagedReferenceRegistry.GetFrameSize(m_Reader, offset, RemainingBytes(offset));
+            }
+
+            nodeReader = new RandomAccessReader(m_SerializedFile, child, m_Reader, offset, isReferencedObject: false, isRoot: false);
             m_ChildrenCacheObject.Add(child.Name, nodeReader);
             m_LastCachedChild = nodeReader;
 
@@ -314,7 +414,7 @@ public class RandomAccessReader : IEnumerable<RandomAccessReader>
 
         for (int i = m_ChildrenCacheArray.Count; i < arraySize; ++i)
         {
-            nodeReader = new RandomAccessReader(m_SerializedFile, dataNode, m_Reader, offset);
+            nodeReader = new RandomAccessReader(m_SerializedFile, dataNode, m_Reader, offset, isReferencedObject: false, isRoot: false);
             m_ChildrenCacheArray.Add(nodeReader);
             m_LastCachedChild = nodeReader;
 

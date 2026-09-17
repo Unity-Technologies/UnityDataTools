@@ -4,6 +4,7 @@ This folder contains variations of the TypeTree representations in the newest Se
 
 - **v22** is used in recent versions of Unity
 - **v23** is introduced in Unity 6.5
+- **v26** is introduced in Unity 6.7
 
 ## Folder Overview
 
@@ -14,6 +15,7 @@ This folder contains variations of the TypeTree representations in the newest Se
 | `v23_Inline/` | v23 | Inline | Addressables | Unity 6000.6.0a1 |
 | `AssetBundle-NoTypeTree/` | v22 | Disabled (`DisableWriteTypeTree`) | `BuildPipeline.BuildAssetBundles` | Unity 6000.0.65f1 |
 | `AssetBundle-NoTypeTreeNoVersion/` | v22 | Disabled (`DisableWriteTypeTree` + `AssetBundleStripUnityVersion`) | `BuildPipeline.BuildAssetBundles` | Unity 6000.0.65f1 |
+| `v26/` | v26 | Inline, with shared subtrees | `BuildPipeline.BuildAssetBundles` | Unity 6000.7.0b2 |
 
 ## Addressable Builds (v22, v23_extracted, v23_Inline)
 
@@ -49,6 +51,29 @@ These three folders are builds of the same tiny Addressables project. They each 
 
 - Serialized file extracted from `MonoScript_monoscripts_dde848dc9848681e340a8b4fa9bd7578.bundle`.
 - Actual name inside AssetBundle: `CAB-d57a1d89ac0708bf030936c59479c685`
+
+## v26
+
+### managedreferences.bundle
+
+Unity's own fixture for the version 26 format, copied from
+`Tests/Unity.PureCSharpTests/UnityFileSystemApi/data/assetbundlewithsharedsubtrees` in the Unity
+source tree. It is shared with that test corpus deliberately, so the two stay comparable: its
+`SerializeReferencePolymorphismExample` is the same script as the one in `UnityProjects/Baseline`,
+which is what lets the version 1, 2 and 3 registry layouts be compared from one source.
+
+It carries the `[SerializeReference]` shapes no other fixture here has, all on
+`ManagedReferenceTestBehaviour`:
+
+- a null reference (a registry record with no type and no data)
+- two instances of one type, and one instance referred to from two fields
+- a `PPtr` inside a referenced object's data
+- a collection of references
+- a reference nested inside another, which is what puts the records in children-first order
+- a `[Serializable]` class with no fields, which is a compound of no size rather than an
+  unresolvable one
+- a plain `int` field before and after the references, which is what catches a reader that does not
+  step over the registry frame: it reads those two shifted rather than failing outright
 
 ## Built-in AssetBundle Builds (AssetBundle-NoTypeTree, AssetBundle-NoTypeTreeNoVersion)
 

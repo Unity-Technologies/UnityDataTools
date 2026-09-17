@@ -51,6 +51,7 @@ public class PPtrAndCrcProcessor : IDisposable
 
     // State for the object currently being processed, (re)initialized by each Process() call.
     private long m_Offset;       // current read position within m_Reader
+    private long m_ObjectEnd;    // end of the object being processed; bounds the registry frame read
     private long m_ObjectId;     // analyzer id of the object being processed, passed to the callback
     private uint m_Crc32;        // CRC accumulated so far for this object
 
@@ -85,23 +86,58 @@ public class PPtrAndCrcProcessor : IDisposable
         m_resourceReaders.Clear();
     }
 
-    // Walks the serialized object rooted at `node`, whose data starts at `offset` in the reader,
-    // emitting every PPtr through the callback. Returns a CRC32 fingerprint of the object's content
-    // (0 when CRC is disabled). `objectId` is the analyzer id of this object, forwarded to the callback.
-    public uint Process(long objectId, long offset, TypeTreeNode node)
+    // Walks the serialized object rooted at `node`, whose data starts at `offset` in the reader and
+    // is `size` bytes long, emitting every PPtr through the callback. Returns a CRC32 fingerprint of
+    // the object's content (0 when CRC is disabled). `objectId` is the analyzer id of this object,
+    // forwarded to the callback.
+    public uint Process(long objectId, long offset, long size, TypeTreeNode node)
     {
         m_Offset = offset;
+        m_ObjectEnd = offset + size;
         m_ObjectId = objectId;
         m_Crc32 = 0;
 
         foreach (var child in node.Children)
         {
+            // A version 3 registry sits here rather than in a node (see
+            // ProcessManagedReferenceRegistry). It is not part of the field that follows it, so its
+            // references get their own path root, named as the node-described versions are.
+            if (child.HasSerializedRefs)
+            {
+                m_StringBuilder.Clear();
+                m_StringBuilder.Append("references.");
+                ProcessManagedReferenceFrame();
+            }
+
             m_StringBuilder.Clear();
             m_StringBuilder.Append(child.Name);
             ProcessNode(child, false);
         }
 
         return m_Crc32;
+    }
+
+    // Walks a version 3 registry: the frame's header and tables are CRC'd as the raw bytes they
+    // are, then each entry's data is walked through its own type tree, exactly as the node-described
+    // versions are.
+    private void ProcessManagedReferenceFrame()
+    {
+        var registry = ManagedReferenceRegistry.ReadFrame(m_Reader, m_Offset, m_ObjectEnd - m_Offset);
+        var frameStart = m_Offset;
+
+        // Everything ahead of the first blob is the header and the two tables.
+        AppendCrc(frameStart, (int)(registry.BlobsOffset - frameStart));
+
+        foreach (var entry in registry.Entries)
+        {
+            if (entry.IsNull)
+                continue;
+
+            m_Offset = entry.DataOffset;
+            ProcessRefTypeData(entry.Rid, entry.ClassName, entry.Namespace, entry.AssemblyName);
+        }
+
+        m_Offset = frameStart + registry.FrameSize;
     }
 
     private void ProcessNode(TypeTreeNode node, bool isInManagedReferenceRegistry)
@@ -268,10 +304,10 @@ public class PPtrAndCrcProcessor : IDisposable
     }
 
     // A ManagedReferenceRegistry holds the [SerializeReference] instances owned by this object.
-    // In YAML/JSON it is the "references:" section that always appears at the end of a
-    // MonoBehaviour/ScriptableObject. Each instance is stored here exactly once; the fields that
-    // point at it (elsewhere in the object) only store its "rid", so shared instances and cycles
-    // collapse to the same rid.
+    // In YAML/JSON it is the "references:" section of a MonoBehaviour/ScriptableObject, which
+    // appears at the end of the object up to Unity 6.6 and ahead of the referencing fields from
+    // 6.7. Each instance is stored here exactly once; the fields that point at it (elsewhere in the
+    // object) only store its "rid", so shared instances and cycles collapse to the same rid.
     //
     // Given this C# source:
     //
@@ -304,10 +340,21 @@ public class PPtrAndCrcProcessor : IDisposable
     // a different TypeTree for every entry (see ProcessManagedReferenceData) - which is exactly why
     // finding references inside the registry is so much more involved than for the rest of the object.
     //
-    // Two on-disk versions exist:
+    // Three on-disk versions exist:
     //   version 1 - entries stored back to back and terminated by a sentinel type (see
     //               ProcessManagedReferenceData); the rid is implied by position.
     //   version 2 - entries stored as a "RefIds" array, each element carrying its own rid.
+    //   version 3 - from SerializedFile version 25 (Unity 6.7). No node describes it at all: the
+    //               registry is a self-delimiting frame of raw bytes leading the C# class's own
+    //               data, so it sits after the built-in fields (m_GameObject, m_Name, ...) and
+    //               before the first field the script declares - which is the field flagged
+    //               HasSerializedRefs, whether or not that field is itself a reference. It holds a
+    //               table of type names and a table of records indexing into it; a record can be a
+    //               null entry, which v1 and v2 could not express. Only a root object's data
+    //               carries a frame: the same TypeTree used to lay out an instance's data inside
+    //               the registry keeps the flag but has no frame, which is why every walker honours
+    //               it only while iterating a root object's fields.
+    //               ManagedReferenceRegistry reads it; see ProcessManagedReferenceFrame here.
     private void ProcessManagedReferenceRegistry(TypeTreeNode node)
     {
         if (node.Children.Count < 2)
@@ -393,18 +440,24 @@ public class PPtrAndCrcProcessor : IDisposable
             return false;
         }
 
-        // The data block follows the referenced type's own TypeTree, not this object's, so look it
-        // up by FQN and walk it (isInManagedReferenceRegistry = true so we don't re-enter the registry).
+        ProcessRefTypeData(rid, className, namespaceName, assemblyName);
+
+        return true;
+    }
+
+    // The data block follows the referenced type's own TypeTree, not the containing object's, so it
+    // is looked up by FQN and walked with isInManagedReferenceRegistry set, which keeps the walk
+    // from re-entering the registry.
+    private void ProcessRefTypeData(long rid, string className, string namespaceName, string assemblyName)
+    {
         var refTypeTypeTree = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
 
-        var size = m_StringBuilder.Length;
+        var pathLength = m_StringBuilder.Length;
         m_StringBuilder.Append("rid(");
         m_StringBuilder.Append(rid);
         m_StringBuilder.Append(").data");
         ProcessNode(refTypeTypeTree, true);
-        m_StringBuilder.Remove(size, m_StringBuilder.Length - size);
-
-        return true;
+        m_StringBuilder.Remove(pathLength, m_StringBuilder.Length - pathLength);
     }
 
     private void ExtractPPtr(string referencedType)

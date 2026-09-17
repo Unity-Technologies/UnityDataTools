@@ -25,4 +25,14 @@ public class SerializedFileOpenException : Exception
         FilePath = filePath;
         MissingTypeTrees = missingTypeTrees;
     }
+
+    /// <summary>
+    /// Carries a specific reason instead of the generic one, for the cases the caller diagnosed
+    /// itself rather than learning from a failed open.
+    /// </summary>
+    public SerializedFileOpenException(string filePath, string reason)
+        : base(reason)
+    {
+        FilePath = filePath;
+    }
 }

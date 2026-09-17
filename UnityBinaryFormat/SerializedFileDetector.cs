@@ -115,6 +115,14 @@ public class TypeTreeInfo
     // -----------------------------------------------------------------------
 
     /// <summary>
+    /// Format version stamped into the inline TypeTree blob (version >= 23, which is where the blob
+    /// gained its prefix). Up to and including 23 the stamp repeats the SerializedFile version;
+    /// from 24 (kIndependentTypeTreeVersion) TypeTrees are versioned independently, starting at 32.
+    /// 0 when there is no inline blob to read it from.
+    /// </summary>
+    public uint TypeTreeFormatVersion { get; set; }
+
+    /// <summary>
     /// C# class name of the SerializeReference type.
     /// string.Empty for regular (non-ref) type entries.
     /// </summary>
@@ -161,6 +169,30 @@ public class ScriptType
     /// The object ID (localIdentifierInFile) of the MonoScript within the identified file.
     /// </summary>
     public long PathID { get; set; }
+}
+
+/// <summary>
+/// One entry of the shared subtree table (version >= 26, kSharedSubtreeSupport). Each entry is a
+/// compound subtree the file stores once, keyed by the hash of its content, that the file's
+/// TypeTrees reference in place of repeating it.
+/// </summary>
+public class SharedSubtreeInfo
+{
+    /// <summary>
+    /// Hash identifying the subtree's content. Also the key used to fetch it from an external
+    /// TypeTree store when the blob is not inline.
+    /// </summary>
+    public UnityHash128 ContentHash { get; set; }
+
+    /// <summary>
+    /// Size in bytes of the inline blob. 0 means the blob was extracted to an external store.
+    /// </summary>
+    public uint SerializedSize { get; set; }
+
+    /// <summary>
+    /// True when the blob is stored in this file rather than an external TypeTree store.
+    /// </summary>
+    public bool Inline => SerializedSize > 0;
 }
 
 /// <summary>
@@ -214,6 +246,16 @@ public class SerializedFileMetadata
     /// Null until the metadata section has been parsed.
     /// </summary>
     public ExternalReference[] ExternalReferences { get; set; }
+
+    /// <summary>
+    /// Number of shared subtree entries. Always 0 for files with version &lt; 26.
+    /// </summary>
+    public int SharedSubtreeCount { get; set; }
+
+    /// <summary>
+    /// Summary of each shared subtree entry. Empty array for files with version &lt; 26.
+    /// </summary>
+    public SharedSubtreeInfo[] SharedSubtrees { get; set; } = Array.Empty<SharedSubtreeInfo>();
 }
 
 /// <summary>
@@ -259,9 +301,10 @@ public static class SerializedFileDetector
     // Older files have format differences that we do not attempt to support.
     private const uint MinMetadataParseVersion = 19;
 
-    // Maximum version for metadata section parsing (kExtractedTypeTreeSupport = 23, Unity 6000.4).
+    // Maximum version for metadata section parsing (kSharedSubtreeSupport = 26, Unity 6000.7).
     // Files newer than this version may have an unknown format and cannot be parsed safely.
-    private const uint MaxMetadataParseVersion = 23;
+    // Public so that callers and tests can report or check the ceiling without repeating the number.
+    public const uint MaxMetadataParseVersion = 26;
 
     // Reasonable version range for SerializedFiles
     // Unity versions currently use values in the 20s-30s range
@@ -280,11 +323,19 @@ public static class SerializedFileDetector
     private const uint SupportsRefObjectVersion = 20;        // m_RefTypes list (appears after externals)
     private const uint StoresTypeDependenciesVersion = 21;   // Per-type dependency list added
     private const uint ExtractedTypeTreeSupportVersion = 23; // TypeTree blob may be extracted externally
+    // 24 and 25 have no constant here because they leave the metadata layout alone: 24 moves the
+    // TypeTree blob onto its own version number space and 25 moves the [SerializeReference] registry
+    // into the object's data, neither of which this parser reads.
+    private const uint SharedSubtreeSupportVersion = 26;     // Shared subtree table follows m_RefTypes
 
     // Per-type-entry constants
     private const int MonoBehaviourClassID = 114;    // persistentTypeID for MonoBehaviour
     private const int UndefinedPersistentTypeID = -1; // persistentTypeID for types with no known ClassID
     private const uint TypeTreeNodeSize = 32;         // Bytes per node in the blob (version >= 18)
+
+    // A TypeTree blob with the version >= 23 prefix starts [uint32 'tthm'][uint32 version].
+    private const uint TypeTreeBlobMagic = 0x7474686D;  // 'tthm', stored as this uint32 value
+    private const int TypeTreeBlobPrefixSize = 8;
 
     /// <summary>
     /// Attempts to detect if a file is a Unity SerializedFile by reading and validating its header.
@@ -656,6 +707,19 @@ public static class SerializedFileDetector
     }
 
     /// <summary>
+    /// Reports whether the stream is a SerializedFile whose version this parser cannot read.
+    /// Returns true only when the version is known and outside the supported range, so a stream
+    /// that is not a SerializedFile at all is left for the caller's usual handling.
+    /// </summary>
+    public static bool IsVersionUnsupported(Stream stream, out string errorMessage)
+    {
+        errorMessage = null;
+
+        return TryDetectSerializedFile(stream, out var fileInfo)
+            && !IsMetadataVersionSupported(fileInfo.Version, out errorMessage);
+    }
+
+    /// <summary>
     /// Returns true when the stream is a SerializedFile we can positively confirm has no TypeTrees.
     /// Returns false for files that have TypeTrees and for anything we cannot parse (so callers fall
     /// back to the normal open path rather than skipping a file we simply did not understand).
@@ -771,6 +835,34 @@ public static class SerializedFileDetector
             for (int i = 0; i < refTypeCount; i++)
                 refTypeTrees[i] = ReadTypeEntry(reader, version, swap, isRefType: true, enableTypeTree);
             metadata.SerializedReferenceTypeTrees = refTypeTrees;
+
+            if (version < SharedSubtreeSupportVersion)
+                return;
+
+            // --- Shared subtree table (version >= 26) ---
+            // Per-entry layout:
+            //   [Hash128 contentHash]
+            //   [uint32  blobSize]   (0 = blob extracted to an external TypeTree store)
+            //   [blob]               (blobSize bytes, absent when the blob was extracted)
+            int subtreeCount = BinaryFileHelper.ReadInt32(reader, swap);
+            metadata.SharedSubtreeCount = subtreeCount;
+
+            var subtrees = new SharedSubtreeInfo[subtreeCount];
+            for (int i = 0; i < subtreeCount; i++)
+            {
+                var contentHash = BinaryFileHelper.ReadHash128(reader, swap);
+                uint blobSize = BinaryFileHelper.ReadUInt32(reader, swap);
+
+                if (blobSize > 0)
+                    stream.Seek(blobSize, SeekOrigin.Current);
+
+                subtrees[i] = new SharedSubtreeInfo
+                {
+                    ContentHash = contentHash,
+                    SerializedSize = blobSize,
+                };
+            }
+            metadata.SharedSubtrees = subtrees;
         }
         catch
         {
@@ -868,7 +960,15 @@ public static class SerializedFileDetector
                 // Version >= 23 with inline blob: skip exactly typeTreeSize bytes.
                 // The blob starts with its own 8-byte magic+version prefix, followed by
                 // node count, char count, node array, and string buffer.
-                stream.Seek(typeTreeSize, SeekOrigin.Current);
+                var blobStart = stream.Position;
+
+                if (typeTreeSize >= TypeTreeBlobPrefixSize &&
+                    BinaryFileHelper.ReadUInt32(reader, swap) == TypeTreeBlobMagic)
+                {
+                    info.TypeTreeFormatVersion = BinaryFileHelper.ReadUInt32(reader, swap);
+                }
+
+                stream.Seek(blobStart + typeTreeSize, SeekOrigin.Begin);
             }
             info.InlineTypeTree = true;
         }

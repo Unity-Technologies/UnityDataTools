@@ -120,12 +120,13 @@ public class AnalyzerTool
                         Console.Error.WriteLine($"Skipped (no TypeTrees): {relativePath}");
                         countNoTypeTrees++;
                     }
-                    catch (SerializedFileOpenException)
+                    catch (SerializedFileOpenException e)
                     {
                         // Expected failure — the file content could not be parsed.
                         // Don't print a stack trace; it adds no value for this known failure mode.
                         EraseProgressLine();
                         Console.Error.WriteLine($"Failed to open: {relativePath}");
+                        Console.Error.WriteLine($"  {e.Message}");
                         countFailures++;
                     }
                     catch (AnalyzeDuplicateException e)

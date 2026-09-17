@@ -264,6 +264,11 @@ public static class SerializedFileTool
         Console.WriteLine($"{"TypeTree Definitions",-20} {typeTreeDefinitions}");
         Console.WriteLine($"{"TypeTree Count",-20} {metadata.TypeTreeCount}");
         Console.WriteLine($"{"RefType Count",-20} {metadata.SerializedReferenceTypeTreeCount}");
+
+        // Only files from Unity 6.7 and later have a shared subtree table, so stay quiet about it
+        // for the older files that make up most of what this command is pointed at.
+        if (metadata.SharedSubtreeCount > 0)
+            Console.WriteLine($"{"Shared Subtrees",-20} {metadata.SharedSubtreeCount}");
     }
 
     private static void OutputMetadataJson(SerializedFileMetadata metadata)
@@ -278,6 +283,13 @@ public static class SerializedFileTool
             typeTrees = metadata.TypeTrees?.Select(TypeTreeInfoToJson).ToArray(),
             serializedReferenceTypeTrees = metadata.SerializedReferenceTypeTrees?.Select(TypeTreeInfoToJson).ToArray(),
             scriptTypes = metadata.ScriptTypes?.Select(s => new { fileID = s.FileID, pathID = s.PathID }).ToArray(),
+            sharedSubtreeCount = metadata.SharedSubtreeCount,
+            sharedSubtrees = metadata.SharedSubtrees?.Select(t => new
+            {
+                contentHash = t.ContentHash.ToString(),
+                serializedSize = t.SerializedSize,
+                inline = t.Inline,
+            }).ToArray(),
         };
 
         var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
@@ -295,6 +307,7 @@ public static class SerializedFileTool
             typeTreeStructureHash = info.TypeTreeStructureHash.ToString(),
             typeTreeContentHash = info.TypeTreeContentHash.ToString(),
             typeTreeSerializedSize = info.TypeTreeSerializedSize,
+            typeTreeFormatVersion = info.TypeTreeFormatVersion,
             inlineTypeTree = info.InlineTypeTree,
             className = info.ClassName,
             namespaceName = info.Namespace,
