@@ -82,6 +82,32 @@ Note: the `serialized-file` and `archive` command do not require TypeTrees.
 >[!TIP]
 >The `binary2text` tool supports an optional argument `-typeinfo` to enable dumping out the TypeTrees in a SerializedFile header.  That is a useful way to learn more about TypeTrees and to see exactly how Unity data is represented in the binary format.
 
+#### What changed in Unity 6.7
+
+The SerializedFile format moved from version 23 to version 26 during Unity 6.7, and two of those
+changes alter how a reader has to interpret a file. UnityDataTool reads both the old and the new
+shape, so this matters mainly when you compare a dump from Unity 6.6 with one from 6.7.
+
+**Shared sub-TypeTrees.** A compound that appears in several of a file's types - `Vector3f`,
+`ColorRGBA`, `PPtr<T>` and so on - is now stored once in a table at the end of the file's metadata,
+keyed by the hash of its content, and each type that uses it carries a single node referencing that
+entry. The serialized objects are unchanged; only the TypeTrees are smaller. `serialized-file
+metadata` reports the table as `Shared Subtrees`.
+
+**The `[SerializeReference]` registry.** Up to Unity 6.6 the registry was described by TypeTree
+nodes like any other field, and appeared at the end of the object. From 6.7 it is a self-contained
+frame that leads the C# class's own data - after the built-in fields such as `m_GameObject` and
+`m_Name`, and before the first field declared by the script - and no TypeTree node describes it.
+Putting the registry first is what lets a reader assign each reference as it reads the field,
+instead of patching it afterwards. `dump` prints its contents in the same shape either way, so the visible difference is
+the reported registry `version` (2 before, 3 from 6.7) and where it appears in the output. The new
+format can also express a null reference, which the older ones could not.
+
+TypeTrees are also versioned independently of the SerializedFile from 6.7 onwards, starting at
+version 32, so a future TypeTree change no longer bumps the file version. `serialized-file metadata
+-f Json` reports each type's stamp as `typeTreeFormatVersion`: files before version 23 have no
+stamp and report 0, version 23 files report 23, and 6.7 files report 32 or higher.
+
 #### Extracted Typetrees
 
 Starting with Unity 6.5 and Addressables 2.9 it is possible to extract the TypeTrees from all the SerializedFiles in an Addressable build into a shared file.  This can reduce the size of the build output, because the TypeTree information is no longer duplicated in each file.

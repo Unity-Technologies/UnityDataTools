@@ -22,6 +22,8 @@ public class TextDumperTool
 
     // Set during the processed of each Serialized File
     UnityFileReader m_Reader;
+    // End of the object currently being dumped; bounds the registry frame read.
+    long m_ObjectEnd;
     SerializedFile m_SerializedFile;
 
     public enum DumpFormat
@@ -82,7 +84,7 @@ public class TextDumperTool
 
     int DumpSerializedFile()
     {
-        if (ReportIfMissingTypeTrees(m_Options.Path, m_Options.Path))
+        if (ReportIfNotDumpable(m_Options.Path, m_Options.Path))
             return 1;
 
         try
@@ -111,11 +113,20 @@ public class TextDumperTool
 
     // dump needs TypeTrees to interpret object data, so a SerializedFile without them cannot be dumped.
     // Detecting this up front avoids handing the file to the native loader, which would otherwise emit
-    // misleading version mismatch errors or crash the process. Returns true (and prints a clear message)
-    // when the file has no TypeTrees. The path may be a real file or an entry in a mounted archive.
-    bool ReportIfMissingTypeTrees(string path, string displayName)
+    // misleading version mismatch errors or crash the process. The same goes for a version this build
+    // does not know: the native loader reports it as a file that may be corrupt, which sends the reader
+    // looking for the wrong problem. Returns true (and prints a clear message) when the file cannot be
+    // dumped. The path may be a real file or an entry in a mounted archive.
+    bool ReportIfNotDumpable(string path, string displayName)
     {
         using var stream = new UnityFileStream(path);
+
+        if (SerializedFileDetector.IsVersionUnsupported(stream, out var versionError))
+        {
+            Console.Error.WriteLine($"Error: \"{displayName}\" cannot be dumped. {versionError}");
+            return true;
+        }
+
         if (!SerializedFileDetector.IsMissingTypeTrees(stream))
             return false;
 
@@ -158,7 +169,7 @@ public class TextDumperTool
 
             var node2 = singleSerializedFile.Value;
             Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
-            if (ReportIfMissingTypeTrees("/" + node2.Path, node2.Path))
+            if (ReportIfNotDumpable("/" + node2.Path, node2.Path))
                 return 1;
             m_Writer = Console.Out;
             OutputSerializedFile("/" + node2.Path);
@@ -172,7 +183,7 @@ public class TextDumperTool
 
                 if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
                 {
-                    if (ReportIfMissingTypeTrees("/" + node.Path, node.Path))
+                    if (ReportIfNotDumpable("/" + node.Path, node.Path))
                     {
                         anyMissingTypeTrees = true;
                         continue;
@@ -227,9 +238,10 @@ public class TextDumperTool
                     continue;
 
                 var offset = obj.Offset;
+                m_ObjectEnd = obj.Offset + obj.Size;
 
                 m_Writer.Write($"ID: {obj.Id} (ClassID: {obj.TypeId}) ");
-                RecursiveDump(root, ref offset, 0);
+                RecursiveDump(root, ref offset, 0, isRootObject: true);
                 m_Writer.WriteLine();
                 dumpedObject = true;
             }
@@ -244,7 +256,7 @@ public class TextDumperTool
         }
     }
 
-    void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1)
+    void RecursiveDump(TypeTreeNode node, ref long offset, int level, int arrayIndex = -1, bool isRootObject = false)
     {
         bool skipChildren = false;
 
@@ -328,6 +340,11 @@ public class TextDumperTool
         {
             foreach (var child in node.Children)
             {
+                // A version 3 registry sits in the data before this field, with no node of its
+                // own. Only a root object carries one, hence isRootObject.
+                if (isRootObject && child.HasSerializedRefs)
+                    DumpManagedReferenceFrame(ref offset, level + 1);
+
                 RecursiveDump(child, ref offset, level + 1);
             }
         }
@@ -470,6 +487,57 @@ public class TextDumperTool
         }
     }
 
+    // Shaped like the version 1 and 2 dumps above, so the three stay comparable in a diff.
+    void DumpManagedReferenceFrame(ref long offset, int level)
+    {
+        var registry = ManagedReferenceRegistry.ReadFrame(m_Reader, offset, m_ObjectEnd - offset);
+
+        WriteIndentedLine(level, "references (ManagedReferenceRegistry)");
+        WriteIndentedLine(level + 1, $"version (int) {registry.Version}");
+
+        foreach (var entry in registry.Entries)
+        {
+            WriteIndentedLine(level + 1, $"rid({entry.Rid}) ReferencedObject");
+
+            if (entry.IsNull)
+            {
+                WriteIndentedLine(level + 2, "null");
+                continue;
+            }
+
+            WriteIndentedLine(level + 2, "type (ReferencedManagedType)");
+            WriteIndentedLine(level + 3, $"class (string) {entry.ClassName}");
+            WriteIndentedLine(level + 3, $"ns (string) {entry.Namespace}");
+            WriteIndentedLine(level + 3, $"asm (string) {entry.AssemblyName}");
+            WriteIndentedLine(level + 2, "data ReferencedObjectData ");
+
+            var dataOffset = entry.DataOffset;
+            DumpReferencedObjectData(entry.ClassName, entry.Namespace, entry.AssemblyName, ref dataOffset, level + 3);
+        }
+
+        offset += registry.FrameSize;
+    }
+
+    void WriteIndentedLine(int level, string text)
+    {
+        AppendIndent(level);
+        m_StringBuilder.Append(text);
+        m_Writer.WriteLine(m_StringBuilder);
+        m_StringBuilder.Clear();
+    }
+
+    // A referenced object's data is laid out by its own type tree rather than the containing
+    // object's, and that tree's root stands for the instance itself, so only its fields are dumped.
+    void DumpReferencedObjectData(string className, string namespaceName, string assemblyName, ref long offset, int level)
+    {
+        var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
+
+        foreach (var child in refTypeRoot.Children)
+        {
+            RecursiveDump(child, ref offset, level);
+        }
+    }
+
     bool DumpManagedReferenceData(TypeTreeNode refTypeNode, TypeTreeNode referencedTypeDataNode, ref long offset, int level, long id)
     {
         if (refTypeNode.Children.Count < 3)
@@ -516,13 +584,7 @@ public class TextDumperTool
             return true;
         }
 
-        var refTypeRoot = m_SerializedFile.GetRefTypeTypeTreeRoot(className, namespaceName, assemblyName);
-
-        // Dump the ReferencedObject using its own TypeTree, but skip the root.
-        foreach (var child in refTypeRoot.Children)
-        {
-            RecursiveDump(child, ref offset, level + 1);
-        }
+        DumpReferencedObjectData(className, namespaceName, assemblyName, ref offset, level + 1);
 
         return true;
     }

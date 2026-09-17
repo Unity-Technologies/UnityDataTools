@@ -7,6 +7,11 @@ namespace UnityDataTools.FileSystem;
 // This is the main entry point. Provides methods to mount archives and open files.
 public static class UnityFileSystem
 {
+    // Serialized file version 26 (Unity 6.7) needs the shared subtree and registry frame entry
+    // points, which arrived together in this library version. Older files are read through the
+    // same library, so there is no reason to keep a fallback for an earlier one.
+    public const int RequiredDllVersion = 2;
+
     public static void Init()
     {
         // Initialize the native library.
@@ -15,6 +20,14 @@ public static class UnityFileSystem
         if (r != ReturnCode.Success && r != ReturnCode.AlreadyInitialized)
         {
             HandleErrors(r);
+        }
+
+        var dllVersion = GetDllVersion();
+        if (dllVersion < RequiredDllVersion)
+        {
+            throw new NotSupportedException(
+                $"UnityFileSystemApi version {dllVersion} is too old; version {RequiredDllVersion} or newer is required. " +
+                "Replace the UnityFileSystemApi library shipped beside UnityDataTool with one from Unity 6.7 or newer.");
         }
     }
 
@@ -121,6 +134,14 @@ public static class UnityFileSystem
 
             case ReturnCode.TypeNotFound:
                 throw new ArgumentException("Type not found.");
+
+            case ReturnCode.HigherTypeTreeVersion:
+                throw new NotSupportedException($"A TypeTree in {filename} was written by a newer version of Unity.");
+
+            // Every node is read through the subtree API, so the native side has no reason to ask
+            // for it. Reaching this means a walk was added that bypasses TypeTreeNode.
+            case ReturnCode.RequiresSubtreeApi:
+                throw new InvalidOperationException("Shared subtree reference read through the non-subtree API.");
         }
     }
 }

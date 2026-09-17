@@ -188,15 +188,19 @@ public class FileDetectionTests
     [Test]
     public void TryParseMetadata_VersionTooNew_ReturnsFalseWithMessage()
     {
-        var headerInfo = new SerializedFileInfo { Version = 24 };
+        // Far enough ahead that this does not need revisiting every time a Unity release adds a
+        // version. TryParseMetadata is given the header directly, so the detector's own plausibility
+        // range does not apply here.
+        var headerInfo = new SerializedFileInfo { Version = 99 };
 
         bool result = SerializedFileDetector.TryParseMetadata("irrelevant", headerInfo, out var metadata, out var errorMessage);
 
         Assert.IsFalse(result);
         Assert.IsNull(metadata);
         Assert.IsNotNull(errorMessage);
-        Assert.That(errorMessage, Does.Contain("24"), "Error should mention the actual version");
-        Assert.That(errorMessage, Does.Contain("23"), "Error should mention the maximum supported version");
+        Assert.That(errorMessage, Does.Contain("99"), "Error should mention the actual version");
+        Assert.That(errorMessage, Does.Contain(SerializedFileDetector.MaxMetadataParseVersion.ToString()),
+            "Error should mention the maximum supported version");
         Assert.That(errorMessage, Does.Contain("UnityDataTool"), "Error should mention UnityDataTool");
     }
 
@@ -295,6 +299,63 @@ public class FileDetectionTests
             Assert.IsTrue(entry.TypeTreeContentHash.IsZero,
                 $"TypeTreeContentHash should be zero for this version < 23 file (persistentTypeID={entry.PersistentTypeID})");
         }
+    }
+
+    [Test]
+    public void TryParseMetadata_V26PlayerFile_ReturnsSharedSubtreeTable()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "PlayerWithTypeTreesV26", "sharedassets1.assets");
+
+        Assert.IsTrue(SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo));
+        Assert.That(headerInfo.Version, Is.EqualTo(26u));
+
+        bool result = SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out var errorMessage);
+        Assert.IsTrue(result, $"Metadata parsing should succeed. Error: {errorMessage}");
+
+        Assert.That(metadata.UnityVersion, Is.EqualTo("6000.7.0b2"));
+        Assert.That(metadata.TypeTreeCount, Is.EqualTo(2), "PreloadData and MonoBehaviour");
+        Assert.That(metadata.SerializedReferenceTypeTreeCount, Is.EqualTo(1));
+
+        // The shared subtree table follows m_RefTypes and is what version 26 adds to the metadata.
+        Assert.That(metadata.SharedSubtreeCount, Is.EqualTo(7));
+        Assert.That(metadata.SharedSubtrees.Length, Is.EqualTo(metadata.SharedSubtreeCount));
+
+        foreach (var subtree in metadata.SharedSubtrees)
+        {
+            Assert.IsTrue(subtree.Inline, "This build embeds its subtree blobs rather than extracting them");
+            Assert.That(subtree.SerializedSize, Is.GreaterThan(0));
+            Assert.IsFalse(subtree.ContentHash.IsZero, "A subtree is keyed by the hash of its content");
+        }
+    }
+
+    // The stamp at the head of a TypeTree blob tells the two version spaces apart: up to and
+    // including 23 it repeats the SerializedFile version, and from 24 TypeTrees are versioned
+    // independently starting at 32.
+    [TestCase("PlayerWithTypeTrees/sharedassets1.assets", 0u, TestName = "TypeTreeFormatVersion_V22_HasNoStamp")]
+    [TestCase("AssetBundleTypeTreeVariations/v23_Inline/prefab_with_serializedreference.serializedfile", 23u, TestName = "TypeTreeFormatVersion_V23_StampsTheFileVersion")]
+    [TestCase("PlayerWithTypeTreesV26/sharedassets1.assets", 33u, TestName = "TypeTreeFormatVersion_V26_StampsTheIndependentVersion")]
+    public void TryParseMetadata_ReportsTypeTreeFormatVersion(string relativePath, uint expected)
+    {
+        var testFile = Path.Combine(m_TestDataPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+
+        Assert.IsTrue(SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo));
+        Assert.IsTrue(SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out _));
+
+        foreach (var entry in metadata.TypeTrees)
+            Assert.That(entry.TypeTreeFormatVersion, Is.EqualTo(expected), $"persistentTypeID={entry.PersistentTypeID}");
+    }
+
+    [Test]
+    public void TryParseMetadata_BeforeVersion26_HasNoSharedSubtreeTable()
+    {
+        var testFile = Path.Combine(m_TestDataPath, "AssetBundleTypeTreeVariations", "v23_Inline",
+            "prefab_with_serializedreference.serializedfile");
+
+        Assert.IsTrue(SerializedFileDetector.TryDetectSerializedFile(testFile, out var headerInfo));
+        Assert.IsTrue(SerializedFileDetector.TryParseMetadata(testFile, headerInfo, out var metadata, out _));
+
+        Assert.That(metadata.SharedSubtreeCount, Is.EqualTo(0));
+        Assert.That(metadata.SharedSubtrees, Is.Empty);
     }
 
     [Test]
