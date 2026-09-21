@@ -16,7 +16,7 @@ namespace UnityDataTools.UnityDataTool.Tests;
 // reference build.
 public class AnalyzeBuildHistoryTests
 {
-    private const string BuildHash = "baff06b928d147276f2245dd3b19216a";
+    private const string BuildHash = "e320fc78984f8430afa90a591fd02004";
 
     private string m_TestOutputFolder;
     private string m_ContentDirectory;
@@ -68,42 +68,6 @@ public class AnalyzeBuildHistoryTests
         return folder;
     }
 
-    private static async Task<(int exitCode, string stdErr)> RunCapturingStdErr(params string[] args)
-    {
-        using var sw = new StringWriter();
-        var currentError = Console.Error;
-        int exitCode;
-        try
-        {
-            Console.SetError(sw);
-            exitCode = await Program.Main(args);
-        }
-        finally
-        {
-            Console.SetError(currentError);
-        }
-
-        return (exitCode, sw.ToString());
-    }
-
-    private static async Task<(int exitCode, string stdOut)> RunCapturingStdOut(params string[] args)
-    {
-        using var sw = new StringWriter();
-        var currentOut = Console.Out;
-        int exitCode;
-        try
-        {
-            Console.SetOut(sw);
-            exitCode = await Program.Main(args);
-        }
-        finally
-        {
-            Console.SetOut(currentOut);
-        }
-
-        return (exitCode, sw.ToString());
-    }
-
     [Test]
     public async Task Analyze_WithBuildHistory_ImportsLayoutAndBuildReport()
     {
@@ -151,7 +115,7 @@ public class AnalyzeBuildHistoryTests
         CreateStaleBuildFolder(history, "Build-Stale");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", m_ContentDirectory, "--build-history", history, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode, "a build history without the analyzed build must fail");
@@ -170,7 +134,7 @@ public class AnalyzeBuildHistoryTests
             "Data", "LeadingEdgeBuilds", "AssetBundles", "assetbundleroot");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", bundlePath, "--build-history", history, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode);
@@ -218,7 +182,7 @@ public class AnalyzeBuildHistoryTests
         File.Delete(Path.Combine(noSummary, "BuildReportSummary.json"));
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdOut) = await RunCapturingStdOut(
+        var (exitCode, stdOut) = await ConsoleTestHelper.RunCapturingStdOut(
             "analyze", m_ContentDirectory, "--build-history", history, "-o", databasePath);
 
         Assert.AreEqual(0, exitCode);
@@ -239,7 +203,7 @@ public class AnalyzeBuildHistoryTests
         var positionalLayout = Path.Combine(m_FixtureReportFolder, "ContentLayout.json");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", m_ContentDirectory, positionalLayout, "--build-history", history, "-o", databasePath);
 
         Assert.AreEqual(0, exitCode);
@@ -262,7 +226,7 @@ public class AnalyzeBuildHistoryTests
             "Data", "contentdirectory-zstd");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", archiveBuild, "--build-history", history, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode);

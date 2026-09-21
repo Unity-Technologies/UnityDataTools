@@ -40,18 +40,27 @@ The file uses a few terms consistently:
 |--------|-------------|
 | `Version` | Schema version of the file. See [Schema versioning](#schema-versioning). |
 | `BuildManifestHash` | Hash of the build manifest this layout corresponds to. |
-| `SerializedFiles` | One entry per serialized file in the build. Each entry records the source assets it contains, its content hash, and its dependencies on other serialized files, loadables, and loadable scenes. The same source asset can appear in more than one serialized file (for example, a single FBX file can be split into multiple output files). |
-| `RootAssets` | The `ObjectIdHash` of each root asset the build was made from. Each one has a corresponding entry in `LoadableObjectIds`. |
-| `LoadableObjectIds` | The objects that can be loaded on demand. Each entry records its `ObjectIdHash`, where the object lives in the built content (which serialized file) and where it came from in the source project (GUID, asset path, local file ID, and identifier type). |
+| `SerializedFiles` | One entry per serialized file in the build. Each entry records its stable id (see below), the source assets it contains, the index of its artifact in `BinaryArtifacts`, and its dependencies on other serialized files, loadables, and loadable scenes. The same source asset can appear in more than one serialized file (for example, a single FBX file can be split into multiple output files). |
+| `RootAssets` | The root assets the build was made from, as indices into `LoadableObjectIds`, in root input order. |
+| `LoadableObjectIds` | The objects that can be loaded on demand. Each entry records where the object lives in the built content (which serialized file) and its identity (source asset GUID, local file ID, and identifier type). |
 | `LoadableSceneIds` | The scenes in the build, each with its source project path and GUID, and the serialized file that contains it. |
 | `BinaryArtifacts` | The artifacts that make up the build output. See [Binary artifacts](#binary-artifacts). |
+
+### Stable ids
+
+Each serialized file has a **stable id**: an identity hash used to reference the file from other
+serialized files in a way that doesn't break when its content changes (unlike the content hash,
+which names the produced artifact and changes with every content change). Inside the built files,
+the external reference tables list these ids with a `.cfid` extension as symbolic placeholder names —
+see [Content Directory Format](contentdirectory-format.md). The synthetic built-in entry uses its
+resource path (`Library/unity default resources`) as its stable id.
 
 ### Binary artifacts
 
 `BinaryArtifacts` is essentially the list of files in the build output. Each entry has a `Category` and a `Size`, and lists its direct dependencies in `ArtifactReferences`:
 
 * The entry with category `manifest` is the root of the graph.
-* Entries with category `contentfile` each have a matching entry in `SerializedFiles` (matched by content hash).
+* Entries with category `contentfile` each have a matching entry in `SerializedFiles` (which references its artifact by index through `ArtifactIndex`).
 * `BinaryArtifacts` also reports the additional data files that hold audio, video, texture, and mesh data (the `.resource` and `.resS` files).
 * BinaryArtifacts are identified by the hash of their content.  When saved as a file, the filename is the hash and the file extension is based on the category.
 
@@ -61,7 +70,14 @@ The file uses a few terms consistently:
 
 The schema is subject to change. The `Version` field records the schema version of the file, independently of the Unity version that produced it. When the schema changes, the version number increments.
 
-[`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs) always represents the latest schema version (currently version 2).
+[`ContentLayout.cs`](../UnityDataModels/ContentLayout.cs) always represents the latest schema version (currently version 3, written by Unity 6.7). The version 2 schema written by Unity 6.6 remains available as a reference definition in [`ContentLayoutV2.cs`](../UnityDataModels/ContentLayoutV2.cs) (namespace `UnityDataTools.Models.V2`).
+
+The [`analyze` command](command-analyze.md) accepts versions 2 and 3, importing both into the same database schema (see [ContentLayout in the Analyze Database](contentlayout-database.md)). Version 3 made these changes relative to version 2:
+
+* `SerializedFiles` entries carry `StableId` (the bare identity hash, no `.cfid` extension) instead of `ID`, and `ArtifactIndex` (the index of the file's artifact in `BinaryArtifacts`, `-1` for the built-in entry) instead of `ContentHash`.
+* `LoadableDependencies` and `RootAssets` reference loadables as indices into `LoadableObjectIds` instead of `ObjectIdHash` strings, and `ObjectIdHash` itself was removed.
+* `LoadableObjectIds` entries were trimmed to `{GUID, LFID, IdentifierType, SerializedFile}`. `AssetPath` and `OutputLFID` were removed: Unity 6.7 no longer remaps objects into clusters, so the local file id of an object in its output file matches the source id (MonoScripts excepted), and `LFID` now records the output-file id directly for placed objects.
+* `IsBuiltIn` is only written when true.
 
 ## Related documentation
 

@@ -201,7 +201,9 @@ public class ReferenceFinderTool
             using var loadableCommand = m_LoadableObjectIds.Count > 0 ? db.CreateCommand() : null;
             if (loadableCommand != null)
             {
-                loadableCommand.CommandText = "SELECT asset_path, filename FROM content_layout_loadable_objects_view WHERE object = @id";
+                // The guid is the loadable's identity in every layout version (v3 layouts no
+                // longer record the asset path).
+                loadableCommand.CommandText = "SELECT guid, filename FROM content_layout_loadable_objects_view WHERE object = @id";
                 loadableCommand.Parameters.Add("@id", SqliteType.Integer);
             }
 
@@ -224,7 +226,7 @@ public class ReferenceFinderTool
                         if (loadableReader.Read())
                         {
                             m_Writer.WriteLine("Found reference in loadable:");
-                            m_Writer.WriteLine(loadableReader.GetString(0));
+                            m_Writer.WriteLine($"GUID {loadableReader.GetString(0)}");
                             m_Writer.WriteLine($"(SerializedFile = {loadableReader.GetString(1)})");
                         }
                     }

@@ -247,6 +247,12 @@
   <data name="ContentLayoutLoadableObjects" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ContentLayoutLoadableObjects.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="ContentLayoutLoadableObjectsV2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutLoadableObjectsV2.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="ContentLayoutLoadableObjectsView" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ContentLayoutLoadableObjectsView.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="ContentLayoutLoadableScenes" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ContentLayoutLoadableScenes.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>

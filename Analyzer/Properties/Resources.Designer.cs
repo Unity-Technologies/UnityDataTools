@@ -282,6 +282,18 @@ namespace UnityDataTools.Analyzer.Properties {
             }
         }
 
+        internal static string ContentLayoutLoadableObjectsV2 {
+            get {
+                return ResourceManager.GetString("ContentLayoutLoadableObjectsV2", resourceCulture);
+            }
+        }
+
+        internal static string ContentLayoutLoadableObjectsView {
+            get {
+                return ResourceManager.GetString("ContentLayoutLoadableObjectsView", resourceCulture);
+            }
+        }
+
         internal static string ContentLayoutLoadableSceneDependencies {
             get {
                 return ResourceManager.GetString("ContentLayoutLoadableSceneDependencies", resourceCulture);

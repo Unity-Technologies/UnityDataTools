@@ -62,10 +62,10 @@ WHERE s.asset_path = 'Assets/Scenes/Scene1.unity';
 ## The loadables and what they resolve to (layout + content)
 
 Each loadable with the analyzed object it points at (type, name, size), and whether it is a root
-asset of the build:
+asset of the build (`is_root_asset` holds the root's 1-based input position, 0 for non-roots):
 
 ```sql
-SELECT * FROM content_layout_loadable_objects_view ORDER BY is_root_asset DESC, asset_path;
+SELECT * FROM content_layout_loadable_objects_view ORDER BY is_root_asset DESC, name;
 ```
 
 ## Data files of a serialized file (layout only)
@@ -75,7 +75,7 @@ serialized file:
 
 ```sql
 SELECT * FROM content_layout_resource_files_view
-WHERE filename = 'c0152db4dd710be51b2decb997325f34.cf';
+WHERE filename = 'eb3abd5ab5b0d790980fe9e9df872484.cf';
 ```
 
 ## Checking reference resolution (layout + content)
