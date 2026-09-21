@@ -29,7 +29,7 @@ public class DumpTests
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
         m_NoTypeTreeArchivePath = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
         m_SerializationDemoBundlePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundles", "serializationdemo");
-        m_ContentDirectoryBuildReportPath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f64157fb08bb9f645971d39c1203bd03.buildreport");
+        m_ContentDirectoryBuildReportPath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f096bba0b9ce4c44194edd738d64b9df.buildreport");
     }
 
     [Test]
@@ -478,9 +478,9 @@ public class DumpTests
 
         var output = sw.ToString();
 
-        Assert.That(output, Does.Contain("buildSessionGUID (GUID) f64157fb08bb9f645971d39c1203bd03"));
+        Assert.That(output, Does.Contain("buildSessionGUID (GUID) f096bba0b9ce4c44194edd738d64b9df"));
         Assert.That(output, Does.Contain("sourceAssetGUID (GUID) 162c015549f8733449ac70ae78ad3aa5"));
-        Assert.That(output, Does.Contain("buildManifestHash (Hash128) baff06b928d147276f2245dd3b19216a"));
+        Assert.That(output, Does.Contain("buildManifestHash (Hash128) e320fc78984f8430afa90a591fd02004"));
 
         // The individual fields of these compound types are no longer dumped.
         Assert.That(output, Does.Not.Contain("data[0] (unsigned int)"));

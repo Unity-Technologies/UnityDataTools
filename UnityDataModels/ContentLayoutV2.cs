@@ -1,12 +1,9 @@
-// This file defines the structure of the ContentLayout.json file produced by BuildPipeline.BuildContentDirectory
-// (available starting in Unity 6.6).
+// The version 2 schema of the ContentLayout.json file, produced by BuildPipeline.BuildContentDirectory
+// in Unity 6.6. Preserved as a reference definition for users working with Unity 6.6 build output.
 //
-// See Documentation/contentlayout.md for further details.
-//
-// ContentLayout always represents the latest schema version (currently 3, written by Unity 6.7).
-// Older versions are preserved under a version-specific namespace: the version 2 schema (Unity 6.6)
-// is defined in ContentLayoutV2.cs as UnityDataTools.Models.V2.ContentLayout.
-namespace UnityDataTools.Models
+// The latest schema is defined in ContentLayout.cs (UnityDataTools.Models.ContentLayout); see
+// Documentation/contentlayout.md for the differences between the versions.
+namespace UnityDataTools.Models.V2
 {
     /// <summary>
     /// Category strings used by <see cref="BinaryArtifact.Category"/>.
@@ -40,15 +37,12 @@ namespace UnityDataTools.Models
         /// <summary>Index of this entry inside <see cref="ContentLayout.SerializedFiles"/>.</summary>
         public int Index;
 
-        /// <summary>Stable identity hash of this SerializedFile, used to reference it from other
-        /// SerializedFiles in a way that doesn't break when the content changes. Computed from the
-        /// cluster or object identity of the source. For the synthetic built-in entry this is the
-        /// resource path instead.</summary>
-        public string StableId;
+        /// <summary>Stable identifier used to reference this SerializedFile from other SerializedFiles
+        /// in a way that doesn't break when the content changes. Currently based on the cluster or guid of the source.</summary>
+        public string ID;
 
         /// <summary>True for synthetic entries representing built-in Unity resources that are not produced
-        /// by the build (currently only "Library/unity default resources"); such entries resolve through
-        /// the PersistentManager at runtime and have no artifact. Only written when true; absent means false.</summary>
+        /// by the build (currently only "Library/unity default resources"). Such entries have no ContentHash.</summary>
         public bool IsBuiltIn;
 
         /// <summary>The source assets included in this SerializedFile.</summary>
@@ -58,31 +52,34 @@ namespace UnityDataTools.Models
         /// other SerializedFiles that need to be loaded prior to loading this SerializedFile.</summary>
         public int[] SerializedFileDependencies;
 
-        /// <summary>Indices into <see cref="ContentLayout.LoadableObjectIds"/> for loadable objects
-        /// referenced from this SerializedFile.</summary>
-        public int[] LoadableDependencies;
+        /// <summary>ObjectIdHash values for loadable objects referenced from this SerializedFile.</summary>
+        public string[] LoadableDependencies;
 
         /// <summary>Scene paths for scenes referenced from this SerializedFile.</summary>
         public string[] LoadableSceneDependencies;
 
-        /// <summary>Index into <see cref="ContentLayout.BinaryArtifacts"/> for the artifact holding this
-        /// SerializedFile's content, or -1 for the built-in entry, which has no artifact.</summary>
-        public int ArtifactIndex;
+        /// <summary>xxhash3 hash of the content, used for the filename (+".cf") and for lookup into UDS.
+        /// Matches the <see cref="BinaryArtifact.ContentHash"/> of the corresponding entry in
+        /// <see cref="ContentLayout.BinaryArtifacts"/>.</summary>
+        public string ContentHash;
     }
 
     /// <summary>
     /// Records a loadable object in the build. Listed at the top level of the ContentLayout so that a
     /// loadable's identity is described independently of the SerializedFile that happens to contain it.
-    /// Referenced by index from <see cref="SerializedFileLayout.LoadableDependencies"/> and
-    /// <see cref="ContentLayout.RootAssets"/>.
     /// </summary>
     public class LoadableObjectIdLayout
     {
+        /// <summary>Hash of the GUID, LFID and IdentifierType.</summary>
+        public string ObjectIdHash;
+
         /// <summary>AssetDatabase GUID of the source asset.</summary>
         public string GUID;
 
-        /// <summary>Local file id of the object in the output SerializedFile when placed,
-        /// otherwise the source local file id. Identical to the source id except for MonoScripts.</summary>
+        /// <summary>Path of the source asset.</summary>
+        public string AssetPath;
+
+        /// <summary>Local file id of the source object.</summary>
         public long LFID;
 
         /// <summary>Identifier type of the source object.</summary>
@@ -91,6 +88,10 @@ namespace UnityDataTools.Models
         /// <summary>Index into <see cref="ContentLayout.SerializedFiles"/> for the file that contains this
         /// loadable, or -1 if it was dropped (e.g. server build shader references).</summary>
         public int SerializedFile = -1;
+
+        /// <summary>Local file id of the object within its output Content File (the one identified by the
+        /// <see cref="SerializedFile"/> index).</summary>
+        public long OutputLFID;
     }
 
     /// <summary>
@@ -117,8 +118,7 @@ namespace UnityDataTools.Models
         public int Index;
 
         /// <summary>Content addressable hash. For ContentFile artifacts, the matching
-        /// <see cref="SerializedFileLayout"/> references this entry via
-        /// <see cref="SerializedFileLayout.ArtifactIndex"/>.</summary>
+        /// <see cref="SerializedFileLayout"/> can be found by ContentHash.</summary>
         public string ContentHash;
 
         /// <summary>One of the strings in <see cref="BuildArtifactCategory"/>.</summary>
@@ -132,50 +132,19 @@ namespace UnityDataTools.Models
         /// Note: this does not track references to other ContentFiles — those are recorded in
         /// <see cref="SerializedFileLayout.SerializedFileDependencies"/>.</summary>
         public int[] ArtifactReferences;
-
-        /// <summary>The on-disk file extension for this artifact, derived from <see cref="Category"/>.
-        /// For unrecognized categories, returns the category name.</summary>
-        public string FileExtension
-        {
-            get
-            {
-                switch (Category)
-                {
-                    case BuildArtifactCategory.Texture:
-                    case BuildArtifactCategory.Mesh:
-                        return ".resS";
-                    case BuildArtifactCategory.Audio:
-                    case BuildArtifactCategory.Video:
-                        return ".resource";
-                    case BuildArtifactCategory.ContentFile:
-                        return ".cf";
-                    case BuildArtifactCategory.Manifest:
-                        return ".json";
-                    default:
-                        return string.IsNullOrEmpty(Category) ? "" : "." + Category;
-                }
-            }
-        }
     }
 
     /// <summary>
-    /// In-memory representation of the ContentLayout.json file written by the build.
+    /// In-memory representation of a version 2 ContentLayout.json file (Unity 6.6).
     ///
     /// The Layout is a companion to the BuildManifest, recording additional details about the build
-    /// (including source assets and information about which source object each loadable refers to).
+    /// (including source assets and information about which object an ObjectId hash refers to).
     /// It is not shipped with the build; it exists for tools and tests that analyze build output.
-    /// The schema is subject to change and there is currently no backward compatibility.
     /// </summary>
     public class ContentLayout
     {
         /// <summary>The schema version this type represents.</summary>
-        // v1 -> v2: added OutputLFID to LoadableObjectIds entries.
-        // v2 -> v3: ObjectIdHash deleted. LoadableObjectIds entries trimmed to {GUID, LFID,
-        //           IdentifierType, SerializedFile}; LoadableDependencies and RootAssets became
-        //           indices into LoadableObjectIds. SerializedFiles entries carry StableId
-        //           (the identity hash, no extension) instead of ID, and ArtifactIndex (index
-        //           into BinaryArtifacts) instead of ContentHash.
-        public const int CurrentVersion = 3;
+        public const int SchemaVersion = 2;
 
         /// <summary>Schema version of the ContentLayout.json file.</summary>
         public int Version;
@@ -186,8 +155,8 @@ namespace UnityDataTools.Models
         /// <summary>The SerializedFiles in the build output.</summary>
         public SerializedFileLayout[] SerializedFiles;
 
-        /// <summary>Indices into <see cref="LoadableObjectIds"/> of the root assets, in root input order.</summary>
-        public int[] RootAssets;
+        /// <summary>ObjectIdHash values of the root assets; resolve via <see cref="LoadableObjectIds"/>.</summary>
+        public string[] RootAssets;
 
         /// <summary>Loadable objects in the build.</summary>
         public LoadableObjectIdLayout[] LoadableObjectIds;

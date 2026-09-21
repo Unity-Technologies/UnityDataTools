@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Commands.ContentLayout;
@@ -11,8 +12,10 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
     // Populates the content_layout* tables from a ContentLayout.json (see
     // Documentation/contentlayout.md). The tables mirror the json structure, with two adjustments
     // that make the data natural to query: the top-level RootAssets list is folded into the
-    // is_root_asset flag, and the json's sentinel values (-1 for "dropped from build", missing
-    // ContentHash for built-ins) are stored as NULL.
+    // is_root_asset column (holding the 1-based root position), and the json's sentinel values
+    // (-1 for "dropped from build" and for the built-in entry's missing artifact) are stored as
+    // NULL. Version 2 layouts arrive here already upgraded to the current model (see
+    // ContentLayoutV2Upgrader); their extra source data lands in v2-only columns.
     internal class ContentLayoutSQLWriter : IDisposable
     {
         private AddContentLayout m_AddContentLayout = new();
@@ -47,13 +50,16 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
         }
 
         // Creates the content_layout tables and views. Called lazily on the first import so that
-        // analyzing other content (AssetBundles, Player builds) doesn't create empty tables.
-        public void Init()
+        // analyzing other content (AssetBundles, Player builds) doesn't create empty tables. The
+        // loadable-objects table and view get extra source columns when importing a v2 layout.
+        public void Init(bool v2LoadableColumns)
         {
             if (m_Initialized)
                 return;
 
             m_Initialized = true;
+
+            m_AddLoadableObject.V2Columns = v2LoadableColumns;
 
             m_AddContentLayout.CreateCommand(m_Database);
             m_AddSerializedFile.CreateCommand(m_Database);
@@ -67,10 +73,17 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             m_AddArtifactReference.CreateCommand(m_Database);
 
             ExecuteDDL(Properties.Resources.ContentLayoutViews);
+            // Created separately because it must come after the loadable-objects table exists in
+            // its version-dependent form: the view selects that table's columns as-is.
+            ExecuteDDL(Properties.Resources.ContentLayoutLoadableObjectsView);
         }
 
-        public void WriteContentLayout(string filename, ContentLayout layout)
+        // v2Data holds the v2-only source fields of each loadable, aligned by index with
+        // layout.LoadableObjectIds; null when a current-version layout is imported.
+        public void WriteContentLayout(string filename, ContentLayout layout, IReadOnlyList<LoadableObjectV2Data> v2Data)
         {
+            var contentHashByFileIndex = ResolveContentHashes(layout);
+
             using var transaction = m_Database.BeginTransaction();
             SetTransaction(transaction);
 
@@ -85,18 +98,18 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
                 foreach (var file in layout.SerializedFiles)
                 {
                     m_AddSerializedFile.SetValue("file_index", file.Index);
-                    m_AddSerializedFile.SetValue("cfid", file.ID);
+                    m_AddSerializedFile.SetValue("stable_id", file.StableId);
                     m_AddSerializedFile.SetValue("is_builtin", file.IsBuiltIn ? 1 : 0);
-                    m_AddSerializedFile.SetValue("content_hash",
-                        string.IsNullOrEmpty(file.ContentHash) ? null : file.ContentHash);
+                    m_AddSerializedFile.SetValue("artifact_index",
+                        file.ArtifactIndex < 0 ? null : file.ArtifactIndex);
                     // Filled in by LinkSerializedFiles when the analyzed input also contains the
                     // build content.
                     m_AddSerializedFile.SetValue("serialized_file", null);
                     m_AddSerializedFile.ExecuteNonQuery();
 
-                    if (!string.IsNullOrEmpty(file.ContentHash))
+                    if (contentHashByFileIndex.TryGetValue(file.Index, out var contentHash))
                     {
-                        m_ImportedFiles.Add((file.Index, file.ContentHash));
+                        m_ImportedFiles.Add((file.Index, contentHash));
                     }
 
                     // Empty arrays can be omitted from the json, leaving the fields null.
@@ -118,10 +131,10 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
                         m_AddSerializedFileDependency.ExecuteNonQuery();
                     }
 
-                    foreach (var objectIdHash in file.LoadableDependencies ?? [])
+                    foreach (var loadableIndex in file.LoadableDependencies ?? [])
                     {
                         m_AddLoadableDependency.SetValue("serialized_file_index", file.Index);
-                        m_AddLoadableDependency.SetValue("object_id_hash", objectIdHash);
+                        m_AddLoadableDependency.SetValue("loadable_index", loadableIndex);
                         m_AddLoadableDependency.ExecuteNonQuery();
                     }
 
@@ -133,19 +146,32 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
                     }
                 }
 
-                var rootAssets = new HashSet<string>(layout.RootAssets ?? []);
-
-                foreach (var loadable in layout.LoadableObjectIds ?? [])
+                // RootAssets order is the build's root input order, recorded as a 1-based position.
+                var rootPositions = new Dictionary<int, int>();
+                var rootAssets = layout.RootAssets ?? [];
+                for (int i = 0; i < rootAssets.Length; ++i)
                 {
-                    m_AddLoadableObject.SetValue("object_id_hash", loadable.ObjectIdHash);
+                    rootPositions[rootAssets[i]] = i + 1;
+                }
+
+                var loadables = layout.LoadableObjectIds ?? [];
+                for (int i = 0; i < loadables.Length; ++i)
+                {
+                    var loadable = loadables[i];
+                    m_AddLoadableObject.SetValue("loadable_index", i);
                     m_AddLoadableObject.SetValue("guid", loadable.GUID);
-                    m_AddLoadableObject.SetValue("asset_path", loadable.AssetPath);
                     m_AddLoadableObject.SetValue("lfid", loadable.LFID);
                     m_AddLoadableObject.SetValue("identifier_type", loadable.IdentifierType);
                     m_AddLoadableObject.SetValue("serialized_file_index",
                         loadable.SerializedFile < 0 ? null : loadable.SerializedFile);
-                    m_AddLoadableObject.SetValue("output_lfid", loadable.OutputLFID);
-                    m_AddLoadableObject.SetValue("is_root_asset", rootAssets.Contains(loadable.ObjectIdHash) ? 1 : 0);
+                    m_AddLoadableObject.SetValue("is_root_asset", rootPositions.GetValueOrDefault(i, 0));
+
+                    if (v2Data != null)
+                    {
+                        m_AddLoadableObject.SetValue("asset_path", v2Data[i].AssetPath);
+                        m_AddLoadableObject.SetValue("source_lfid", v2Data[i].SourceLfid);
+                    }
+
                     m_AddLoadableObject.ExecuteNonQuery();
                 }
 
@@ -185,31 +211,54 @@ namespace UnityDataTools.Analyzer.SQLite.Writers
             // Indexes are created after the bulk insert so that a very large layout imports fast.
             ExecuteDDL(Properties.Resources.ContentLayoutIndexes);
 
-            PopulateContentFileDependencies(layout);
+            PopulateContentFileDependencies(layout, contentHashByFileIndex);
+        }
+
+        // The content hash of each non-built-in layout file, resolved through its ArtifactIndex.
+        // The hash gives the on-disk filename, which is how the layout entries are matched to the
+        // analyzed files.
+        private static Dictionary<int, string> ResolveContentHashes(ContentLayout layout)
+        {
+            var artifactHashByIndex = (layout.BinaryArtifacts ?? []).ToDictionary(a => a.Index, a => a.ContentHash);
+            var contentHashByFileIndex = new Dictionary<int, string>();
+
+            foreach (var file in layout.SerializedFiles ?? [])
+            {
+                if (file.ArtifactIndex < 0)
+                    continue;
+
+                if (!artifactHashByIndex.TryGetValue(file.ArtifactIndex, out var hash) || string.IsNullOrEmpty(hash))
+                {
+                    throw new InvalidDataException(
+                        $"SerializedFile {file.Index} references BinaryArtifacts[{file.ArtifactIndex}], which does not exist.");
+                }
+
+                contentHashByFileIndex.Add(file.Index, hash);
+            }
+
+            return contentHashByFileIndex;
         }
 
         // Fills the shared dependency map that resolves the external references of the analyzed
         // content files (see ContentFileDependencyMap): for each content file, the dependency
-        // indexes become the target names, in order. Built-in dependencies (no content hash) map to
+        // indexes become the target names, in order. Built-in dependencies (no artifact) map to
         // null so the reference falls back to the external table path. Keys and resolved names use
         // the normalized content-hash name so they match the analyzed files regardless of whether
         // those carry the ".cf" extension on disk.
-        private void PopulateContentFileDependencies(ContentLayout layout)
+        private void PopulateContentFileDependencies(ContentLayout layout, Dictionary<int, string> contentHashByFileIndex)
         {
-            var hashByIndex = (layout.SerializedFiles ?? []).ToDictionary(f => f.Index, f => f.ContentHash);
-
             foreach (var file in layout.SerializedFiles ?? [])
             {
-                if (string.IsNullOrEmpty(file.ContentHash))
+                if (!contentHashByFileIndex.TryGetValue(file.Index, out var contentHash))
                     continue;
 
                 var resolved = (file.SerializedFileDependencies ?? [])
-                    .Select(i => hashByIndex.TryGetValue(i, out var hash) && !string.IsNullOrEmpty(hash)
+                    .Select(i => contentHashByFileIndex.TryGetValue(i, out var hash)
                         ? ContentFileDependencyMap.NormalizeFileName(hash)
                         : null)
                     .ToArray();
 
-                m_ContentFileDependencies.Add(ContentFileDependencyMap.NormalizeFileName(file.ContentHash), resolved);
+                m_ContentFileDependencies.Add(ContentFileDependencyMap.NormalizeFileName(contentHash), resolved);
             }
         }
 
