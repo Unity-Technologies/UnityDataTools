@@ -188,6 +188,10 @@ or
 ```
 Skipping build2\assetbundle: Duplicate archive name 'assetbundle'. Each analyzed archive must have a unique name; only a single build can be analyzed at a time.
 ```
+or
+```
+Skipping ui.sd: AssetBundle variant of 'ui.hd', which was already analyzed (both contain SerializedFile 'CAB-5d40f7cad7c871cf2ad2af19ac542994'). Only one variant of each bundle can be analyzed.
+```
 
 **analyze only supports a single build at a time.** Unity resolves references between SerializedFiles
 by file name, so two files that share a name are indistinguishable to those references — there is no
@@ -203,7 +207,7 @@ This is expected when the input contains more than one build, and in these commo
 | Cause | What to do |
 |-------|------------|
 | Multiple builds passed together (or nested in one directory) | Analyze each build into its own database |
-| AssetBundle variants (same content, different variant) | Analyze each variant separately |
+| [AssetBundle variants](assetbundle-format.md#assetbundle-variants) (same content, different variant) | Expected within a single build; analyze one variant of each bundle, or each variant into its own database |
 | Hashed AssetBundle file names across two builds | The file names differ but the inner SerializedFile (`CAB-<hash>`) is shared — analyze each build separately |
 | Player scenes with the same file name (`level0`, …) from different builds | Analyze each build separately |
 

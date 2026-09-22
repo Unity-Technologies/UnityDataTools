@@ -131,9 +131,9 @@ public class AnalyzerTool
                     }
                     catch (AnalyzeDuplicateException e)
                     {
-                        // A file or archive with this name was already analyzed. Only a single build
-                        // can be analyzed at a time; print a clear one-line message (always visible,
-                        // not just with -v) and continue, counting this file as failed.
+                        // This file, archive, or a SerializedFile inside the archive was already
+                        // analyzed. Print a clear one-line message (always visible, not just with -v)
+                        // and continue, counting this file as failed.
                         EraseProgressLine();
                         Console.Error.WriteLine($"Skipping {relativePath}: {e.Message}");
                         countFailures++;

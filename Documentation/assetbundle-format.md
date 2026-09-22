@@ -35,6 +35,7 @@ understand them for normal use, but they show up throughout UnityDataTool output
 
 - **Regular (non-scene) bundles** contain one SerializedFile named `CAB-<hash>`, where the hash is
   the **MD4** hash of the AssetBundle name (not the `Hash128` / spooky hash exposed in the C# API).
+  For [AssetBundle variants](#assetbundle-variants) the name hashed excludes the variant suffix.
 - **Scene bundles** name their scene files differently depending on the build pipeline:
   - `BuildPipeline.BuildAssetBundles` uses `BuildPlayer-<SceneName>`.
   - The Scriptable Build Pipeline / Addressables uses `CAB-<hash of the scene path>`.
@@ -90,6 +91,72 @@ In UnityDataTool output, these layers appear in different places:
 
 Keeping those layers separate helps explain why a query over `refs` may show cross-bundle
 relationships without directly mentioning an AssetBundle filename on each reference row.
+
+## AssetBundle variants
+
+`BuildPipeline.BuildAssetBundles` supports **AssetBundle variants**: two or more bundles that hold
+interchangeable versions of the same content, for example high and low resolution textures, or the
+text for different languages. The application decides at runtime which variant to load, and any
+other bundle that references the content resolves to whichever variant is loaded.
+
+Variants are a feature of `BuildPipeline.BuildAssetBundles` only. The Scriptable Build Pipeline and
+Addressables do not support them. Variants are a low-level mechanism that makes it harder to reason
+about what a build contains, so they are generally discouraged for new projects, but some shipped
+titles rely on them and their bundles show up in UnityDataTool output.
+
+### How variants are built
+
+A variant is declared by setting `assetBundleVariant` alongside `assetBundleName`, either in the
+`AssetBundleBuild` array passed to `BuildPipeline.BuildAssetBundles` or in the Inspector for an asset
+or folder. The variant name is lowercased and appended to the bundle name like a file extension, so
+bundle `textures` with variants `hd` and `sd` produces the files `textures.hd` and `textures.sd`
+(plus a `.manifest` file for each). Because the variant occupies the extension position there is no
+room for a fixed file extension, which is one reason `BuildPipeline.BuildAssetBundles` output has
+no standard extension.
+
+The variants are separate bundles in the build output, but the build makes their internals match:
+
+- **Same SerializedFile name.** The `CAB-<hash>` name is the MD4 hash of the base bundle name
+  (`textures`), not the full name with the variant. `textures.hd` and `textures.sd` therefore both
+  contain a SerializedFile named `CAB-<hash of "textures">`.
+- **Same local object ids.** In a normal bundle an object's local file id is derived from its asset
+  GUID. In a variant bundle it is instead derived from the asset's name (its file name, or its path
+  relative to the folder marked with the variant). Two assets with matching names in the `hd` and
+  `sd` folders therefore get identical local file ids, even though they are different assets with
+  different GUIDs. Dependencies that are pulled into a variant bundle implicitly, rather than being
+  marked with the variant, keep the GUID-based id.
+- **Same dependency name.** Other bundles record the dependency in `m_Dependencies` by the base name
+  (`textures`), and the `m_AssetBundleName` field of every variant's AssetBundle object is also the
+  base name. Only the AssetBundle object's `m_Name` carries the full name (`textures.hd`).
+
+This is what makes the substitution work. A `PPtr` in another bundle identifies its target by
+SerializedFile path and local file id (see
+[Bundle dependencies and object references](#bundle-dependencies-and-object-references)). Both
+values are identical across the variants, so the reference resolves into whichever variant the
+application has loaded. The Unity runtime has no variant-specific logic: it simply finds the mounted
+SerializedFile with the matching name.
+
+For this to work, each variant should contain the same set of asset names. The build also rejects a
+bundle that uses the plain base name in the same build as a variant of that name (`textures` next to
+`textures.hd`). The `AssetBundleManifest` lists the full names, and its
+`GetAllAssetBundlesWithVariant()` method returns those that were built as variants.
+
+### Variants and UnityDataTool
+
+Apart from the shared internal names, variant bundles are regular AssetBundles, and
+[`archive`](command-archive.md), [`dump`](command-dump.md) and
+[`serialized-file`](command-serialized-file.md) work on them as on any other bundle.
+
+[`analyze`](command-analyze.md) is the exception. Its schema requires every SerializedFile name to
+be unique within a database, and every variant of a bundle contains a SerializedFile with the same
+name. If the input includes more than one variant of the same bundle, analyze processes the first
+one it meets and skips the rest, reporting each skipped file as an AssetBundle variant of the one
+that was analyzed (see
+[Duplicate SerializedFile name](command-analyze.md#duplicate-serializedfile-name--duplicate-archive-name)).
+The resulting database is still valid; it simply describes one variant. To choose which, pass only
+that variant of each bundle, for example only the `.hd` files together with the non-variant bundles.
+To compare variants, analyze each into its own database as described in
+[Comparing Builds](comparing-builds.md).
 
 ## Built-in resources
 

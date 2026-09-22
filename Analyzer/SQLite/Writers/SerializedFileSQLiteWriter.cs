@@ -23,9 +23,12 @@ public class SerializedFileSQLiteWriter : IDisposable
     // second copy of the same content with a clear error instead of a raw UNIQUE constraint
     // failure. Only a single build can be analyzed at a time (see AnalyzeDuplicateException).
     // Archive names are compared case-sensitively, matching the archives.name schema constraint
-    // and the name as it exists on the file system.
+    // and the name as it exists on the file system. Each serialized file id maps to the archive
+    // it was found in (null for a loose file) so a duplicate can be recognized as an AssetBundle
+    // variant of that archive.
     private HashSet<string> m_WrittenArchiveNames = new();
-    private HashSet<int> m_WrittenSerializedFileIds = new();
+    private Dictionary<int, string> m_WrittenSerializedFiles = new();
+    private string m_CurrentArchiveName;
 
     private bool m_SkipReferences;
     private bool m_SkipCrc;
@@ -156,6 +159,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             throw new AnalyzeDuplicateException(name, isArchive: true);
         }
 
+        m_CurrentArchiveName = name;
         m_AddArchiveCommand.SetValue("id", m_CurrentArchiveId);
         m_AddArchiveCommand.SetValue("name", name);
         m_AddArchiveCommand.SetValue("file_size", size);
@@ -170,6 +174,21 @@ public class SerializedFileSQLiteWriter : IDisposable
         }
 
         m_CurrentArchiveId = -1;
+        m_CurrentArchiveName = null;
+    }
+
+    // AssetBundle variants are named "<bundle>.<variant>", and every variant of a bundle contains
+    // a SerializedFile with the same name. Two archives that differ only in their extension and
+    // share a SerializedFile are therefore taken to be variants of the same bundle.
+    private static bool LooksLikeAssetBundleVariantPair(string archiveA, string archiveB)
+    {
+        if (archiveA == null || archiveB == null || archiveA == archiveB)
+            return false;
+
+        if (Path.GetExtension(archiveA) == "" || Path.GetExtension(archiveB) == "")
+            return false;
+
+        return Path.ChangeExtension(archiveA, null) == Path.ChangeExtension(archiveB, null);
     }
 
     public void WriteSerializedFile(string relativePath, string fullPath, string containingFolder)
@@ -199,9 +218,13 @@ public class SerializedFileSQLiteWriter : IDisposable
         // Two SerializedFiles with the same name map to the same id (the provider deduplicates by
         // name), so a second one would collide on serialized_files.id. Reject it before opening a
         // transaction; the file name is what matters to the user, not the analyzer id.
-        if (m_WrittenSerializedFileIds.Contains(serializedFileId))
+        if (m_WrittenSerializedFiles.TryGetValue(serializedFileId, out var analyzedArchive))
         {
-            throw new AnalyzeDuplicateException(Path.GetFileName(fullPath), isArchive: false);
+            var fileName = Path.GetFileName(fullPath);
+            if (LooksLikeAssetBundleVariantPair(m_CurrentArchiveName, analyzedArchive))
+                throw AnalyzeDuplicateException.AssetBundleVariant(fileName, analyzedArchive);
+
+            throw new AnalyzeDuplicateException(fileName, isArchive: false);
         }
 
         using var transaction = m_Database.BeginTransaction();
@@ -387,7 +410,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             }
 
             transaction.Commit();
-            m_WrittenSerializedFileIds.Add(serializedFileId);
+            m_WrittenSerializedFiles[serializedFileId] = m_CurrentArchiveName;
         }
         catch (Exception)
         {

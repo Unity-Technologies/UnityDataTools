@@ -97,6 +97,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             {
                 bool archiveHadErrors = false;
                 bool archiveHadMissingTypeTrees = false;
+                AnalyzeDuplicateException archiveDuplicate = null;
                 using (UnityArchive archive = UnityFileSystem.MountArchive(file, "archive:" + Path.DirectorySeparatorChar))
                 {
                     if (archive == null)
@@ -125,10 +126,9 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                                 catch (AnalyzeDuplicateException e)
                                 {
                                     // A SerializedFile with this name was already analyzed (e.g. two
-                                    // differently-named bundles containing the same CAB). Report the
-                                    // self-contained message rather than a raw SQLite constraint error.
-                                    Console.Error.WriteLine($"Skipping {node.Path} in archive {archiveName}: {e.Message}");
-                                    archiveHadErrors = true;
+                                    // differently-named bundles containing the same CAB, or AssetBundle
+                                    // variants). Reported once for the whole archive, below.
+                                    archiveDuplicate ??= e;
                                 }
                                 catch (Exception e)
                                 {
@@ -151,10 +151,16 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                     }
                 }
 
-                // Genuine errors take precedence over missing TypeTrees when reporting the archive's outcome.
+                // Genuine errors take precedence over duplicates and missing TypeTrees when reporting
+                // the archive's outcome.
                 if (archiveHadErrors)
                 {
                     throw new Exception("One or more files in the archive failed to process");
+                }
+
+                if (archiveDuplicate != null)
+                {
+                    throw archiveDuplicate;
                 }
 
                 if (archiveHadMissingTypeTrees)

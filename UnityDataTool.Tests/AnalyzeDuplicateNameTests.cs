@@ -103,6 +103,32 @@ public class AnalyzeDuplicateNameTests
             1, "only one SerializedFile named 'level0' should be recorded");
     }
 
+    // AssetBundle variant shape: archives that differ only in their extension and share the same
+    // inner SerializedFile. The second is skipped with the variant-specific message, printed once
+    // for the archive rather than once per inner file plus a generic failure line.
+    [Test]
+    public async Task Analyze_AssetBundleVariants_SkippedWithVariantMessage()
+    {
+        var source = Path.Combine(m_AssetBundlesFolder, "2019.4.0f1", "assetbundle");
+        var variantHd = Path.Combine(m_TestOutputFolder, "ui.hd");
+        var variantSd = Path.Combine(m_TestOutputFolder, "ui.sd");
+        File.Copy(source, variantHd);
+        File.Copy(source, variantSd);
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var (exitCode, stderr) = await RunAnalyze(variantHd, variantSd, "-o", databasePath);
+
+        Assert.AreEqual(0, exitCode, "analyze should continue and exit 0 after skipping the variant");
+        StringAssert.Contains("Skipping ui.sd: AssetBundle variant of 'ui.hd'", stderr);
+        StringAssert.DoesNotContain("Duplicate SerializedFile name", stderr);
+        StringAssert.DoesNotContain("Failed to process", stderr);
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM archives WHERE name IN ('ui.hd', 'ui.sd')",
+            2, "both variant archives should be recorded");
+    }
+
     // Hashed-name shape: the same archive under two different file names (as with hashed bundle
     // names). The archive names differ, so both are recorded, but they share the same inner
     // SerializedFile ("CAB-<hash>"), which is rejected the second time.
