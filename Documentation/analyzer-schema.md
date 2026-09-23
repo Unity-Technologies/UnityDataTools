@@ -545,6 +545,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 5 | Added the `dangling_refs` table and view ([#85](https://github.com/Unity-Technologies/UnityDataTools/issues/85)) |
 | 6 | `archives.name` is UNIQUE ([#51](https://github.com/Unity-Technologies/UnityDataTools/issues/51)) |
 | 7 | Unity 6.6 `build_reports` columns and `build_report_content_*` tables ([#107](https://github.com/Unity-Technologies/UnityDataTools/issues/107)); `asset_name` / `asset_extension` columns on `build_report_source_assets` ([#110](https://github.com/Unity-Technologies/UnityDataTools/issues/110)) |
+| 8 | `content_layout*` tables track the version 3 layout schema of Unity 6.7: loadables keyed by `loadable_index`, `stable_id` / `artifact_index` columns replace `cfid` / `content_hash`, `is_root_asset` records the root position, and the v2-only columns (`asset_path`, `source_lfid`) exist only in databases imported from a version 2 layout ([#131](https://github.com/Unity-Technologies/UnityDataTools/issues/131)) |
 
 ## Related documentation
 

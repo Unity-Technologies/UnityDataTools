@@ -52,7 +52,7 @@ runtime.
 
 Every build artifact is named by the hash of its own content:
 
-- **Content Files** use the `.cf` extension (for example `c0152db4dd710be51b2decb997325f34.cf`).
+- **Content Files** use the `.cf` extension (for example `eb3abd5ab5b0d790980fe9e9df872484.cf`).
 - **`.resS`** files hold streamed texture and mesh data.
 - **`.resource`** files hold audio and video data.
 
@@ -73,7 +73,7 @@ it is best to avoid assumption that the extensions are always present.
 ### The build manifest
 
 The build manifest is a JSON file, also named by its content hash (for example
-`baff06b928d147276f2245dd3b19216a.json`). It records everything needed to load the content: the list of
+`e320fc78984f8430afa90a591fd02004.json`). It records everything needed to load the content: the list of
 Content Files, their dependencies, and the loadable objects and scenes. Its schema is internal and may
 change substantially, so this page does not document it. Instead, use
 [`ContentLayout.json`](contentlayout.md), which presents the same information (plus source-asset
@@ -145,8 +145,8 @@ on) are not packed with it — they land in their own Content Files following th
 [granularity rules](#build-layout-granularity), and the scene's file reaches them through the
 manifest dependency list. This differs from Player builds, where each scene comes with companion
 `sharedassets` files holding its assets. Scene Content Files also differ in their object IDs: the
-scene's objects get small sequential IDs (1, 2, 3, ...), rather than the 64-bit hash-based IDs used
-in other Content Files.
+scene's objects get small sequential IDs (1, 2, 3, ...), rather than keeping the local file ids of
+their source objects like other Content Files do.
 
 In `ContentLayout.json` (schema details on the [ContentLayout.json](contentlayout.md) page), the
 top-level `LoadableSceneIds` array lists each scene with its source path and the Content File that
@@ -155,27 +155,29 @@ scenes:
 
 ```json
 "LoadableSceneIds": [
-  { "GUID": "590cfeb4e0ff90f4e92f9e1262bcfe6f", "Path": "Assets/Scenes/Scene2.unity", "SerializedFile": 6 },
-  { "GUID": "162c015549f8733449ac70ae78ad3aa5", "Path": "Assets/Scenes/Scene1.unity", "SerializedFile": 2 }
+  { "GUID": "590cfeb4e0ff90f4e92f9e1262bcfe6f", "Path": "Assets/Scenes/Scene2.unity", "SerializedFile": 12 },
+  { "GUID": "162c015549f8733449ac70ae78ad3aa5", "Path": "Assets/Scenes/Scene1.unity", "SerializedFile": 6 }
 ]
 ```
 
-The scene's own `SerializedFiles` entry names the scene as its single source asset, and its symbolic
-`ID` is derived from the scene's GUID:
+The scene's own `SerializedFiles` entry names the scene as its single source asset, and its
+`StableId` is derived from the scene's GUID:
 
 ```json
 {
-  "Index": 2,
-  "ID": "162c015549f8733449ac70ae78ad3aa5.cfid",
+  "Index": 6,
+  "StableId": "162c015549f8733449ac70ae78ad3aa5",
+  "ArtifactIndex": 6,
   "SourceAssets": [ "Assets/Scenes/Scene1.unity" ],
-  "SerializedFileDependencies": [ 0, 1, 9 ],
-  "ContentHash": "c271b85494f5e4cc35c4ec4a776324af"
+  "SerializedFileDependencies": [ 0, 1, 13 ]
 }
 ```
 
-So this scene lives in `c271b85494f5e4cc35c4ec4a776324af.cf`, and depends on three other files: the
-built-in `unity default resources` entry, the Content File built from `Resources/unity_builtin_extra`
-(the default sprite material), and the file holding the Sprite it shows.
+Its `ArtifactIndex` points at the `BinaryArtifacts` entry whose `ContentHash` is
+`8ec44fb05f86ef7dcb7bbef683d8a330`, so this scene lives in `8ec44fb05f86ef7dcb7bbef683d8a330.cf`. It
+depends on three other files: the built-in `unity default resources` entry, the Content File built
+from `Resources/unity_builtin_extra` (the default sprite material), and the file holding the Sprite
+it shows.
 
 A `LoadableSceneId` reference is an on-demand reference, like a `Loadable`: loading the referencing
 file does not load the scene. The file holding the reference records the scene by path in its
@@ -186,12 +188,12 @@ GUID. The reference build's `SceneList` asset, a ScriptableObject with a diction
 
 ```json
 {
-  "Index": 7,
-  "ID": "70a210050f71a924aa83be7146547111.cfid",
+  "Index": 3,
+  "StableId": "70a210050f71a924aa83be7146547111",
+  "ArtifactIndex": 3,
   "SourceAssets": [ "Assets/ScriptableObjects/SceneList.asset" ],
-  "SerializedFileDependencies": [ 8 ],
-  "LoadableSceneDependencies": [ "Assets/Scenes/Scene2.unity", "Assets/Scenes/Scene1.unity" ],
-  "ContentHash": "8ad4924ac5e264fde63d8e95a0dab8ab"
+  "SerializedFileDependencies": [ 4 ],
+  "LoadableSceneDependencies": [ "Assets/Scenes/Scene2.unity", "Assets/Scenes/Scene1.unity" ]
 }
 ```
 
@@ -230,24 +232,25 @@ File**, in the manifest, rather than in the file's own external-reference table.
 reproduced in [`ContentLayout.json`](contentlayout.md), which is what the examples below use.
 
 Consider `ContentDirectoryRoot.asset`, which directly references several ScriptableObjects. Its entry
-in `ContentLayout.json` names the source asset, the file's own content hash, and — crucially — an
-ordered list of the files it depends on:
+in `ContentLayout.json` names the source asset, the artifact holding the file's content, and —
+crucially — an ordered list of the files it depends on:
 
 ```json
 {
-  "Index": 5,
-  "ID": "52b43dad178849b42ac753005736e7bb.cfid",
+  "Index": 10,
+  "StableId": "52b43dad178849b42ac753005736e7bb",
+  "ArtifactIndex": 10,
   "SourceAssets": [ "Assets/ScriptableObjects/ContentDirectoryRoot.asset" ],
-  "SerializedFileDependencies": [ 8, 4, 11, 13, 7 ],
-  "ContentHash": "c0152db4dd710be51b2decb997325f34"
+  "SerializedFileDependencies": [ 4, 5, 2, 9, 3 ]
 }
 ```
 
-The `ContentHash` tells us this asset lives in `c0152db4dd710be51b2decb997325f34.cf`. Dumping that file
-shows the object's references and the file's external-reference table:
+`BinaryArtifacts` entry 10 has the content hash `eb3abd5ab5b0d790980fe9e9df872484`, so this asset
+lives in `eb3abd5ab5b0d790980fe9e9df872484.cf`. Dumping that file shows the object's references and
+the file's external-reference table:
 
 ```
-UnityDataTool dump --stdout c0152db4dd710be51b2decb997325f34.cf
+UnityDataTool dump --stdout eb3abd5ab5b0d790980fe9e9df872484.cf
 ```
 ```
 External References
@@ -257,13 +260,13 @@ path(3): "21679be819d6e9146a63bb02a7e51f2f.cfid" GUID: 0000000000000000000000000
 path(4): "78532141fd7679a458405eb16bdb75fd.cfid" GUID: 00000000000000000000000000000000 Type: 0
 path(5): "70a210050f71a924aa83be7146547111.cfid" GUID: 00000000000000000000000000000000 Type: 0
 
-ID: -775554941117088049 (ClassID: 114) MonoBehaviour
+ID: 11400000 (ClassID: 114) MonoBehaviour
   ...
       data[1] (SerializedKeyValue`2)
         key (string) SingleAudioClipLoadableReference
         value (PPtr<$ScriptableObject>)
           m_FileID (int) 3
-          m_PathID (SInt64) -2313013086301746513
+          m_PathID (SInt64) 11400000
 ```
 
 The external table lists symbolic names ending in `.cfid`, **not** the content-hash filenames.
@@ -275,29 +278,29 @@ through the build. A key goal of the content directory design is to reduce the a
 
 Because of that, the content of the external table is effectively ignored by the loading system for
 Content File references. What counts is the ordered dependency list in the manifest. The
-`"SerializedFileDependencies": [8, 4, 11, 13, 7]` array corresponds, in exact size and order, to the
+`"SerializedFileDependencies": [4, 5, 2, 9, 3]` array corresponds, in exact size and order, to the
 five entries of the external table.
 
 So resolving the reference to `SingleAudioClipLoadableReference` above:
 
 1. The `PPtr` has `m_FileID` 3. A non-zero `m_FileID` is a 1-based index into the external table (0
    would mean "this same file").
-2. Index 3 maps to the 3rd entry of `SerializedFileDependencies`, which is `11`.
-3. `ContentLayout.json` entry with `"Index": 11` is `SingleAudioClipLoadableReference.asset`, whose
-   `ContentHash` is `5c43454a3823f172a2a326410a36ba6b`.
-4. The referenced file is therefore `5c43454a3823f172a2a326410a36ba6b.cf`.
+2. Index 3 maps to the 3rd entry of `SerializedFileDependencies`, which is `2`.
+3. `ContentLayout.json` entry with `"Index": 2` is `SingleAudioClipLoadableReference.asset`, whose
+   `ArtifactIndex` leads to the content hash `38abbace71a8a756c679a7ff3f501f02`.
+4. The referenced file is therefore `38abbace71a8a756c679a7ff3f501f02.cf`.
 
 A partial mapping for this file, showing how `m_FileID` values in the external table resolve through
-the dependency list `[8, 4, 11, 13, 7]` to a content-hash filename:
+the dependency list `[4, 5, 2, 9, 3]` to a content-hash filename:
 
 ```mermaid
 flowchart TD
-    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file c0152db4….cf<br/>deps [8, 4, 11, 13, 7]"]
-    Loadable["<b>LoadableAudioClipReference</b><br/>Index 4 · cfid 4038ff67…<br/>file bfcf18a2….cf"]
-    Single["<b>SingleAudioClipLoadableReference</b><br/>Index 11 · cfid 21679be8…<br/>file 5c43454a….cf"]
+    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file eb3abd5a….cf<br/>deps [4, 5, 2, 9, 3]"]
+    Loadable["<b>LoadableAudioClipReference</b><br/>Index 5 · cfid 4038ff67…<br/>file 2357d63c….cf"]
+    Single["<b>SingleAudioClipLoadableReference</b><br/>Index 2 · cfid 21679be8…<br/>file 38abbace….cf"]
 
-    Root -->|"m_FileID 2 → dep 4 → Index 4"| Loadable
-    Root -->|"m_FileID 3 → dep 11 → Index 11"| Single
+    Root -->|"m_FileID 2 → dep 5 → Index 5"| Loadable
+    Root -->|"m_FileID 3 → dep 2 → Index 2"| Single
 ```
 
 > [!NOTE]
@@ -322,7 +325,7 @@ audio clips and a texture, so it exercises both kinds of data file. Dumping the 
 `Assets/Textures/GreenStatic.png`'s texture data shows the Texture2D pointing at its `.resS` file:
 
 ```
-ID: -6933612096100796476 (ClassID: 83) AudioClip
+ID: 8300000 (ClassID: 83) AudioClip
   m_Name (string) a
   ...
   m_Resource (StreamedResource)
@@ -331,7 +334,7 @@ ID: -6933612096100796476 (ClassID: 83) AudioClip
     m_Size (UInt64) 47424
 ```
 ```
-ID: 1183010003894172340 (ClassID: 28) Texture2D
+ID: 2800000 (ClassID: 28) Texture2D
   m_Name (string) GreenStatic
   m_StreamData (StreamingInfo)
     offset (UInt64) 0
@@ -366,8 +369,8 @@ File's `ArtifactReferences` point at the resource artifacts it needs. Continuing
 above:
 
 ```json
-{ "Index": 11, "ContentHash": "730d2d641a53eeb1e633f2ff60d730e9", "Category": "contentfile", "Size": 1288, "ArtifactReferences": [12] },
-{ "Index": 12, "ContentHash": "4226b5c16a50dab6eff0f08dd1253d4b", "Category": "audio", "Size": 47424 }
+{ "Index": 11, "ContentHash": "39105176560358e0cd444e7a0a513ed3", "Category": "contentfile", "Size": 1400, "ArtifactReferences": [17] },
+{ "Index": 17, "ContentHash": "4226b5c16a50dab6eff0f08dd1253d4b", "Category": "audio", "Size": 47424 }
 ```
 
 When [`analyze`](command-analyze.md) imports the layout it preserves this: the artifacts land in

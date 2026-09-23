@@ -24,7 +24,7 @@ public class BuildReportTests
         m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "test_folder");
         m_TestDataFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "BuildReports");
         var leadingEdge = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LeadingEdgeBuilds");
-        m_ContentDirectoryReport = Path.Combine(leadingEdge, "BuildReport-ContentDirectory", "f64157fb08bb9f645971d39c1203bd03.buildreport");
+        m_ContentDirectoryReport = Path.Combine(leadingEdge, "BuildReport-ContentDirectory", "f096bba0b9ce4c44194edd738d64b9df.buildreport");
         m_AssetBundleReport = Path.Combine(leadingEdge, "BuildReport-AssetBundles", "LastBuild.buildreport");
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
@@ -622,9 +622,9 @@ public class BuildReportTests
             "Unexpected build_content_options");
         // The session GUID matches the report's GUID-based filename.
         SQLTestHelper.AssertQueryString(db, "SELECT build_session_guid FROM build_reports",
-            "f64157fb08bb9f645971d39c1203bd03", "Unexpected build_session_guid");
+            "f096bba0b9ce4c44194edd738d64b9df", "Unexpected build_session_guid");
         SQLTestHelper.AssertQueryString(db, "SELECT build_manifest_hash FROM build_reports",
-            "baff06b928d147276f2245dd3b19216a", "Unexpected build_manifest_hash");
+            "e320fc78984f8430afa90a591fd02004", "Unexpected build_manifest_hash");
         // No build profile was active: the path is present-but-empty, and the all-zero GUID -> NULL.
         SQLTestHelper.AssertQueryString(db, "SELECT build_profile_path FROM build_reports",
             "", "Expected empty build_profile_path");
@@ -686,7 +686,7 @@ public class BuildReportTests
             "Unexpected number of asset stats rows");
 
         // Spot-check the cross-build stats.
-        SQLTestHelper.AssertQueryInt(db, "SELECT serialized_file_size FROM build_report_content_summary", 158832,
+        SQLTestHelper.AssertQueryInt(db, "SELECT serialized_file_size FROM build_report_content_summary", 99584,
             "Unexpected serialized_file_size");
         SQLTestHelper.AssertQueryInt(db, "SELECT object_count FROM build_report_content_summary", 28,
             "Unexpected object_count");
@@ -749,7 +749,7 @@ public class BuildReportTests
         // Each report's type stats resolve to a build report in the matching serialized file.
         SQLTestHelper.AssertQueryInt(db,
             @"SELECT COUNT(*) FROM build_report_content_type_stats_view
-              WHERE build_report_filename = 'f64157fb08bb9f645971d39c1203bd03.buildreport'
+              WHERE build_report_filename = 'f096bba0b9ce4c44194edd738d64b9df.buildreport'
               AND type_name = 'Cubemap'",
             1, "Expected the ContentDirectory report's Cubemap type stat");
 
