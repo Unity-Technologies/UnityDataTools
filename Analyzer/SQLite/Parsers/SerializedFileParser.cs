@@ -179,8 +179,8 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                 // Note: The file has already been validated in CanParse() via SerializedFileDetector,
                 // so we're confident it's a valid SerializedFile at this point.
                 //
-                // Unlike an archive, a SerializedFile is recorded under its bare file name: that is
-                // the name external references and serialized_files.id are keyed on (issue #149).
+                // SerializedFiles are recorded with the bare file name, matching how Unity
+                // references work and requiring uniqueness. (issue #36).
                 m_Writer.WriteSerializedFile(Path.GetFileName(file), file, Path.GetDirectoryName(file));
             }
         }

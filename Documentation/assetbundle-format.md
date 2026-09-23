@@ -152,7 +152,7 @@ be unique within a database, and every variant of a bundle contains a Serialized
 name. If the input includes more than one variant of the same bundle, analyze processes the first
 one it meets and skips the rest, reporting each skipped file as an AssetBundle variant of the one
 that was analyzed (see
-[Duplicate SerializedFile name](command-analyze.md#duplicate-serializedfile-name--duplicate-archive-name)).
+[Duplicate SerializedFile name](command-analyze.md#duplicate-serializedfile-name)).
 The resulting database is still valid; it simply describes one variant. To choose which, pass only
 that variant of each bundle, for example only the `.hd` files together with the non-variant bundles.
 To compare variants, analyze each into its own database as described in
