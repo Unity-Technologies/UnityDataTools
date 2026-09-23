@@ -64,6 +64,15 @@ UnityDataTool analyze /path/to/bundles --skip-references --skip-crc
 
 See also [Analyze Examples](analyze-examples.md).
 
+## How archives are named
+
+The `archives.name` column, and the `archive` column of the views built on it, holds the path of
+the archive relative to the directory that was analyzed, using `/` separators. An AssetBundle name
+may itself be a path, and `BuildPipeline.BuildAssetBundles` writes such a bundle into a matching
+folder structure, so a build containing `dlc/weapons/main` and `dlc/armor/main` records those two
+names rather than two bundles called `main`. An archive named directly on the command line, rather
+than found by scanning a directory, is recorded under its bare file name.
+
 ---
 
 ## What Can Be Analyzed
@@ -201,6 +210,10 @@ archive name) may appear only once in a database.
 When analyze encounters a second file or archive with a name it has already processed, it prints one
 of the messages above, **skips that file or archive** (counting it as a failed file), and continues
 with the rest of the input. The already-analyzed copy is kept; the duplicate's content is ignored.
+
+Two bundles that share a file name in different sub-folders of the analyzed directory are not
+duplicates: archives are named by their relative path, so `dlc/weapons/main` and `dlc/armor/main`
+are both analyzed. See [How archives are named](#how-archives-are-named).
 
 This is expected when the input contains more than one build, and in these common cases:
 

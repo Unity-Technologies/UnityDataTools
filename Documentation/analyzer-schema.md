@@ -147,8 +147,14 @@ is not inside an archive has no row here.
 | Column | Type | Description |
 |---|---|---|
 | `id` | INTEGER | Analyzer-assigned id. Primary key. |
-| `name` | TEXT | The archive's name on the file system. UNIQUE. |
+| `name` | TEXT | The archive's path relative to the analyzed directory, with `/` separators. UNIQUE. |
 | `file_size` | INTEGER | Size of the archive file in bytes. |
+
+`name` is the path of the archive file relative to the directory that was analyzed, for example
+`dlc/weapons/main`. `BuildPipeline.BuildAssetBundles` writes a bundle whose name is a path into a
+matching folder structure, so the relative path is both unique and the name the bundle has in the
+`AssetBundleManifest`. An archive passed directly on the command line, rather than found by scanning
+a directory, is recorded under its bare file name.
 
 `name` is UNIQUE and case-sensitive because analyze supports a single build at a time: two archives
 with the same name would make every query ambiguous. A duplicate is detected while writing and
@@ -545,6 +551,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 5 | Added the `dangling_refs` table and view ([#85](https://github.com/Unity-Technologies/UnityDataTools/issues/85)) |
 | 6 | `archives.name` is UNIQUE ([#51](https://github.com/Unity-Technologies/UnityDataTools/issues/51)) |
 | 7 | Unity 6.6 `build_reports` columns and `build_report_content_*` tables ([#107](https://github.com/Unity-Technologies/UnityDataTools/issues/107)); `asset_name` / `asset_extension` columns on `build_report_source_assets` ([#110](https://github.com/Unity-Technologies/UnityDataTools/issues/110)) |
+| 8 | `archives.name` is the path relative to the scanned directory, not the bare file name ([#149](https://github.com/Unity-Technologies/UnityDataTools/issues/149)) |
 
 ## Related documentation
 

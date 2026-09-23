@@ -47,7 +47,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             return IsContentLayoutFile(filename);
         }
 
-        public void Parse(string filename)
+        public void Parse(string filename, string rootDirectory)
         {
             ContentLayout layout;
             using (var reader = File.OpenText(filename))

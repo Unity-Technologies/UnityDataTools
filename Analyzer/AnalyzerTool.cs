@@ -107,7 +107,7 @@ public class AnalyzerTool
                     foundParser = true;
                     try
                     {
-                        parser.Parse(file);
+                        parser.Parse(file, displayRoot);
                         ReportProgress(relativePath, i, files.Count);
                         countSuccess++;
                     }
