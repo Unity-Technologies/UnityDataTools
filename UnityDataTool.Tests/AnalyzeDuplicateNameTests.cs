@@ -214,4 +214,30 @@ public class AnalyzeDuplicateNameTests
         SQLTestHelper.AssertQueryString(db, "SELECT name FROM archives", "main",
             "a directly-named archive keeps its bare file name");
     }
+
+    // The variant check compares the extensions of two archive names, which are now paths. A dot
+    // in a folder name is not an extension, so two bundles under "v1.2" and "v1.3" must be
+    // reported as a plain duplicate rather than as variants of each other.
+    [Test]
+    public async Task Analyze_DottedFolderNames_NotReportedAsVariants()
+    {
+        var source = Path.Combine(m_AssetBundlesFolder, "2019.4.0f1", "assetbundle");
+        foreach (var folder in new[] { "v1.2", "v1.3" })
+        {
+            Directory.CreateDirectory(Path.Combine(m_TestOutputFolder, folder));
+            File.Copy(source, Path.Combine(m_TestOutputFolder, folder, "main"));
+        }
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var (exitCode, stderr) = await RunAnalyze(m_TestOutputFolder, "-o", databasePath);
+
+        Assert.AreEqual(0, exitCode);
+        StringAssert.Contains("Duplicate SerializedFile name", stderr);
+        StringAssert.DoesNotContain("AssetBundle variant", stderr);
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM archives WHERE name IN ('v1.2/main', 'v1.3/main')",
+            2, "both archives should be recorded under their dotted-folder relative path");
+    }
 }

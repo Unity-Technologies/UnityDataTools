@@ -180,6 +180,9 @@ public class SerializedFileSQLiteWriter : IDisposable
     // AssetBundle variants are named "<bundle>.<variant>", and every variant of a bundle contains
     // a SerializedFile with the same name. Two archives that differ only in their extension and
     // share a SerializedFile are therefore taken to be variants of the same bundle.
+    //
+    // The names are paths, and the Path methods below only consider the last segment, so a dot in
+    // a folder name ("v1.2/main") is not mistaken for a variant suffix.
     private static bool LooksLikeAssetBundleVariantPair(string archiveA, string archiveB)
     {
         if (archiveA == null || archiveB == null || archiveA == archiveB)
