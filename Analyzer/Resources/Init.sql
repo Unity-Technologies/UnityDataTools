@@ -168,7 +168,7 @@ WHERE m.type = 'Material';
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
-PRAGMA user_version = 7;
+PRAGMA user_version = 8;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

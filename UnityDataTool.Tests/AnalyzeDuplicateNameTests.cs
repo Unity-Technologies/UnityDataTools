@@ -13,6 +13,9 @@ namespace UnityDataTools.UnityDataTool.Tests;
 // single-line message instead of a raw "UNIQUE constraint failed" SQLite error. Covers the three
 // scenarios from the issue: loose files, archives with the same name, and differently-named
 // archives (hashed bundle names) that share the same inner SerializedFile.
+//
+// Also covers the opposite case (issue #149): bundles sharing a file name in different sub-folders
+// of one scanned directory are distinct archives, not duplicates.
 public class AnalyzeDuplicateNameTests
 {
     private string m_TestOutputFolder;
@@ -158,5 +161,83 @@ public class AnalyzeDuplicateNameTests
             @"SELECT COUNT(*) FROM serialized_files
               WHERE name LIKE 'CAB-%' AND id IN (SELECT serialized_file FROM objects)",
             1, "the shared inner SerializedFile should be analyzed only once");
+    }
+
+    // Issue #149: an AssetBundle name can be a path, so a build commonly contains several bundles
+    // with the same file name in different folders. They are recorded under their path relative to
+    // the scanned directory and are not treated as duplicates.
+    [Test]
+    public async Task Analyze_SameFileNameInDifferentFolders_NamedByRelativePath()
+    {
+        var sourceFolder = Path.Combine(m_AssetBundlesFolder, "2019.4.0f1");
+        var folderA = Path.Combine(m_TestOutputFolder, "dlc", "weapons");
+        var folderB = Path.Combine(m_TestOutputFolder, "dlc", "armor");
+        Directory.CreateDirectory(folderA);
+        Directory.CreateDirectory(folderB);
+        File.Copy(Path.Combine(sourceFolder, "assetbundle"), Path.Combine(folderA, "main"));
+        File.Copy(Path.Combine(sourceFolder, "scenes"), Path.Combine(folderB, "main"));
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var (exitCode, stderr) = await RunAnalyze(m_TestOutputFolder, "-o", databasePath);
+
+        Assert.AreEqual(0, exitCode);
+        StringAssert.DoesNotContain("Duplicate archive name", stderr);
+        StringAssert.DoesNotContain("UNIQUE constraint", stderr);
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM archives WHERE name IN ('dlc/weapons/main', 'dlc/armor/main')",
+            2, "both bundles should be recorded under their relative path");
+        Assert.Greater(SQLTestHelper.QueryInt(db,
+            "SELECT COUNT(*) FROM object_view WHERE archive = 'dlc/weapons/main'"), 0);
+        Assert.Greater(SQLTestHelper.QueryInt(db,
+            "SELECT COUNT(*) FROM object_view WHERE archive = 'dlc/armor/main'"), 0);
+    }
+
+    // A file named directly on the command line has no scanned directory to be relative to, so it
+    // keeps its bare file name.
+    [Test]
+    public async Task Analyze_FileNamedDirectly_KeepsBareFileName()
+    {
+        var source = Path.Combine(m_AssetBundlesFolder, "2019.4.0f1", "assetbundle");
+        var nested = Path.Combine(m_TestOutputFolder, "dlc", "weapons");
+        Directory.CreateDirectory(nested);
+        var bundle = Path.Combine(nested, "main");
+        File.Copy(source, bundle);
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var (exitCode, _) = await RunAnalyze(bundle, "-o", databasePath);
+
+        Assert.AreEqual(0, exitCode);
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+        SQLTestHelper.AssertQueryString(db, "SELECT name FROM archives", "main",
+            "a directly-named archive keeps its bare file name");
+    }
+
+    // The variant check compares the extensions of two archive names, which are now paths. A dot
+    // in a folder name is not an extension, so two bundles under "v1.2" and "v1.3" must be
+    // reported as a plain duplicate rather than as variants of each other.
+    [Test]
+    public async Task Analyze_DottedFolderNames_NotReportedAsVariants()
+    {
+        var source = Path.Combine(m_AssetBundlesFolder, "2019.4.0f1", "assetbundle");
+        foreach (var folder in new[] { "v1.2", "v1.3" })
+        {
+            Directory.CreateDirectory(Path.Combine(m_TestOutputFolder, folder));
+            File.Copy(source, Path.Combine(m_TestOutputFolder, folder, "main"));
+        }
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var (exitCode, stderr) = await RunAnalyze(m_TestOutputFolder, "-o", databasePath);
+
+        Assert.AreEqual(0, exitCode);
+        StringAssert.Contains("Duplicate SerializedFile name", stderr);
+        StringAssert.DoesNotContain("AssetBundle variant", stderr);
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM archives WHERE name IN ('v1.2/main', 'v1.3/main')",
+            2, "both archives should be recorded under their dotted-folder relative path");
     }
 }

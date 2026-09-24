@@ -179,14 +179,10 @@ This error occurs when SerializedFiles are built without TypeTrees. The command 
 UnityDataTool analyze /path/to/bundles --typetree-data /path/to/typetree.bin
 ```
 
-### Duplicate SerializedFile name / Duplicate archive name
+### Duplicate SerializedFile name
 
 ```
 Skipping build2\level0: Duplicate SerializedFile name 'level0'. Only a single build can be analyzed at a time; the same SerializedFile name cannot be analyzed twice.
-```
-or
-```
-Skipping build2\assetbundle: Duplicate archive name 'assetbundle'. Each analyzed archive must have a unique name; only a single build can be analyzed at a time.
 ```
 or
 ```
@@ -195,12 +191,22 @@ Skipping ui.sd: AssetBundle variant of 'ui.hd', which was already analyzed (both
 
 **analyze only supports a single build at a time.** Unity resolves references between SerializedFiles
 by file name, so two files that share a name are indistinguishable to those references — there is no
-way to tell which copy a reference points at. For that reason each SerializedFile name (and each
-archive name) may appear only once in a database.
+way to tell which copy a reference points at. For that reason each SerializedFile name may appear
+only once in a database.
 
-When analyze encounters a second file or archive with a name it has already processed, it prints one
-of the messages above, **skips that file or archive** (counting it as a failed file), and continues
-with the rest of the input. The already-analyzed copy is kept; the duplicate's content is ignored.
+Archive names do not have to be unique across folders: an archive is recorded under its path
+relative to the analyzed directory, so two bundles that share a file name in different sub-folders
+(`dlc/weapons/main` and `dlc/armor/main`) are both analyzed. Two builds analyzed together still
+collide, both on their SerializedFiles and, when each build is passed as its own input path, on
+their archive names:
+
+```
+Skipping build2\assetbundle: Duplicate archive name 'assetbundle'. Each analyzed archive must have a unique name; only a single build can be analyzed at a time.
+```
+
+When analyze encounters a second file or archive with a name it has already processed, it **skips
+that file or archive** (counting it as a failed file) and continues with the rest of the input.
+The already-analyzed copy is kept; the duplicate's content is ignored.
 
 This is expected when the input contains more than one build, and in these common cases:
 

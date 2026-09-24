@@ -67,7 +67,7 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
             return false;
         }
 
-        public void Parse(string filename)
+        public void Parse(string filename, string rootDirectory)
         {
             // only init our writer if we are actually parsing a file
             m_Writer.Init();

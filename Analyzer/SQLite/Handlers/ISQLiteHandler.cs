@@ -26,7 +26,10 @@ public interface ISQLiteFileParser : IDisposable
 {
     void Init(SqliteConnection db);
     bool CanParse(string filename);
-    void Parse(string filename);
+
+    // rootDirectory is the scanned input path the file was found under; names recorded in the
+    // database are relative to it, so same-named files in different sub-folders stay distinct.
+    void Parse(string filename, string rootDirectory);
 
     // Called once after all files have been parsed, so a parser can write data that can only be
     // determined from the complete set (e.g. dangling references). No-op for parsers that don't

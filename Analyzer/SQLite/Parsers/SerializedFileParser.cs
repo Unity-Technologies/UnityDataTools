@@ -55,11 +55,11 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                 m_SerializedFileIdProvider, m_ContentFileDependencies);
         }
 
-        public void Parse(string filename)
+        public void Parse(string filename, string rootDirectory)
         {
             // only init our writer if we are actually parsing a file
             m_Writer.Init();
-            ProcessFile(filename, Path.GetDirectoryName(filename));
+            ProcessFile(filename, rootDirectory);
         }
 
         bool ShouldIgnoreFile(string file)
@@ -105,7 +105,12 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
 
                     try
                     {
-                        var archiveName = Path.GetRelativePath(rootDirectory, file);
+                        // Naming an archive by its path relative to the scanned root keeps
+                        // bundles that share a file name in different folders distinct (issue
+                        // #149). Forward slashes make the value platform independent and match
+                        // the name the AssetBundleManifest uses.
+                        var archiveName = Path.GetRelativePath(rootDirectory, file)
+                            .Replace(Path.DirectorySeparatorChar, '/');
 
                         m_Writer.BeginArchive(archiveName, new FileInfo(file).Length);
 
@@ -173,8 +178,10 @@ namespace UnityDataTools.Analyzer.SQLite.Parsers
                 // This isn't a Unity Archive file, so process it as a SerializedFile.
                 // Note: The file has already been validated in CanParse() via SerializedFileDetector,
                 // so we're confident it's a valid SerializedFile at this point.
-                var relativePath = Path.GetRelativePath(rootDirectory, file);
-                m_Writer.WriteSerializedFile(relativePath, file, Path.GetDirectoryName(file));
+                //
+                // SerializedFiles are recorded with the bare file name, matching how Unity
+                // references work and requiring uniqueness. (issue #36).
+                m_Writer.WriteSerializedFile(Path.GetFileName(file), file, Path.GetDirectoryName(file));
             }
         }
     }
