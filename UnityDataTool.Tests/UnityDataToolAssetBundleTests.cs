@@ -335,6 +335,36 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
             "Expected to find exactly one MonoBehaviour instance of SerializeReferencePolymorphismExample");
     }
 
+    // The 2019.4 and 2020.3 bundles have a version 1 registry, where the rid is the entry's position;
+    // the later ones have version 2. The instance data is the same in both.
+    [Test]
+    public async Task Analyze_ManagedReferences_DatabaseContainsExpectedContent(
+        [Values("", "--skip-references --skip-crc")] string options)
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", Context.UnityDataFolder }
+            .Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM managed_reference_view", 2,
+            "SerializeReference instances");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM managed_reference_view WHERE object_id = -4606375687431940004 " +
+            "AND class_name = 'SerializeReferencePolymorphismExample/Apple' AND namespace = '' " +
+            "AND assembly_name LIKE 'Assembly-CSharp%' AND size = 12",
+            1, "Apple instance");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM managed_reference_view WHERE object_id = -4606375687431940004 " +
+            "AND class_name = 'SerializeReferencePolymorphismExample/Orange' AND namespace = '' " +
+            "AND assembly_name LIKE 'Assembly-CSharp%' AND size = 8",
+            1, "Orange instance");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM view_managed_reference_types WHERE instances = 1 AND objects = 1", 2,
+            "one row per SerializeReference type");
+    }
+
     private void ValidateDatabase(string databasePath, bool withRefs)
     {
         using var db = SQLTestHelper.OpenDatabase(databasePath);

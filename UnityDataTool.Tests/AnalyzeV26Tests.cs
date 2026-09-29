@@ -35,10 +35,10 @@ public class AnalyzeV26Tests
         testDir.EnumerateDirectories().ToList().ForEach(d => d.Delete(true));
     }
 
-    async Task<SqliteConnection> Analyze(string input)
+    async Task<SqliteConnection> Analyze(string input, params string[] options)
     {
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
-        Assert.AreEqual(0, await Program.Main(new[] { "analyze", input, "-o", databasePath }));
+        Assert.AreEqual(0, await Program.Main(new[] { "analyze", input, "-o", databasePath }.Concat(options).ToArray()));
         return SQLTestHelper.OpenDatabase(databasePath);
     }
 
@@ -52,6 +52,48 @@ public class AnalyzeV26Tests
         SQLTestHelper.AssertQueryInt(db,
             "SELECT COUNT(*) FROM refs_view WHERE property_path LIKE 'references.rid(%).data.material' AND property_type = '$Material'",
             1, "PPtr held by a [SerializeReference] instance");
+    }
+
+    // The registry holds each instance once, however it is referenced: nested inside another
+    // instance, from an array, or from several fields. The null reference (rid -2) has no row.
+    [Test]
+    public async Task Analyze_Version26_RecordsEveryManagedReference()
+    {
+        using var db = await Analyze(m_ManagedReferencesBundle);
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM managed_references", 9, "SerializeReference instances");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(DISTINCT rid) FROM managed_references", 9, "distinct rids");
+
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT instances FROM view_managed_reference_types WHERE class_name = 'ManagedReferenceTestBehaviour/Shape'",
+            4, "Shape instances");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT size FROM managed_references WHERE class_name = 'ManagedReferenceTestBehaviour/TexturedShape'",
+            16, "TexturedShape data size");
+    }
+
+    // The same asset built by Unity 6.0 (registry version 2) and 6.7 (version 3). The size must
+    // match, which shows the version 3 size covers the instance data and not the frame.
+    [TestCase("PlayerWithTypeTrees", false)]
+    [TestCase("PlayerWithTypeTreesV26", false)]
+    [TestCase("PlayerWithTypeTreesV26", true)]
+    public async Task Analyze_RecordsManagedReference_WhicheverFormat(string folder, bool skipReferencesAndCrc)
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", folder, "sharedassets1.assets");
+
+        using var db = skipReferencesAndCrc
+            ? await Analyze(path, "--skip-references", "--skip-crc")
+            : await Analyze(path);
+
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM managed_reference_view", 1, "SerializeReference instances");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT COUNT(*) FROM managed_reference_view WHERE name = 'ScriptableObjectWIthSerializeReference' " +
+            "AND class_name = 'Data' AND namespace = 'MyNamespace' AND assembly_name = 'Assembly-CSharp' " +
+            "AND rid = 6911265806470873295 AND size = 20",
+            1, "the Data instance of ScriptableObjectWIthSerializeReference");
+
+        if (skipReferencesAndCrc)
+            SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM refs", 0, "refs with --skip-references");
     }
 
     // In a version 26 file a PPtr is usually reached through a shared subtree, which is a node with

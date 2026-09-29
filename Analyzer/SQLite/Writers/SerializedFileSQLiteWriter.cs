@@ -95,6 +95,7 @@ public class SerializedFileSQLiteWriter : IDisposable
     private AddType m_AddTypeCommand = new AddType();
     private AddPreloadDependency m_InsertDepCommand = new AddPreloadDependency();
     private AddDanglingRef m_AddDanglingRefCommand = new AddDanglingRef();
+    private AddManagedReference m_AddManagedReferenceCommand = new AddManagedReference();
 
     private bool m_Initialized;
     private SqliteConnection m_Database;
@@ -137,6 +138,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddTypeCommand.CreateCommand(m_Database);
         m_InsertDepCommand.CreateCommand(m_Database);
         m_AddDanglingRefCommand.CreateCommand(m_Database);
+        m_AddManagedReferenceCommand.CreateCommand(m_Database);
 
         m_LastId = m_Database.CreateCommand();
         m_LastId.CommandText = "SELECT last_insert_rowid()";
@@ -213,7 +215,7 @@ public class SerializedFileSQLiteWriter : IDisposable
 
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
-        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference);
+        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference, AddManagedReference);
         int serializedFileId = m_SerializedFileIdProvider.GetId(
             ContentFileDependencyMap.NormalizeFileName(Path.GetFileName(fullPath)));
         int sceneId = -1;
@@ -382,10 +384,10 @@ public class SerializedFileSQLiteWriter : IDisposable
                 }
                 m_AddObjectCommand.SetValue("game_object", gameObject);
 
-                // The walk both extracts references and accumulates the CRC, so it is needed
-                // unless both are disabled. When CRC is on but references are off, the walk
-                // still resolves referenced object ids (AddReference skips the insert).
-                if (!m_SkipReferences || !m_SkipCrc)
+                // The walk extracts references, accumulates the CRC and records [SerializeReference]
+                // instances, which are recorded whatever the skip options. When references are off,
+                // the walk still resolves referenced object ids (AddReference skips the insert).
+                if (!m_SkipReferences || !m_SkipCrc || PPtrAndCrcProcessor.HasManagedReferenceRegistry(root))
                 {
                     crc32 = pptrReader.Process(currentObjectId, offset, obj.Size, root);
                 }
@@ -517,6 +519,20 @@ public class SerializedFileSQLiteWriter : IDisposable
         return referencedObjectId;
     }
 
+    // Callback from PPtrAndCrcProcessor for each [SerializeReference] instance in the SerializedFile
+    private void AddManagedReference(long objectId, long rid, string className, string namespaceName,
+        string assemblyName, long size)
+    {
+        m_AddManagedReferenceCommand.SetTransaction(m_CurrentTransaction);
+        m_AddManagedReferenceCommand.SetValue("object", objectId);
+        m_AddManagedReferenceCommand.SetValue("rid", rid);
+        m_AddManagedReferenceCommand.SetValue("class_name", className);
+        m_AddManagedReferenceCommand.SetValue("namespace", namespaceName);
+        m_AddManagedReferenceCommand.SetValue("assembly_name", assemblyName);
+        m_AddManagedReferenceCommand.SetValue("size", size);
+        m_AddManagedReferenceCommand.ExecuteNonQuery();
+    }
+
     // Resolve a property path/type string to its id, writing the lookup row the first time the
     // string is seen. Called within the current transaction (references are being extracted).
     private int GetPropertyPathId(string propertyPath)
@@ -562,6 +578,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddTypeCommand.Dispose();
         m_InsertDepCommand.Dispose();
         m_AddDanglingRefCommand.Dispose();
+        m_AddManagedReferenceCommand.Dispose();
 
         m_LastId.Dispose();
     }
