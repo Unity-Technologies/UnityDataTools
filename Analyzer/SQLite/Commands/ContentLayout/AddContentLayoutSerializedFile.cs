@@ -12,9 +12,9 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.ContentLayout
         protected override Dictionary<string, SqliteType> Fields => new()
         {
             { "file_index", SqliteType.Integer },
-            { "cfid", SqliteType.Text },
+            { "stable_id", SqliteType.Text },
             { "is_builtin", SqliteType.Integer },
-            { "content_hash", SqliteType.Text },
+            { "artifact_index", SqliteType.Integer },
             { "serialized_file", SqliteType.Integer }
         };
     }

@@ -12,7 +12,7 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.ContentLayout
         protected override Dictionary<string, SqliteType> Fields => new()
         {
             { "serialized_file_index", SqliteType.Integer },
-            { "object_id_hash", SqliteType.Text }
+            { "loadable_index", SqliteType.Integer }
         };
     }
 }

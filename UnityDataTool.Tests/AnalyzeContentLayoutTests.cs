@@ -10,10 +10,11 @@ namespace UnityDataTools.UnityDataTool.Tests;
 #pragma warning disable NUnit2005, NUnit2006
 
 // Tests the import of ContentLayout.json into the content_layout* tables (issue #99). Runs
-// against the ContentLayout.json of the LeadingEdge ContentDirectory reference build, whose
-// content is well-known (see UnityProjects/LeadingEdge/Assets/Editor/BuildContentDirectory.cs):
+// against the version 3 ContentLayout.json of the LeadingEdge ContentDirectory reference build,
+// whose content is well-known (see UnityProjects/LeadingEdge/Assets/Editor/BuildContentDirectory.cs):
 // 14 serialized files (1 built-in), 3 loadable objects with ContentDirectoryRoot as the single
-// root asset, 2 loadable scenes, and 18 binary artifacts.
+// root asset, 2 loadable scenes, and 18 binary artifacts. The version 2 import is covered by
+// AnalyzeContentLayoutV2Tests.
 public class AnalyzeContentLayoutTests
 {
     private string m_TestOutputFolder;
@@ -27,7 +28,7 @@ public class AnalyzeContentLayoutTests
         m_ContentLayoutPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
             "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "ContentLayout.json");
         m_BuildReportPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
-            "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f64157fb08bb9f645971d39c1203bd03.buildreport");
+            "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f096bba0b9ce4c44194edd738d64b9df.buildreport");
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
     }
@@ -52,10 +53,10 @@ public class AnalyzeContentLayoutTests
         // Header row identifying the imported layout.
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout", 1,
             "a single layout should be imported");
-        SQLTestHelper.AssertQueryInt(db, "SELECT version FROM content_layout", 2,
+        SQLTestHelper.AssertQueryInt(db, "SELECT version FROM content_layout", 3,
             "the layout schema version should be recorded");
         SQLTestHelper.AssertQueryString(db, "SELECT build_manifest_hash FROM content_layout",
-            "baff06b928d147276f2245dd3b19216a", "the BuildManifestHash should be recorded");
+            "e320fc78984f8430afa90a591fd02004", "the BuildManifestHash should be recorded");
 
         // Row counts of each table, matching the json content.
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_serialized_files", 14,
@@ -77,39 +78,58 @@ public class AnalyzeContentLayoutTests
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_artifact_references", 17,
             "one row per artifact reference");
 
-        // The built-in entry keeps its human-readable ID and has no content hash.
+        // The built-in entry keeps its human-readable path as the stable id and has no artifact.
         SQLTestHelper.AssertQueryString(db,
-            "SELECT cfid FROM content_layout_serialized_files WHERE file_index = 0",
+            "SELECT stable_id FROM content_layout_serialized_files WHERE file_index = 0",
             "Library/unity default resources", "the built-in entry should be at index 0");
         SQLTestHelper.AssertQueryInt(db,
             "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 1", 1,
             "the reference build has a single built-in entry");
         SQLTestHelper.AssertQueryInt(db,
-            "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 1 AND content_hash IS NOT NULL", 0,
-            "built-in entries have no content hash");
+            "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 1 AND artifact_index IS NOT NULL", 0,
+            "built-in entries have no artifact");
 
         // The ContentDirectoryRoot file and its dependencies, preserving the json array order
-        // (json SerializedFileDependencies for index 5: [8, 4, 11, 13, 7]).
+        // (json SerializedFileDependencies for index 10: [4, 5, 2, 9, 3]).
         SQLTestHelper.AssertQueryString(db,
-            "SELECT cfid FROM content_layout_serialized_files WHERE file_index = 5",
-            "52b43dad178849b42ac753005736e7bb.cfid", "cfid of the ContentDirectoryRoot file");
+            "SELECT stable_id FROM content_layout_serialized_files WHERE file_index = 10",
+            "52b43dad178849b42ac753005736e7bb", "stable id of the ContentDirectoryRoot file");
         SQLTestHelper.AssertQueryString(db,
-            "SELECT content_hash FROM content_layout_serialized_files WHERE file_index = 5",
-            "c0152db4dd710be51b2decb997325f34", "content hash of the ContentDirectoryRoot file");
+            @"SELECT ba.content_hash FROM content_layout_serialized_files f
+              INNER JOIN content_layout_binary_artifacts ba ON ba.artifact_index = f.artifact_index
+              WHERE f.file_index = 10",
+            "eb3abd5ab5b0d790980fe9e9df872484", "artifact link of the ContentDirectoryRoot file");
         SQLTestHelper.AssertQueryString(db,
             @"SELECT GROUP_CONCAT(dependency_index) FROM (
                 SELECT dependency_index FROM content_layout_serialized_file_dependencies
-                WHERE serialized_file_index = 5 ORDER BY position)",
-            "8,4,11,13,7", "dependency order must match the json array order");
+                WHERE serialized_file_index = 10 ORDER BY position)",
+            "4,5,2,9,3", "dependency order must match the json array order");
         SQLTestHelper.AssertQueryString(db,
-            "SELECT asset_path FROM content_layout_source_assets WHERE serialized_file_index = 5",
+            "SELECT asset_path FROM content_layout_source_assets WHERE serialized_file_index = 10",
             "Assets/ScriptableObjects/ContentDirectoryRoot.asset", "source asset of the root file");
 
-        // RootAssets is folded into the is_root_asset flag.
-        SQLTestHelper.AssertQueryString(db,
-            "SELECT asset_path FROM content_layout_loadable_objects WHERE is_root_asset = 1",
-            "Assets/ScriptableObjects/ContentDirectoryRoot.asset",
+        // RootAssets is folded into is_root_asset, which holds the 1-based root position
+        // (json RootAssets: [2]).
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT loadable_index FROM content_layout_loadable_objects WHERE is_root_asset = 1", 2,
             "ContentDirectoryRoot is the only root asset");
+        SQLTestHelper.AssertQueryString(db,
+            "SELECT guid FROM content_layout_loadable_objects WHERE is_root_asset = 1",
+            "52b43dad178849b42ac753005736e7bb", "the root loadable records its source asset guid");
+
+        // The loadable dependencies are indices into the loadables (json file 5: [0, 1]).
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT GROUP_CONCAT(loadable_index) FROM (
+                SELECT loadable_index FROM content_layout_loadable_dependencies
+                WHERE serialized_file_index = 5 ORDER BY loadable_index)",
+            "0,1", "loadable dependencies reference loadables by index");
+
+        // v3 layouts do not record the source asset path or source lfid of a loadable, so the
+        // v2-only columns must not exist in this database.
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM pragma_table_info('content_layout_loadable_objects')
+              WHERE name IN ('asset_path', 'source_lfid')", 0,
+            "the v2-only columns exist only in databases imported from a v2 layout");
 
         // Even without the build content, every non-built-in entry links to a serialized_files
         // row: a placeholder holding just the filename (archive NULL, no objects).
@@ -117,9 +137,9 @@ public class AnalyzeContentLayoutTests
             "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 0 AND serialized_file IS NULL", 0,
             "a layout-only analyze links every entry to a placeholder row");
         SQLTestHelper.AssertQueryInt(db,
-            @"SELECT COUNT(*) FROM content_layout_serialized_files f
-              INNER JOIN serialized_files sf ON sf.id = f.serialized_file
-              WHERE sf.name != f.content_hash || '.cf' OR sf.archive IS NOT NULL", 0,
+            @"SELECT COUNT(*) FROM content_layout_serialized_files_view v
+              INNER JOIN serialized_files sf ON sf.id = v.serialized_file
+              WHERE sf.name != v.filename OR sf.archive IS NOT NULL", 0,
             "placeholder rows hold the filename and no archive");
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM objects", 0,
             "a layout-only analyze produces no objects");
@@ -131,7 +151,7 @@ public class AnalyzeContentLayoutTests
             13, "one contentfile artifact per non-built-in serialized file");
         SQLTestHelper.AssertQueryString(db,
             "SELECT filename FROM content_layout_binary_artifacts_view WHERE category = 'manifest'",
-            "baff06b928d147276f2245dd3b19216a.json", "the artifact filename is derived from the category");
+            "e320fc78984f8430afa90a591fd02004.json", "the artifact filename is derived from the category");
 
         // Views are created with the tables and their joins produce the expected rows.
         SQLTestHelper.AssertViewExists(db, "content_layout_serialized_files_view");
@@ -148,16 +168,15 @@ public class AnalyzeContentLayoutTests
             "Library/unity default resources", "built-in entries show their path as the filename");
         SQLTestHelper.AssertQueryString(db,
             @"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
-              WHERE serialized_file_index = 2 AND position = 1",
+              WHERE serialized_file_index = 6 AND position = 1",
             "Library/unity default resources", "dependencies on built-in entries resolve to their path");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT filename FROM content_layout_loadable_objects_view
-              WHERE asset_path = 'Assets/ScriptableObjects/ContentDirectoryRoot.asset'",
-            "c0152db4dd710be51b2decb997325f34.cf", "the loadable view resolves the containing file");
+            @"SELECT filename FROM content_layout_loadable_objects_view WHERE loadable_index = 2",
+            "eb3abd5ab5b0d790980fe9e9df872484.cf", "the loadable view resolves the containing file");
         SQLTestHelper.AssertQueryString(db,
             @"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
-              WHERE serialized_file_index = 5 AND position = 1",
-            "86d71ff2bb38e064697257d35d6421b8.cf", "the dependencies view resolves target filenames");
+              WHERE serialized_file_index = 10 AND position = 1",
+            "79bdcb3e9bc659d3519594280240cd1b.cf", "the dependencies view resolves target filenames");
     }
 
     [Test]
@@ -188,12 +207,10 @@ public class AnalyzeContentLayoutTests
             "SELECT COUNT(*) FROM content_layout_loadable_objects_view WHERE object IS NULL", 0,
             "every loadable should resolve to an analyzed object");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT name FROM content_layout_loadable_objects_view
-              WHERE asset_path = 'Assets/ScriptableObjects/ContentDirectoryRoot.asset'",
+            "SELECT name FROM content_layout_loadable_objects_view WHERE is_root_asset = 1",
             "ContentDirectoryRoot", "the root loadable resolves to the root ScriptableObject");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT type FROM content_layout_loadable_objects_view
-              WHERE asset_path = 'Assets/ScriptableObjects/ContentDirectoryRoot.asset'",
+            "SELECT type FROM content_layout_loadable_objects_view WHERE is_root_asset = 1",
             "MonoBehaviour", "ScriptableObjects are serialized as MonoBehaviour");
 
         // The layout resolves the .cfid placeholder references, so the only dangling targets
@@ -227,25 +244,6 @@ public class AnalyzeContentLayoutTests
             "both loadable scenes should link to analyzed content files");
     }
 
-    // Runs a command capturing stderr, where analyze prints its warnings.
-    private static async Task<(int exitCode, string stdErr)> RunCapturingStdErr(params string[] args)
-    {
-        using var sw = new StringWriter();
-        var currentError = Console.Error;
-        int exitCode;
-        try
-        {
-            Console.SetError(sw);
-            exitCode = await Program.Main(args);
-        }
-        finally
-        {
-            Console.SetError(currentError);
-        }
-
-        return (exitCode, sw.ToString());
-    }
-
     [Test]
     public async Task Analyze_ContentDirectoryWithoutLayout_WarnsAndRecordsDanglingRefs()
     {
@@ -253,7 +251,7 @@ public class AnalyzeContentLayoutTests
             "Data", "LeadingEdgeBuilds", "ContentDirectory");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr("analyze", contentDirectory, "-o", databasePath);
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr("analyze", contentDirectory, "-o", databasePath);
 
         Assert.AreEqual(0, exitCode, "a ContentDirectory without its layout is still analyzable");
         Assert.That(stdErr, Does.Contain("without its ContentLayout.json"),
@@ -279,7 +277,7 @@ public class AnalyzeContentLayoutTests
             "Data", "contentdirectory-zstd");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", contentDirectory, otherBuild, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode, "analyzing two different ContentDirectory builds must fail");
@@ -295,7 +293,7 @@ public class AnalyzeContentLayoutTests
             "Data", "contentdirectory-zstd");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", otherBuild, m_ContentLayoutPath, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode, "a layout that does not match the build must not be used");
@@ -310,12 +308,12 @@ public class AnalyzeContentLayoutTests
         var staleFolder = Path.Combine(m_TestOutputFolder, "stale_layout");
         Directory.CreateDirectory(staleFolder);
         File.WriteAllText(Path.Combine(staleFolder, "ContentLayout.json"),
-            "{\"Version\":2,\"BuildManifestHash\":\"deadbeefdeadbeefdeadbeefdeadbeef\"}");
+            "{\"Version\":3,\"BuildManifestHash\":\"deadbeefdeadbeefdeadbeefdeadbeef\"}");
         var contentDirectory = Path.Combine(TestContext.CurrentContext.TestDirectory,
             "Data", "LeadingEdgeBuilds", "ContentDirectory");
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", staleFolder, m_ContentLayoutPath, contentDirectory, "-o", databasePath);
 
         Assert.AreEqual(0, exitCode);
@@ -323,7 +321,7 @@ public class AnalyzeContentLayoutTests
 
         using var db = SQLTestHelper.OpenDatabase(databasePath);
         SQLTestHelper.AssertQueryString(db, "SELECT build_manifest_hash FROM content_layout",
-            "baff06b928d147276f2245dd3b19216a", "the matching layout should be the imported one");
+            "e320fc78984f8430afa90a591fd02004", "the matching layout should be the imported one");
     }
 
     [Test]
@@ -336,7 +334,7 @@ public class AnalyzeContentLayoutTests
             "Data", "LeadingEdgeBuilds", "ContentDirectory");
         var subsetFolder = Path.Combine(m_TestOutputFolder, "subset");
         Directory.CreateDirectory(subsetFolder);
-        const string rootFile = "c0152db4dd710be51b2decb997325f34.cf";
+        const string rootFile = "eb3abd5ab5b0d790980fe9e9df872484.cf";
         File.Copy(Path.Combine(contentDirectory, rootFile), Path.Combine(subsetFolder, rootFile));
         File.Copy(Path.Combine(contentDirectory, "BuildManifestHash.txt"),
             Path.Combine(subsetFolder, "BuildManifestHash.txt"));
@@ -368,11 +366,11 @@ public class AnalyzeContentLayoutTests
             "Data", "LeadingEdgeBuilds", "ContentDirectory");
         var subsetFolder = Path.Combine(m_TestOutputFolder, "subset_no_hash");
         Directory.CreateDirectory(subsetFolder);
-        const string rootFile = "c0152db4dd710be51b2decb997325f34.cf";
+        const string rootFile = "eb3abd5ab5b0d790980fe9e9df872484.cf";
         File.Copy(Path.Combine(contentDirectory, rootFile), Path.Combine(subsetFolder, rootFile));
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", subsetFolder, m_ContentLayoutPath, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode);
@@ -387,22 +385,11 @@ public class AnalyzeContentLayoutTests
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_ContentLayoutPath, contentDirectory, "-o", databasePath }));
 
-        using var sw = new StringWriter();
-        var currentOut = Console.Out;
-        int exitCode;
-        try
-        {
-            Console.SetOut(sw);
-            exitCode = await Program.Main(new string[]
-                { "find-refs", databasePath, "-n", "SerializationDemo", "-t", "MonoBehaviour", "--stdout" });
-        }
-        finally
-        {
-            Console.SetOut(currentOut);
-        }
+        var (exitCode, stdOut) = await ConsoleTestHelper.RunCapturingStdOut(
+            "find-refs", databasePath, "-n", "SerializationDemo", "-t", "MonoBehaviour", "--stdout");
 
         Assert.AreEqual(0, exitCode);
-        Assert.That(sw.ToString(), Does.Contain("ContentDirectoryRoot"),
+        Assert.That(stdOut, Does.Contain("ContentDirectoryRoot"),
             "the chain from the root asset should be found across content files");
     }
 
@@ -466,7 +453,7 @@ public class AnalyzeContentLayoutTests
         File.Copy(m_ContentLayoutPath, Path.Combine(folderB, "ContentLayout.json"));
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 
-        var (exitCode, stdErr) = await RunCapturingStdErr(
+        var (exitCode, stdErr) = await ConsoleTestHelper.RunCapturingStdErr(
             "analyze", folderA, folderB, "-o", databasePath);
 
         Assert.AreEqual(1, exitCode, "multiple layouts without build content cannot be disambiguated");

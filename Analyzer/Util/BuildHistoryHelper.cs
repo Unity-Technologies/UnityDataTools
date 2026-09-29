@@ -111,16 +111,34 @@ public static class BuildHistoryHelper
     // null when the value cannot be found or the file is not valid json.
     public static string TryReadBuildManifestHash(string contentLayoutPath)
     {
+        return TryReadTopLevelProperty(contentLayoutPath, "BuildManifestHash",
+            reader => reader.ReadAsString()?.ToLowerInvariant());
+    }
+
+    // Reads the top-level Version of a ContentLayout.json without parsing the whole file (it is
+    // the first property). Returns null when the value cannot be found or the file is not valid
+    // json.
+    public static int? TryReadLayoutVersion(string contentLayoutPath)
+    {
+        return TryReadTopLevelProperty(contentLayoutPath, "Version",
+            reader => reader.ReadAsInt32());
+    }
+
+    // Streams the start of a json file looking for a top-level property, without parsing the
+    // whole file. Returns null when the property is not found within the first tokens or the
+    // file is not valid json.
+    private static T TryReadTopLevelProperty<T>(string path, string propertyName, Func<JsonTextReader, T> readValue)
+    {
         try
         {
-            using var reader = new JsonTextReader(File.OpenText(contentLayoutPath));
+            using var reader = new JsonTextReader(File.OpenText(path));
 
             for (int i = 0; i < 64 && reader.Read(); ++i)
             {
                 if (reader.TokenType == JsonToken.PropertyName && reader.Depth == 1 &&
-                    "BuildManifestHash".Equals(reader.Value))
+                    propertyName.Equals(reader.Value))
                 {
-                    return reader.ReadAsString()?.ToLowerInvariant();
+                    return readValue(reader);
                 }
             }
         }
@@ -128,7 +146,7 @@ public static class BuildHistoryHelper
         {
         }
 
-        return null;
+        return default;
     }
 
     static bool HasExtension(string path, string extension)
