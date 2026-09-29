@@ -62,12 +62,6 @@ public class TextDumperTool
             if (ArchiveDetector.IsUnityArchive(m_Options.Path))
                 return m_Options.Entry != null || m_Options.ToStdout ? DumpArchiveSerializedFile() : DumpArchive();
 
-            if (m_Options.Entry != null)
-            {
-                Console.Error.WriteLine(ArchiveSerializedFile.EntryWithoutArchiveError(m_Options.Path));
-                return 1;
-            }
-
             if (YamlSerializedFileDetector.IsYamlSerializedFile(m_Options.Path))
             {
                 Console.Error.WriteLine("Error: The file is a YAML-format SerializedFile, which is not supported.");
@@ -82,7 +76,8 @@ public class TextDumperTool
             Console.Error.WriteLine($"File: {m_Options.Path}");
             return 1;
         }
-        catch (Exception e)
+        // The caller reports a failed selection in terms of its own options.
+        catch (Exception e) when (e is not SerializedFileSelectionException)
         {
             Console.Error.WriteLine($"Error: {e.GetType()}: {e.Message}");
             Console.Error.WriteLine(e.StackTrace);
@@ -101,19 +96,12 @@ public class TextDumperTool
     // Dumps one SerializedFile from an archive, chosen with --entry or because it is the only one.
     int DumpArchiveSerializedFile()
     {
-        if (!ArchiveSerializedFile.TryOpen(m_Options.Path, m_Options.Entry, out var archiveFile, out var errorMessage))
-        {
-            Console.Error.WriteLine(errorMessage);
+        using var serializedFile = MountedSerializedFile.Open(m_Options.Path, m_Options.Entry);
+
+        if (ReportIfNotDumpable(serializedFile.MountedPath, serializedFile.PathInArchive))
             return 1;
-        }
 
-        using (archiveFile)
-        {
-            if (ReportIfNotDumpable(archiveFile.MountedPath, archiveFile.Name))
-                return 1;
-
-            return WriteDump(archiveFile.MountedPath, archiveFile.Name);
-        }
+        return WriteDump(serializedFile.MountedPath, serializedFile.PathInArchive);
     }
 
     // Writes the dump of one SerializedFile to stdout or to "<name>.txt" in the output folder.

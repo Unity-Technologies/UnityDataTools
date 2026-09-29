@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnityDataTools.Analyzer;
 using UnityDataTools.Archive;
+using UnityDataTools.BinaryFormat;
 using UnityDataTools.FileSystem;
 using UnityDataTools.ReferenceFinder;
 using UnityDataTools.SerializedFile;
@@ -228,7 +229,7 @@ public static class Program
                     ToStdout = toStdout,
                     Entry = entry,
                 };
-                return Task.FromResult(HandleDump(options));
+                return Task.FromResult(RunWithEntry(fi, entry, () => HandleDump(options)));
             },
             pathArg, fOpt, aOpt, xOpt, oOpt, objectIdOpt, typeOpt, dOpt, stdoutOpt, entryOpt);
 
@@ -312,7 +313,7 @@ public static class Program
             fOpt,
         };
         externalRefsCommand.SetHandler(
-            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.ListExternalRefs(fi, entry, f)),
+            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(RunWithEntry(fi, entry, () => SerializedFileTool.ListExternalRefs(fi, entry, f))),
             pathArg, entryOpt, fOpt);
 
         var objectListCommand = new Command("objectlist", "List all objects in a SerializedFile.")
@@ -322,7 +323,7 @@ public static class Program
             fOpt,
         };
         objectListCommand.SetHandler(
-            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.ListObjects(fi, entry, f)),
+            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(RunWithEntry(fi, entry, () => SerializedFileTool.ListObjects(fi, entry, f))),
             pathArg, entryOpt, fOpt);
 
         var headerCommand = new Command("header", "Show SerializedFile header information.")
@@ -332,7 +333,7 @@ public static class Program
             fOpt,
         };
         headerCommand.SetHandler(
-            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.PrintHeader(fi, entry, f)),
+            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(RunWithEntry(fi, entry, () => SerializedFileTool.PrintHeader(fi, entry, f))),
             pathArg, entryOpt, fOpt);
 
         var metadataCommand = new Command("metadata", "Show information from the metadata section of the SerializedFile (use `-f Json` for detailed information).")
@@ -342,7 +343,7 @@ public static class Program
             fOpt,
         };
         metadataCommand.SetHandler(
-            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(SerializedFileTool.PrintMetadata(fi, entry, f)),
+            (FileInfo fi, string entry, SerializedFileTool.OutputFormat f) => Task.FromResult(RunWithEntry(fi, entry, () => SerializedFileTool.PrintMetadata(fi, entry, f))),
             pathArg, entryOpt, fOpt);
 
         var serializedFileCommand = new Command("serialized-file", "Inspect a SerializedFile (scene, assets, etc.).")
@@ -354,6 +355,38 @@ public static class Program
         };
         serializedFileCommand.AddAlias("sf");
         return serializedFileCommand;
+    }
+
+    // Runs a command that accepts --entry, and explains in terms of --entry why no SerializedFile
+    // could be selected inside the archive.
+    static int RunWithEntry(FileInfo file, string entry, Func<int> command)
+    {
+        if (entry != null && !ArchiveDetector.IsUnityArchive(file.FullName))
+        {
+            Console.Error.WriteLine("Error: --entry can only be used with a Unity Archive, and this file is not one.");
+            Console.Error.WriteLine($"File: {file.FullName}");
+            return 1;
+        }
+
+        try
+        {
+            return command();
+        }
+        catch (SerializedFileSelectionException e)
+        {
+            if (e.Failure == SerializedFileSelectionFailure.MultipleSerializedFiles)
+                Console.Error.WriteLine($"Error: {e.Message} Choose one with --entry, for example --entry \"{e.SerializedFiles[0]}\".");
+            else
+                Console.Error.WriteLine($"Error: {e.Message}");
+
+            if (e.SerializedFiles.Count > 0)
+            {
+                Console.Error.WriteLine("SerializedFiles in the archive:");
+                foreach (var path in e.SerializedFiles)
+                    Console.Error.WriteLine($"  {path}");
+            }
+            return 1;
+        }
     }
 
     static int LoadTypeTreeDataFile(FileInfo typeTreeDataFile)

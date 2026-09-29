@@ -121,18 +121,19 @@ public static class SerializedFileTool
         public Stream Stream { get; init; }
         public SerializedFileInfo Info { get; init; }
         public string DisplayName { get; init; }
-        public ArchiveSerializedFile ArchiveFile { get; init; }
+        public MountedSerializedFile MountedFile { get; init; }
 
         public void Dispose()
         {
             // The stream reads through the mount, so close it before unmounting.
             Stream.Dispose();
-            ArchiveFile?.Dispose();
+            MountedFile?.Dispose();
         }
     }
 
     // Opens the file as a SerializedFile, or the SerializedFile chosen by entry when the file is an
-    // archive. Prints a helpful error and returns null when that is not possible.
+    // archive. Prints a helpful error and returns null when that is not possible, except that a failed
+    // selection inside the archive throws SerializedFileSelectionException.
     private static OpenedSerializedFile OpenSerializedFile(string filePath, string entry)
     {
         if (!File.Exists(filePath))
@@ -143,28 +144,18 @@ public static class SerializedFileTool
 
         Stream stream;
         string displayName;
-        ArchiveSerializedFile archiveFile = null;
+        MountedSerializedFile mountedFile = null;
 
         if (ArchiveDetector.IsUnityArchive(filePath))
         {
-            if (!ArchiveSerializedFile.TryOpen(filePath, entry, out archiveFile, out var archiveError))
-            {
-                Console.Error.WriteLine(archiveError);
-                return null;
-            }
+            mountedFile = MountedSerializedFile.Open(filePath, entry);
 
             // The metadata parser reads one small value at a time, and every unbuffered read is a native call.
-            stream = new BufferedStream(new UnityFileStream(archiveFile.MountedPath), 64 * 1024);
-            displayName = $"{archiveFile.Name} in {filePath}";
+            stream = new BufferedStream(new UnityFileStream(mountedFile.MountedPath), 64 * 1024);
+            displayName = $"{mountedFile.PathInArchive} in {filePath}";
         }
         else
         {
-            if (entry != null)
-            {
-                Console.Error.WriteLine(ArchiveSerializedFile.EntryWithoutArchiveError(filePath));
-                return null;
-            }
-
             if (YamlSerializedFileDetector.IsYamlSerializedFile(filePath))
             {
                 Console.Error.WriteLine($"Error: The file is a YAML-format SerializedFile, which is not supported.");
@@ -183,11 +174,11 @@ public static class SerializedFileTool
             Console.Error.WriteLine($"Error: The file does not appear to be a valid Unity SerializedFile.");
             Console.Error.WriteLine($"File: {displayName}");
             stream.Dispose();
-            archiveFile?.Dispose();
+            mountedFile?.Dispose();
             return null;
         }
 
-        return new OpenedSerializedFile { Stream = stream, Info = info, DisplayName = displayName, ArchiveFile = archiveFile };
+        return new OpenedSerializedFile { Stream = stream, Info = info, DisplayName = displayName, MountedFile = mountedFile };
     }
 
     private static void OutputExternalRefsText(ExternalReference[] refs)
