@@ -159,10 +159,11 @@ is only needed when scripts access the data on the CPU. `view_potential_duplicat
 objects across the whole build (this is why the full analysis matters) and is only expected to have
 results for AssetBundle builds: rows that span archives usually mean a shared dependency was not
 assigned to a common AssetBundle, so it was duplicated into each AssetBundle that needs it. To see
-a suspicious object in full, dump it from the file the query reported:
+a suspicious object in full, dump it from the file the query reported (the `archive`,
+`serialized_file` and `object_id` columns of `object_view`):
 
 ```
-UnityDataTool dump /path/to/build/some.bundle -i <object_id> --stdout
+UnityDataTool dump /path/to/build/some.bundle -e <serialized_file> -i <object_id> --stdout
 ```
 
 ## Worked example: why is this one AssetBundle so large?

@@ -41,6 +41,8 @@ public class TextDumperTool
         public long ObjectId { get; init; }
         public string TypeFilter { get; init; }
         public bool ToStdout { get; init; }
+        // Name of the SerializedFile to dump when Path is an archive
+        public string Entry { get; init; }
     }
 
     public int Dump(DumpOptions options)
@@ -58,7 +60,7 @@ public class TextDumperTool
             }
 
             if (ArchiveDetector.IsUnityArchive(m_Options.Path))
-                return DumpArchive();
+                return m_Options.Entry != null || m_Options.ToStdout ? DumpArchiveSerializedFile() : DumpArchive();
 
             if (YamlSerializedFileDetector.IsYamlSerializedFile(m_Options.Path))
             {
@@ -74,7 +76,8 @@ public class TextDumperTool
             Console.Error.WriteLine($"File: {m_Options.Path}");
             return 1;
         }
-        catch (Exception e)
+        // The caller reports a failed selection in terms of its own options.
+        catch (Exception e) when (e is not SerializedFileSelectionException)
         {
             Console.Error.WriteLine($"Error: {e.GetType()}: {e.Message}");
             Console.Error.WriteLine(e.StackTrace);
@@ -87,24 +90,41 @@ public class TextDumperTool
         if (ReportIfNotDumpable(m_Options.Path, m_Options.Path))
             return 1;
 
+        return WriteDump(m_Options.Path, m_Options.Path);
+    }
+
+    // Dumps one SerializedFile from an archive, chosen with --entry or because it is the only one.
+    int DumpArchiveSerializedFile()
+    {
+        using var serializedFile = MountedSerializedFile.Open(m_Options.Path, m_Options.Entry);
+
+        if (ReportIfNotDumpable(serializedFile.MountedPath, serializedFile.PathInArchive))
+            return 1;
+
+        return WriteDump(serializedFile.MountedPath, serializedFile.PathInArchive);
+    }
+
+    // Writes the dump of one SerializedFile to stdout or to "<name>.txt" in the output folder.
+    int WriteDump(string path, string displayName)
+    {
         try
         {
             if (m_Options.ToStdout)
             {
                 m_Writer = Console.Out;
-                OutputSerializedFile(m_Options.Path);
+                OutputSerializedFile(path);
                 m_Writer.Flush();
             }
             else
             {
-                using var writer = new StreamWriter(Path.Combine(m_Options.OutputPath, Path.GetFileName(m_Options.Path) + ".txt"), false);
+                using var writer = new StreamWriter(Path.Combine(m_Options.OutputPath, Path.GetFileName(displayName) + ".txt"), false);
                 m_Writer = writer;
-                OutputSerializedFile(m_Options.Path);
+                OutputSerializedFile(path);
             }
         }
         catch (SerializedFileOpenException)
         {
-            Console.Error.WriteLine($"Error: Failed to open serialized file: {m_Options.Path}");
+            Console.Error.WriteLine($"Error: Failed to open serialized file: {displayName}");
             return 1;
         }
 
@@ -134,69 +154,25 @@ public class TextDumperTool
         return true;
     }
 
-    // For convenience we also support directly dumping serialized files that are inside an archive,
-    // so that it's not necessary to use `archive extract` if you only want to see values from the object serialization.
+    // Dumps every SerializedFile inside the archive, so that it's not necessary to use `archive extract`
+    // if you only want to see values from the object serialization.
     int DumpArchive()
     {
         using var archive = UnityFileSystem.MountArchive(m_Options.Path, "/");
-        bool anyMissingTypeTrees = false;
+        bool anyFailed = false;
 
-        if (m_Options.ToStdout)
+        foreach (var node in archive.Nodes)
         {
-            ArchiveNode? singleSerializedFile = null;
-            int serializedFileCount = 0;
-            foreach (var node in archive.Nodes)
+            Console.WriteLine($"Processing {node.Path} {node.Size} {node.Flags}");
+
+            if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
             {
-                if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                {
-                    ++serializedFileCount;
-                    singleSerializedFile ??= node;
-                }
-            }
-
-            if (serializedFileCount == 0)
-            {
-                Console.Error.WriteLine("Error: Archive contains no SerializedFiles.");
-                return 1;
-            }
-
-            if (serializedFileCount > 1)
-            {
-                Console.Error.WriteLine($"Error: --stdout cannot be used with an archive containing multiple SerializedFiles ({serializedFileCount} found).");
-                Console.Error.WriteLine("Extract the archive first, or pass an individual SerializedFile as input.");
-                return 1;
-            }
-
-            var node2 = singleSerializedFile.Value;
-            Console.Error.WriteLine($"Processing {node2.Path} {node2.Size} {node2.Flags}");
-            if (ReportIfNotDumpable("/" + node2.Path, node2.Path))
-                return 1;
-            m_Writer = Console.Out;
-            OutputSerializedFile("/" + node2.Path);
-            m_Writer.Flush();
-        }
-        else
-        {
-            foreach (var node in archive.Nodes)
-            {
-                Console.WriteLine($"Processing {node.Path} {node.Size} {node.Flags}");
-
-                if (node.Flags.HasFlag(ArchiveNodeFlags.SerializedFile))
-                {
-                    if (ReportIfNotDumpable("/" + node.Path, node.Path))
-                    {
-                        anyMissingTypeTrees = true;
-                        continue;
-                    }
-
-                    using var writer = new StreamWriter(Path.Combine(m_Options.OutputPath, Path.GetFileName(node.Path) + ".txt"), false);
-                    m_Writer = writer;
-                    OutputSerializedFile("/" + node.Path);
-                }
+                if (ReportIfNotDumpable("/" + node.Path, node.Path) || WriteDump("/" + node.Path, node.Path) != 0)
+                    anyFailed = true;
             }
         }
 
-        return anyMissingTypeTrees ? 1 : 0;
+        return anyFailed ? 1 : 0;
     }
 
     void OutputSerializedFile(string path)

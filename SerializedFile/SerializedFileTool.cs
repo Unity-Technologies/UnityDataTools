@@ -15,7 +15,7 @@ public static class SerializedFileTool
         Json
     }
 
-    public static int ListExternalRefs(FileInfo filename, OutputFormat format)
+    public static int ListExternalRefs(FileInfo filename, string entry, OutputFormat format)
     {
         // External references are read directly from the parsed metadata rather than via UnityFileSystemApi.
         //
@@ -26,19 +26,20 @@ public static class SerializedFileTool
         //
         // These trade-offs are minor compared to the benefit of handling the common no-TypeTree case,
         // so there is no need to keep the UnityFileSystemApi code path.
-        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
+        using var file = OpenSerializedFile(filename.FullName, entry);
+        if (file == null)
             return 1;
 
-        if (!SerializedFileDetector.TryParseMetadata(filename.FullName, fileInfo, out var metadata, out var errorMessage))
+        if (!SerializedFileDetector.TryParseMetadata(file.Stream, file.Info, out var metadata, out var errorMessage))
         {
-            Console.Error.WriteLine($"Error: Failed to parse external references for: {filename.FullName}");
+            Console.Error.WriteLine($"Error: Failed to parse external references for: {file.DisplayName}");
             Console.Error.WriteLine(errorMessage);
             return 1;
         }
 
         if (metadata.ExternalReferences == null)
         {
-            Console.Error.WriteLine($"Error: External references could not be parsed for: {filename.FullName}");
+            Console.Error.WriteLine($"Error: External references could not be parsed for: {file.DisplayName}");
             return 1;
         }
 
@@ -50,23 +51,24 @@ public static class SerializedFileTool
         return 0;
     }
 
-    public static int ListObjects(FileInfo filename, OutputFormat format)
+    public static int ListObjects(FileInfo filename, string entry, OutputFormat format)
     {
         // The object list is read directly from the parsed metadata rather than via UnityFileSystemApi.
         // (See comment in ListExternalRefs() for the reasons for doing it that way)
-        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
+        using var file = OpenSerializedFile(filename.FullName, entry);
+        if (file == null)
             return 1;
 
-        if (!SerializedFileDetector.TryParseMetadata(filename.FullName, fileInfo, out var metadata, out var errorMessage))
+        if (!SerializedFileDetector.TryParseMetadata(file.Stream, file.Info, out var metadata, out var errorMessage))
         {
-            Console.Error.WriteLine($"Error: Failed to parse object list for: {filename.FullName}");
+            Console.Error.WriteLine($"Error: Failed to parse object list for: {file.DisplayName}");
             Console.Error.WriteLine(errorMessage);
             return 1;
         }
 
         if (metadata.ObjectList == null)
         {
-            Console.Error.WriteLine($"Error: Object list could not be parsed for: {filename.FullName}");
+            Console.Error.WriteLine($"Error: Object list could not be parsed for: {file.DisplayName}");
             return 1;
         }
 
@@ -78,27 +80,29 @@ public static class SerializedFileTool
         return 0;
     }
 
-    public static int PrintHeader(FileInfo filename, OutputFormat format)
+    public static int PrintHeader(FileInfo filename, string entry, OutputFormat format)
     {
-        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
+        using var file = OpenSerializedFile(filename.FullName, entry);
+        if (file == null)
             return 1;
 
         if (format == OutputFormat.Json)
-            OutputHeaderJson(fileInfo);
+            OutputHeaderJson(file.Info);
         else
-            OutputHeaderText(fileInfo);
+            OutputHeaderText(file.Info);
 
         return 0;
     }
 
-    public static int PrintMetadata(FileInfo filename, OutputFormat format)
+    public static int PrintMetadata(FileInfo filename, string entry, OutputFormat format)
     {
-        if (!ValidateSerializedFile(filename.FullName, out var fileInfo))
+        using var file = OpenSerializedFile(filename.FullName, entry);
+        if (file == null)
             return 1;
 
-        if (!SerializedFileDetector.TryParseMetadata(filename.FullName, fileInfo, out var metadata, out var errorMessage))
+        if (!SerializedFileDetector.TryParseMetadata(file.Stream, file.Info, out var metadata, out var errorMessage))
         {
-            Console.Error.WriteLine($"Error: Failed to parse metadata for: {filename.FullName}");
+            Console.Error.WriteLine($"Error: Failed to parse metadata for: {file.DisplayName}");
             Console.Error.WriteLine(errorMessage);
             return 1;
         }
@@ -111,52 +115,70 @@ public static class SerializedFileTool
         return 0;
     }
 
-    /// <summary>
-    /// Validates that a file is a SerializedFile and provides helpful error messages if not.
-    /// </summary>
-    /// <param name="filePath">Path to the file to validate</param>
-    /// <param name="fileInfo">SerializedFile header information if valid, null otherwise</param>
-    /// <returns>True if valid SerializedFile, false otherwise</returns>
-    private static bool ValidateSerializedFile(string filePath, out SerializedFileInfo fileInfo)
+    // A validated SerializedFile open for reading: a file on disk, or an entry of a mounted archive.
+    private sealed class OpenedSerializedFile : IDisposable
     {
-        fileInfo = null;
+        public Stream Stream { get; init; }
+        public SerializedFileInfo Info { get; init; }
+        public string DisplayName { get; init; }
+        public MountedSerializedFile MountedFile { get; init; }
 
+        public void Dispose()
+        {
+            // The stream reads through the mount, so close it before unmounting.
+            Stream.Dispose();
+            MountedFile?.Dispose();
+        }
+    }
+
+    // Opens the file as a SerializedFile, or the SerializedFile chosen by entry when the file is an
+    // archive. Prints a helpful error and returns null when that is not possible, except that a failed
+    // selection inside the archive throws SerializedFileSelectionException.
+    private static OpenedSerializedFile OpenSerializedFile(string filePath, string entry)
+    {
         if (!File.Exists(filePath))
         {
             Console.Error.WriteLine($"Error: File not found: {filePath}");
-            return false;
+            return null;
         }
+
+        Stream stream;
+        string displayName;
+        MountedSerializedFile mountedFile = null;
 
         if (ArchiveDetector.IsUnityArchive(filePath))
         {
-            Console.Error.WriteLine($"Error: The file is an AssetBundle or other Unity Archive, not a SerializedFile.");
-            Console.Error.WriteLine($"File: {filePath}");
-            Console.Error.WriteLine();
-            Console.Error.WriteLine("Unity Archives contain SerializedFiles inside them.");
-            Console.Error.WriteLine("To access the SerializedFiles, first extract the archive using:");
-            Console.Error.WriteLine($"  UnityDataTool archive extract \"{filePath}\" -o <output-directory>");
-            Console.Error.WriteLine();
-            Console.Error.WriteLine("Then you can run serialized-file commands on the extracted files.");
-            return false;
-        }
+            mountedFile = MountedSerializedFile.Open(filePath, entry);
 
-        if (YamlSerializedFileDetector.IsYamlSerializedFile(filePath))
+            // The metadata parser reads one small value at a time, and every unbuffered read is a native call.
+            stream = new BufferedStream(new UnityFileStream(mountedFile.MountedPath), 64 * 1024);
+            displayName = $"{mountedFile.PathInArchive} in {filePath}";
+        }
+        else
         {
-            Console.Error.WriteLine($"Error: The file is a YAML-format SerializedFile, which is not supported.");
-            Console.Error.WriteLine($"File: {filePath}");
-            Console.Error.WriteLine();
-            Console.Error.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
-            return false;
+            if (YamlSerializedFileDetector.IsYamlSerializedFile(filePath))
+            {
+                Console.Error.WriteLine($"Error: The file is a YAML-format SerializedFile, which is not supported.");
+                Console.Error.WriteLine($"File: {filePath}");
+                Console.Error.WriteLine();
+                Console.Error.WriteLine("UnityDataTool only supports binary-format SerializedFiles.");
+                return null;
+            }
+
+            stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            displayName = filePath;
         }
 
-        if (!SerializedFileDetector.TryDetectSerializedFile(filePath, out fileInfo))
+        if (!SerializedFileDetector.TryDetectSerializedFile(stream, out var info))
         {
             Console.Error.WriteLine($"Error: The file does not appear to be a valid Unity SerializedFile.");
-            Console.Error.WriteLine($"File: {filePath}");
-            return false;
+            Console.Error.WriteLine($"File: {displayName}");
+            stream.Dispose();
+            mountedFile?.Dispose();
+            return null;
         }
 
-        return true;
+        return new OpenedSerializedFile { Stream = stream, Info = info, DisplayName = displayName, MountedFile = mountedFile };
     }
 
     private static void OutputExternalRefsText(ExternalReference[] refs)

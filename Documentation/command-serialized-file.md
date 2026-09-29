@@ -38,7 +38,8 @@ UnityDataTool sf externalrefs <filename> [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `<filename>` | Path to the SerializedFile | *(required)* |
+| `<filename>` | Path to the SerializedFile, or to an archive that contains it | *(required)* |
+| `-e, --entry <name>` | Name of the SerializedFile inside the archive (see [SerializedFiles inside an archive](#serializedfiles-inside-an-archive)) | — |
 | `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
 
 ### Example - Text Output
@@ -93,7 +94,8 @@ UnityDataTool sf objectlist <filename> [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `<filename>` | Path to the SerializedFile | *(required)* |
+| `<filename>` | Path to the SerializedFile, or to an archive that contains it | *(required)* |
+| `-e, --entry <name>` | Name of the SerializedFile inside the archive (see [SerializedFiles inside an archive](#serializedfiles-inside-an-archive)) | — |
 | `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
 
 ### Example - Text Output
@@ -155,7 +157,8 @@ UnityDataTool sf header <filename> [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `<filename>` | Path to the SerializedFile | *(required)* |
+| `<filename>` | Path to the SerializedFile, or to an archive that contains it | *(required)* |
+| `-e, --entry <name>` | Name of the SerializedFile inside the archive (see [SerializedFiles inside an archive](#serializedfiles-inside-an-archive)) | — |
 | `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
 
 ### Example - Text Output
@@ -223,7 +226,8 @@ UnityDataTool sf metadata <filename> [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `<filename>` | Path to the SerializedFile | *(required)* |
+| `<filename>` | Path to the SerializedFile, or to an archive that contains it | *(required)* |
+| `-e, --entry <name>` | Name of the SerializedFile inside the archive (see [SerializedFiles inside an archive](#serializedfiles-inside-an-archive)) | — |
 | `-f, --format <format>` | Output format: `Text` or `Json` | `Text` |
 
 ### Example - Text Output
@@ -363,21 +367,25 @@ UnityDataTool sf objectlist sharedassets0.assets -f json | jq '.[] | select(.typ
 
 ---
 
-## SerializedFile vs Archive
+## SerializedFiles inside an archive
 
-When working with AssetBundles (or a compressed Player build) you need to extract the contents first (with `archive extract`), then run the `serialized-file` command on individual files in the extracted output.
+AssetBundles, compressed Player builds and Content Directory builds store their SerializedFiles inside a Unity Archive. Every subcommand can read a SerializedFile directly from the archive, without extracting it: pass the archive path and name the SerializedFile with `-e` / `--entry`.
 
-**Example workflow:**
 ```bash
-# 1. List contents of an archive
+# 1. List the contents of the archive
 UnityDataTool archive list scenes.bundle
 
-# 2. Extract the archive
-UnityDataTool archive extract scenes.bundle -o extracted/
-
-# 3. Inspect individual SerializedFiles
-UnityDataTool sf objectlist extracted/CAB-5d40f7cad7c871cf2ad2af19ac542994
+# 2. Inspect one of its SerializedFiles
+UnityDataTool sf objectlist scenes.bundle -e BuildPlayer-SampleScene.sharedAssets
 ```
+
+When the archive contains only one SerializedFile (the usual case for an AssetBundle that does not contain scenes), `--entry` can be left out:
+
+```bash
+UnityDataTool sf externalrefs mybundle.bundle
+```
+
+When there are several, the error lists their names. The names are also the `serialized_file` column of `object_view` in a database built by `analyze`.
 
 ---
 

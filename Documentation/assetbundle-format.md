@@ -198,14 +198,12 @@ built-in shaders it needs and does not depend on the Player's Always Included Sh
 
 The [`archive`](command-archive.md) command lists or extracts the files inside a bundle, and
 [`dump`](command-dump.md) / [`serialized-file`](command-serialized-file.md) inspect the
-SerializedFiles. A typical workflow is to extract the bundle into a folder and then dump specific
-objects:
+SerializedFiles directly inside the bundle, without extracting it:
 
 ```
-UnityDataTool archive extract mybundle.bundle -o extracted
-cd extracted
-UnityDataTool sf objectlist CAB-<hash>
-UnityDataTool dump --stdout CAB-<hash> --type AssetBundle
+UnityDataTool archive list mybundle.bundle
+UnityDataTool sf objectlist mybundle.bundle -e CAB-<hash>
+UnityDataTool dump --stdout mybundle.bundle -e CAB-<hash> --type AssetBundle
 ```
 
 ## The AssetBundle object

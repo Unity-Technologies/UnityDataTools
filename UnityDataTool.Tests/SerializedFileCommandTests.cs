@@ -422,37 +422,6 @@ public class SerializedFileCommandTests
         Assert.AreNotEqual(0, result, "Should return error code for invalid file");
     }
 
-    [Test]
-    public async Task Header_ArchiveFile_ReturnsError()
-    {
-        var legacyDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats", "AssetBundles");
-        var archivePath = Path.Combine(legacyDir, "alienprefab");
-
-        if (!File.Exists(archivePath))
-        {
-            Assert.Ignore("alienprefab test file not found");
-            return;
-        }
-
-        using var sw = new StringWriter();
-        var currentErr = Console.Error;
-        try
-        {
-            Console.SetError(sw);
-
-            var result = await Program.Main(new string[] { "serialized-file", "header", archivePath });
-
-            Assert.AreNotEqual(0, result, "Should return error code for archive file");
-
-            var errorOutput = sw.ToString();
-            StringAssert.Contains("Unity Archive", errorOutput, "Error message should mention Unity Archive");
-        }
-        finally
-        {
-            Console.SetError(currentErr);
-        }
-    }
-
     #endregion
 
     #region Metadata Tests
@@ -799,48 +768,6 @@ public class SerializedFileCommandTests
     }
 
     [Test]
-    public async Task ErrorHandling_ArchiveFile_ReturnsHelpfulError()
-    {
-        // Use an AssetBundle from test data
-        var assetBundlesDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "AssetBundles", "2022.1.20f1");
-
-        // Skip if the test data doesn't exist (CI environments might not have all test data)
-        if (!Directory.Exists(assetBundlesDir))
-        {
-            Assert.Ignore("AssetBundle test data not found");
-            return;
-        }
-
-        var archiveFiles = Directory.GetFiles(assetBundlesDir, "*", SearchOption.TopDirectoryOnly);
-        if (archiveFiles.Length == 0)
-        {
-            Assert.Ignore("No AssetBundle test files found");
-            return;
-        }
-
-        var archivePath = archiveFiles[0]; // Use first archive file found
-
-        using var sw = new StringWriter();
-        var currentErr = Console.Error;
-        try
-        {
-            Console.SetError(sw);
-
-            var result = await Program.Main(new string[] { "serialized-file", "objectlist", archivePath });
-
-            Assert.AreNotEqual(0, result, "Should return error code for archive file");
-
-            var errorOutput = sw.ToString();
-            StringAssert.Contains("Unity Archive", errorOutput, "Error message should mention Unity Archive");
-            StringAssert.Contains("archive extract", errorOutput, "Error message should suggest using archive extract command");
-        }
-        finally
-        {
-            Console.SetError(currentErr);
-        }
-    }
-
-    [Test]
     public async Task ErrorHandling_InvalidFile_ShowsHelpfulMessage()
     {
         var path = Path.Combine(m_TestDataFolder, "README.md");
@@ -940,5 +867,120 @@ public class SerializedFileCommandTests
     }
 
     #endregion
-}
 
+    #region Archive Tests
+
+    private static string AssetBundlesPath(params string[] parts) =>
+        Path.Combine(new[] { TestContext.CurrentContext.TestDirectory, "Data", "AssetBundles", "2022.1.20f1" }.Concat(parts).ToArray());
+
+    private static async Task<(int ExitCode, string Out, string Err)> RunCaptured(params string[] args)
+    {
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+            var result = await Program.Main(args);
+            return (result, swOut.ToString(), swErr.ToString());
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+    }
+
+    [Test]
+    public async Task Archive_SingleSerializedFile_UsedWithoutEntry()
+    {
+        var (exitCode, output, _) = await RunCaptured("sf", "externalrefs", AssetBundlesPath("assetbundle"));
+
+        Assert.AreEqual(0, exitCode);
+        StringAssert.Contains("Path: archive:/CAB-35fce856128a6714740898681ea54bbe/CAB-35fce856128a6714740898681ea54bbe", output);
+    }
+
+    [Test]
+    public async Task Archive_SingleSerializedFile_LegacyHeader()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "LegacyFormats", "AssetBundles", "alienprefab");
+
+        var (exitCode, output, _) = await RunCaptured("sf", "header", path);
+
+        Assert.AreEqual(0, exitCode);
+        StringAssert.Contains("Legacy (32-bit)", output);
+    }
+
+    [Test]
+    public async Task Archive_NoTypeTreeBundle_ObjectListWorks()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
+
+        var (exitCode, output, _) = await RunCaptured("sf", "objectlist", path, "-f", "Json");
+
+        Assert.AreEqual(0, exitCode);
+        using var doc = JsonDocument.Parse(output);
+        Assert.Greater(doc.RootElement.GetArrayLength(), 0);
+    }
+
+    [Test]
+    public async Task Archive_Entry_SelectsSerializedFile()
+    {
+        var path = AssetBundlesPath("scenes");
+
+        var (sceneExit, sceneOutput, _) = await RunCaptured("sf", "objectlist", path, "--entry", "BuildPlayer-SampleScene", "-f", "Json");
+        var (sharedExit, sharedOutput, _) = await RunCaptured("sf", "objectlist", path, "-e", "BuildPlayer-SampleScene.sharedAssets", "-f", "Json");
+
+        Assert.AreEqual(0, sceneExit);
+        Assert.AreEqual(0, sharedExit);
+        using var sceneDoc = JsonDocument.Parse(sceneOutput);
+        using var sharedDoc = JsonDocument.Parse(sharedOutput);
+        Assert.Greater(sceneDoc.RootElement.GetArrayLength(), 0);
+        Assert.Greater(sharedDoc.RootElement.GetArrayLength(), 0);
+        Assert.AreNotEqual(sceneOutput, sharedOutput);
+    }
+
+    [Test]
+    public async Task Archive_MultipleSerializedFiles_WithoutEntry_ListsEntries()
+    {
+        var (exitCode, _, err) = await RunCaptured("sf", "metadata", AssetBundlesPath("scenes"));
+
+        Assert.AreNotEqual(0, exitCode);
+        StringAssert.Contains("The archive contains 4 SerializedFiles. Choose one with --entry", err);
+        StringAssert.Contains("  BuildPlayer-SampleScene.sharedAssets", err);
+        StringAssert.Contains("  BuildPlayer-OtherScene", err);
+    }
+
+    [Test]
+    public async Task Archive_EntryNotFound_ListsEntries()
+    {
+        var (exitCode, _, err) = await RunCaptured("sf", "header", AssetBundlesPath("scenes"), "-e", "NoSuchFile");
+
+        Assert.AreNotEqual(0, exitCode);
+        StringAssert.Contains("\"NoSuchFile\" was not found in the archive.", err);
+        StringAssert.Contains("  BuildPlayer-SampleScene", err);
+    }
+
+    [Test]
+    public async Task Archive_EntryNotSerializedFile_ReturnsError()
+    {
+        var (exitCode, _, err) = await RunCaptured("sf", "header", AssetBundlesPath("assetbundle"), "-e", "CAB-5d40f7cad7c871cf2ad2af19ac542994.resS");
+
+        Assert.AreNotEqual(0, exitCode);
+        StringAssert.Contains("is not a SerializedFile", err);
+        StringAssert.Contains("  CAB-5d40f7cad7c871cf2ad2af19ac542994", err);
+    }
+
+    [Test]
+    public async Task Archive_EntryOnPlainSerializedFile_ReturnsError()
+    {
+        var (exitCode, _, err) = await RunCaptured("sf", "header", Path.Combine(m_TestDataFolder, "level0"), "-e", "level0");
+
+        Assert.AreNotEqual(0, exitCode);
+        StringAssert.Contains("--entry can only be used with a Unity Archive", err);
+    }
+
+    #endregion
+}

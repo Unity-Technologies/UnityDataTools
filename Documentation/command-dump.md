@@ -10,7 +10,8 @@ UnityDataTool dump <path> [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `<path>` | Path to file to dump | *(required)* |
+| `<path>` | Path to the SerializedFile, or to an archive that contains SerializedFiles | *(required)* |
+| `-e, --entry <name>` | Only dump this SerializedFile from inside the archive (see [Archive Support](#archive-support)) | All SerializedFiles |
 | `-o, --output-path <path>` | Output folder | Current folder |
 | `--stdout` | Write the dump to stdout (status and errors go to stderr). Mutually exclusive with `-o`. | `false` |
 | `-f, --output-format <format>` | Output format | `text` |
@@ -84,7 +85,7 @@ UnityDataTool dump /path/to/file --stdout > my-dump.txt
 Restrictions:
 
 - `--stdout` and `-o` are mutually exclusive.
-- For Unity archives that contain more than one SerializedFile, `--stdout` is refused — there is no unambiguous way to deliver multiple files on a single stream. Pass an individual SerializedFile, or omit `--stdout` to get one `.txt` per SerializedFile in the output folder.
+- For Unity archives that contain more than one SerializedFile, choose the one to dump with `--entry`. Without it `--stdout` is refused, because there is no unambiguous way to deliver multiple files on a single stream.
 
 ---
 
@@ -113,6 +114,14 @@ BuildPlayer-SampleScene.txt
 BuildPlayer-Scene2.sharedAssets.txt
 BuildPlayer-Scene2.txt
 ```
+
+To dump only one of the SerializedFiles, pass its name with `-e` / `--entry`. Nothing is extracted to disk. The names are listed by [`archive list`](command-archive.md), and they are also the `serialized_file` column of `object_view` in a database built by `analyze`:
+
+```bash
+UnityDataTool dump scenes.bundle -e BuildPlayer-Scene2.sharedAssets --stdout
+```
+
+When the archive contains only one SerializedFile (the usual case for an AssetBundle that does not contain scenes), `--stdout` uses it without `--entry`. When there are several, the error lists their names.
 
 ---
 
