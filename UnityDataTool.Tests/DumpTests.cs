@@ -14,6 +14,7 @@ public class DumpTests
     private string m_SerializedFilePath;
     private string m_ResourceFilePath;
     private string m_MultiSerializedFileArchivePath;
+    private string m_SceneBundlePath;
     private string m_NoTypeTreeSerializedFilePath;
     private string m_NoTypeTreeArchivePath;
     private string m_SerializationDemoBundlePath;
@@ -26,6 +27,7 @@ public class DumpTests
         m_SerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "level0");
         m_ResourceFilePath = Path.Combine(m_TestDataFolder, "PlayerWithTypeTrees", "sharedassets0.assets.resS");
         m_MultiSerializedFileArchivePath = Path.Combine(m_TestDataFolder, "PlayerDataCompressed", "data.unity3d");
+        m_SceneBundlePath = Path.Combine(m_TestDataFolder, "AssetBundles", "2022.1.20f1", "scenes");
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
         m_NoTypeTreeArchivePath = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
         m_SerializationDemoBundlePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundles", "serializationdemo");
@@ -172,8 +174,64 @@ public class DumpTests
         }
 
         var err = swErr.ToString();
-        Assert.That(err, Does.Contain("--stdout cannot be used with an archive containing multiple SerializedFiles"));
-        Assert.That(err, Does.Contain("(5 found)"));
+        Assert.That(err, Does.Contain("The archive contains 5 SerializedFiles. Choose one with --entry"));
+        Assert.That(err, Does.Contain("  Resources/unity_builtin_extra"));
+    }
+
+    [Test]
+    public async Task Dump_Stdout_Entry_DumpsChosenSerializedFile()
+    {
+        using var sw = new StringWriter();
+        var currentOut = Console.Out;
+        try
+        {
+            Console.SetOut(sw);
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SceneBundlePath, "--stdout", "--entry", "BuildPlayer-SampleScene", "-t", "GameObject" }));
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+        }
+
+        Assert.That(sw.ToString(), Does.Contain("(ClassID: 1) GameObject"));
+    }
+
+    [Test]
+    public async Task Dump_Entry_WritesOnlyChosenSerializedFile()
+    {
+        var outputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "dump_entry_output");
+        Directory.CreateDirectory(outputFolder);
+        try
+        {
+            Assert.AreEqual(0, await Program.Main(new string[] { "dump", m_SceneBundlePath, "-e", "BuildPlayer-OtherScene.sharedAssets", "-o", outputFolder }));
+
+            var files = Directory.GetFiles(outputFolder);
+            Assert.AreEqual(1, files.Length);
+            Assert.AreEqual("BuildPlayer-OtherScene.sharedAssets.txt", Path.GetFileName(files[0]));
+            Assert.That(File.ReadAllText(files[0]), Does.Contain("External References"));
+        }
+        finally
+        {
+            Directory.Delete(outputFolder, true);
+        }
+    }
+
+    [Test]
+    public async Task Dump_Entry_OnPlainSerializedFile_Fails()
+    {
+        using var swErr = new StringWriter();
+        var currentErr = Console.Error;
+        try
+        {
+            Console.SetError(swErr);
+            Assert.AreNotEqual(0, await Program.Main(new string[] { "dump", m_SerializedFilePath, "--stdout", "-e", "level0" }));
+        }
+        finally
+        {
+            Console.SetError(currentErr);
+        }
+
+        Assert.That(swErr.ToString(), Does.Contain("--entry can only be used with a Unity Archive"));
     }
 
     [Test]
