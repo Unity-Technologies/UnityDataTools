@@ -156,6 +156,42 @@ WHERE mb.type = 'MonoBehaviour'
   AND ms.namespace = 'UnityEngine.U2D.Animation';
 ```
 
+## Example: Finding SerializeReference types
+
+A field marked with `[SerializeReference]` stores a C# object inside the MonoBehaviour or
+ScriptableObject that holds the field. There is no MonoScript for the object's type. Instead, the
+type's class, namespace and assembly are written into every object that holds an instance. This makes
+the types hard to find in built content, so analyze collects every instance into the
+[`managed_references`](analyzer-schema.md#managed_references) table.
+
+For example, before you rename a class, you can check that no content built with the old name remains:
+
+```
+SELECT archive, serialized_file, name, object_id, class_name, namespace, assembly_name, rid
+FROM managed_reference_view
+WHERE class_name = 'MyOldClassName';
+```
+
+A nested class is recorded as `Outer/Inner`, so use `LIKE '%/MyOldClassName'` to find it without
+the outer class name.
+
+To see every type used, how often, and how many bytes its instances take:
+
+```
+SELECT * FROM managed_reference_stats_view;
+```
+
+`managed_reference_view` shows the name of the holding object, but not its own C# class. The C#
+class comes from `script_object_view`, which is populated only when analyze runs without
+`--skip-references`. Join the two views on `id` to see both:
+
+```
+SELECT so.class_name AS script_class, so.name, mr.class_name, mr.namespace, mr.rid, mr.size
+FROM managed_reference_view mr
+INNER JOIN script_object_view so ON mr.id = so.id
+ORDER BY so.class_name, mr.class_name;
+```
+
 ## Example: Quick summary for individual AssetBundles
 
 Often Analyze is used for an entire build output, so that you can view information about the build output as a whole.

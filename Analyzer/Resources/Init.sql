@@ -75,6 +75,18 @@ CREATE TABLE IF NOT EXISTS dangling_refs
     PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS managed_references
+(
+    -- One [SerializeReference] instance held by a MonoBehaviour / ScriptableObject. Populated even
+    -- with --skip-references and --skip-crc. Null references have no row.
+    object INTEGER,          -- objects.id of the MonoBehaviour that holds the instance
+    rid INTEGER,             -- managed reference id; the entry position in registry version 1 files
+    class_name TEXT,         -- a nested class is written Outer/Inner
+    namespace TEXT,
+    assembly_name TEXT,
+    size INTEGER             -- bytes of the instance's serialized data, excluding its type name
+);
+
 CREATE VIEW refs_view AS
 -- refs with the property_path and property_type ids resolved to their strings.
 SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
@@ -114,6 +126,35 @@ FROM objects o
 INNER JOIN types t ON o.type = t.id
 INNER JOIN serialized_files sf ON o.serialized_file = sf.id
 LEFT JOIN archives ab ON sf.archive = ab.id;
+
+CREATE VIEW managed_reference_view AS
+-- Each [SerializeReference] instance with the MonoBehaviour that holds it.
+SELECT
+    o.id,
+    o.object_id,
+    o.name,
+    o.archive,
+    o.serialized_file,
+    m.class_name,
+    m.namespace,
+    m.assembly_name,
+    m.rid,
+    m.size
+FROM managed_references m
+INNER JOIN object_view o ON m.object = o.id;
+
+CREATE VIEW managed_reference_stats_view AS
+-- Each distinct [SerializeReference] type: instance count, holding objects and total size.
+SELECT
+    class_name,
+    namespace,
+    assembly_name,
+    COUNT(*) AS instances,
+    COUNT(DISTINCT object) AS objects,
+    SUM(size) AS total_size
+FROM managed_references
+GROUP BY class_name, namespace, assembly_name
+ORDER BY instances DESC, class_name;
 
 CREATE VIEW view_breakdown_by_type AS
 -- Object count and total size per type, largest first.
@@ -168,7 +209,7 @@ WHERE m.type = 'Material';
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
-PRAGMA user_version = 9;
+PRAGMA user_version = 10;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

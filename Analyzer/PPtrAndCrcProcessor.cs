@@ -15,6 +15,8 @@ namespace UnityDataTools.Analyzer;
 //     content fingerprint used to detect whether two objects are identical.
 //     NOTE: references contribute their resolved analyzer object id (see ExtractPPtr), so the CRC
 //     is only comparable within a single analyze database, not between separate runs - see issue #74.
+// It also reports each [SerializeReference] instance it walks through, since only this walk
+// reaches them.
 // CRC computation can be disabled (skipCrc) while still extracting references.
 public class PPtrAndCrcProcessor : IDisposable
 {
@@ -28,6 +30,11 @@ public class PPtrAndCrcProcessor : IDisposable
     // caller folds into the CRC.
     public delegate int CallbackDelegate(long objectId, int fileId, long pathId, string propertyPath, string propertyType);
 
+    // Invoked for each [SerializeReference] instance held by the object. `size` is the byte length of
+    // the instance's data, excluding the type name that precedes it.
+    public delegate void ManagedReferenceCallbackDelegate(long objectId, long rid, string className,
+        string namespaceName, string assemblyName, long size);
+
     // Content-addressed stream paths (new ContentDirectory build output) look like
     // "cah:/<hash>". The hash already identifies the content, so the path itself is
     // folded into the CRC instead of opening the (differently named) resource file.
@@ -40,6 +47,7 @@ public class PPtrAndCrcProcessor : IDisposable
     private string m_Folder;                     // directory of the serialized file; used to find companion resource files
     private bool m_SkipCrc;                      // when true, skip CRC computation (references are still extracted)
     private CallbackDelegate m_Callback;         // invoked for each PPtr; returns the referenced object's id
+    private ManagedReferenceCallbackDelegate m_ManagedReferenceCallback;
 
     // Readers for external resource (.resS/.resource) files, opened on demand, reused across
     // objects, and disposed in Dispose().
@@ -62,18 +70,35 @@ public class PPtrAndCrcProcessor : IDisposable
     // skipCrc:        when true, the tree is still walked to emit references but no CRC is computed.
     // callback:       called for every PPtr found; its return value (the referenced object's id) is
     //                 folded into the CRC.
+    // managedReferenceCallback:
+    //                 called for every [SerializeReference] instance found.
     public PPtrAndCrcProcessor(
         SerializedFile serializedFile,
         UnityFileReader reader,
         string folder,
         bool skipCrc,
-        CallbackDelegate callback)
+        CallbackDelegate callback,
+        ManagedReferenceCallbackDelegate managedReferenceCallback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
         m_Folder = folder;
         m_SkipCrc = skipCrc;
         m_Callback = callback;
+        m_ManagedReferenceCallback = managedReferenceCallback;
+    }
+
+    // True when objects of this type carry a [SerializeReference] registry, in either its node-described
+    // form (versions 1 and 2) or as a frame ahead of the field flagged HasSerializedRefs (version 3).
+    public static bool HasManagedReferenceRegistry(TypeTreeNode root)
+    {
+        foreach (var child in root.Children)
+        {
+            if (child.IsManagedReferenceRegistry || child.HasSerializedRefs)
+                return true;
+        }
+
+        return false;
     }
 
     public void Dispose()
@@ -456,8 +481,11 @@ public class PPtrAndCrcProcessor : IDisposable
         m_StringBuilder.Append("rid(");
         m_StringBuilder.Append(rid);
         m_StringBuilder.Append(").data");
+        var dataStart = m_Offset;
         ProcessNode(refTypeTypeTree, true);
         m_StringBuilder.Remove(pathLength, m_StringBuilder.Length - pathLength);
+
+        m_ManagedReferenceCallback(m_ObjectId, rid, className, namespaceName, assemblyName, m_Offset - dataStart);
     }
 
     private void ExtractPPtr(string referencedType)

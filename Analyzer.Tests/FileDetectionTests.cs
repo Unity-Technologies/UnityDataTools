@@ -512,10 +512,10 @@ public class FileDetectionTests
         for (int i = 0; i < expected.Length; i++)
         {
             var obj = metadata.ObjectList[i];
-            Assert.That(obj.Id,     Is.EqualTo(expected[i].Id),     $"ObjectList[{i}].Id");
+            Assert.That(obj.Id, Is.EqualTo(expected[i].Id), $"ObjectList[{i}].Id");
             Assert.That(obj.TypeId, Is.EqualTo(expected[i].TypeId), $"ObjectList[{i}].TypeId");
             Assert.That(obj.Offset, Is.EqualTo(expected[i].Offset), $"ObjectList[{i}].Offset");
-            Assert.That(obj.Size,   Is.EqualTo(expected[i].Size),   $"ObjectList[{i}].Size");
+            Assert.That(obj.Size, Is.EqualTo(expected[i].Size), $"ObjectList[{i}].Size");
         }
     }
 

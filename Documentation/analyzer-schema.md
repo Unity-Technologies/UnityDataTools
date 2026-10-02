@@ -26,7 +26,7 @@ Parts of the schema are documented on their own pages:
 * **Ids are analyzer-assigned.** `objects.id` and the ids that reference it exist only in the
   database. The Unity object id is `objects.object_id`.
 * **Two options change what gets populated.** `--skip-references` leaves `refs`, `dangling_refs` and
-  `script_object_view` empty. `--skip-crc` sets every `objects.crc32` to 0, which makes
+  `script_object_view` empty (`managed_references` is still populated). `--skip-crc` sets every `objects.crc32` to 0, which makes
   `view_potential_duplicates` report many false positives.
 
 ## At a glance
@@ -56,7 +56,7 @@ Core views:
 | [`view_material_shader_refs`](#view_material_shader_refs-and-view_material_texture_refs) | each Material and its Shader |
 | [`view_material_texture_refs`](#view_material_shader_refs-and-view_material_texture_refs) | each Material and its Textures |
 
-AssetBundle and MonoScript:
+AssetBundle and scripting:
 
 | Name | Purpose |
 |---|---|
@@ -67,6 +67,9 @@ AssetBundle and MonoScript:
 | [`monoscripts`](#monoscripts) | C# class behind each MonoBehaviour / ScriptableObject |
 | [`monoscripts_view`](#monoscripts_view) | MonoScripts with their containing file |
 | [`script_object_view`](#script_object_view) | MonoBehaviours and ScriptableObjects with their C# type |
+| [`managed_references`](#managed_references) | `[SerializeReference]` instance held by a MonoBehaviour / ScriptableObject |
+| [`managed_reference_view`](#managed_reference_view) | those instances with the object that holds them |
+| [`managed_reference_stats_view`](#managed_reference_stats_view) | instance count and total size per `[SerializeReference]` type |
 
 Type-specific views, each `object_view` plus extra columns:
 
@@ -421,6 +424,46 @@ with `--skip-references`.
 
 ---
 
+# SerializeReference tables and views
+
+A field marked with [`[SerializeReference]`](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeReference.html)
+holds a C# object (a "managed reference") that is stored inside the MonoBehaviour or ScriptableObject
+itself. Its type does not have a MonoScript. Instead, each MonoBehaviour stores the class, namespace and
+assembly of each instance in its own managed reference registry. These tables collect those instances
+from the whole build, so you can see which types are used and where. For example, you can check that a
+class you want to rename is not used anywhere.
+
+The data is the same for AssetBundles, Player builds and ContentDirectory builds, and for every
+registry format, including the one introduced in Unity 6.7. It does not depend on the `refs` table, so
+it is populated even with `--skip-references --skip-crc`.
+
+## managed_references
+
+One row per `[SerializeReference]` instance. Each instance is stored once in its MonoBehaviour's
+registry, however many fields point at it, so an instance that is shared or nested inside another
+instance has one row. Null references have no row.
+
+| Column | Type | Description |
+|---|---|---|
+| `object` | INTEGER | [`objects.id`](#objects) of the MonoBehaviour that holds the instance. |
+| `rid` | INTEGER | The managed reference id, which the fields pointing at the instance store. Unique only within its MonoBehaviour. In files built with Unity 2020 or earlier (registry version 1) it is the entry's position in the registry. |
+| `class_name` | TEXT | The instance's concrete class. A nested class is written `Outer/Inner`. |
+| `namespace` | TEXT | C# namespace; empty for the global namespace. |
+| `assembly_name` | TEXT | The assembly, e.g. `Assembly-CSharp`. |
+| `size` | INTEGER | Bytes of the instance's serialized data, excluding its type name. It is part of the holding object's `size`. |
+
+## managed_reference_view
+
+`managed_references` with the holding MonoBehaviour's `id`, `object_id`, `name`, `archive` and
+`serialized_file` from [`object_view`](#object_view).
+
+## managed_reference_stats_view
+
+One row per distinct `[SerializeReference]` type, with `instances` (row count), `objects` (distinct
+holding MonoBehaviours) and `total_size`, most used first.
+
+---
+
 # Type-specific views
 
 Each of these has the same columns as [`object_view`](#object_view) plus the ones listed.
@@ -553,6 +596,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 7 | Unity 6.6 `build_reports` columns and `build_report_content_*` tables ([#107](https://github.com/Unity-Technologies/UnityDataTools/issues/107)); `asset_name` / `asset_extension` columns on `build_report_source_assets` ([#110](https://github.com/Unity-Technologies/UnityDataTools/issues/110)) |
 | 8 | `archives.name` is the path relative to the scanned directory, not the bare file name ([#149](https://github.com/Unity-Technologies/UnityDataTools/issues/149)) |
 | 9 | `content_layout*` tables track the version 3 layout schema of Unity 6.7: loadables keyed by `loadable_index`, `stable_id` / `artifact_index` columns replace `cfid` / `content_hash`, `is_root_asset` records the root position, and the v2-only columns (`asset_path`, `source_lfid`) exist only in databases imported from a version 2 layout ([#131](https://github.com/Unity-Technologies/UnityDataTools/issues/131)) |
+| 10 | Added the `managed_references` table, `managed_reference_view` and `managed_reference_stats_view` ([#53](https://github.com/Unity-Technologies/UnityDataTools/issues/53)) |
 
 ## Related documentation
 

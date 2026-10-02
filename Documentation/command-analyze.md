@@ -238,7 +238,7 @@ When `--skip-references` is used, some functionality is lost:
 
 * the `find-refs` command will not work
 * `view_material_shader_refs` and `view_material_texture_refs` will be empty
-* `script_object_view` will be empty
+* `script_object_view` will be empty (`managed_references` is still populated)
 * `dangling_refs` will be empty
 * Queries that look at the relationship between objects will not work.  For example the refs table is required to link between a `MonoBehaviour` and its `MonoScript`.
 
