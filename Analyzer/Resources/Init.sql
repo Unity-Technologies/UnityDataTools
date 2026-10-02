@@ -143,7 +143,7 @@ SELECT
 FROM managed_references m
 INNER JOIN object_view o ON m.object = o.id;
 
-CREATE VIEW view_managed_reference_types AS
+CREATE VIEW managed_reference_stats_view AS
 -- Each distinct [SerializeReference] type: instance count, holding objects and total size.
 SELECT
     class_name,

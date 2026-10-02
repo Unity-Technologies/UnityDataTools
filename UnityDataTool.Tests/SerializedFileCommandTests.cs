@@ -311,24 +311,24 @@ public class SerializedFileCommandTests
 
             // Spot-check a few entries by index
             var first = jsonArray[0];
-            Assert.AreEqual(1,            first.GetProperty("id").GetInt64());
-            Assert.AreEqual(1,            first.GetProperty("typeId").GetInt32());
+            Assert.AreEqual(1, first.GetProperty("id").GetInt64());
+            Assert.AreEqual(1, first.GetProperty("typeId").GetInt32());
             Assert.AreEqual("GameObject", first.GetProperty("typeName").GetString());
-            Assert.AreEqual(576,          first.GetProperty("offset").GetInt64());
-            Assert.AreEqual(63,           first.GetProperty("size").GetInt64());
+            Assert.AreEqual(576, first.GetProperty("offset").GetInt64());
+            Assert.AreEqual(63, first.GetProperty("size").GetInt64());
 
             var third = jsonArray[2];
-            Assert.AreEqual(3,                third.GetProperty("id").GetInt64());
-            Assert.AreEqual(104,              third.GetProperty("typeId").GetInt32());
+            Assert.AreEqual(3, third.GetProperty("id").GetInt64());
+            Assert.AreEqual(104, third.GetProperty("typeId").GetInt32());
             Assert.AreEqual("RenderSettings", third.GetProperty("typeName").GetString());
-            Assert.AreEqual(720,              third.GetProperty("offset").GetInt64());
+            Assert.AreEqual(720, third.GetProperty("offset").GetInt64());
 
             var last = jsonArray[6];
-            Assert.AreEqual(7,               last.GetProperty("id").GetInt64());
-            Assert.AreEqual(114,             last.GetProperty("typeId").GetInt32());
+            Assert.AreEqual(7, last.GetProperty("id").GetInt64());
+            Assert.AreEqual(114, last.GetProperty("typeId").GetInt32());
             Assert.AreEqual("MonoBehaviour", last.GetProperty("typeName").GetString());
-            Assert.AreEqual(1200,            last.GetProperty("offset").GetInt64());
-            Assert.AreEqual(44,              last.GetProperty("size").GetInt64());
+            Assert.AreEqual(1200, last.GetProperty("offset").GetInt64());
+            Assert.AreEqual(44, last.GetProperty("size").GetInt64());
         }
         finally
         {

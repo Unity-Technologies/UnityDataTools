@@ -361,7 +361,7 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
             "AND assembly_name LIKE 'Assembly-CSharp%' AND size = 8",
             1, "Orange instance");
         SQLTestHelper.AssertQueryInt(db,
-            "SELECT COUNT(*) FROM view_managed_reference_types WHERE instances = 1 AND objects = 1", 2,
+            "SELECT COUNT(*) FROM managed_reference_stats_view WHERE instances = 1 AND objects = 1", 2,
             "one row per SerializeReference type");
     }
 

@@ -178,7 +178,7 @@ the outer class name.
 To see every type used, how often, and how many bytes its instances take:
 
 ```
-SELECT * FROM view_managed_reference_types;
+SELECT * FROM managed_reference_stats_view;
 ```
 
 `managed_reference_view` shows the name of the holding object, but not its own C# class. The C#

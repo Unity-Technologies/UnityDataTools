@@ -80,7 +80,7 @@ public class BuildReportTests
         // There can be other more obscure objects present, depending on the build,
         // e.g. PluginBuildInfo, AudioBuildInfo, VideoBuildInfo etc.
         var ttlObjCount = SQLTestHelper.QueryInt(db, "SELECT COUNT(*) FROM objects");
-        Assert.That(ttlObjCount, Is.GreaterThanOrEqualTo(1+ packedAssetCount + 1),
+        Assert.That(ttlObjCount, Is.GreaterThanOrEqualTo(1 + packedAssetCount + 1),
             "Unexpected number of objects in BuildReport analysis");
 
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM archives", 0,

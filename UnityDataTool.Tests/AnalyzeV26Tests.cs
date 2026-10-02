@@ -65,7 +65,7 @@ public class AnalyzeV26Tests
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(DISTINCT rid) FROM managed_references", 9, "distinct rids");
 
         SQLTestHelper.AssertQueryInt(db,
-            "SELECT instances FROM view_managed_reference_types WHERE class_name = 'ManagedReferenceTestBehaviour/Shape'",
+            "SELECT instances FROM managed_reference_stats_view WHERE class_name = 'ManagedReferenceTestBehaviour/Shape'",
             4, "Shape instances");
         SQLTestHelper.AssertQueryInt(db,
             "SELECT size FROM managed_references WHERE class_name = 'ManagedReferenceTestBehaviour/TexturedShape'",
