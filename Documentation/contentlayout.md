@@ -64,9 +64,9 @@ resource path (`Library/unity default resources`) as its stable id.
 * `BinaryArtifacts` also reports the additional data files that hold audio, video, texture, and mesh data (the `.resource` and `.resS` files).
 * BinaryArtifacts are identified by the hash of their content.  When saved as a file, the filename is the hash and the file extension is based on the category.
 
-`ArtifactReferences` lists only direct dependencies. Dependencies that go through a loadable or loadable scene are not included, and the `ArtifactReferences` graph is never cyclical. Together, this makes it possible to see every artifact required to load a particular serialized file, excluding data that is loaded on demand through a loadable or loadable scene.
+`ArtifactReferences` does not record dependencies between serialized files. The dependencies that come from objects with direct (PPtr) references to objects in other serialized files are listed only in the `SerializedFiles` entries, in `SerializedFileDependencies`. A `contentfile` artifact's `ArtifactReferences` lists only the `.resS` and `.resource` data files its objects use. It never lists another `contentfile`, and the data files are leaf nodes with no dependencies of their own. By design the `ArtifactReferences` graph never contains cycles, and this will stay true if more categories of data are added in the future.
 
-The dependencies between serialized files (`SerializedFileDependencies`) can contain cycles in builds from Unity 6.7, where assets that reference each other in a loop keep their own serialized files. See [Circular references](contentdirectory-format.md#circular-references).
+To find every artifact required to load a serialized file, follow its `SerializedFileDependencies` recursively to the other serialized files it needs, and collect each file's artifact (through `ArtifactIndex`) together with that artifact's `ArtifactReferences`. Dependencies that go through a loadable or loadable scene are not included in either list, because that data is loaded on demand. Unlike `ArtifactReferences`, `SerializedFileDependencies` can contain cycles in builds from Unity 6.7, where assets that reference each other in a loop keep their own serialized files. See [Circular references](contentdirectory-format.md#circular-references).
 
 ## Schema versioning
 
