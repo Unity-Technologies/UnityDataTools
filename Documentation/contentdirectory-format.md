@@ -21,6 +21,10 @@ The output can be written as loose files or packed into a Unity Archive, so Unit
 same way it opens Player and AssetBundle content.
 
 An example build, used for testing, can be found in `TestCommon/Data/LeadingEdgeBuilds/ContentDirectory`.
+The `ContentLayout.json` excerpts on this page come from its layout in
+`TestCommon/Data/LeadingEdgeBuilds/BuildReport-ContentDirectory`, which uses the version 3 schema
+written by Unity 6.7. Unity 6.6 writes version 2, which names some fields differently — see
+[Schema versioning](contentlayout.md#schema-versioning).
 
 The files use technical, content-hash-based names, rather than the familiar `level0` / `sharedassets`
 names of a Player build or the user-specified names of AssetBundles. You do not need to understand the
@@ -109,12 +113,9 @@ few grouping rules shape the result:
   File, just as they are represented in the Editor (see [Scenes](#scenes) below).
 - **Assets with sub-assets** are split across multiple Content Files. For example an FBX is separated
   so that the component hierarchy and the meshes land in different files.
-- **Scripts** are grouped: the `MonoScript` objects for several source scripts can share one Content
-  File.
-- **Circular direct references are best avoided.** Currently a cycle forces all the affected Unity
-  objects to be clustered together into a single Content File, and the build prints a warning. The way
-  to break a cycle is to convert one of the references into a `Loadable` (an on-demand reference)
-  instead of a direct reference.
+- **Scripts** are grouped: all the `MonoScript` objects in the build share a single Content File.
+- **Circular direct references are best avoided.** How a cycle shows up in the build output depends
+  on the Unity version — see [Circular references](#circular-references) below.
 
 Unity's two built-in resource files are handled in different ways:
 
@@ -129,6 +130,63 @@ Unity's two built-in resource files are handled in different ways:
   build. This is because the `unity_builtin_extra` file in a Player is generated per build and
   contains only the project's "Always Included Shaders" — copying the referenced objects into the
   content directory makes it independent of what a particular Player build happens to contain.
+
+### Circular references
+
+A circular reference is a loop of direct references between objects that the rules above would place
+in different Content Files — for example two ScriptableObject assets that reference each other, or a
+Prefab whose component references a ScriptableObject that references the Prefab back. Only direct
+references count: a `Loadable` or `LoadableSceneId` reference does not create a dependency between
+files, so converting one of the references in the loop into a `Loadable` breaks the cycle. Scenes
+are never part of a cycle, because Unity does not support direct references to objects inside a
+scene.
+
+**Unity 6.6** merges each cycle at build time. All the objects that would have formed the loop are
+written into a single Content File, so the dependencies between Content Files never contain a cycle.
+In [`ContentLayout.json`](contentlayout.md) the merged file is one `SerializedFiles` entry whose
+`SourceAssets` lists every asset in the loop. The build prints a warning that it detected circular
+reference loops, and the Editor log lists the assets involved in each one. A long chain of references
+can pull many assets into one unexpectedly large Content File, and loading any of them loads them all.
+
+**Unity 6.7** keeps the normal granular layout. Each asset in the loop stays in its own Content File
+and the files reference each other in a cycle, which is visible in `ContentLayout.json` as
+`SerializedFileDependencies` that lead back to the starting file. At runtime the files in a cycle are
+loaded together as a single unit: loading any one of them loads all of them, and this is more
+resource-intensive than loading files individually. The build prints a warning when it finds a cycle,
+and fails if the combined size of the Content Files in a single cycle exceeds a limit (currently
+64 MB).
+
+Unity 6.7 also writes a `circularrefs.json` file to the build's directory in the
+[build history](#build-history), listing each cycle with its files. A common pattern is a Prefab
+that references a definition asset which references the Prefab back:
+
+```json
+{
+    "clusters": [
+        {
+            "fileCount": 2,
+            "combinedSizeBytes": 22656,
+            "files": [
+                {
+                    "fileId": "3c9e1f0a7b2d48e6a15f0c8d9e2b4a71",
+                    "guid": "3c9e1f0a7b2d48e6a15f0c8d9e2b4a71",
+                    "path": "Assets/Items/Crate.prefab"
+                },
+                {
+                    "fileId": "8d4a62b0e9f1475c9b3e1a0f6c7d2e58",
+                    "guid": "8d4a62b0e9f1475c9b3e1a0f6c7d2e58",
+                    "path": "Assets/Items/Definitions/Crate.asset"
+                }
+            ]
+        }
+    ]
+}
+```
+
+The file is written for every build, with an empty `clusters` array when there are no cycles. Each
+`fileId` is the file's `StableId` in `ContentLayout.json`, and `path` is the source asset the Content
+File was built from. In a large project this file is worth checking: it can list hundreds of cycles,
+and a single cycle can span hundreds of files.
 
 ## Scenes
 
