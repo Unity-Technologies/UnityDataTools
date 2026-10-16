@@ -21,6 +21,10 @@ The output can be written as loose files or packed into a Unity Archive, so Unit
 same way it opens Player and AssetBundle content.
 
 An example build, used for testing, can be found in `TestCommon/Data/LeadingEdgeBuilds/ContentDirectory`.
+The `ContentLayout.json` excerpts on this page come from its layout in
+`TestCommon/Data/LeadingEdgeBuilds/BuildReport-ContentDirectory`, which uses the version 3 schema
+written by Unity 6.7. Unity 6.6 writes version 2, which names some fields differently — see
+[Schema versioning](contentlayout.md#schema-versioning).
 
 The files use technical, content-hash-based names, rather than the familiar `level0` / `sharedassets`
 names of a Player build or the user-specified names of AssetBundles. You do not need to understand the

@@ -64,7 +64,9 @@ resource path (`Library/unity default resources`) as its stable id.
 * `BinaryArtifacts` also reports the additional data files that hold audio, video, texture, and mesh data (the `.resource` and `.resS` files).
 * BinaryArtifacts are identified by the hash of their content.  When saved as a file, the filename is the hash and the file extension is based on the category.
 
-`ArtifactReferences` lists only direct dependencies. Dependencies that go through a loadable or loadable scene are not included, and the dependency graph is never cyclical. Together, this makes it possible to see every artifact required to load a particular serialized file, excluding data that is loaded on demand through a loadable or loadable scene.
+`ArtifactReferences` lists only direct dependencies. Dependencies that go through a loadable or loadable scene are not included, and the `ArtifactReferences` graph is never cyclical. Together, this makes it possible to see every artifact required to load a particular serialized file, excluding data that is loaded on demand through a loadable or loadable scene.
+
+The dependencies between serialized files (`SerializedFileDependencies`) can contain cycles in builds from Unity 6.7, where assets that reference each other in a loop keep their own serialized files. See [Circular references](contentdirectory-format.md#circular-references).
 
 ## Schema versioning
 
