@@ -11,6 +11,10 @@ level* binary
 *.tif binary
 *.jpg binary
 
+# Unity data files have many extensions (or none) and can look like text to git's heuristic
+TestCommon/Data/** -text
+TestCommon/Data/**/*.md text
+
 
 # vs can handle these as lf, but really wants them as crlf
 *.vcproj eol=crlf
