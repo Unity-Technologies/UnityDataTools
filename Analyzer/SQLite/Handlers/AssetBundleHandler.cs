@@ -140,7 +140,7 @@ public class AssetBundleHandler : ISQLiteHandler
         streamDataSize = 0;
     }
 
-    public void Finalize(SqliteConnection db)
+    public void FinalizeDatabase(SqliteConnection db)
     {
         using var command = new SqliteCommand();
         command.Connection = db;

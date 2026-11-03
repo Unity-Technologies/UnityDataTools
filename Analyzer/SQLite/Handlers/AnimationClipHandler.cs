@@ -36,10 +36,6 @@ public class AnimationClipHandler : ISQLiteHandler
         streamDataSize = 0;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
     void IDisposable.Dispose()
     {
         m_InsertCommand?.Dispose();

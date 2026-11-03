@@ -164,10 +164,6 @@ public class PackedAssetsHandler : ISQLiteHandler
         name = packedAssets.Path;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
     void IDisposable.Dispose()
     {
         m_InsertPackedAssetsCommand?.Dispose();

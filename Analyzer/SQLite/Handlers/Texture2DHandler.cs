@@ -41,10 +41,6 @@ public class Texture2DHandler : ISQLiteHandler
         streamDataSize = texture2d.StreamDataSize;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
     void IDisposable.Dispose()
     {
         m_InsertCommand?.Dispose();

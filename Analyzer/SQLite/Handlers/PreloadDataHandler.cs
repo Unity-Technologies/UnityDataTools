@@ -51,10 +51,6 @@ public class PreloadDataHandler : ISQLiteHandler
         streamDataSize = 0;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
     void IDisposable.Dispose()
     {
         m_InsertDepCommand?.Dispose();

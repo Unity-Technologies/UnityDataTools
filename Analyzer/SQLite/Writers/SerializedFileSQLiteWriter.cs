@@ -424,16 +424,23 @@ public class SerializedFileSQLiteWriter : IDisposable
         }
     }
 
-    // Records every referenced object that was assigned an id but never written to the objects
-    // table (its serialized file was not part of the analyzed input). Must run after all files are
+    // Lets the handlers create their indexes, then records every referenced object that was assigned
+    // an id but never written to the objects table (its serialized file was not part of the analyzed
+    // input). Must run after all files are
     // processed, since an id is only known to be dangling once nothing has claimed it as an object.
     // The set of written objects/files is read back from the database so this is robust to every
     // object write site (regular objects, synthetic Scene objects, etc.) without instrumenting them.
     public void FinalizeDatabase()
     {
+        if (!m_Initialized)
+            return;
+
+        foreach (var handler in m_Handlers.Values)
+            handler.FinalizeDatabase(m_Database);
+
         // Dangling refs are part of reference tracking, so honor --skip-references (the view that
         // makes them useful joins the refs table, which is empty in that mode anyway).
-        if (!m_Initialized || m_SkipReferences)
+        if (m_SkipReferences)
             return;
 
         var writtenObjectIds = ReadIntSet("SELECT id FROM objects");
