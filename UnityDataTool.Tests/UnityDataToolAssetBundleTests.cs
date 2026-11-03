@@ -335,6 +335,24 @@ public class UnityDataToolAssetBundleTests : AssetBundleTestFixture
             "Expected to find exactly one MonoBehaviour instance of SerializeReferencePolymorphismExample");
     }
 
+    [Test]
+    public async Task Analyze_HandlerIndexes_AreCreated(
+        [Values("", "--skip-references")] string options)
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+        var analyzePath = Path.Combine(Context.UnityDataFolder);
+
+        Assert.AreEqual(0, await Program.Main(new string[] { "analyze", analyzePath }.Concat(options.Split(" ", StringSplitOptions.RemoveEmptyEntries)).ToArray()));
+
+        using var db = SQLTestHelper.OpenDatabase(databasePath);
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN (
+                'preload_dependencies_object', 'preload_dependencies_dependency',
+                'shader_subprograms_shader_index', 'shader_subprogram_keywords_subprogram_id_index')",
+            4,
+            "Expected the indexes created by the handlers");
+    }
+
     // The 2019.4 and 2020.3 bundles have a version 1 registry, where the rid is the entry's position;
     // the later ones have version 2. The instance data is the same in both.
     [Test]

@@ -597,6 +597,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 8 | `archives.name` is the path relative to the scanned directory, not the bare file name ([#149](https://github.com/Unity-Technologies/UnityDataTools/issues/149)) |
 | 9 | `content_layout*` tables track the version 3 layout schema of Unity 6.7: loadables keyed by `loadable_index`, `stable_id` / `artifact_index` columns replace `cfid` / `content_hash`, `is_root_asset` records the root position, and the v2-only columns (`asset_path`, `source_lfid`) exist only in databases imported from a version 2 layout ([#131](https://github.com/Unity-Technologies/UnityDataTools/issues/131)) |
 | 10 | Added the `managed_references` table, `managed_reference_view` and `managed_reference_stats_view` ([#53](https://github.com/Unity-Technologies/UnityDataTools/issues/53)) |
+| 11 | Added indexes on `preload_dependencies(object)`, `preload_dependencies(dependency)`, `shader_subprograms(shader)` and `shader_subprogram_keywords(subprogram_id)` ([#83](https://github.com/Unity-Technologies/UnityDataTools/issues/83)) |
 
 ## Related documentation
 

@@ -143,7 +143,7 @@ public class ShaderHandler : ISQLiteHandler
         return id;
     }
 
-    public void Finalize(SqliteConnection db)
+    public void FinalizeDatabase(SqliteConnection db)
     {
         using var command = new SqliteCommand();
         command.Connection = db;

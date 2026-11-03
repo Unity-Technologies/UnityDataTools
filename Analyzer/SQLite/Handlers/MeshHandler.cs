@@ -63,10 +63,6 @@ public class MeshHandler : ISQLiteHandler
         name = mesh.Name;
     }
 
-    public void Finalize(SqliteConnection db)
-    {
-    }
-
     void IDisposable.Dispose()
     {
         m_InsertCommand?.Dispose();
