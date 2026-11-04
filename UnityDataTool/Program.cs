@@ -290,6 +290,52 @@ public static class Program
             (FileInfo fi, ArchiveTool.OutputFormat f) => Task.FromResult(ArchiveTool.PrintSummary(fi, f)),
             pathArg, fOpt);
 
+        var repackOutOpt = new Option<FileInfo>(aliases: new[] { "--output-file", "-o" }, description: "Path of the repacked archive") { IsRequired = true };
+        var compressionOpt = new Option<RepackCompression>(aliases: new[] { "--compression", "-c" }, description: "Block compression", getDefaultValue: () => RepackCompression.Lz4HC);
+        var blockSizeOpt = new Option<int>(aliases: new[] { "--block-size" }, description: "Largest uncompressed size of a block, in bytes. Unity uses 131072 (128 KB)", getDefaultValue: () => RepackOptions.DefaultBlockSize);
+        var maxCompressedOpt = new Option<int?>(aliases: new[] { "--max-compressed-block-size" }, description: "Largest size of a block after compression, in bytes. Blocks that would compress to more are made shorter");
+        var splitOpt = new Option<bool>(aliases: new[] { "--split-at-file-boundaries" }, description: "Start a new block for each file instead of letting blocks span files");
+        var alignOpt = new Option<int>(aliases: new[] { "--file-alignment" }, description: "Align the start of each file in the uncompressed data to this many bytes (a power of two), padding with zeros", getDefaultValue: () => 1);
+        var blockAlignOpt = new Option<int>(aliases: new[] { "--block-alignment" }, description: "Align the position of each block in the file to this many bytes (a power of two). Needs archive format version 9 (Unity 6.7)", getDefaultValue: () => 1);
+        var ratioOpt = new Option<double>(aliases: new[] { "--min-compression-ratio" }, description: "Store a block uncompressed unless uncompressed/compressed size reaches this ratio", getDefaultValue: () => 1.0);
+        var skipVerifyOpt = new Option<bool>(aliases: new[] { "--skip-verify" }, description: "Do not check that the repacked archive has the same content as the original");
+
+        var repackArchiveCommand = new Command("repack", "Rewrite a Unity Archive with a different LZ4/LZ4HC block layout, keeping its content.")
+        {
+            pathArg,
+            repackOutOpt,
+            compressionOpt,
+            blockSizeOpt,
+            maxCompressedOpt,
+            splitOpt,
+            alignOpt,
+            blockAlignOpt,
+            ratioOpt,
+            skipVerifyOpt,
+            fOpt,
+        };
+        // Bound via InvocationContext because the option count exceeds the strongly-typed SetHandler overloads.
+        repackArchiveCommand.SetHandler((InvocationContext context) =>
+        {
+            var parse = context.ParseResult;
+            var options = new RepackOptions
+            {
+                Compression = parse.GetValueForOption(compressionOpt),
+                BlockSize = parse.GetValueForOption(blockSizeOpt),
+                MaxCompressedBlockSize = parse.GetValueForOption(maxCompressedOpt),
+                SplitAtFileBoundaries = parse.GetValueForOption(splitOpt),
+                FileAlignment = parse.GetValueForOption(alignOpt),
+                BlockAlignment = parse.GetValueForOption(blockAlignOpt),
+                MinCompressionRatio = parse.GetValueForOption(ratioOpt),
+            };
+            context.ExitCode = ArchiveTool.Repack(
+                parse.GetValueForArgument(pathArg),
+                parse.GetValueForOption(repackOutOpt),
+                options,
+                parse.GetValueForOption(skipVerifyOpt),
+                parse.GetValueForOption(fOpt));
+        });
+
         return new Command("archive", "Inspect or extract the contents of a Unity archive (AssetBundle or web platform .data file).")
         {
             extractArchiveCommand,
@@ -297,6 +343,7 @@ public static class Program
             headerArchiveCommand,
             blocksArchiveCommand,
             infoArchiveCommand,
+            repackArchiveCommand,
         };
     }
 

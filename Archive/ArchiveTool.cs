@@ -232,6 +232,104 @@ public static class ArchiveTool
         return 0;
     }
 
+    public static int Repack(FileInfo filename, FileInfo output, RepackOptions options, bool skipVerify, OutputFormat format)
+    {
+        var path = filename.ToString();
+
+        if (WebBundleHelper.IsWebBundle(path))
+        {
+            Console.Error.WriteLine("Web bundle files (.data, .data.gz, .data.br) use a different format. The repack command is only supported for Unity Archive files.");
+            return 1;
+        }
+
+        var optionsError = options.Validate();
+        if (optionsError != null)
+        {
+            Console.Error.WriteLine(optionsError);
+            return 1;
+        }
+
+        if (options.MaxCompressedBlockSize.HasValue && options.Compression == RepackCompression.None)
+        {
+            Console.Error.WriteLine("--max-compressed-block-size has no effect without compression.");
+            return 1;
+        }
+
+        RepackResult result;
+        try
+        {
+            result = ArchiveRepacker.Repack(filename.FullName, output.FullName, options, verify: !skipVerify);
+        }
+        catch (Exception err) when (
+            err is ArgumentException
+            || err is NotSupportedException
+            || err is InvalidDataException
+            || err is IOException
+            || err is UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"Error repacking archive: {err.Message}");
+            return 1;
+        }
+
+        if (format == OutputFormat.Json)
+            OutputRepackJson(output, result);
+        else
+            OutputRepackText(filename, output, result);
+
+        return 0;
+    }
+
+    static void OutputRepackText(FileInfo input, FileInfo output, RepackResult result)
+    {
+        var a = result.Original;
+        var b = result.Repacked;
+        double change = a.FileSize > 0 ? 100.0 * (b.FileSize - a.FileSize) / a.FileSize : 0;
+
+        Console.WriteLine($"Repacked {input.Name} into {output.FullName}");
+        Console.WriteLine();
+        Console.WriteLine($"{"",-30} {"Original",15} {"Repacked",15}");
+        Console.WriteLine($"{"File Size",-30} {a.FileSize,15:N0} {b.FileSize,15:N0}  ({change:+0.0;-0.0;0.0}%)");
+        Console.WriteLine($"{"Compression",-30} {a.Compression,15} {b.Compression,15}");
+        Console.WriteLine($"{"Block Count",-30} {a.BlockCount,15:N0} {b.BlockCount,15:N0}");
+        Console.WriteLine($"{"Uncompressed Blocks",-30} {a.UncompressedBlockCount,15:N0} {b.UncompressedBlockCount,15:N0}");
+        Console.WriteLine($"{"Largest Block",-30} {a.LargestBlockSize,15:N0} {b.LargestBlockSize,15:N0}");
+        Console.WriteLine($"{"Read Amplification",-30} {a.ReadAmplification,14:F2}x {b.ReadAmplification,14:F2}x");
+        Console.WriteLine();
+        if (result.Verified)
+            Console.WriteLine($"Verified: all {result.FileCount} files match the original byte for byte.");
+        else
+            Console.WriteLine("Not verified (--skip-verify).");
+    }
+
+    static void OutputRepackJson(FileInfo output, RepackResult result)
+    {
+        var jsonObject = new
+        {
+            output = output.FullName,
+            fileCount = result.FileCount,
+            verified = result.Verified,
+            original = StatsToJson(result.Original),
+            repacked = StatsToJson(result.Repacked),
+        };
+        var json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Console.WriteLine(json);
+    }
+
+    static object StatsToJson(ArchiveLayoutStats stats)
+    {
+        return new
+        {
+            fileSize = stats.FileSize,
+            compression = stats.Compression,
+            blockCount = stats.BlockCount,
+            uncompressedBlockCount = stats.UncompressedBlockCount,
+            largestBlockSize = stats.LargestBlockSize,
+            dataSize = stats.DataSize,
+            uncompressedDataSize = stats.UncompressedDataSize,
+            readAmplification = Math.Round(stats.ReadAmplification, 3),
+        };
+    }
+
     static void OutputHeaderText(ArchiveHeaderInfo info)
     {
         Console.WriteLine($"{"Signature",-30} {info.Signature}");
