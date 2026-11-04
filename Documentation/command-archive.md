@@ -13,6 +13,7 @@ To inspect the serialized objects *inside* an archive, use the [`dump`](command-
 | [`blocks`](#blocks) | Display the data block list | Yes | — |
 | [`list`](#list) | List contents of an archive | Yes | Yes |
 | [`extract`](#extract) | Extract contents of an archive | Yes | Yes |
+| [`repack`](#repack) | Rewrite an archive with a different LZ4/LZ4HC block layout | Yes | — |
 
 ---
 
@@ -150,6 +151,72 @@ contents/BuildPlayer-Scene2
 ```
 
 > **Note:** The extracted files are in binary formats, not text.  If they are SerializedFiles then use the [`dump`](command-dump.md) command to convert them to readable text format.  See also the [`serialized-file`](command-serialized-file.md) command.
+
+---
+
+## repack
+
+Rewrites a Unity Archive into a new archive that contains the same files, compressed with a block layout you choose. The original file is not modified.
+
+Unity writes chunk-based (LZ4/LZ4HC) archives with blocks of up to 128 KB of uncompressed data, and there is no build option to change that. The archive format records the size and compression of every block, so other layouts can be read as well. `repack` makes it possible to measure what a different layout does to the download size, the patch size and the cost of reading the content, for example to tune it to a platform's storage. The input can use any compression that UnityDataTool can read, including LZMA; the output is uncompressed, LZ4 or LZ4HC (LZMA output is not supported).
+
+The output keeps the archive format version and Unity version of the input, and by default it is checked after writing: both archives are read back through UnityFileSystemApi and every file must match the original byte for byte. If the check fails, the output is deleted.
+
+### Quick Reference
+
+```
+UnityDataTool archive repack <archive-path> -o <output-file> [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `<archive-path>` | Path to the archive file | *(required)* |
+| `-o, --output-file <path>` | Path of the repacked archive. Must differ from the input | *(required)* |
+| `-c, --compression <None\|Lz4\|Lz4HC>` | Block compression | `Lz4HC` |
+| `--block-size <bytes>` | Largest uncompressed size of a block (1 KB to 64 MB) | `131072` |
+| `--max-compressed-block-size <bytes>` | Largest stored size of a block. A block that would compress to more is made shorter | *(no limit)* |
+| `--split-at-file-boundaries` | Start a new block for each file, so that no block holds data from two files | *(blocks span files)* |
+| `--file-alignment <bytes>` | Align the start of each file in the uncompressed data to a power of two, padding with zeros | `1` |
+| `--block-alignment <bytes>` | Align the position of each block in the file to a power of two. Needs archive format version 9 (Unity 6.7 and later), where blocks record their own position | `1` |
+| `--min-compression-ratio <ratio>` | Store a block uncompressed unless uncompressed size / compressed size reaches this ratio | `1.0` |
+| `--skip-verify` | Do not read the output back to compare it with the input | |
+| `-f, --format <Text\|Json>` | Output format of the report | `Text` |
+
+A block is always stored uncompressed when compression does not make it smaller. A higher `--min-compression-ratio` extends that to data that only compresses a little (for example textures in a GPU compression format, or audio), which saves the decompression work when it is loaded.
+
+### Example
+
+```bash
+UnityDataTool archive repack scenes.bundle -o scenes-512k.bundle --block-size 524288
+UnityDataTool archive repack scenes.bundle -o scenes-split.bundle --split-at-file-boundaries -f Json
+```
+
+**Output:**
+```
+Repacked scenes into /path/to/scenes-split.bundle
+
+                                      Original        Repacked
+File Size                              362,352         364,873  (+0.7%)
+Compression                              Lz4HC           Lz4HC
+Block Count                                 11               9
+Uncompressed Blocks                          0               0
+Largest Block                          131,072         131,072
+Read Amplification                       1.00x           1.00x
+
+Verified: all 4 files match the original byte for byte.
+```
+
+The report compares the two layouts:
+
+| Field | Meaning |
+|-------|---------|
+| Uncompressed Blocks | Blocks stored without compression in an archive that otherwise uses compression |
+| Largest Block | Largest uncompressed block size, which is roughly the memory needed to decompress one block |
+| Read Amplification | Uncompressed size of the blocks that must be read to load each file on its own, divided by the total size of the files. 1.00x means no block is shared between two files. A single LZMA block that holds four files reports 4.00x |
+
+`archive info`, `archive blocks` and `archive list` work on the repacked file, and `dump` and `analyze` read it the same way as the original.
+
+> **Note:** The output is checked with UnityFileSystemApi, which comes from the Unity Editor. Test a repacked archive in a Player build on your target platform before you ship it.
 
 ---
 

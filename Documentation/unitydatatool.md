@@ -8,7 +8,7 @@ A command-line tool for analyzing and inspecting Unity build output—AssetBundl
 |---------|-------------|
 | [`analyze`](command-analyze.md) | Extract data from Unity files into a SQLite database |
 | [`dump`](command-dump.md) | Convert SerializedFiles to human-readable text |
-| [`archive`](command-archive.md) | List or extract contents of Unity Archives |
+| [`archive`](command-archive.md) | List, extract or repack the contents of Unity Archives |
 | [`serialized-file`](command-serialized-file.md) | Quick inspection of SerializedFile metadata |
 | [`find-refs`](command-find-refs.md) | Trace reference chains to objects *(experimental)* |
 
