@@ -63,6 +63,14 @@ public class AnalyzerTool
             return 1;
         }
 
+        // Fail before the database is opened, so an existing database at the output path is not
+        // truncated by a run that has nothing to analyze (issue #138).
+        if (files.Count == 0)
+        {
+            Console.Error.WriteLine("Error: the input paths matched no files to analyze.");
+            return 1;
+        }
+
         if (File.Exists(m_Options.DatabaseName))
         {
             Console.Error.WriteLine($"Overwriting existing database \"{m_Options.DatabaseName}\" (previous contents are discarded).");

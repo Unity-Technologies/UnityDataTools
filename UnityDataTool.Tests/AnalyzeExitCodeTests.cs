@@ -79,6 +79,28 @@ public class AnalyzeExitCodeTests
         Assert.That(File.Exists(databasePath), Is.False, "Expected the overwritten database to be removed, not left empty");
     }
 
+    // An input that matches no files must not touch the database a previous run left at the
+    // output path (issue #138).
+    [Test]
+    public async Task Analyze_NoInputFiles_KeepsDatabaseOfPreviousRun()
+    {
+        var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
+
+        var (firstExitCode, _) = await RunAnalyze(m_AssetBundlePath, "-o", databasePath);
+        Assert.AreEqual(0, firstExitCode);
+        var previousContents = File.ReadAllBytes(databasePath);
+
+        var emptyFolder = Path.Combine(m_TestOutputFolder, "empty_input");
+        Directory.CreateDirectory(emptyFolder);
+        var (exitCode, output) = await RunAnalyze(emptyFolder, "-o", databasePath);
+
+        Assert.AreEqual(1, exitCode);
+        StringAssert.Contains("the input paths matched no files to analyze", output);
+        StringAssert.DoesNotContain("Overwriting existing database", output);
+        Assert.That(File.Exists(databasePath), Is.True);
+        CollectionAssert.AreEqual(previousContents, File.ReadAllBytes(databasePath));
+    }
+
     [Test]
     public async Task Analyze_SomeFilesFailed_SucceedsAndKeepsDatabase()
     {
