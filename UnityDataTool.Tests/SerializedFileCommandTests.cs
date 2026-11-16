@@ -875,22 +875,7 @@ public class SerializedFileCommandTests
 
     private static async Task<(int ExitCode, string Out, string Err)> RunCaptured(params string[] args)
     {
-        using var swOut = new StringWriter();
-        using var swErr = new StringWriter();
-        var currentOut = Console.Out;
-        var currentErr = Console.Error;
-        try
-        {
-            Console.SetOut(swOut);
-            Console.SetError(swErr);
-            var result = await Program.Main(args);
-            return (result, swOut.ToString(), swErr.ToString());
-        }
-        finally
-        {
-            Console.SetOut(currentOut);
-            Console.SetError(currentErr);
-        }
+        return await ConsoleTestHelper.RunCapturingOutput(args);
     }
 
     [Test]
