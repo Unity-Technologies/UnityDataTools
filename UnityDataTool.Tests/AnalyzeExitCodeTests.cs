@@ -45,23 +45,13 @@ public class AnalyzeExitCodeTests
 
     private static async Task<(int exitCode, string output)> RunAnalyze(params string[] args)
     {
-        var originalOut = System.Console.Out;
-        var originalError = System.Console.Error;
-        using var swOut = new StringWriter();
-        using var swErr = new StringWriter();
-        try
-        {
-            System.Console.SetOut(swOut);
-            System.Console.SetError(swErr);
-            var exitCode = await Program.Main(new[] { "analyze" }.Concat(args).ToArray());
-            return (exitCode, swOut.ToString() + swErr.ToString());
-        }
-        finally
-        {
-            System.Console.SetOut(originalOut);
-            System.Console.SetError(originalError);
-        }
+        var commandArgs = new[] { "analyze" }.Concat(args).ToArray();
+
+        var (exitCode, stdout, stderr) = await CommandTestHelper.RunAsync(commandArgs);
+
+        return (exitCode, stdout + stderr);
     }
+
 
     [Test]
     public async Task Analyze_NothingAnalyzed_RemovesDatabaseOfPreviousRun()
