@@ -20,6 +20,16 @@ Both builds start from a root ScriptableObject whose serialized dictionary maps 
 
 Both build scripts write directly into `TestCommon/Data/LeadingEdgeBuilds` using paths relative to the project root.
 
+## Regenerating the reference builds
+
+Run the editor scripts in batchmode with an editor matching the project version:
+
+    Unity.exe -batchmode -quit -projectPath UnityProjects/LeadingEdge -executeMethod <GenerateAssets.Generate|BuildAssetBundles.Build|BuildContentDirectory.Build> -logFile <log>
+
+* `ProjectVersion.txt` is gitignored; the version above is the tracked one.
+* Builds are deterministic: rebuilding without asset changes leaves the output byte-identical.
+* `GenerateAssets` rewrites `SerializationDemo.asset` with a new random `[SerializeReference]` `rid` (data unchanged). Revert that file unless the assets actually changed.
+
 ## Content Directory Build
 
 The root asset is `ContentDirectoryRoot.asset`. It directly references the `LoadableAudioClipReference` assets, so those are loaded automatically when the content directory is registered. The AudioClips themselves are referenced through `Loadable<T>`, so they are included in the build but loaded only on demand. It also directly references the `SceneList` asset, whose `LoadableSceneId` entries pull the two scenes into the build; each scene becomes its own Content File.
