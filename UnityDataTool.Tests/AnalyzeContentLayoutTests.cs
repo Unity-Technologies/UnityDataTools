@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
@@ -10,11 +11,11 @@ namespace UnityDataTools.UnityDataTool.Tests;
 #pragma warning disable NUnit2005, NUnit2006
 
 // Tests the import of ContentLayout.json into the content_layout* tables (issue #99). Runs
-// against the version 3 ContentLayout.json of the LeadingEdge ContentDirectory reference build,
-// whose content is well-known (see UnityProjects/LeadingEdge/Assets/Editor/BuildContentDirectory.cs):
-// 14 serialized files (1 built-in), 3 loadable objects with ContentDirectoryRoot as the single
-// root asset, 2 loadable scenes, and 18 binary artifacts. The version 2 import is covered by
-// AnalyzeContentLayoutV2Tests.
+// against the version 3 ContentLayout.json of the LeadingEdge ContentDirectory reference build
+// (see UnityProjects/LeadingEdge/Assets/Editor/BuildContentDirectory.cs), with ContentDirectoryRoot
+// as the single root asset. That build is regenerated with each new Unity version, so the expected
+// indices, hashes and row counts are read from the json (see LeadingEdgeTestData) rather than
+// hard-coded. The version 2 import is covered by AnalyzeContentLayoutV2Tests.
 public class AnalyzeContentLayoutTests
 {
     private string m_TestOutputFolder;
@@ -25,10 +26,8 @@ public class AnalyzeContentLayoutTests
     public void OneTimeSetup()
     {
         m_TestOutputFolder = Path.Combine(TestContext.CurrentContext.TestDirectory, "content_layout_test_folder");
-        m_ContentLayoutPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
-            "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "ContentLayout.json");
-        m_BuildReportPath = Path.Combine(TestContext.CurrentContext.TestDirectory,
-            "Data", "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f096bba0b9ce4c44194edd738d64b9df.buildreport");
+        m_ContentLayoutPath = LeadingEdgeTestData.ContentLayoutPath;
+        m_BuildReportPath = LeadingEdgeTestData.ContentDirectoryBuildReportPath;
         Directory.CreateDirectory(m_TestOutputFolder);
         Directory.SetCurrentDirectory(m_TestOutputFolder);
     }
@@ -50,33 +49,41 @@ public class AnalyzeContentLayoutTests
         Assert.AreEqual(0, await Program.Main(new string[] { "analyze", m_ContentLayoutPath, "-o", databasePath }));
         using var db = SQLTestHelper.OpenDatabase(databasePath);
 
+        var layout = LeadingEdgeTestData.ReadContentLayout();
+        var serializedFiles = layout.GetProperty("SerializedFiles").EnumerateArray().ToArray();
+        var artifacts = layout.GetProperty("BinaryArtifacts").EnumerateArray().ToArray();
+        int ArrayLength(JsonElement e, string property) =>
+            e.TryGetProperty(property, out var array) ? array.GetArrayLength() : 0;
+        int FileIndexOf(string assetPath) =>
+            LeadingEdgeTestData.SerializedFileForAsset(layout, assetPath).GetProperty("Index").GetInt32();
+
         // Header row identifying the imported layout.
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout", 1,
             "a single layout should be imported");
         SQLTestHelper.AssertQueryInt(db, "SELECT version FROM content_layout", 3,
             "the layout schema version should be recorded");
         SQLTestHelper.AssertQueryString(db, "SELECT build_manifest_hash FROM content_layout",
-            "e320fc78984f8430afa90a591fd02004", "the BuildManifestHash should be recorded");
+            LeadingEdgeTestData.BuildManifestHash, "the BuildManifestHash should match BuildManifestHash.txt");
 
         // Row counts of each table, matching the json content.
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_serialized_files", 14,
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_serialized_files", serializedFiles.Length,
             "one row per SerializedFiles entry");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_source_assets", 16,
-            "one row per source asset per file");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_serialized_file_dependencies", 16,
-            "one row per file dependency");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_dependencies", 3,
-            "one row per loadable dependency");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_scene_dependencies", 2,
-            "one row per loadable scene dependency");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_objects", 3,
-            "one row per LoadableObjectIds entry");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_scenes", 2,
-            "one row per LoadableSceneIds entry");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_binary_artifacts", 18,
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_source_assets",
+            serializedFiles.Sum(f => ArrayLength(f, "SourceAssets")), "one row per source asset per file");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_serialized_file_dependencies",
+            serializedFiles.Sum(f => ArrayLength(f, "SerializedFileDependencies")), "one row per file dependency");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_dependencies",
+            serializedFiles.Sum(f => ArrayLength(f, "LoadableDependencies")), "one row per loadable dependency");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_scene_dependencies",
+            serializedFiles.Sum(f => ArrayLength(f, "LoadableSceneDependencies")), "one row per loadable scene dependency");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_objects",
+            ArrayLength(layout, "LoadableObjectIds"), "one row per LoadableObjectIds entry");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_loadable_scenes",
+            ArrayLength(layout, "LoadableSceneIds"), "one row per LoadableSceneIds entry");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_binary_artifacts", artifacts.Length,
             "one row per BinaryArtifacts entry");
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_artifact_references", 17,
-            "one row per artifact reference");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_artifact_references",
+            artifacts.Sum(a => ArrayLength(a, "ArtifactReferences")), "one row per artifact reference");
 
         // The built-in entry keeps its human-readable path as the stable id and has no artifact.
         SQLTestHelper.AssertQueryString(db,
@@ -89,40 +96,51 @@ public class AnalyzeContentLayoutTests
             "SELECT COUNT(*) FROM content_layout_serialized_files WHERE is_builtin = 1 AND artifact_index IS NOT NULL", 0,
             "built-in entries have no artifact");
 
-        // The ContentDirectoryRoot file and its dependencies, preserving the json array order
-        // (json SerializedFileDependencies for index 10: [4, 5, 2, 9, 3]).
+        // The ContentDirectoryRoot file and its dependencies, preserving the json array order. The
+        // stable id is the asset's GUID (from its .meta file), so it survives a rebuild.
+        var root = LeadingEdgeTestData.SerializedFileForAsset(layout, LeadingEdgeTestData.RootAssetPath);
+        var rootIndex = root.GetProperty("Index").GetInt32();
+        var rootDependencies = root.GetProperty("SerializedFileDependencies").EnumerateArray().Select(d => d.GetInt32()).ToArray();
+        Assert.Greater(rootDependencies.Length, 1, "the root needs several dependencies for the order check to mean anything");
         SQLTestHelper.AssertQueryString(db,
-            "SELECT stable_id FROM content_layout_serialized_files WHERE file_index = 10",
+            $"SELECT stable_id FROM content_layout_serialized_files WHERE file_index = {rootIndex}",
             "52b43dad178849b42ac753005736e7bb", "stable id of the ContentDirectoryRoot file");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT ba.content_hash FROM content_layout_serialized_files f
+            $@"SELECT ba.content_hash FROM content_layout_serialized_files f
               INNER JOIN content_layout_binary_artifacts ba ON ba.artifact_index = f.artifact_index
-              WHERE f.file_index = 10",
-            "eb3abd5ab5b0d790980fe9e9df872484", "artifact link of the ContentDirectoryRoot file");
+              WHERE f.file_index = {rootIndex}",
+            LeadingEdgeTestData.ContentHashOf(layout, root), "artifact link of the ContentDirectoryRoot file");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT GROUP_CONCAT(dependency_index) FROM (
+            $@"SELECT GROUP_CONCAT(dependency_index) FROM (
                 SELECT dependency_index FROM content_layout_serialized_file_dependencies
-                WHERE serialized_file_index = 10 ORDER BY position)",
-            "4,5,2,9,3", "dependency order must match the json array order");
+                WHERE serialized_file_index = {rootIndex} ORDER BY position)",
+            string.Join(",", rootDependencies), "dependency order must match the json array order");
         SQLTestHelper.AssertQueryString(db,
-            "SELECT asset_path FROM content_layout_source_assets WHERE serialized_file_index = 10",
-            "Assets/ScriptableObjects/ContentDirectoryRoot.asset", "source asset of the root file");
+            $"SELECT asset_path FROM content_layout_source_assets WHERE serialized_file_index = {rootIndex}",
+            LeadingEdgeTestData.RootAssetPath, "source asset of the root file");
 
-        // RootAssets is folded into is_root_asset, which holds the 1-based root position
-        // (json RootAssets: [2]).
+        // RootAssets is folded into is_root_asset, which holds the 1-based root position.
+        var rootAssets = layout.GetProperty("RootAssets").EnumerateArray().Select(r => r.GetInt32()).ToArray();
+        Assert.AreEqual(1, rootAssets.Length, "ContentDirectoryRoot is the only root asset");
         SQLTestHelper.AssertQueryInt(db,
-            "SELECT loadable_index FROM content_layout_loadable_objects WHERE is_root_asset = 1", 2,
-            "ContentDirectoryRoot is the only root asset");
+            "SELECT loadable_index FROM content_layout_loadable_objects WHERE is_root_asset = 1", rootAssets[0],
+            "is_root_asset marks the RootAssets entry");
         SQLTestHelper.AssertQueryString(db,
             "SELECT guid FROM content_layout_loadable_objects WHERE is_root_asset = 1",
             "52b43dad178849b42ac753005736e7bb", "the root loadable records its source asset guid");
 
-        // The loadable dependencies are indices into the loadables (json file 5: [0, 1]).
+        // The loadable dependencies are indices into the loadables: LoadableAudioClipReference holds
+        // Loadable<AudioClip> references to both mp3s.
+        var loadableReference = LeadingEdgeTestData.SerializedFileForAsset(layout,
+            "Assets/ScriptableObjects/LoadableAudioClipReference.asset");
+        var loadableDependencies = loadableReference.GetProperty("LoadableDependencies").EnumerateArray()
+            .Select(d => d.GetInt32()).OrderBy(d => d).ToArray();
+        Assert.AreEqual(2, loadableDependencies.Length, "LoadableAudioClipReference references both AudioClips");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT GROUP_CONCAT(loadable_index) FROM (
+            $@"SELECT GROUP_CONCAT(loadable_index) FROM (
                 SELECT loadable_index FROM content_layout_loadable_dependencies
-                WHERE serialized_file_index = 5 ORDER BY loadable_index)",
-            "0,1", "loadable dependencies reference loadables by index");
+                WHERE serialized_file_index = {loadableReference.GetProperty("Index").GetInt32()} ORDER BY loadable_index)",
+            string.Join(",", loadableDependencies), "loadable dependencies reference loadables by index");
 
         // v3 layouts do not record the source asset path or source lfid of a loadable, so the
         // v2-only columns must not exist in this database.
@@ -148,10 +166,11 @@ public class AnalyzeContentLayoutTests
             "loadables cannot resolve to objects in a layout-only analyze");
 
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_binary_artifacts WHERE category = 'contentfile'",
-            13, "one contentfile artifact per non-built-in serialized file");
+            serializedFiles.Count(f => !(f.TryGetProperty("IsBuiltIn", out var builtIn) && builtIn.GetBoolean())),
+            "one contentfile artifact per non-built-in serialized file");
         SQLTestHelper.AssertQueryString(db,
             "SELECT filename FROM content_layout_binary_artifacts_view WHERE category = 'manifest'",
-            "e320fc78984f8430afa90a591fd02004.json", "the artifact filename is derived from the category");
+            LeadingEdgeTestData.BuildManifestHash + ".json", "the artifact filename is derived from the category");
 
         // Views are created with the tables and their joins produce the expected rows.
         SQLTestHelper.AssertViewExists(db, "content_layout_serialized_files_view");
@@ -161,22 +180,38 @@ public class AnalyzeContentLayoutTests
         SQLTestHelper.AssertViewExists(db, "content_layout_binary_artifacts_view");
         SQLTestHelper.AssertViewExists(db, "content_layout_resource_files_view");
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_resource_files_view", 4,
-            "the reference build has 2 .resS and 2 .resource data files");
+        // Content Files reference their .resS/.resource data files: the audio, video and texture
+        // assets of the reference build.
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM content_layout_resource_files_view",
+            artifacts.Where(a => a.GetProperty("Category").GetString() == "contentfile")
+                .Sum(a => ArrayLength(a, "ArtifactReferences")),
+            "one row per data file referenced by a Content File");
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT GROUP_CONCAT(DISTINCT category) FROM (
+                SELECT category FROM content_layout_resource_files_view ORDER BY category)",
+            "audio,texture,video", "the reference build has audio, texture and video data files");
         SQLTestHelper.AssertQueryString(db,
             "SELECT filename FROM content_layout_serialized_files_view WHERE is_builtin = 1",
             "Library/unity default resources", "built-in entries show their path as the filename");
+
+        // Scene1's first dependency is the built-in entry (index 0).
+        var scene1Index = FileIndexOf("Assets/Scenes/Scene1.unity");
+        Assert.AreEqual(0, LeadingEdgeTestData.SerializedFileAt(layout, scene1Index)
+            .GetProperty("SerializedFileDependencies")[0].GetInt32());
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
-              WHERE serialized_file_index = 6 AND position = 1",
+            $@"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
+              WHERE serialized_file_index = {scene1Index} AND position = 1",
             "Library/unity default resources", "dependencies on built-in entries resolve to their path");
+
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT filename FROM content_layout_loadable_objects_view WHERE loadable_index = 2",
-            "eb3abd5ab5b0d790980fe9e9df872484.cf", "the loadable view resolves the containing file");
+            "SELECT filename FROM content_layout_loadable_objects_view WHERE is_root_asset = 1",
+            LeadingEdgeTestData.ContentFileForAsset(LeadingEdgeTestData.RootAssetPath),
+            "the loadable view resolves the containing file");
         SQLTestHelper.AssertQueryString(db,
-            @"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
-              WHERE serialized_file_index = 10 AND position = 1",
-            "79bdcb3e9bc659d3519594280240cd1b.cf", "the dependencies view resolves target filenames");
+            $@"SELECT dependency_filename FROM content_layout_serialized_file_dependencies_view
+              WHERE serialized_file_index = {rootIndex} AND position = 1",
+            LeadingEdgeTestData.ContentHashOf(layout, LeadingEdgeTestData.SerializedFileAt(layout, rootDependencies[0])) + ".cf",
+            "the dependencies view resolves target filenames");
     }
 
     [Test]
@@ -242,6 +277,16 @@ public class AnalyzeContentLayoutTests
               INNER JOIN content_layout_serialized_files f ON f.file_index = s.serialized_file_index
               WHERE EXISTS (SELECT 1 FROM objects o WHERE o.serialized_file = f.serialized_file)", 2,
             "both loadable scenes should link to analyzed content files");
+
+        // The VideoClip is a separate content file from the ScriptableObject that references it.
+        SQLTestHelper.AssertQueryInt(db,
+            @"SELECT COUNT(*) FROM refs r
+              INNER JOIN objects src ON src.id = r.object
+              INNER JOIN object_view tgt ON tgt.id = r.referenced_object
+              WHERE src.name = 'VideoClipReference' AND tgt.type = 'VideoClip'
+                AND tgt.name = 'basic_clip_no_audio_160_100_1_1_50_100_H264'
+                AND src.serialized_file != tgt.serialized_file", 1,
+            "VideoClipReference should reference the VideoClip across files");
     }
 
     [Test]
@@ -321,7 +366,7 @@ public class AnalyzeContentLayoutTests
 
         using var db = SQLTestHelper.OpenDatabase(databasePath);
         SQLTestHelper.AssertQueryString(db, "SELECT build_manifest_hash FROM content_layout",
-            "e320fc78984f8430afa90a591fd02004", "the matching layout should be the imported one");
+            LeadingEdgeTestData.BuildManifestHash, "the matching layout should be the imported one");
     }
 
     [Test]
@@ -334,7 +379,7 @@ public class AnalyzeContentLayoutTests
             "Data", "LeadingEdgeBuilds", "ContentDirectory");
         var subsetFolder = Path.Combine(m_TestOutputFolder, "subset");
         Directory.CreateDirectory(subsetFolder);
-        const string rootFile = "eb3abd5ab5b0d790980fe9e9df872484.cf";
+        var rootFile = LeadingEdgeTestData.ContentFileForAsset(LeadingEdgeTestData.RootAssetPath);
         File.Copy(Path.Combine(contentDirectory, rootFile), Path.Combine(subsetFolder, rootFile));
         File.Copy(Path.Combine(contentDirectory, "BuildManifestHash.txt"),
             Path.Combine(subsetFolder, "BuildManifestHash.txt"));
@@ -366,7 +411,7 @@ public class AnalyzeContentLayoutTests
             "Data", "LeadingEdgeBuilds", "ContentDirectory");
         var subsetFolder = Path.Combine(m_TestOutputFolder, "subset_no_hash");
         Directory.CreateDirectory(subsetFolder);
-        const string rootFile = "eb3abd5ab5b0d790980fe9e9df872484.cf";
+        var rootFile = LeadingEdgeTestData.ContentFileForAsset(LeadingEdgeTestData.RootAssetPath);
         File.Copy(Path.Combine(contentDirectory, rootFile), Path.Combine(subsetFolder, rootFile));
         var databasePath = SQLTestHelper.GetDatabasePath(m_TestOutputFolder);
 

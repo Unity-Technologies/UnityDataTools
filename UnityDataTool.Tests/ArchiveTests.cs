@@ -524,14 +524,39 @@ BuildPlayer-OtherScene
 
     // The native library reads the block offsets independently of the C# parser, so successful
     // extraction of content spanning several non-contiguous blocks confirms the layout is understood.
+    // The expected size comes from the C# parser's directory listing.
     [Test]
     public async Task ArchiveExtract_Version9_FilesExtractedSuccessfully()
     {
+        const string entryName = "BuildPlayer-Scene1.sharedAssets";
+        long expectedSize;
+        long largestBlock;
+        using (var sw = new StringWriter())
+        {
+            var currentOut = Console.Out;
+            try
+            {
+                Console.SetOut(sw);
+                Assert.AreEqual(0, await Program.Main(new string[] { "archive", "list", m_Version9ArchivePath, "-f", "Json" }));
+                var entries = JsonDocument.Parse(sw.ToString()).RootElement.EnumerateArray();
+                expectedSize = entries.Single(e => e.GetProperty("path").GetString() == entryName).GetProperty("size").GetInt64();
+
+                sw.GetStringBuilder().Clear();
+                Assert.AreEqual(0, await Program.Main(new string[] { "archive", "blocks", m_Version9ArchivePath, "-f", "Json" }));
+                largestBlock = JsonDocument.Parse(sw.ToString()).RootElement.GetProperty("blocks").EnumerateArray()
+                    .Max(b => b.GetProperty("uncompressedSize").GetInt64());
+            }
+            finally
+            {
+                Console.SetOut(currentOut);
+            }
+        }
+        Assert.Greater(expectedSize, largestBlock, $"{entryName} should span several blocks of the archive");
+
         Assert.AreEqual(0, await Program.Main(new string[] { "archive", "extract", m_Version9ArchivePath }));
 
-        // BuildPlayer-Scene1.sharedAssets spans the first eight blocks of the archive.
-        var extractedFile = new FileInfo(Path.Combine(m_TestOutputFolder, "archive", "BuildPlayer-Scene1.sharedAssets"));
-        Assert.IsTrue(extractedFile.Exists, "Expected file not found: BuildPlayer-Scene1.sharedAssets");
-        Assert.AreEqual(761460, extractedFile.Length);
+        var extractedFile = new FileInfo(Path.Combine(m_TestOutputFolder, "archive", entryName));
+        Assert.IsTrue(extractedFile.Exists, $"Expected file not found: {entryName}");
+        Assert.AreEqual(expectedSize, extractedFile.Length);
     }
 }

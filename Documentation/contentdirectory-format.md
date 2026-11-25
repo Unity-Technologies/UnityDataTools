@@ -56,7 +56,7 @@ runtime.
 
 Every build artifact is named by the hash of its own content:
 
-- **Content Files** use the `.cf` extension (for example `eb3abd5ab5b0d790980fe9e9df872484.cf`).
+- **Content Files** use the `.cf` extension (for example `607f3fe8fb722f11bbf24885f3e3ae6c.cf`).
 - **`.resS`** files hold streamed texture and mesh data.
 - **`.resource`** files hold audio and video data.
 
@@ -77,7 +77,7 @@ it is best to avoid assumption that the extensions are always present.
 ### The build manifest
 
 The build manifest is a JSON file, also named by its content hash (for example
-`e320fc78984f8430afa90a591fd02004.json`). It records everything needed to load the content: the list of
+`b852a6d80db71bb7e92fe3881f7e0be3.json`). It records everything needed to load the content: the list of
 Content Files, their dependencies, and the loadable objects and scenes. Its schema is internal and may
 change substantially, so this page does not document it. Instead, use
 [`ContentLayout.json`](contentlayout.md), which presents the same information (plus source-asset
@@ -213,7 +213,7 @@ scenes:
 
 ```json
 "LoadableSceneIds": [
-  { "GUID": "590cfeb4e0ff90f4e92f9e1262bcfe6f", "Path": "Assets/Scenes/Scene2.unity", "SerializedFile": 12 },
+  { "GUID": "590cfeb4e0ff90f4e92f9e1262bcfe6f", "Path": "Assets/Scenes/Scene2.unity", "SerializedFile": 14 },
   { "GUID": "162c015549f8733449ac70ae78ad3aa5", "Path": "Assets/Scenes/Scene1.unity", "SerializedFile": 6 }
 ]
 ```
@@ -227,7 +227,7 @@ The scene's own `SerializedFiles` entry names the scene as its single source ass
   "StableId": "162c015549f8733449ac70ae78ad3aa5",
   "ArtifactIndex": 6,
   "SourceAssets": [ "Assets/Scenes/Scene1.unity" ],
-  "SerializedFileDependencies": [ 0, 1, 13 ]
+  "SerializedFileDependencies": [ 0, 1, 15 ]
 }
 ```
 
@@ -295,20 +295,20 @@ crucially — an ordered list of the files it depends on:
 
 ```json
 {
-  "Index": 10,
+  "Index": 12,
   "StableId": "52b43dad178849b42ac753005736e7bb",
-  "ArtifactIndex": 10,
+  "ArtifactIndex": 12,
   "SourceAssets": [ "Assets/ScriptableObjects/ContentDirectoryRoot.asset" ],
-  "SerializedFileDependencies": [ 4, 5, 2, 9, 3 ]
+  "SerializedFileDependencies": [ 4, 5, 2, 11, 3, 7 ]
 }
 ```
 
-`BinaryArtifacts` entry 10 has the content hash `eb3abd5ab5b0d790980fe9e9df872484`, so this asset
-lives in `eb3abd5ab5b0d790980fe9e9df872484.cf`. Dumping that file shows the object's references and
+`BinaryArtifacts` entry 12 has the content hash `607f3fe8fb722f11bbf24885f3e3ae6c`, so this asset
+lives in `607f3fe8fb722f11bbf24885f3e3ae6c.cf`. Dumping that file shows the object's references and
 the file's external-reference table:
 
 ```
-UnityDataTool dump --stdout eb3abd5ab5b0d790980fe9e9df872484.cf
+UnityDataTool dump --stdout 607f3fe8fb722f11bbf24885f3e3ae6c.cf
 ```
 ```
 External References
@@ -317,6 +317,7 @@ path(2): "4038ff673d390134d924b57fcbed0432.cfid" GUID: 0000000000000000000000000
 path(3): "21679be819d6e9146a63bb02a7e51f2f.cfid" GUID: 00000000000000000000000000000000 Type: 0
 path(4): "78532141fd7679a458405eb16bdb75fd.cfid" GUID: 00000000000000000000000000000000 Type: 0
 path(5): "70a210050f71a924aa83be7146547111.cfid" GUID: 00000000000000000000000000000000 Type: 0
+path(6): "eca09d6e300b43447a9452b97499c8b5.cfid" GUID: 00000000000000000000000000000000 Type: 0
 
 ID: 11400000 (ClassID: 114) MonoBehaviour
   ...
@@ -336,8 +337,8 @@ through the build. A key goal of the content directory design is to reduce the a
 
 Because of that, the content of the external table is effectively ignored by the loading system for
 Content File references. What counts is the ordered dependency list in the manifest. The
-`"SerializedFileDependencies": [4, 5, 2, 9, 3]` array corresponds, in exact size and order, to the
-five entries of the external table.
+`"SerializedFileDependencies": [4, 5, 2, 11, 3, 7]` array corresponds, in exact size and order, to the
+six entries of the external table.
 
 So resolving the reference to `SingleAudioClipLoadableReference` above:
 
@@ -349,11 +350,11 @@ So resolving the reference to `SingleAudioClipLoadableReference` above:
 4. The referenced file is therefore `38abbace71a8a756c679a7ff3f501f02.cf`.
 
 A partial mapping for this file, showing how `m_FileID` values in the external table resolve through
-the dependency list `[4, 5, 2, 9, 3]` to a content-hash filename:
+the dependency list `[4, 5, 2, 11, 3, 7]` to a content-hash filename:
 
 ```mermaid
 flowchart TD
-    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file eb3abd5a….cf<br/>deps [4, 5, 2, 9, 3]"]
+    Root["<b>ContentDirectoryRoot</b><br/>cfid 52b43dad…<br/>file 607f3fe8….cf<br/>deps [4, 5, 2, 11, 3, 7]"]
     Loadable["<b>LoadableAudioClipReference</b><br/>Index 5 · cfid 4038ff67…<br/>file 2357d63c….cf"]
     Single["<b>SingleAudioClipLoadableReference</b><br/>Index 2 · cfid 21679be8…<br/>file 38abbace….cf"]
 
@@ -377,8 +378,8 @@ slash; `cah` stands for "content-addressable hash"). Unlike the `.cfid` placehol
 content hash of the data file, so it resolves directly to `<hash>.resS` or `<hash>.resource` with no
 manifest lookup.
 
-The reference build in `TestCommon/Data/LeadingEdgeBuilds/ContentDirectory` deliberately includes both
-audio clips and a texture, so it exercises both kinds of data file. Dumping the Content File built from
+The reference build in `TestCommon/Data/LeadingEdgeBuilds/ContentDirectory` deliberately includes
+audio clips, a video clip and a texture, so it exercises both kinds of data file. Dumping the Content File built from
 `Assets/Audio/a.mp3` shows the AudioClip pointing at its `.resource` file, and dumping the one holding
 `Assets/Textures/GreenStatic.png`'s texture data shows the Texture2D pointing at its `.resS` file:
 
@@ -427,8 +428,8 @@ File's `ArtifactReferences` point at the resource artifacts it needs. Continuing
 above:
 
 ```json
-{ "Index": 11, "ContentHash": "39105176560358e0cd444e7a0a513ed3", "Category": "contentfile", "Size": 1400, "ArtifactReferences": [17] },
-{ "Index": 17, "ContentHash": "4226b5c16a50dab6eff0f08dd1253d4b", "Category": "audio", "Size": 47424 }
+{ "Index": 13, "ContentHash": "39105176560358e0cd444e7a0a513ed3", "Category": "contentfile", "Size": 1400, "ArtifactReferences": [20] },
+{ "Index": 20, "ContentHash": "4226b5c16a50dab6eff0f08dd1253d4b", "Category": "audio", "Size": 47424 }
 ```
 
 When [`analyze`](command-analyze.md) imports the layout it preserves this: the artifacts land in
@@ -445,12 +446,13 @@ JOIN content_layout_source_assets sa ON sa.serialized_file_index = rfv.file_inde
 ORDER BY rfv.category, rfv.size;
 ```
 ```
-asset_path                       data_filename                              category  size
--------------------------------  -----------------------------------------  --------  ------
-Assets/Audio/6.mp3               68c9d0b12420e1951eec7790bd0754fe.resource  audio     30688
-Assets/Audio/a.mp3               4226b5c16a50dab6eff0f08dd1253d4b.resource  audio     47424
-Assets/Textures/GreenStatic.png  f0a44ad4a4babd121543fd44032928e7.resS      texture   215970
-Resources/unity_builtin_extra    ea7c9fa2d58ef71544726747da8ade6d.resS      texture   524280
+asset_path                                                    data_filename                              category  size
+------------------------------------------------------------  -----------------------------------------  --------  ------
+Assets/Audio/6.mp3                                            68c9d0b12420e1951eec7790bd0754fe.resource  audio     30688
+Assets/Audio/a.mp3                                            4226b5c16a50dab6eff0f08dd1253d4b.resource  audio     47424
+Assets/Textures/GreenStatic.png                               f0a44ad4a4babd121543fd44032928e7.resS      texture   215970
+Resources/unity_builtin_extra                                 ea7c9fa2d58ef71544726747da8ade6d.resS      texture   524280
+Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4  8375d07750c65b463618348ca4bc470a.resource  video     26720
 ```
 
 The fourth row is the default sprite texture pulled in from `Resources/unity_builtin_extra` (see the

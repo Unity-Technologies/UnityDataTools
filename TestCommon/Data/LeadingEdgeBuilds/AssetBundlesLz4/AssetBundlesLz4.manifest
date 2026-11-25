@@ -1,6 +1,6 @@
 ManifestFileVersion: 0
-UnityVersion: 6000.7.0b2
-CRC: 3869125346
+UnityVersion: 6000.7.0f1
+CRC: 3368678634
 HashAppended: 0
 AssetBundleManifest:
   AssetBundleInfos:
@@ -10,6 +10,7 @@ AssetBundleManifest:
         Dependency_0: directaudioclipreference
         Dependency_1: singleaudioclipdirectreference
         Dependency_2: serializationdemo
+        Dependency_3: videoclipreference
     Info_1:
       Name: directaudioclipreference
       Dependencies:
@@ -23,11 +24,18 @@ AssetBundleManifest:
       Name: serializationdemo
       Dependencies: {}
     Info_4:
-      Name: 6
-      Dependencies: {}
+      Name: videoclipreference
+      Dependencies:
+        Dependency_0: basic_clip_no_audio_160_100_1_1_50_100_h264
     Info_5:
-      Name: a
+      Name: basic_clip_no_audio_160_100_1_1_50_100_h264
       Dependencies: {}
     Info_6:
+      Name: 6
+      Dependencies: {}
+    Info_7:
+      Name: a
+      Dependencies: {}
+    Info_8:
       Name: scenes
       Dependencies: {}

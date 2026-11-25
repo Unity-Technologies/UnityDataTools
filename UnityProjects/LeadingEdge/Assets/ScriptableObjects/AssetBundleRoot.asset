@@ -19,3 +19,5 @@ MonoBehaviour:
     value: {fileID: 11400000, guid: 0bfc83564a9c3024bb15ff70c58eef45, type: 2}
   - key: SerializationDemo
     value: {fileID: 11400000, guid: 78532141fd7679a458405eb16bdb75fd, type: 2}
+  - key: VideoClipReference
+    value: {fileID: 11400000, guid: eca09d6e300b43447a9452b97499c8b5, type: 2}

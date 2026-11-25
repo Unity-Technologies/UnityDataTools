@@ -4,6 +4,7 @@ using Unity.Loading;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Video;
 
 // Generates the scenes and ScriptableObject assets used as build sources. The dictionaries are populated before
 // the assets are saved, so the entries are serialized into the asset files.
@@ -12,12 +13,14 @@ using UnityEngine;
 // which is also referenced by the all-clips variants, demonstrating an AudioClip shared between two assets.
 // Two small scenes each show the shared GreenStatic texture through a SpriteRenderer, with distinct GameObject
 // names so the scenes have different content. The SceneList asset references both scenes by LoadableSceneId.
+// VideoClipReference directly references the small mp4 in Assets/Video and is included in both build roots.
 // The root assets (DirectScriptableObjectReference) directly reference the leaf assets and act as build roots.
 public static class GenerateAssets
 {
     const string AudioFolder = "Assets/Audio";
     const string OutputFolder = "Assets/ScriptableObjects";
     const string TexturePath = "Assets/Textures/GreenStatic.png";
+    public const string VideoPath = "Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4";
 
     public static readonly string[] ScenePaths =
     {
@@ -56,8 +59,12 @@ public static class GenerateAssets
 
         var sceneList = CreateSceneList("SceneList");
 
-        CreateReference("AssetBundleRoot", direct, singleDirect, serializationDemo);
-        CreateReference("ContentDirectoryRoot", loadable, singleLoadable, serializationDemo, sceneList);
+        var videoClipReference = ScriptableObject.CreateInstance<VideoClipReference>();
+        videoClipReference.clip = AssetDatabase.LoadAssetAtPath<VideoClip>(VideoPath);
+        AssetDatabase.CreateAsset(videoClipReference, $"{OutputFolder}/VideoClipReference.asset");
+
+        CreateReference("AssetBundleRoot", direct, singleDirect, serializationDemo, videoClipReference);
+        CreateReference("ContentDirectoryRoot", loadable, singleLoadable, serializationDemo, sceneList, videoClipReference);
 
         AssetDatabase.SaveAssets();
 
