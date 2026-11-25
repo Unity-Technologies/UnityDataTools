@@ -76,6 +76,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         { "Texture2D", new Texture2DHandler() },
         { "Shader", new ShaderHandler() },
         { "AudioClip", new AudioClipHandler() },
+        { "VideoClip", new VideoClipHandler() },
         { "AnimationClip", new AnimationClipHandler() },
         { "AssetBundle", new AssetBundleHandler() },
         { "PreloadData", new PreloadDataHandler() },
