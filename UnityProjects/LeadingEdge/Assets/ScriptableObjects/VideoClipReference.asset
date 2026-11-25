@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9574b22856b9c864e97c915e0d4f0765, type: 3}
+  m_Name: VideoClipReference
+  m_EditorClassIdentifier: Assembly-CSharp::VideoClipReference
+  clip: {fileID: 32900000, guid: cbf33dec0d92cfa45afcd81ffff0904d, type: 3}

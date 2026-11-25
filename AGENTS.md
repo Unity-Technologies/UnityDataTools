@@ -206,4 +206,4 @@ To use a specific Unity version's library:
 
 * UnityProjects contains two Unity projects that generate test data for the test suites:
   * `Baseline` - tracks stable, broadly-used Unity versions and is upgraded only when necessary. Most UnityDataTools users inspect output from these versions. Its `TypeIdRegistryGenerator` regenerates `UnityFileSystem/TypeIdRegistry.cs`.
-  * `LeadingEdge` - tracks the newest Unity version (currently the 6.6 beta) and is updated proactively so newer build features (Content Directory builds, serialized dictionaries, etc.) can be tested.
+  * `LeadingEdge` - tracks the newest Unity version (currently 6000.7) and is updated proactively so newer build features (Content Directory builds, serialized dictionaries, etc.) can be tested.

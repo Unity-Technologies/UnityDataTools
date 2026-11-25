@@ -1,16 +1,16 @@
 ManifestFileVersion: 0
-UnityVersion: 6000.6.0b3
-CRC: 1569140202
+UnityVersion: 6000.7.0f1
+CRC: 4133328393
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: d7f919acab03f8314047c9954b2f35d3
+    Hash: 7ec75270f2afc886e8e6acf93a2a0206
   TypeTreeHash:
     serializedVersion: 2
-    Hash: e4c92e7ce30487f41e62ec475c399971
+    Hash: 62386482238bd200538a1128761adc3c
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 1dbce57dbf052f5659ad2cc7eb1ce772
+    Hash: 8fa1e176be28d3c81ca94d983b323be3
 HashAppended: 0
 ClassTypes:
 - Class: 114
@@ -19,6 +19,8 @@ ClassTypes:
   Script: {fileID: 11500000, guid: 8623c5efbb626994da80931050f0aba0, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: f44aeb02ae06dd84bb3ef76e1df8d525, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 9574b22856b9c864e97c915e0d4f0765, type: 3}
 - Class: 115
   Script: {instanceID: 0}
 SerializeReferenceClassIdentifiers:
@@ -32,3 +34,4 @@ Dependencies:
 - C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/directaudioclipreference
 - C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/serializationdemo
 - C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/singleaudioclipdirectreference
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/videoclipreference

@@ -1,0 +1,26 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.7.0f1
+CRC: 1633178751
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 70e6b63d3669fc317be3dd444f9c6eb4
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 6743ec0f43ef2a46358edfb8e4028509
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 500a4a2143fe495a10f10f28a6b403ed
+HashAppended: 0
+ClassTypes:
+- Class: 114
+  Script: {fileID: 11500000, guid: 9574b22856b9c864e97c915e0d4f0765, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 329
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/ScriptableObjects/VideoClipReference.asset
+Dependencies:
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/basic_clip_no_audio_160_100_1_1_50_100_h264

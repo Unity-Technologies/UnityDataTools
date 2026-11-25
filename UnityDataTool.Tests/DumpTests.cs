@@ -31,7 +31,7 @@ public class DumpTests
         m_NoTypeTreeSerializedFilePath = Path.Combine(m_TestDataFolder, "PlayerNoTypeTree", "level0");
         m_NoTypeTreeArchivePath = Path.Combine(m_TestDataFolder, "AssetBundleTypeTreeVariations", "AssetBundle-NoTypeTree", "small.bundle");
         m_SerializationDemoBundlePath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundles", "serializationdemo");
-        m_ContentDirectoryBuildReportPath = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "BuildReport-ContentDirectory", "f096bba0b9ce4c44194edd738d64b9df.buildreport");
+        m_ContentDirectoryBuildReportPath = LeadingEdgeTestData.ContentDirectoryBuildReportPath;
     }
 
     [Test]
@@ -348,7 +348,7 @@ public class DumpTests
         Assert.That(output, Does.Contain("(ClassID: 114) MonoBehaviour"));
         Assert.That(output, Does.Contain("m_Name (string) SerializationDemo"));
         Assert.That(output, Does.Contain("data (managedReference)"));
-        Assert.That(output, Does.Contain("references (ManagedReferencesRegistry)"));
+        Assert.That(output, Does.Contain("references (ManagedReferenceRegistry)"));
         Assert.That(output, Does.Contain("class (string) SerializationDemo/SerializedData"));
 
         // Scalar fields: name, serialized type and value.
@@ -371,6 +371,28 @@ public class DumpTests
         Assert.That(output, Does.Contain("Array<int>[512]"));
         Assert.That(output, Does.Contain("ArrayDataHash 6feca6e2"));
         Assert.That(output, Does.Not.Contain("293, 294, 295, 296,"));
+    }
+
+    // The LeadingEdge VideoClip (UnityProjects/LeadingEdge/Assets/Video): a 160x100, 50 fps, 100 frame mp4
+    // with no audio. The clip's mp4 data is stored unchanged in the bundle's .resource file.
+    [Test]
+    public async Task Dump_Stdout_AssetBundle_VideoClip_ContainsExpectedFields()
+    {
+        var path = Path.Combine(m_TestDataFolder, "LeadingEdgeBuilds", "AssetBundles", "basic_clip_no_audio_160_100_1_1_50_100_h264");
+
+        var output = await DumpToString("dump", path, "--stdout", "--type", "VideoClip");
+
+        Assert.That(output, Does.Contain("(ClassID: 329) VideoClip"));
+        Assert.That(output, Does.Contain("m_Name (string) basic_clip_no_audio_160_100_1_1_50_100_H264"));
+        Assert.That(output, Does.Contain("m_OriginalPath (string) Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4"));
+        Assert.That(output, Does.Contain("Width (unsigned int) 160"));
+        Assert.That(output, Does.Contain("Height (unsigned int) 100"));
+        Assert.That(output, Does.Contain("m_FrameRate (double) 50"));
+        Assert.That(output, Does.Contain("m_FrameCount (UInt64) 100"));
+        Assert.That(output, Does.Contain("m_AudioChannelCount (vector)"));
+        Assert.That(output, Does.Contain("m_ExternalResources (StreamedResource)"));
+        Assert.That(output, Does.Match(@"m_Source \(string\) archive:/CAB-[0-9a-f]+/CAB-[0-9a-f]+\.resource"));
+        Assert.That(output, Does.Contain("m_Size (UInt64) 26720"));
     }
 
     static async Task<string> DumpToString(params string[] args)
@@ -516,9 +538,9 @@ public class DumpTests
     }
 
     // GUID and Hash128 fields are printed as a single hex string instead of their serialized fields.
-    // The expected values can be verified independently: buildSessionGUID matches the build report
-    // file name, and the Scene1 sourceAssetGUID matches Assets/Scenes/Scene1.unity.meta in the
-    // LeadingEdge project.
+    // The expected values come from outside the report: buildSessionGUID matches the build report
+    // file name, buildManifestHash matches BuildManifestHash.txt, and the Scene1 sourceAssetGUID
+    // matches Assets/Scenes/Scene1.unity.meta in the LeadingEdge project.
     [Test]
     public async Task Dump_Stdout_BuildReport_PrintsGuidAndHash128AsHexStrings()
     {
@@ -536,9 +558,9 @@ public class DumpTests
 
         var output = sw.ToString();
 
-        Assert.That(output, Does.Contain("buildSessionGUID (GUID) f096bba0b9ce4c44194edd738d64b9df"));
+        Assert.That(output, Does.Contain($"buildSessionGUID (GUID) {LeadingEdgeTestData.BuildSessionGuid}"));
         Assert.That(output, Does.Contain("sourceAssetGUID (GUID) 162c015549f8733449ac70ae78ad3aa5"));
-        Assert.That(output, Does.Contain("buildManifestHash (Hash128) e320fc78984f8430afa90a591fd02004"));
+        Assert.That(output, Does.Contain($"buildManifestHash (Hash128) {LeadingEdgeTestData.BuildManifestHash}"));
 
         // The individual fields of these compound types are no longer dumped.
         Assert.That(output, Does.Not.Contain("data[0] (unsigned int)"));

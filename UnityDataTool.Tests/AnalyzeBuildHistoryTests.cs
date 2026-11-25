@@ -16,7 +16,7 @@ namespace UnityDataTools.UnityDataTool.Tests;
 // reference build.
 public class AnalyzeBuildHistoryTests
 {
-    private const string BuildHash = "e320fc78984f8430afa90a591fd02004";
+    private static string BuildHash => LeadingEdgeTestData.BuildManifestHash;
 
     private string m_TestOutputFolder;
     private string m_ContentDirectory;

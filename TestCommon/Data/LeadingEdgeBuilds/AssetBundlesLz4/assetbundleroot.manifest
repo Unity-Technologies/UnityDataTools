@@ -1,16 +1,16 @@
 ManifestFileVersion: 0
-UnityVersion: 6000.7.0b2
-CRC: 1322119296
+UnityVersion: 6000.7.0f1
+CRC: 4133328393
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: c174946e4bcb463b2dd90535ff0dcfe5
+    Hash: 7ec75270f2afc886e8e6acf93a2a0206
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 819240184df2798191fd853444ad58c4
+    Hash: 62386482238bd200538a1128761adc3c
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: cf13ad57198a935f56c518df40c037d0
+    Hash: 1d6897bcf03b294e91d1cd09a0670b48
 HashAppended: 0
 ClassTypes:
 - Class: 114
@@ -19,6 +19,8 @@ ClassTypes:
   Script: {fileID: 11500000, guid: 8623c5efbb626994da80931050f0aba0, type: 3}
 - Class: 114
   Script: {fileID: 11500000, guid: f44aeb02ae06dd84bb3ef76e1df8d525, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 9574b22856b9c864e97c915e0d4f0765, type: 3}
 - Class: 115
   Script: {instanceID: 0}
 SerializeReferenceClassIdentifiers:
@@ -29,6 +31,7 @@ SerializeReferenceClassIdentifiers:
 Assets:
 - Assets/ScriptableObjects/AssetBundleRoot.asset
 Dependencies:
-- C:/UnitySrc/UnityDataTools_Cursor/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/directaudioclipreference
-- C:/UnitySrc/UnityDataTools_Cursor/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/serializationdemo
-- C:/UnitySrc/UnityDataTools_Cursor/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/singleaudioclipdirectreference
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/directaudioclipreference
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/serializationdemo
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/singleaudioclipdirectreference
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundlesLz4/videoclipreference

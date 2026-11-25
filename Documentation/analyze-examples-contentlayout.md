@@ -75,7 +75,7 @@ serialized file:
 
 ```sql
 SELECT * FROM content_layout_resource_files_view
-WHERE filename = 'eb3abd5ab5b0d790980fe9e9df872484.cf';
+WHERE filename = '76b865a0aa4307287bc257adfdfe74e9.cf';
 ```
 
 ## Checking reference resolution (layout + content)
