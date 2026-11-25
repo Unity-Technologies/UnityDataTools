@@ -38,18 +38,8 @@ public class AnalyzeOverwriteTests
 
     private static async Task<(int exitCode, string stderr)> RunAnalyze(params string[] args)
     {
-        var originalError = System.Console.Error;
-        using var sw = new StringWriter();
-        try
-        {
-            System.Console.SetError(sw);
-            var exitCode = await Program.Main(new[] { "analyze" }.Concat(args).ToArray());
-            return (exitCode, sw.ToString());
-        }
-        finally
-        {
-            System.Console.SetError(originalError);
-        }
+        var commandArgs = new[] { "analyze" }.Concat(args).ToArray();
+        return await ConsoleTestHelper.RunCapturingStdErr(commandArgs);
     }
 
     [Test]

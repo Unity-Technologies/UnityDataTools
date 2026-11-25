@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,19 +36,9 @@ public class SceneBundleContentTests
 
     private static async Task<string> RunAndCaptureStdout(params string[] args)
     {
-        using var sw = new StringWriter();
-        var currentOut = Console.Out;
-        try
-        {
-            Console.SetOut(sw);
-            Assert.AreEqual(0, await Program.Main(args), $"command failed: {string.Join(' ', args)}");
-        }
-        finally
-        {
-            Console.SetOut(currentOut);
-        }
-
-        return sw.ToString();
+        var (exitCode, stdOut) = await ConsoleTestHelper.RunCapturingStdOut(args);
+        Assert.AreEqual(0, exitCode, $"command failed: {string.Join(' ', args)}");
+        return stdOut;
     }
 
     [Test]

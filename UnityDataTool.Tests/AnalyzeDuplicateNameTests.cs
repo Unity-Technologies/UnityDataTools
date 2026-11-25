@@ -43,18 +43,8 @@ public class AnalyzeDuplicateNameTests
     // duplicate messages are printed).
     private static async Task<(int exitCode, string stderr)> RunAnalyze(params string[] args)
     {
-        var originalError = System.Console.Error;
-        using var sw = new StringWriter();
-        try
-        {
-            System.Console.SetError(sw);
-            var exitCode = await Program.Main(new[] { "analyze" }.Concat(args).ToArray());
-            return (exitCode, sw.ToString());
-        }
-        finally
-        {
-            System.Console.SetError(originalError);
-        }
+        var commandArgs = new[] { "analyze" }.Concat(args).ToArray();
+        return await ConsoleTestHelper.RunCapturingStdErr(commandArgs);
     }
 
     // Case 2 / Case 3: two build folders each contain an archive named "assetbundle" (and "scenes").

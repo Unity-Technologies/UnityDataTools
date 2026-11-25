@@ -50,4 +50,29 @@ public static class ConsoleTestHelper
 
         return (exitCode, sw.ToString());
     }
+
+    /// <summary>
+    /// Runs a command capturing both stdout and stderr.
+    /// </summary>
+    public static async Task<(int exitCode, string stdOut, string stdErr)> RunCapturingOutput(params string[] args)
+    {
+        using var swOut = new StringWriter();
+        using var swErr = new StringWriter();
+        var currentOut = Console.Out;
+        var currentErr = Console.Error;
+        int exitCode;
+        try
+        {
+            Console.SetOut(swOut);
+            Console.SetError(swErr);
+            exitCode = await Program.Main(args);
+        }
+        finally
+        {
+            Console.SetOut(currentOut);
+            Console.SetError(currentErr);
+        }
+
+        return (exitCode, swOut.ToString(), swErr.ToString());
+    }
 }

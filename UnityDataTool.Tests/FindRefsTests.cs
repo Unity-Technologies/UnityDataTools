@@ -68,25 +68,13 @@ public class FindRefsTests
 
     private static async Task<(int exitCode, string output)> RunFindRefsOn(string databasePath, string[] args)
     {
-        using var sw = new StringWriter();
-        var currentOut = Console.Out;
-        int exitCode;
-        try
-        {
-            Console.SetOut(sw);
-            var fullArgs = new string[args.Length + 3];
-            fullArgs[0] = "find-refs";
-            fullArgs[1] = databasePath;
-            Array.Copy(args, 0, fullArgs, 2, args.Length);
-            fullArgs[args.Length + 2] = "--stdout";
-            exitCode = await Program.Main(fullArgs);
-        }
-        finally
-        {
-            Console.SetOut(currentOut);
-        }
+        var fullArgs = new string[args.Length + 3];
+        fullArgs[0] = "find-refs";
+        fullArgs[1] = databasePath;
+        Array.Copy(args, 0, fullArgs, 2, args.Length);
+        fullArgs[args.Length + 2] = "--stdout";
 
-        return (exitCode, sw.ToString());
+        return await ConsoleTestHelper.RunCapturingStdOut(fullArgs);
     }
 
     // Regression test for issue #72: the command previously threw "Connection string keyword 'version' is not
