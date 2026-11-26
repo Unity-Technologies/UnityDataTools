@@ -10,6 +10,7 @@ public class Texture2D
     public int Format { get; init; }
     public int MipCount { get; init; }
     public bool RwEnabled { get; init; }
+    public int ImageCount { get; init; }
 
     private Texture2D() { }
 
@@ -22,7 +23,8 @@ public class Texture2D
             Height = reader["m_Height"].GetValue<int>(),
             Format = reader["m_TextureFormat"].GetValue<int>(),
             RwEnabled = reader["m_IsReadable"].GetValue<int>() != 0,
-            MipCount = reader["m_MipCount"].GetValue<int>()
+            MipCount = reader["m_MipCount"].GetValue<int>(),
+            ImageCount = reader["m_ImageCount"].GetValue<int>()
         };
     }
 }

@@ -86,7 +86,7 @@ Type-specific views, each `object_view` plus extra columns:
 | [`animation_view`](#animation_view) | AnimationClip |
 | [`audio_clip_view`](#audio_clip_view) | AudioClip |
 | [`mesh_view`](#mesh_view) | Mesh |
-| [`texture_view`](#texture_view) | Texture2D |
+| [`texture_view`](#texture_view) | Texture2D, Cubemap |
 | [`video_clip_view`](#video_clip_view) | VideoClip |
 | [`shader_view`](#shader_view) | Shader |
 | [`shader_subprogram_view`](#shader_subprogram_view) | Shader sub-programs |
@@ -488,7 +488,7 @@ Large data such as texture pixels, mesh vertices, audio and video is stored outs
 SerializedFile, in a `.resS` (textures and meshes) or `.resource` (audio and video) file. The object
 records where its data is in a `StreamingInfo` or `StreamedResource` field: a path, an offset and a
 size. These tables collect those fields for every type, including types that have no type-specific
-table, such as Cubemap, Texture2DArray and Texture3D.
+table, such as Texture2DArray and Texture3D.
 
 They are built from what the objects record, not from the data files, which analyze does not read
 (except to compute CRCs). The path is a Unity virtual file system path, so it often points inside an
@@ -577,14 +577,16 @@ Meshes.
 
 ## texture_view
 
-Texture2Ds.
+Texture2Ds and Cubemaps (`type` tells them apart). Cubemap derives from Texture2D and serializes the
+same fields. Texture2DArray, Texture3D and CubemapArray derive from Texture and are not in this view.
 
 | Column | Description |
 |---|---|
-| `width` / `height` | texture resolution |
+| `width` / `height` | texture resolution (of one image) |
 | `format` | compression format |
 | `mip_count` | number of mipmaps |
 | `rw_enabled` | 1 if the texture has the *R/W Enabled* option, 0 otherwise |
+| `image_count` | number of images: 1 for a Texture2D, 6 for a Cubemap |
 
 ## video_clip_view
 
@@ -685,6 +687,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 11 | Added indexes on `preload_dependencies(object)`, `preload_dependencies(dependency)`, `shader_subprograms(shader)` and `shader_subprogram_keywords(subprogram_id)` ([#83](https://github.com/Unity-Technologies/UnityDataTools/issues/83)) |
 | 12 | Added the `video_clips` table and `video_clip_view`; a VideoClip's `size` includes its video data ([#165](https://github.com/Unity-Technologies/UnityDataTools/issues/165)) |
 | 13 | Added the `stream_data` table, `stream_data_view` and `stream_data_files_view`; every object's `size` includes its `.resS` / `.resource` data, not only the types with a type-specific table ([#167](https://github.com/Unity-Technologies/UnityDataTools/issues/167)) |
+| 14 | Cubemaps are in the `textures` table and `texture_view`; new `image_count` column ([#168](https://github.com/Unity-Technologies/UnityDataTools/issues/168)) |
 
 ## Related documentation
 
