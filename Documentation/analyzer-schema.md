@@ -110,8 +110,17 @@ Query [`object_view`](#object_view) instead unless you need the raw ids.
 | `type` | INTEGER | [`types.id`](#types). |
 | `name` | TEXT | The `Object.name` property. Empty for the many object types that have no name. |
 | `game_object` | INTEGER | `objects.id` of the GameObject that owns this object. Set only for components; `''` otherwise. |
-| `size` | INTEGER | Size in bytes, including the object's data in `.resS` / `.resource` files, as listed in [`stream_data`](#stream_data). |
+| `size` | INTEGER | Size in bytes, including the object's data in `.resS` / `.resource` files, as listed in [`stream_data`](#stream_data). When several objects share the same data, each includes all of it, so adding up `size` can give more than the build output (see below). |
 | `crc32` | INTEGER | CRC of the object's serialized state, including its external stream data. Useful for detecting whether an object changed between builds. `0` for every object when `--skip-crc` was used. |
+
+`size` is the size of the object, not its share of the build output. These differ when several
+objects point at the same `.resS` / `.resource` data. In a Content Directory this happens whenever
+objects in different Content Files have identical data (for example two meshes with the same
+geometry), because the data file is named by its content hash and stored once. Each of those objects
+includes the whole file in its `size`, so a sum of `size` (for example in
+[`view_breakdown_by_type`](#view_breakdown_by_type)) can exceed the size of the build output and
+the totals in the build report. To total the data files themselves, use
+[`stream_data_files_view`](#stream_data_files_view).
 
 ## types
 
@@ -520,9 +529,8 @@ total `size` of their data, largest first. A range used by several objects is co
 a Content Directory `size` is the size of the file. Otherwise the file can be larger than `size`
 because of padding between objects.
 
-In a Content Directory, objects in different content files whose data is identical share one data
-file. Each of those objects counts the whole file in its `size`, so adding up `objects.size` gives
-more than the build output on disk. Use this view to total the data files themselves.
+Use this view, rather than a sum of `objects.size`, to total the data files themselves (see
+[`objects`](#objects)).
 
 ---
 
