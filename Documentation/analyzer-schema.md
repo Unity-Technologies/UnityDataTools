@@ -514,8 +514,13 @@ from [`object_view`](#object_view), and `filename`: the last part of `path`, e.g
 ## stream_data_files_view
 
 One row per data file (`path`), with its `filename`, the number of `objects` that use it and the
-total `size` of their data, largest first. The file can be larger than `size` because of padding
-between objects.
+total `size` of their data, largest first. A range used by several objects is counted once, so for
+a Content Directory `size` is the size of the file. Otherwise the file can be larger than `size`
+because of padding between objects.
+
+In a Content Directory, objects in different content files whose data is identical share one data
+file. Each of those objects counts the whole file in its `size`, so adding up `objects.size` gives
+more than the build output on disk. Use this view to total the data files themselves.
 
 ---
 

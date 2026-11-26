@@ -184,14 +184,16 @@ FROM stream_data s
 INNER JOIN object_view o ON s.object = o.id;
 
 CREATE VIEW stream_data_files_view AS
--- Each referenced .resS / .resource file: how many objects use it and their total data size.
+-- Each referenced .resS / .resource file: how many objects use it and the size of their data, with
+-- a range shared by several objects counted once.
 SELECT
-    path,
-    replace(path, rtrim(path, replace(path, '/', '')), '') AS filename,
-    COUNT(*) AS objects,
-    SUM(size) AS size
-FROM stream_data
-GROUP BY path
+    r.path,
+    replace(r.path, rtrim(r.path, replace(r.path, '/', '')), '') AS filename,
+    c.objects,
+    SUM(r.size) AS size
+FROM (SELECT DISTINCT path, offset, size FROM stream_data) r
+INNER JOIN (SELECT path, COUNT(*) AS objects FROM stream_data GROUP BY path) c ON c.path = r.path
+GROUP BY r.path
 ORDER BY size DESC;
 
 CREATE VIEW view_breakdown_by_type AS

@@ -151,6 +151,11 @@ public class AnalyzeStreamDataTests
               WHERE a.category IN ('texture', 'mesh', 'audio', 'video')
                 AND NOT EXISTS (SELECT 1 FROM stream_data s WHERE s.path = 'cah:/' || a.content_hash)",
             0, "data artifacts that no object references");
+        SQLTestHelper.AssertQueryInt(db,
+            "SELECT SUM(size) FROM stream_data_files_view",
+            SQLTestHelper.QueryInt(db,
+                "SELECT SUM(size) FROM content_layout_binary_artifacts WHERE category IN ('texture', 'mesh', 'audio', 'video')"),
+            "total size of the data files");
     }
 
     // Unity's build report records the size of each type in the build, including the external data in

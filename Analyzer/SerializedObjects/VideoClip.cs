@@ -7,7 +7,6 @@ public class VideoClip
 {
     public string Name { get; init; }
     public string OriginalPath { get; init; }
-    public long StreamDataSize { get; init; }
     public uint Width { get; init; }
     public uint Height { get; init; }
     public double FrameRate { get; init; }
@@ -34,8 +33,7 @@ public class VideoClip
             FrameRate = reader["m_FrameRate"].GetValue<double>(),
             FrameCount = reader["m_FrameCount"].GetValue<ulong>(),
             AudioTracks = languages.Count,
-            AudioLanguages = string.Join(",", languages),
-            StreamDataSize = (long)reader["m_ExternalResources"]["m_Size"].GetValue<ulong>()
+            AudioLanguages = string.Join(",", languages)
         };
     }
 }
