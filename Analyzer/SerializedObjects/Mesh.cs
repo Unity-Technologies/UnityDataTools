@@ -48,7 +48,6 @@ public class Mesh
     }
 
     public string Name { get; init; }
-    public int StreamDataSize { get; init; }
     public int SubMeshes { get; init; }
     public int BlendShapes { get; init; }
     public int Bones { get; init; }
@@ -86,7 +85,6 @@ public class Mesh
         var channels = new List<Channel>();
         int indices;
         int vertices;
-        int streamDataSize = 0;
         int vertexSize = 0;
 
         if (compression == 0)
@@ -95,12 +93,6 @@ public class Mesh
 
             indices = reader["m_IndexBuffer"].GetArraySize() / bytesPerIndex;
             vertices = reader["m_VertexData"]["m_VertexCount"].GetValue<int>();
-
-            // If vertex data size is 0, data is stored in a stream file.
-            if (reader["m_VertexData"]["m_DataSize"].GetArraySize() == 0)
-            {
-                streamDataSize = reader["m_StreamData"]["size"].GetValue<int>();
-            }
 
             int i = 0;
             foreach (var channel in reader["m_VertexData"]["m_Channels"])
@@ -142,7 +134,6 @@ public class Mesh
             Name = name,
             Vertices = vertices,
             Indices = indices,
-            StreamDataSize = streamDataSize,
             SubMeshes = reader["m_SubMeshes"].GetArraySize(),
             BlendShapes = reader["m_Shapes"]["shapes"].GetArraySize(),
             Bones = reader["m_BoneNameHashes"].GetArraySize(),

@@ -19,7 +19,7 @@ public class Context
 public interface ISQLiteHandler : IDisposable
 {
     void Init(Microsoft.Data.Sqlite.SqliteConnection db);
-    void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize);
+    void Process(Context ctx, long objectId, RandomAccessReader reader, out string name);
 
     // Called once after all files are processed. Indexes are created here rather than in Init so
     // that bulk inserts do not have to maintain them.

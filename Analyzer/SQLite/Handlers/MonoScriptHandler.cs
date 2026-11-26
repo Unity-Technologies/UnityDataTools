@@ -24,7 +24,7 @@ public class MonoScriptHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@assembly_name", SqliteType.Text);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var monoScript = MonoScript.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -35,7 +35,6 @@ public class MonoScriptHandler : ISQLiteHandler
         m_InsertCommand.ExecuteNonQuery();
 
         name = monoScript.ClassName;
-        streamDataSize = 0;
     }
 
     void IDisposable.Dispose()

@@ -65,7 +65,6 @@ public class SerializedObjectsTests : AssetBundleTestFixture
         var expectedTexture = (Texture2D)Context.ExpectedData.Get(name);
 
         Assert.AreEqual(expectedTexture.Name, texture.Name);
-        Assert.AreEqual(expectedTexture.StreamDataSize, texture.StreamDataSize);
         Assert.AreEqual(expectedTexture.Width, texture.Width);
         Assert.AreEqual(expectedTexture.Height, texture.Height);
         Assert.AreEqual(expectedTexture.Format, texture.Format);
@@ -96,7 +95,6 @@ public class SerializedObjectsTests : AssetBundleTestFixture
         Assert.AreEqual(expectedClip.Frequency, clip.Frequency);
         Assert.AreEqual(expectedClip.LoadType, clip.LoadType);
         Assert.AreEqual(expectedClip.BitsPerSample, clip.BitsPerSample);
-        Assert.AreEqual(expectedClip.StreamDataSize, clip.StreamDataSize);
     }
 
     [Test]
@@ -132,7 +130,6 @@ public class SerializedObjectsTests : AssetBundleTestFixture
         Assert.AreEqual(expectedMesh.Vertices, mesh.Vertices);
         Assert.AreEqual(expectedMesh.BlendShapes, mesh.BlendShapes);
         Assert.AreEqual(expectedMesh.RwEnabled, mesh.RwEnabled);
-        Assert.AreEqual(expectedMesh.StreamDataSize, mesh.StreamDataSize);
 
         Assert.AreEqual(expectedMesh.Channels.Count, mesh.Channels.Count);
 

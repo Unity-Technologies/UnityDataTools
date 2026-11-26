@@ -27,7 +27,7 @@ public class VideoClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@original_path", SqliteType.Text);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var videoClip = VideoClip.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -41,7 +41,6 @@ public class VideoClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters["@original_path"].Value = videoClip.OriginalPath;
         m_InsertCommand.ExecuteNonQuery();
 
-        streamDataSize = videoClip.StreamDataSize;
         name = videoClip.Name;
     }
 

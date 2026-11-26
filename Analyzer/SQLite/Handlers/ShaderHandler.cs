@@ -53,7 +53,7 @@ public class ShaderHandler : ISQLiteHandler
         m_InsertSubProgramKeywordsCommand.Parameters.Add("@keyword_id", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var shader = SerializedObjects.Shader.Read(reader);
         var uniquePrograms = new HashSet<uint>();
@@ -123,7 +123,6 @@ public class ShaderHandler : ISQLiteHandler
         m_InsertCommand.ExecuteNonQuery();
 
         name = shader.Name;
-        streamDataSize = 0;
     }
 
     private int GetKeywordId(string keyword, SqliteTransaction ctxTransaction)

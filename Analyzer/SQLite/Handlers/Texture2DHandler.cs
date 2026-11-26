@@ -25,7 +25,7 @@ public class Texture2DHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@mip_count", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var texture2d = Texture2D.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -38,7 +38,6 @@ public class Texture2DHandler : ISQLiteHandler
         m_InsertCommand.ExecuteNonQuery();
 
         name = texture2d.Name;
-        streamDataSize = texture2d.StreamDataSize;
     }
 
     void IDisposable.Dispose()

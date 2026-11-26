@@ -26,7 +26,7 @@ Parts of the schema are documented on their own pages:
 * **Ids are analyzer-assigned.** `objects.id` and the ids that reference it exist only in the
   database. The Unity object id is `objects.object_id`.
 * **Two options change what gets populated.** `--skip-references` leaves `refs`, `dangling_refs` and
-  `script_object_view` empty (`managed_references` is still populated). `--skip-crc` sets every `objects.crc32` to 0, which makes
+  `script_object_view` empty (`managed_references` and `stream_data` are still populated). `--skip-crc` sets every `objects.crc32` to 0, which makes
   `view_potential_duplicates` report many false positives.
 
 ## At a glance
@@ -71,6 +71,14 @@ AssetBundle and scripting:
 | [`managed_reference_view`](#managed_reference_view) | those instances with the object that holds them |
 | [`managed_reference_stats_view`](#managed_reference_stats_view) | instance count and total size per `[SerializeReference]` type |
 
+Stream data (`.resS` / `.resource` files):
+
+| Name | Purpose |
+|---|---|
+| [`stream_data`](#stream_data) | object's data stored in a `.resS` or `.resource` file |
+| [`stream_data_view`](#stream_data_view) | that data with the object and the data file name |
+| [`stream_data_files_view`](#stream_data_files_view) | each data file with its object count and total size |
+
 Type-specific views, each `object_view` plus extra columns:
 
 | Name | Type |
@@ -102,8 +110,17 @@ Query [`object_view`](#object_view) instead unless you need the raw ids.
 | `type` | INTEGER | [`types.id`](#types). |
 | `name` | TEXT | The `Object.name` property. Empty for the many object types that have no name. |
 | `game_object` | INTEGER | `objects.id` of the GameObject that owns this object. Set only for components; `''` otherwise. |
-| `size` | INTEGER | Size in bytes, including any external `.resS` / `.resource` stream data belonging to the object. |
+| `size` | INTEGER | Size in bytes, including the object's data in `.resS` / `.resource` files, as listed in [`stream_data`](#stream_data). When several objects share the same data, each includes all of it, so adding up `size` can give more than the build output (see below). |
 | `crc32` | INTEGER | CRC of the object's serialized state, including its external stream data. Useful for detecting whether an object changed between builds. `0` for every object when `--skip-crc` was used. |
+
+`size` is the size of the object, not its share of the build output. These differ when several
+objects point at the same `.resS` / `.resource` data. In a Content Directory this happens whenever
+objects in different Content Files have identical data (for example two meshes with the same
+geometry), because the data file is named by its content hash and stored once. Each of those objects
+includes the whole file in its `size`, so a sum of `size` (for example in
+[`view_breakdown_by_type`](#view_breakdown_by_type)) can exceed the size of the build output and
+the totals in the build report. To total the data files themselves, use
+[`stream_data_files_view`](#stream_data_files_view).
 
 ## types
 
@@ -465,6 +482,58 @@ holding MonoBehaviours) and `total_size`, most used first.
 
 ---
 
+# Stream data tables and views
+
+Large data such as texture pixels, mesh vertices, audio and video is stored outside the
+SerializedFile, in a `.resS` (textures and meshes) or `.resource` (audio and video) file. The object
+records where its data is in a `StreamingInfo` or `StreamedResource` field: a path, an offset and a
+size. These tables collect those fields for every type, including types that have no type-specific
+table, such as Cubemap, Texture2DArray and Texture3D.
+
+They are built from what the objects record, not from the data files, which analyze does not read
+(except to compute CRCs). The path is a Unity virtual file system path, so it often points inside an
+archive rather than at a file on disk:
+
+| Build | Example path | Notes |
+|---|---|---|
+| AssetBundle | `archive:/CAB-<hash>/CAB-<hash>.resS` | One file per SerializedFile, named after it. Several objects share it, each at its own offset. |
+| Player | `sharedassets0.assets.resS` | Same layout as AssetBundles. |
+| Content Directory | `cah:/<hash>` | One file per object's data, named by the hash of its content, with offset 0. Several content files can use the same data file. The hash is `content_layout_binary_artifacts.content_hash`. |
+
+The tables are populated even with `--skip-references --skip-crc`.
+
+## stream_data
+
+One row per `StreamingInfo` / `StreamedResource` field that points at data. Current Unity types
+have at most one such field, so this is one row per object with external data. An empty field (for
+example in a texture whose pixels are stored in the object itself) has no row.
+
+| Column | Type | Description |
+|---|---|---|
+| `object` | INTEGER | [`objects.id`](#objects). The object's `size` includes this data. |
+| `property_path` | TEXT | The field, e.g. `m_StreamData` (Texture2D, Mesh, Cubemap), `m_Resource` (AudioClip) or `m_ExternalResources` (VideoClip). |
+| `path` | TEXT | The data file, as recorded in the object. See the table above. |
+| `offset` | INTEGER | Byte offset of the data in the file. |
+| `size` | INTEGER | Bytes of data. |
+
+## stream_data_view
+
+`stream_data` (without the `object` column) with the object's `id`, `object_id`, `archive`, `serialized_file`, `type` and `name`
+from [`object_view`](#object_view), and `filename`: the last part of `path`, e.g.
+`CAB-<hash>.resS`, or the hash for a Content Directory.
+
+## stream_data_files_view
+
+One row per data file (`path`), with its `filename`, the number of `objects` that use it and the
+total `size` of their data, largest first. A range used by several objects is counted once, so for
+a Content Directory `size` is the size of the file. Otherwise the file can be larger than `size`
+because of padding between objects.
+
+Use this view, rather than a sum of `objects.size`, to total the data files themselves (see
+[`objects`](#objects)).
+
+---
+
 # Type-specific views
 
 Each of these has the same columns as [`object_view`](#object_view) plus the ones listed.
@@ -520,7 +589,7 @@ Texture2Ds.
 ## video_clip_view
 
 VideoClips. The video (and any audio tracks) is stored in a `.resource` file, not in the
-VideoClip object itself; that data is included in the object's `size`.
+VideoClip object itself; that data is included in the object's `size` (see [`stream_data`](#stream_data)).
 
 | Column | Description |
 |---|---|
@@ -615,6 +684,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 10 | Added the `managed_references` table, `managed_reference_view` and `managed_reference_stats_view` ([#53](https://github.com/Unity-Technologies/UnityDataTools/issues/53)) |
 | 11 | Added indexes on `preload_dependencies(object)`, `preload_dependencies(dependency)`, `shader_subprograms(shader)` and `shader_subprogram_keywords(subprogram_id)` ([#83](https://github.com/Unity-Technologies/UnityDataTools/issues/83)) |
 | 12 | Added the `video_clips` table and `video_clip_view`; a VideoClip's `size` includes its video data ([#165](https://github.com/Unity-Technologies/UnityDataTools/issues/165)) |
+| 13 | Added the `stream_data` table, `stream_data_view` and `stream_data_files_view`; every object's `size` includes its `.resS` / `.resource` data, not only the types with a type-specific table ([#167](https://github.com/Unity-Technologies/UnityDataTools/issues/167)) |
 
 ## Related documentation
 

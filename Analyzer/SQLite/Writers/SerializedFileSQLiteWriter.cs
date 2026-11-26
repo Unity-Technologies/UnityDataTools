@@ -97,6 +97,10 @@ public class SerializedFileSQLiteWriter : IDisposable
     private AddPreloadDependency m_InsertDepCommand = new AddPreloadDependency();
     private AddDanglingRef m_AddDanglingRefCommand = new AddDanglingRef();
     private AddManagedReference m_AddManagedReferenceCommand = new AddManagedReference();
+    private AddStreamData m_AddStreamDataCommand = new AddStreamData();
+
+    // Total external stream data of the object being processed, added to its size.
+    private long m_CurrentStreamDataSize;
 
     private bool m_Initialized;
     private SqliteConnection m_Database;
@@ -140,6 +144,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_InsertDepCommand.CreateCommand(m_Database);
         m_AddDanglingRefCommand.CreateCommand(m_Database);
         m_AddManagedReferenceCommand.CreateCommand(m_Database);
+        m_AddStreamDataCommand.CreateCommand(m_Database);
 
         m_LastId = m_Database.CreateCommand();
         m_LastId.CommandText = "SELECT last_insert_rowid()";
@@ -216,7 +221,8 @@ public class SerializedFileSQLiteWriter : IDisposable
 
         using var sf = UnityFileSystem.OpenSerializedFile(fullPath);
         using var reader = new UnityFileReader(fullPath, 64 * 1024 * 1024);
-        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference, AddManagedReference);
+        using var pptrReader = new PPtrAndCrcProcessor(sf, reader, containingFolder, m_SkipCrc, AddReference, AddManagedReference,
+            AddStreamData);
         int serializedFileId = m_SerializedFileIdProvider.GetId(
             ContentFileDependencyMap.NormalizeFileName(Path.GetFileName(fullPath)));
         int sceneId = -1;
@@ -356,12 +362,10 @@ public class SerializedFileSQLiteWriter : IDisposable
                 var randomAccessReader = new RandomAccessReader(sf, root, reader, offset, objectSize: obj.Size);
 
                 string name = string.Empty;
-                long streamDataSize = 0;
 
                 if (m_Handlers.TryGetValue(root.Type, out var handler))
                 {
-                    handler.Process(ctx, currentObjectId, randomAccessReader,
-                        out name, out streamDataSize);
+                    handler.Process(ctx, currentObjectId, randomAccessReader, out name);
                 }
                 else if (randomAccessReader.HasChild("m_Name"))
                 {
@@ -386,9 +390,12 @@ public class SerializedFileSQLiteWriter : IDisposable
                 m_AddObjectCommand.SetValue("game_object", gameObject);
 
                 // The walk extracts references, accumulates the CRC and records [SerializeReference]
-                // instances, which are recorded whatever the skip options. When references are off,
-                // the walk still resolves referenced object ids (AddReference skips the insert).
-                if (!m_SkipReferences || !m_SkipCrc || PPtrAndCrcProcessor.HasManagedReferenceRegistry(root))
+                // instances and external stream data, which are recorded whatever the skip options.
+                // When references are off, the walk still resolves referenced object ids
+                // (AddReference skips the insert).
+                m_CurrentStreamDataSize = 0;
+                if (!m_SkipReferences || !m_SkipCrc || PPtrAndCrcProcessor.HasManagedReferenceRegistry(root) ||
+                    pptrReader.HasStreamData(root))
                 {
                     crc32 = pptrReader.Process(currentObjectId, offset, obj.Size, root);
                 }
@@ -400,7 +407,7 @@ public class SerializedFileSQLiteWriter : IDisposable
                 m_AddObjectCommand.SetValue("serialized_file", serializedFileId);
                 m_AddObjectCommand.SetValue("type", obj.TypeId);
                 m_AddObjectCommand.SetValue("name", name);
-                m_AddObjectCommand.SetValue("size", obj.Size + streamDataSize);
+                m_AddObjectCommand.SetValue("size", obj.Size + m_CurrentStreamDataSize);
                 m_AddObjectCommand.SetValue("crc32", crc32);
                 m_AddObjectCommand.ExecuteNonQuery();
 
@@ -541,6 +548,20 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_AddManagedReferenceCommand.ExecuteNonQuery();
     }
 
+    // Callback from PPtrAndCrcProcessor for each external stream data reference in the SerializedFile
+    private void AddStreamData(long objectId, string propertyPath, string path, long offset, long size)
+    {
+        m_CurrentStreamDataSize += size;
+
+        m_AddStreamDataCommand.SetTransaction(m_CurrentTransaction);
+        m_AddStreamDataCommand.SetValue("object", objectId);
+        m_AddStreamDataCommand.SetValue("property_path", propertyPath);
+        m_AddStreamDataCommand.SetValue("path", path);
+        m_AddStreamDataCommand.SetValue("offset", offset);
+        m_AddStreamDataCommand.SetValue("size", size);
+        m_AddStreamDataCommand.ExecuteNonQuery();
+    }
+
     // Resolve a property path/type string to its id, writing the lookup row the first time the
     // string is seen. Called within the current transaction (references are being extracted).
     private int GetPropertyPathId(string propertyPath)
@@ -587,6 +608,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         m_InsertDepCommand.Dispose();
         m_AddDanglingRefCommand.Dispose();
         m_AddManagedReferenceCommand.Dispose();
+        m_AddStreamDataCommand.Dispose();
 
         m_LastId.Dispose();
     }

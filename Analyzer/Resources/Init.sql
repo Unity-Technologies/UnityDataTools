@@ -87,6 +87,17 @@ CREATE TABLE IF NOT EXISTS managed_references
     size INTEGER             -- bytes of the instance's serialized data, excluding its type name
 );
 
+CREATE TABLE IF NOT EXISTS stream_data
+(
+    -- An object's data stored outside its SerializedFile, in a .resS or .resource file, as recorded
+    -- by its StreamingInfo / StreamedResource field. Populated even with --skip-references and --skip-crc.
+    object INTEGER,          -- objects.id; its size includes this data
+    property_path TEXT,      -- the StreamingInfo / StreamedResource field, e.g. m_StreamData
+    path TEXT,               -- as serialized, e.g. archive:/CAB-<hash>/CAB-<hash>.resS or cah:/<hash>
+    offset INTEGER,          -- byte offset in the file; always 0 for cah:/ paths
+    size INTEGER
+);
+
 CREATE VIEW refs_view AS
 -- refs with the property_path and property_type ids resolved to their strings.
 SELECT r.object, r.referenced_object, pn.name AS property_path, pt.name AS property_type
@@ -156,6 +167,37 @@ FROM managed_references
 GROUP BY class_name, namespace, assembly_name
 ORDER BY instances DESC, class_name;
 
+CREATE VIEW stream_data_view AS
+-- Each object's external .resS / .resource data, with the object and the data file name (the last
+-- part of the path).
+SELECT
+    o.id,
+    o.object_id,
+    o.archive,
+    o.serialized_file,
+    o.type,
+    o.name,
+    s.property_path,
+    s.path,
+    replace(s.path, rtrim(s.path, replace(s.path, '/', '')), '') AS filename,
+    s.offset,
+    s.size
+FROM stream_data s
+INNER JOIN object_view o ON s.object = o.id;
+
+CREATE VIEW stream_data_files_view AS
+-- Each referenced .resS / .resource file: how many objects use it and the size of their data, with
+-- a range shared by several objects counted once.
+SELECT
+    r.path,
+    replace(r.path, rtrim(r.path, replace(r.path, '/', '')), '') AS filename,
+    c.objects,
+    SUM(r.size) AS size
+FROM (SELECT DISTINCT path, offset, size FROM stream_data) r
+INNER JOIN (SELECT path, COUNT(*) AS objects FROM stream_data GROUP BY path) c ON c.path = r.path
+GROUP BY r.path
+ORDER BY size DESC;
+
 CREATE VIEW view_breakdown_by_type AS
 -- Object count and total size per type, largest first.
 SELECT *,
@@ -209,7 +251,7 @@ WHERE m.type = 'Material';
 
 INSERT INTO types (id, name) VALUES (-1, 'Scene');
 
-PRAGMA user_version = 12;
+PRAGMA user_version = 13;
 
 PRAGMA synchronous = OFF;
 PRAGMA journal_mode = MEMORY;

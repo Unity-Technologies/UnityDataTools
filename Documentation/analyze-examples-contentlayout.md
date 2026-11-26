@@ -78,6 +78,9 @@ SELECT * FROM content_layout_resource_files_view
 WHERE filename = '76b865a0aa4307287bc257adfdfe74e9.cf';
 ```
 
+Without the layout, [`stream_data_view`](analyzer-schema.md#stream_data_view) gives the same files
+per object, as recorded in the objects (`path` is `cah:/<hash>`).
+
 ## Checking reference resolution (layout + content)
 
 When the layout was part of the analyze, the references between Content Files are resolved, so the

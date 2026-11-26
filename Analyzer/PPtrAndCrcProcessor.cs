@@ -35,6 +35,12 @@ public class PPtrAndCrcProcessor : IDisposable
     public delegate void ManagedReferenceCallbackDelegate(long objectId, long rid, string className,
         string namespaceName, string assemblyName, long size);
 
+    // Invoked for each non-empty StreamingInfo / StreamedResource field: the object's data stored in an
+    // external .resS / .resource file. `propertyPath` is the field, e.g. "m_StreamData". `path` is as
+    // serialized and may be a VFS path, e.g. "archive:/CAB-<hash>/CAB-<hash>.resS" or "cah:/<hash>".
+    public delegate void StreamDataCallbackDelegate(long objectId, string propertyPath, string path, long offset,
+        long size);
+
     // Content-addressed stream paths (new ContentDirectory build output) look like
     // "cah:/<hash>". The hash already identifies the content, so the path itself is
     // folded into the CRC instead of opening the (differently named) resource file.
@@ -48,6 +54,10 @@ public class PPtrAndCrcProcessor : IDisposable
     private bool m_SkipCrc;                      // when true, skip CRC computation (references are still extracted)
     private CallbackDelegate m_Callback;         // invoked for each PPtr; returns the referenced object's id
     private ManagedReferenceCallbackDelegate m_ManagedReferenceCallback;
+    private StreamDataCallbackDelegate m_StreamDataCallback;
+
+    // HasStreamData result per type tree root.
+    private Dictionary<TypeTreeNode, bool> m_HasStreamData = new();
 
     // Readers for external resource (.resS/.resource) files, opened on demand, reused across
     // objects, and disposed in Dispose().
@@ -72,13 +82,16 @@ public class PPtrAndCrcProcessor : IDisposable
     //                 folded into the CRC.
     // managedReferenceCallback:
     //                 called for every [SerializeReference] instance found.
+    // streamDataCallback:
+    //                 called for every external stream data reference found.
     public PPtrAndCrcProcessor(
         SerializedFile serializedFile,
         UnityFileReader reader,
         string folder,
         bool skipCrc,
         CallbackDelegate callback,
-        ManagedReferenceCallbackDelegate managedReferenceCallback)
+        ManagedReferenceCallbackDelegate managedReferenceCallback,
+        StreamDataCallbackDelegate streamDataCallback)
     {
         m_SerializedFile = serializedFile;
         m_Reader = reader;
@@ -86,6 +99,34 @@ public class PPtrAndCrcProcessor : IDisposable
         m_SkipCrc = skipCrc;
         m_Callback = callback;
         m_ManagedReferenceCallback = managedReferenceCallback;
+        m_StreamDataCallback = streamDataCallback;
+    }
+
+    // True when objects of this type have a StreamingInfo or StreamedResource field, i.e. can store
+    // data in an external .resS / .resource file.
+    public bool HasStreamData(TypeTreeNode root)
+    {
+        if (!m_HasStreamData.TryGetValue(root, out var result))
+        {
+            result = ContainsStreamDataNode(root);
+            m_HasStreamData.Add(root, result);
+        }
+
+        return result;
+    }
+
+    private static bool ContainsStreamDataNode(TypeTreeNode node)
+    {
+        if (node.Type == "StreamingInfo" || node.Type == "StreamedResource")
+            return true;
+
+        foreach (var child in node.Children)
+        {
+            if (ContainsStreamDataNode(child))
+                return true;
+        }
+
+        return false;
     }
 
     // True when objects of this type carry a [SerializeReference] registry, in either its node-described
@@ -200,8 +241,7 @@ public class PPtrAndCrcProcessor : IDisposable
             var offset = node.Children[0].Size == 4 ? m_Reader.ReadInt32(m_Offset) : m_Reader.ReadInt64(m_Offset);
             m_Offset += node.Children[0].Size;
 
-            // size is an unsigned 32-bit field read as a signed int; streams >2GB are not handled.
-            var size = m_Reader.ReadInt32(m_Offset);
+            var size = m_Reader.ReadUInt32(m_Offset);
             m_Offset += 4;
 
             var stringSize = m_Reader.ReadInt32(m_Offset);
@@ -209,10 +249,7 @@ public class PPtrAndCrcProcessor : IDisposable
             m_Offset += stringSize + 4;
             m_Offset = (m_Offset + 3) & ~(3);
 
-            if (size > 0)
-            {
-                AppendStreamCrc(offset, size, filename);
-            }
+            ReportStreamData(offset, size, filename);
         }
         else if (node.Type == "StreamedResource")
         {
@@ -229,14 +266,10 @@ public class PPtrAndCrcProcessor : IDisposable
             var offset = m_Reader.ReadInt64(m_Offset);
             m_Offset += 8;
 
-            // 64-bit size truncated to int; streams >2GB are not handled.
-            var size = (int)m_Reader.ReadInt64(m_Offset);
+            var size = m_Reader.ReadInt64(m_Offset);
             m_Offset += 8;
 
-            if (size > 0)
-            {
-                AppendStreamCrc(offset, size, filename);
-            }
+            ReportStreamData(offset, size, filename);
         }
         else if (node.CSharpType == typeof(string))
         {
@@ -519,6 +552,18 @@ public class PPtrAndCrcProcessor : IDisposable
     {
         if (!m_SkipCrc)
             m_Crc32 = m_Reader.ComputeCRC(offset, size, m_Crc32);
+    }
+
+    // Records a StreamingInfo / StreamedResource field. A size of 0 means the object has no external data.
+    private void ReportStreamData(long offset, long size, string path)
+    {
+        if (size <= 0)
+            return;
+
+        m_StreamDataCallback(m_ObjectId, m_StringBuilder.ToString(), path, offset, size);
+
+        // Streams over 2GB are not handled by the CRC.
+        AppendStreamCrc(offset, (int)size, path);
     }
 
     // Extends the CRC with the content of an external stream segment (StreamingInfo /

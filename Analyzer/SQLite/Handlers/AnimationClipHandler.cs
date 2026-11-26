@@ -23,7 +23,7 @@ public class AnimationClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@events", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var animationClip = AnimationClip.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -33,7 +33,6 @@ public class AnimationClipHandler : ISQLiteHandler
         m_InsertCommand.ExecuteNonQuery();
 
         name = animationClip.Name;
-        streamDataSize = 0;
     }
 
     void IDisposable.Dispose()

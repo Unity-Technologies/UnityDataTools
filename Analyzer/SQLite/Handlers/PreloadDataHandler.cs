@@ -30,7 +30,7 @@ public class PreloadDataHandler : ISQLiteHandler
         m_InsertDepCommand.Parameters.Add("@dependency", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var preloadData = PreloadData.Read(reader);
         m_InsertDepCommand.Transaction = ctx.Transaction;
@@ -48,7 +48,6 @@ public class PreloadDataHandler : ISQLiteHandler
         }
 
         name = "";
-        streamDataSize = 0;
     }
 
     void IDisposable.Dispose()

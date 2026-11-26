@@ -116,25 +116,4 @@ public class AnalyzeVideoClipTests
         SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM video_clip_view", Clips.Length, "one row per clip");
         AssertClipProperties(db, clip);
     }
-
-    // Unity's build report records the size of each type in the build, including the external data in
-    // .resS / .resource files. The analyzed object sizes of the types that have such data must add up
-    // to the same totals.
-    [TestCase("AudioClip")]
-    [TestCase("Texture2D")]
-    [TestCase("VideoClip")]
-    public void Analyze_ContentDirectory_SizeMatchesBuildReportTypeStats(string typeName)
-    {
-        using var db = SQLTestHelper.OpenDatabase(m_ContentDirectoryDatabase);
-
-        SQLTestHelper.AssertQueryInt(db,
-            $"SELECT resource_count > 0 FROM build_report_content_type_stats_view WHERE type_name = '{typeName}'", 1,
-            $"the build report should list {typeName} with external data");
-        var reportSize = SQLTestHelper.QueryInt(db,
-            $"SELECT size FROM build_report_content_type_stats_view WHERE type_name = '{typeName}'");
-        SQLTestHelper.AssertQueryInt(db,
-            $@"SELECT SUM(size) FROM object_view
-               WHERE type = '{typeName}' AND serialized_file NOT LIKE '%.buildreport'",
-            reportSize, $"analyzed {typeName} sizes should match the build report");
-    }
 }

@@ -30,7 +30,7 @@ public class MeshHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@channels", SqliteType.Text);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var mesh = Mesh.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -59,7 +59,6 @@ public class MeshHandler : ISQLiteHandler
 
         m_InsertCommand.ExecuteNonQuery();
 
-        streamDataSize = mesh.StreamDataSize;
         name = mesh.Name;
     }
 

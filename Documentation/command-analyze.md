@@ -224,7 +224,7 @@ To compare two builds, analyze each into a separate database and query across th
 
 Two independent flags reduce analyze time and database size:
 
-* `--skip-crc` skips the CRC32 calculation. This is usually the largest time saver, because computing a CRC requires reading the full content of every object, including large texture, mesh and audio data in companion `.resS`/`.resource` files.
+* `--skip-crc` skips the CRC32 calculation. This is usually the largest time saver, because computing a CRC requires reading the full content of every object.  For AssetBundle and Player builds that includes reading large texture, mesh and audio data in companion `.resS`/`.resource` files.
 * `--skip-references` skips reference extraction, which is the largest contributor to database size (the `refs` table). The references are not needed for core asset inventory and size information.
 
 For the fastest, smallest result, combine them.
