@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS textures
     format INTEGER,
     mip_count INTEGER,
     rw_enabled INTEGER,
+    image_count INTEGER,
     PRIMARY KEY (id)
 );
 
@@ -23,7 +24,8 @@ SELECT
     t.height,
     f.name AS format,
     t.mip_count,
-    t.rw_enabled
+    t.rw_enabled,
+    t.image_count
 FROM object_view o
 INNER JOIN textures t ON o.id = t.id
 LEFT JOIN texture_formats f ON t.format = f.id;

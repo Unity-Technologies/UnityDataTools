@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 using UnityDataTools.Analyzer.SQLite.Commands.SerializedFile;
@@ -70,21 +71,32 @@ public class SerializedFileSQLiteWriter : IDisposable
     // through this map before being handed to m_ObjectIdProvider.
     Dictionary<int, int> m_LocalToDbFileId = new();
 
-    private Dictionary<string, ISQLiteHandler> m_Handlers = new()
+    private Dictionary<string, ISQLiteHandler> m_Handlers = CreateHandlers();
+
+    // Several types can map to one handler, so lifecycle calls go through the distinct handlers.
+    private IEnumerable<ISQLiteHandler> DistinctHandlers => m_Handlers.Values.Distinct();
+
+    private static Dictionary<string, ISQLiteHandler> CreateHandlers()
     {
-        { "Mesh", new MeshHandler() },
-        { "Texture2D", new Texture2DHandler() },
-        { "Shader", new ShaderHandler() },
-        { "AudioClip", new AudioClipHandler() },
-        { "VideoClip", new VideoClipHandler() },
-        { "AnimationClip", new AnimationClipHandler() },
-        { "AssetBundle", new AssetBundleHandler() },
-        { "PreloadData", new PreloadDataHandler() },
-        { "MonoScript", new MonoScriptHandler() },
-        { "BuildReport", new BuildReportHandler() },
-        { "PackedAssets", new PackedAssetsHandler() },
-        { "ContentSummary", new ContentSummaryHandler() },
-    };
+        // Cubemap derives from Texture2D and serializes the same fields, so it shares the handler.
+        var textureHandler = new Texture2DHandler();
+        return new()
+        {
+            { "Mesh", new MeshHandler() },
+            { "Texture2D", textureHandler },
+            { "Cubemap", textureHandler },
+            { "Shader", new ShaderHandler() },
+            { "AudioClip", new AudioClipHandler() },
+            { "VideoClip", new VideoClipHandler() },
+            { "AnimationClip", new AnimationClipHandler() },
+            { "AssetBundle", new AssetBundleHandler() },
+            { "PreloadData", new PreloadDataHandler() },
+            { "MonoScript", new MonoScriptHandler() },
+            { "BuildReport", new BuildReportHandler() },
+            { "PackedAssets", new PackedAssetsHandler() },
+            { "ContentSummary", new ContentSummaryHandler() },
+        };
+    }
 
     // serialized files
     private AddReference m_AddReferenceCommand = new AddReference();
@@ -123,7 +135,7 @@ public class SerializedFileSQLiteWriter : IDisposable
             return;
 
         m_Initialized = true;
-        foreach (var handler in m_Handlers.Values)
+        foreach (var handler in DistinctHandlers)
         {
             handler.Init(m_Database);
         }
@@ -443,7 +455,7 @@ public class SerializedFileSQLiteWriter : IDisposable
         if (!m_Initialized)
             return;
 
-        foreach (var handler in m_Handlers.Values)
+        foreach (var handler in DistinctHandlers)
             handler.FinalizeDatabase(m_Database);
 
         // Dangling refs are part of reference tracking, so honor --skip-references (the view that
@@ -592,7 +604,7 @@ public class SerializedFileSQLiteWriter : IDisposable
 
     public void Dispose()
     {
-        foreach (var handler in m_Handlers.Values)
+        foreach (var handler in DistinctHandlers)
         {
             handler.Dispose();
         }

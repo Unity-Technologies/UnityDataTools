@@ -16,13 +16,14 @@ public class Texture2DHandler : ISQLiteHandler
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();
-        m_InsertCommand.CommandText = "INSERT INTO textures(id, width, height, format, rw_enabled, mip_count) VALUES(@id, @width, @height, @format, @rw_enabled, @mip_count)";
+        m_InsertCommand.CommandText = "INSERT INTO textures(id, width, height, format, rw_enabled, mip_count, image_count) VALUES(@id, @width, @height, @format, @rw_enabled, @mip_count, @image_count)";
         m_InsertCommand.Parameters.Add("@id", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@width", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@height", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@format", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@rw_enabled", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@mip_count", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@image_count", SqliteType.Integer);
     }
 
     public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
@@ -35,6 +36,7 @@ public class Texture2DHandler : ISQLiteHandler
         m_InsertCommand.Parameters["@format"].Value = texture2d.Format;
         m_InsertCommand.Parameters["@rw_enabled"].Value = texture2d.RwEnabled;
         m_InsertCommand.Parameters["@mip_count"].Value = texture2d.MipCount;
+        m_InsertCommand.Parameters["@image_count"].Value = texture2d.ImageCount;
         m_InsertCommand.ExecuteNonQuery();
 
         name = texture2d.Name;
