@@ -16,13 +16,14 @@ public class VideoClipHandler : ISQLiteHandler
         command.ExecuteNonQuery();
 
         m_InsertCommand = db.CreateCommand();
-        m_InsertCommand.CommandText = "INSERT INTO video_clips(id, width, height, frame_rate, frame_count, audio_tracks, original_path) VALUES(@id, @width, @height, @frame_rate, @frame_count, @audio_tracks, @original_path)";
+        m_InsertCommand.CommandText = "INSERT INTO video_clips(id, width, height, frame_rate, frame_count, audio_tracks, audio_languages, original_path) VALUES(@id, @width, @height, @frame_rate, @frame_count, @audio_tracks, @audio_languages, @original_path)";
         m_InsertCommand.Parameters.Add("@id", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@width", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@height", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@frame_rate", SqliteType.Real);
         m_InsertCommand.Parameters.Add("@frame_count", SqliteType.Integer);
         m_InsertCommand.Parameters.Add("@audio_tracks", SqliteType.Integer);
+        m_InsertCommand.Parameters.Add("@audio_languages", SqliteType.Text);
         m_InsertCommand.Parameters.Add("@original_path", SqliteType.Text);
     }
 
@@ -36,6 +37,7 @@ public class VideoClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters["@frame_rate"].Value = videoClip.FrameRate;
         m_InsertCommand.Parameters["@frame_count"].Value = (long)videoClip.FrameCount;
         m_InsertCommand.Parameters["@audio_tracks"].Value = videoClip.AudioTracks;
+        m_InsertCommand.Parameters["@audio_languages"].Value = videoClip.AudioLanguages;
         m_InsertCommand.Parameters["@original_path"].Value = videoClip.OriginalPath;
         m_InsertCommand.ExecuteNonQuery();
 

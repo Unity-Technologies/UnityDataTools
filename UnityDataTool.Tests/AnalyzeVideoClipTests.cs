@@ -11,14 +11,26 @@ namespace UnityDataTools.UnityDataTool.Tests;
 #pragma warning disable NUnit2005, NUnit2006
 
 // Tests the video_clips table and video_clip_view (issue #165) against the LeadingEdge reference
-// builds, which contain one small clip: Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4
-// (160x100, 50 fps, 100 frames, no audio). Its mp4 data is stored unchanged in a .resource file and
-// counted in the VideoClip's size.
+// builds, which contain two small clips in UnityProjects/LeadingEdge/Assets/Video. Each clip's mp4 is
+// stored unchanged in a .resource file and counted in the VideoClip's size.
 public class AnalyzeVideoClipTests
 {
-    const string ClipName = "basic_clip_no_audio_160_100_1_1_50_100_H264";
-    const string OriginalPath = "Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4";
-    const int Mp4Size = 26720;
+    // Properties of the clips, from the mp4 files themselves.
+    public record Clip(string Name, int Width, int Height, int FrameRate, int FrameCount, int AudioTracks,
+        string AudioLanguages, int Mp4Size)
+    {
+        public string OriginalPath => $"Assets/Video/{Name}.mp4";
+        public override string ToString() => Name;
+    }
+
+    static readonly Clip NoAudio = new("basic_clip_no_audio_160_100_1_1_50_100_H264",
+        160, 100, 50, 100, 0, "", 26720);
+
+    // Synthetic test pattern with two sine-tone tracks: English stereo 48 kHz and French mono 44.1 kHz.
+    static readonly Clip TwoLanguages = new("clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_H264",
+        160, 100, 25, 50, 2, "en,fr", 34844);
+
+    static readonly Clip[] Clips = { NoAudio, TwoLanguages };
 
     private string m_WorkFolder;
     private string m_AssetBundleDatabase;
@@ -55,28 +67,36 @@ public class AnalyzeVideoClipTests
         }
     }
 
-    [Test]
-    public void Analyze_AssetBundle_VideoClipViewHasClipProperties()
+    static void AssertClipProperties(SqliteConnection db, Clip clip)
     {
-        using var db = SQLTestHelper.OpenDatabase(m_AssetBundleDatabase);
-
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM video_clip_view", 1, "the build has one VideoClip");
-        SQLTestHelper.AssertQueryString(db, "SELECT name FROM video_clip_view", ClipName, "name");
-        SQLTestHelper.AssertQueryString(db, "SELECT original_path FROM video_clip_view", OriginalPath, "original_path");
-        SQLTestHelper.AssertQueryInt(db, "SELECT width FROM video_clip_view", 160, "width");
-        SQLTestHelper.AssertQueryInt(db, "SELECT height FROM video_clip_view", 100, "height");
-        SQLTestHelper.AssertQueryInt(db, "SELECT frame_rate = 50 FROM video_clip_view", 1, "frame_rate");
-        SQLTestHelper.AssertQueryInt(db, "SELECT frame_count FROM video_clip_view", 100, "frame_count");
-        SQLTestHelper.AssertQueryInt(db, "SELECT duration = 2 FROM video_clip_view", 1, "duration is frame_count / frame_rate");
-        SQLTestHelper.AssertQueryInt(db, "SELECT audio_tracks FROM video_clip_view", 0, "the clip has no audio");
+        var where = $"FROM video_clip_view WHERE name = '{clip.Name}'";
+        SQLTestHelper.AssertQueryInt(db, $"SELECT COUNT(*) {where}", 1, "the clip should be in the view once");
+        SQLTestHelper.AssertQueryString(db, $"SELECT original_path {where}", clip.OriginalPath, "original_path");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT width {where}", clip.Width, "width");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT height {where}", clip.Height, "height");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT frame_rate = {clip.FrameRate} {where}", 1, "frame_rate");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT frame_count {where}", clip.FrameCount, "frame_count");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT duration = {(double)clip.FrameCount / clip.FrameRate} {where}", 1,
+            "duration is frame_count / frame_rate");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT audio_tracks {where}", clip.AudioTracks, "audio_tracks");
+        SQLTestHelper.AssertQueryString(db, $"SELECT audio_languages {where}", clip.AudioLanguages, "audio_languages");
     }
 
-    // The VideoClip object holds only the clip's description; the video itself is in the bundle's
-    // .resource file. Its size is the serialized object (as listed in the SerializedFile) plus that data.
     [Test]
-    public async Task Analyze_AssetBundle_VideoClipSizeIncludesVideoData()
+    public void Analyze_AssetBundle_VideoClipViewHasClipProperties([ValueSource(nameof(Clips))] Clip clip)
     {
-        var bundle = Path.Combine(LeadingEdgeTestData.Folder, "AssetBundles", ClipName.ToLowerInvariant());
+        using var db = SQLTestHelper.OpenDatabase(m_AssetBundleDatabase);
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM video_clip_view", Clips.Length, "one row per clip");
+        AssertClipProperties(db, clip);
+    }
+
+    // The VideoClip object holds only the clip's description; the video (with its audio) is in the
+    // bundle's .resource file. Its size is the serialized object (as listed in the SerializedFile) plus
+    // that data.
+    [Test]
+    public async Task Analyze_AssetBundle_VideoClipSizeIncludesVideoData([ValueSource(nameof(Clips))] Clip clip)
+    {
+        var bundle = Path.Combine(LeadingEdgeTestData.Folder, "AssetBundles", clip.Name.ToLowerInvariant());
         var (exitCode, stdOut) = await ConsoleTestHelper.RunCapturingStdOut(
             "serialized-file", "objectlist", bundle, "--format", "json");
         Assert.AreEqual(0, exitCode);
@@ -85,19 +105,16 @@ public class AnalyzeVideoClipTests
             .GetProperty("size").GetInt32();
 
         using var db = SQLTestHelper.OpenDatabase(m_AssetBundleDatabase);
-        SQLTestHelper.AssertQueryInt(db, "SELECT size FROM video_clip_view", serializedSize + Mp4Size,
-            "size should be the serialized VideoClip plus its video data");
+        SQLTestHelper.AssertQueryInt(db, $"SELECT size FROM video_clip_view WHERE name = '{clip.Name}'",
+            serializedSize + clip.Mp4Size, "size should be the serialized VideoClip plus its video data");
     }
 
     [Test]
-    public void Analyze_ContentDirectory_VideoClipViewHasClipProperties()
+    public void Analyze_ContentDirectory_VideoClipViewHasClipProperties([ValueSource(nameof(Clips))] Clip clip)
     {
         using var db = SQLTestHelper.OpenDatabase(m_ContentDirectoryDatabase);
-
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM video_clip_view", 1, "the build has one VideoClip");
-        SQLTestHelper.AssertQueryString(db, "SELECT original_path FROM video_clip_view", OriginalPath, "original_path");
-        SQLTestHelper.AssertQueryInt(db, "SELECT width FROM video_clip_view", 160, "width");
-        SQLTestHelper.AssertQueryInt(db, "SELECT frame_count FROM video_clip_view", 100, "frame_count");
+        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) FROM video_clip_view", Clips.Length, "one row per clip");
+        AssertClipProperties(db, clip);
     }
 
     // Unity's build report records the size of each type in the build, including the external data in

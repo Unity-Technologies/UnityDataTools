@@ -529,6 +529,7 @@ VideoClip object itself; that data is included in the object's `size`.
 | `frame_count` | number of frames |
 | `duration` | length in seconds (`frame_count` / `frame_rate`) |
 | `audio_tracks` | number of audio tracks |
+| `audio_languages` | language of each audio track in track order, comma separated, e.g. `en,fr`. Empty when the clip has no audio, and an entry is empty for a track without a language |
 | `original_path` | the source asset path in the project |
 
 ## shader_view

@@ -12,4 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9574b22856b9c864e97c915e0d4f0765, type: 3}
   m_Name: VideoClipReference
   m_EditorClassIdentifier: Assembly-CSharp::VideoClipReference
-  clip: {fileID: 32900000, guid: cbf33dec0d92cfa45afcd81ffff0904d, type: 3}
+  clips:
+  - {fileID: 32900000, guid: cbf33dec0d92cfa45afcd81ffff0904d, type: 3}
+  - {fileID: 32900000, guid: 7b8f21ee951db2d4fb5cc7f4bed0dfe7, type: 3}

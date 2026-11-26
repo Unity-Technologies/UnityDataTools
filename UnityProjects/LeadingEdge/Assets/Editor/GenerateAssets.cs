@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Unity.Loading;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,14 +15,14 @@ using UnityEngine.Video;
 // which is also referenced by the all-clips variants, demonstrating an AudioClip shared between two assets.
 // Two small scenes each show the shared GreenStatic texture through a SpriteRenderer, with distinct GameObject
 // names so the scenes have different content. The SceneList asset references both scenes by LoadableSceneId.
-// VideoClipReference directly references the small mp4 in Assets/Video and is included in both build roots.
+// VideoClipReference directly references the small mp4s in Assets/Video and is included in both build roots.
 // The root assets (DirectScriptableObjectReference) directly reference the leaf assets and act as build roots.
 public static class GenerateAssets
 {
     const string AudioFolder = "Assets/Audio";
     const string OutputFolder = "Assets/ScriptableObjects";
     const string TexturePath = "Assets/Textures/GreenStatic.png";
-    public const string VideoPath = "Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4";
+    public const string VideoFolder = "Assets/Video";
 
     public static readonly string[] ScenePaths =
     {
@@ -60,7 +62,11 @@ public static class GenerateAssets
         var sceneList = CreateSceneList("SceneList");
 
         var videoClipReference = ScriptableObject.CreateInstance<VideoClipReference>();
-        videoClipReference.clip = AssetDatabase.LoadAssetAtPath<VideoClip>(VideoPath);
+        videoClipReference.clips = AssetDatabase.FindAssets("t:VideoClip", new[] { VideoFolder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .Select(AssetDatabase.LoadAssetAtPath<VideoClip>)
+            .ToArray();
         AssetDatabase.CreateAsset(videoClipReference, $"{OutputFolder}/VideoClipReference.asset");
 
         CreateReference("AssetBundleRoot", direct, singleDirect, serializationDemo, videoClipReference);
