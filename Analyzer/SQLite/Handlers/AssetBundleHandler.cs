@@ -60,7 +60,7 @@ public class AssetBundleHandler : ISQLiteHandler
         m_InsertSceneObjectCommand.Parameters.Add("@name", SqliteType.Text);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var assetBundle = AssetBundle.Read(reader);
 
@@ -137,7 +137,6 @@ public class AssetBundleHandler : ISQLiteHandler
         }
 
         name = assetBundle.Name;
-        streamDataSize = 0;
     }
 
     public void FinalizeDatabase(SqliteConnection db)

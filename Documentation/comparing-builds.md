@@ -322,6 +322,16 @@ This confirms our understanding that pixel data inside "red.png" is what caused 
 >[!TIP]
 >This same approach can be used to analyze mesh data (which can be stored alongside textures in .resS files).  And for Audio and Video data inside .resource files.
 
+>[!TIP]
+>The analyze database records the same ranges for every object, so instead of searching the dump you can query them:
+>
+>```sql
+>SELECT name, offset, size FROM stream_data_view
+>WHERE filename = 'CAB-6b49068aebcf9d3b05692c8efd933167.resS' ORDER BY offset;
+>```
+>
+>See [stream_data](analyzer-schema.md#stream_data).
+
 # Special cases
 
 In some rare cases the binary Serialized File is different between two builds, but the text "dump" is identical.

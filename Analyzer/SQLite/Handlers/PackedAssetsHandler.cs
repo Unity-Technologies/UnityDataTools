@@ -101,7 +101,7 @@ public class PackedAssetsHandler : ISQLiteHandler
         m_SchemaCreated = true;
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         EnsureSchema(ctx.Transaction);
 
@@ -160,7 +160,6 @@ public class PackedAssetsHandler : ISQLiteHandler
             m_InsertContentsCommand.ExecuteNonQuery();
         }
 
-        streamDataSize = 0;
         name = packedAssets.Path;
     }
 

@@ -26,7 +26,7 @@ public class AudioClipHandler : ISQLiteHandler
         m_InsertCommand.Parameters.Add("@format", SqliteType.Integer);
     }
 
-    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name, out long streamDataSize)
+    public void Process(Context ctx, long objectId, RandomAccessReader reader, out string name)
     {
         var audioClip = AudioClip.Read(reader);
         m_InsertCommand.Transaction = ctx.Transaction;
@@ -39,7 +39,6 @@ public class AudioClipHandler : ISQLiteHandler
 
         m_InsertCommand.ExecuteNonQuery();
 
-        streamDataSize = audioClip.StreamDataSize;
         name = audioClip.Name;
     }
 
