@@ -3,7 +3,7 @@
     "BuildContentOptions": [
         "CleanBuildCache"
     ],
-    "BuildManifestHash": "b852a6d80db71bb7e92fe3881f7e0be3",
+    "BuildManifestHash": "03a009bd0d08304bd3d93bf8105bf7a9",
     "BuildName": "ContentDirectory",
     "BuildOptions": [
         "None"
@@ -11,8 +11,8 @@
     "BuildProfilePath": "",
     "BuildResult": 1,
     "BuildResultName": "Succeeded",
-    "BuildSessionGUID": "e1abba4688afb0340b10109102b4c27c",
-    "BuildStartedAt": "2026-11-25T22:33:34.2392788Z",
+    "BuildSessionGUID": "9e370ae6a115a624e8fcc6e028ed5505",
+    "BuildStartedAt": "2026-11-26T00:12:17.1161841Z",
     "BuildType": 3,
     "BuildTypeName": "ContentDirectory",
     "ContentSourceBuildSessionGUID": "00000000000000000000000000000000",
@@ -26,7 +26,7 @@
     "Subtarget": 2,
     "SubtargetName": "Player",
     "TotalErrors": 0,
-    "TotalSizeBytes": 951754,
-    "TotalTimeMs": 7914,
+    "TotalSizeBytes": 989635,
+    "TotalTimeMs": 7370,
     "TotalWarnings": 0
 }

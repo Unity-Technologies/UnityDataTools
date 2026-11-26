@@ -377,5 +377,11 @@ namespace UnityDataTools.Analyzer.Properties {
                 return ResourceManager.GetString("ContentSummary", resourceCulture);
             }
         }
+
+        internal static string VideoClip {
+            get {
+                return ResourceManager.GetString("VideoClip", resourceCulture);
+            }
+        }
     }
 }

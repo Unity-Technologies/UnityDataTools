@@ -1,6 +1,6 @@
 ManifestFileVersion: 0
 UnityVersion: 6000.7.0f1
-CRC: 178798776
+CRC: 2673833525
 HashAppended: 0
 AssetBundleManifest:
   AssetBundleInfos:
@@ -27,15 +27,19 @@ AssetBundleManifest:
       Name: videoclipreference
       Dependencies:
         Dependency_0: basic_clip_no_audio_160_100_1_1_50_100_h264
+        Dependency_1: clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_h264
     Info_5:
-      Name: basic_clip_no_audio_160_100_1_1_50_100_h264
-      Dependencies: {}
-    Info_6:
       Name: 6
       Dependencies: {}
-    Info_7:
+    Info_6:
       Name: a
       Dependencies: {}
+    Info_7:
+      Name: basic_clip_no_audio_160_100_1_1_50_100_h264
+      Dependencies: {}
     Info_8:
+      Name: clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_h264
+      Dependencies: {}
+    Info_9:
       Name: scenes
       Dependencies: {}

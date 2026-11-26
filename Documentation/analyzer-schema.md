@@ -79,6 +79,7 @@ Type-specific views, each `object_view` plus extra columns:
 | [`audio_clip_view`](#audio_clip_view) | AudioClip |
 | [`mesh_view`](#mesh_view) | Mesh |
 | [`texture_view`](#texture_view) | Texture2D |
+| [`video_clip_view`](#video_clip_view) | VideoClip |
 | [`shader_view`](#shader_view) | Shader |
 | [`shader_subprogram_view`](#shader_subprogram_view) | Shader sub-programs |
 | [`shader_keyword_ratios`](#shader_keyword_ratios) | Shader keyword impact on variant count |
@@ -516,6 +517,21 @@ Texture2Ds.
 | `mip_count` | number of mipmaps |
 | `rw_enabled` | 1 if the texture has the *R/W Enabled* option, 0 otherwise |
 
+## video_clip_view
+
+VideoClips. The video (and any audio tracks) is stored in a `.resource` file, not in the
+VideoClip object itself; that data is included in the object's `size`.
+
+| Column | Description |
+|---|---|
+| `width` / `height` | video resolution |
+| `frame_rate` | frames per second |
+| `frame_count` | number of frames |
+| `duration` | length in seconds (`frame_count` / `frame_rate`) |
+| `audio_tracks` | number of audio tracks |
+| `audio_languages` | language of each audio track in track order, comma separated, e.g. `en,fr`. Empty when the clip has no audio, and an entry is empty for a track without a language |
+| `original_path` | the source asset path in the project |
+
 ## shader_view
 
 Shaders.
@@ -598,6 +614,7 @@ Any schema change - a new or changed table, view or column - must bump the pragm
 | 9 | `content_layout*` tables track the version 3 layout schema of Unity 6.7: loadables keyed by `loadable_index`, `stable_id` / `artifact_index` columns replace `cfid` / `content_hash`, `is_root_asset` records the root position, and the v2-only columns (`asset_path`, `source_lfid`) exist only in databases imported from a version 2 layout ([#131](https://github.com/Unity-Technologies/UnityDataTools/issues/131)) |
 | 10 | Added the `managed_references` table, `managed_reference_view` and `managed_reference_stats_view` ([#53](https://github.com/Unity-Technologies/UnityDataTools/issues/53)) |
 | 11 | Added indexes on `preload_dependencies(object)`, `preload_dependencies(dependency)`, `shader_subprograms(shader)` and `shader_subprogram_keywords(subprogram_id)` ([#83](https://github.com/Unity-Technologies/UnityDataTools/issues/83)) |
+| 12 | Added the `video_clips` table and `video_clip_view`; a VideoClip's `size` includes its video data ([#165](https://github.com/Unity-Technologies/UnityDataTools/issues/165)) |
 
 ## Related documentation
 

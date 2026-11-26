@@ -1,23 +1,24 @@
 -------------------------------------------------------------------------------
 Build Report - Content Size Statistics
-Serialized File count                     15
-Resource file count                        5
-Object count                              31
-Serialized Files                     101.6 kb	  11.0%
-Serialized Files Headers              88.1 kb	   9.5%
-Resource data (Texture,Audio...)     825.3 kb	  89.0%
-Total build size                     926.9 kb
+Serialized File count                     16
+Resource file count                        6
+Object count                              32
+Serialized Files                     104.4 kb	  10.8%
+Serialized Files Headers              90.6 kb	   9.4%
+Resource data (Texture,Audio...)     859.3 kb	  89.2%
+Total build size                     963.7 kb
 
 Largest Types:
-   512.2 kb	  55.3% Cubemap
-   211.1 kb	  22.8% Texture2D
-    76.5 kb	   8.3% AudioClip
-    26.3 kb	   2.8% VideoClip
+   512.2 kb	  53.2% Cubemap
+   211.1 kb	  21.9% Texture2D
+    76.5 kb	   7.9% AudioClip
+    60.6 kb	   6.3% VideoClip
 
 Largest Assets:
-   519.4 kb	  56.0% Resources/unity_builtin_extra
-   211.5 kb	  22.8% Assets/Textures/GreenStatic.png
-    46.4 kb	   5.0% Assets/Audio/a.mp3
-    30.1 kb	   3.2% Assets/Audio/6.mp3
-    26.3 kb	   2.8% Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4
+   519.4 kb	  53.9% Resources/unity_builtin_extra
+   211.5 kb	  22.0% Assets/Textures/GreenStatic.png
+    46.4 kb	   4.8% Assets/Audio/a.mp3
+    34.3 kb	   3.6% Assets/Video/clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_H264.mp4
+    30.1 kb	   3.1% Assets/Audio/6.mp3
+    26.3 kb	   2.7% Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4
 -------------------------------------------------------------------------------

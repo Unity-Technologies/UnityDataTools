@@ -1,0 +1,21 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.7.0f1
+CRC: 399902067
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: a23307aa861a7b8b0ea2205c908bb88c
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: c12678a98877549a3fe7bb52917258ad
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: fc957465f2619e5bb34413ed1da24610
+HashAppended: 0
+ClassTypes:
+- Class: 329
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Video/clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_H264.mp4
+Dependencies: []

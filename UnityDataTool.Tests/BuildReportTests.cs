@@ -713,9 +713,12 @@ public class BuildReportTests
         SQLTestHelper.AssertQueryString(db,
             "SELECT type_name FROM build_report_content_type_stats_view WHERE type = 89", "Cubemap",
             "Expected type_name 'Cubemap' for type 89");
+        var videoArtifacts = LeadingEdgeTestData.ReadContentLayout().GetProperty("BinaryArtifacts").EnumerateArray()
+            .Count(a => a.GetProperty("Category").GetString() == "video");
+        Assert.Greater(videoArtifacts, 0, "the reference build should contain video");
         SQLTestHelper.AssertQueryInt(db,
-            "SELECT resource_count FROM build_report_content_type_stats_view WHERE type_name = 'VideoClip'", 1,
-            "Expected the VideoClip type stat with its .resource data");
+            "SELECT resource_count FROM build_report_content_type_stats_view WHERE type_name = 'VideoClip'", videoArtifacts,
+            "Expected the VideoClip type stat with one .resource file per video artifact in the layout");
 
         var buildReportId = SQLTestHelper.QueryInt(db, "SELECT id FROM objects WHERE type = 1125");
         SQLTestHelper.AssertQueryInt(db,

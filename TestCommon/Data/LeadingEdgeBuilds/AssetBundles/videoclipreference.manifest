@@ -1,16 +1,16 @@
 ManifestFileVersion: 0
 UnityVersion: 6000.7.0f1
-CRC: 1633178751
+CRC: 3848728780
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 70e6b63d3669fc317be3dd444f9c6eb4
+    Hash: 3140cb265b467884ccceb1dcc7fbc87d
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 6743ec0f43ef2a46358edfb8e4028509
+    Hash: 01c8c316400c95dbdfbf56cc4050760e
   IncrementalBuildHash:
     serializedVersion: 2
-    Hash: 500a4a2143fe495a10f10f28a6b403ed
+    Hash: 3a0820b846ecf01e20a3bfc484d60b67
 HashAppended: 0
 ClassTypes:
 - Class: 114
@@ -24,3 +24,4 @@ Assets:
 - Assets/ScriptableObjects/VideoClipReference.asset
 Dependencies:
 - C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/basic_clip_no_audio_160_100_1_1_50_100_h264
+- C:/UnitySrc/UnityDataTools/UnityProjects/LeadingEdge/../../TestCommon/Data/LeadingEdgeBuilds/AssetBundles/clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_h264
