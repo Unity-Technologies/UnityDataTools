@@ -549,12 +549,13 @@ public class SerializedFileSQLiteWriter : IDisposable
     }
 
     // Callback from PPtrAndCrcProcessor for each external stream data reference in the SerializedFile
-    private void AddStreamData(long objectId, string path, long offset, long size)
+    private void AddStreamData(long objectId, string propertyPath, string path, long offset, long size)
     {
         m_CurrentStreamDataSize += size;
 
         m_AddStreamDataCommand.SetTransaction(m_CurrentTransaction);
         m_AddStreamDataCommand.SetValue("object", objectId);
+        m_AddStreamDataCommand.SetValue("property_path", propertyPath);
         m_AddStreamDataCommand.SetValue("path", path);
         m_AddStreamDataCommand.SetValue("offset", offset);
         m_AddStreamDataCommand.SetValue("size", size);

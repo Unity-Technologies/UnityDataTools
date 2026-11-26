@@ -72,6 +72,10 @@ public class AnalyzeStreamDataTests
         SQLTestHelper.AssertQueryString(db,
             $"SELECT type || ' ' || name || ' ' || offset || ' ' || size FROM stream_data_view WHERE filename = '{CabName}.resource'",
             "AudioClip blip 0 5248", "object in the .resource file");
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT group_concat(type || ' ' || property_path, ', ') FROM
+              (SELECT DISTINCT type, property_path FROM stream_data_view ORDER BY type)",
+            "AudioClip m_Resource, Mesh m_StreamData, Texture2D m_StreamData", "the field of each type");
 
         SQLTestHelper.AssertQueryString(db,
             "SELECT group_concat(filename || ' ' || objects || ' ' || size, ', ') FROM stream_data_files_view",
@@ -133,7 +137,11 @@ public class AnalyzeStreamDataTests
     {
         using var db = SQLTestHelper.OpenDatabase(m_ContentDirectoryDatabase);
 
-        SQLTestHelper.AssertQueryInt(db, "SELECT COUNT(*) > 0 FROM stream_data", 1, "stream data was recorded");
+        SQLTestHelper.AssertQueryString(db,
+            @"SELECT group_concat(type || ' ' || property_path, ', ') FROM
+              (SELECT DISTINCT type, property_path FROM stream_data_view ORDER BY type)",
+            "AudioClip m_Resource, Cubemap m_StreamData, Texture2D m_StreamData, VideoClip m_ExternalResources",
+            "the field of each type");
         SQLTestHelper.AssertQueryInt(db,
             "SELECT COUNT(*) FROM stream_data WHERE path NOT LIKE 'cah:/%' OR offset <> 0", 0,
             "every path is content-addressed with offset 0");

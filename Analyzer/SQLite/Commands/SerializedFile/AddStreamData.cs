@@ -14,6 +14,7 @@ namespace UnityDataTools.Analyzer.SQLite.Commands.SerializedFile
         protected override Dictionary<string, SqliteType> Fields => new()
         {
             { "object", SqliteType.Integer },
+            { "property_path", SqliteType.Text },
             { "path", SqliteType.Text },
             { "offset", SqliteType.Integer },
             { "size", SqliteType.Integer }

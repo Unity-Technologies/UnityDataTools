@@ -420,7 +420,42 @@ whole build.
 
 ### How the relationship is recorded
 
-The link from a Content File to the resource files it uses is recorded in the `BinaryArtifacts` section
+The relationship is recorded in two places, and [`analyze`](command-analyze.md) captures both:
+
+* **In each object**, in the `StreamingInfo` / `StreamedResource` field shown above. This is the
+  object-level link, and it is the only one available when you analyze the build output without its
+  `ContentLayout.json`.
+* **In `ContentLayout.json`**, as a file-level link from each Content File to the resource files it
+  uses. This also gives the size of each resource file.
+
+#### From the objects
+
+Analyze records every such field in the `stream_data` table, whatever else was imported. See
+[Stream data tables and views](analyzer-schema.md#stream-data-tables-and-views). `stream_data_view`
+lists each object with its data file:
+
+```sql
+SELECT type, name, property_path, path, offset, size FROM stream_data_view ORDER BY type, name;
+```
+```
+type       name                                                   property_path        path                                   offset  size
+---------  -----------------------------------------------------  -------------------  -------------------------------------  ------  ------
+AudioClip  6                                                      m_Resource           cah:/68c9d0b12420e1951eec7790bd0754fe  0       30688
+AudioClip  a                                                      m_Resource           cah:/4226b5c16a50dab6eff0f08dd1253d4b  0       47424
+Cubemap    Default-Skybox-Cubemap                                 m_StreamData         cah:/ea7c9fa2d58ef71544726747da8ade6d  0       524280
+Texture2D  GreenStatic                                            m_StreamData         cah:/f0a44ad4a4babd121543fd44032928e7  0       215970
+VideoClip  basic_clip_no_audio_160_100_1_1_50_100_H264            m_ExternalResources  cah:/8375d07750c65b463618348ca4bc470a  0       26720
+VideoClip  clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_H264  m_ExternalResources  cah:/e3f2a9d0296a3f74d23f9f99be455927  0       34844
+```
+
+The offset is always 0 here, because each object's data is a whole file. When objects in different
+Content Files have identical data they share one file, so several rows can have the same `path`, and
+each of those objects includes the whole file in its `objects.size`. `stream_data_files_view` counts
+each file once.
+
+#### From ContentLayout.json
+
+The file-level link is recorded in the `BinaryArtifacts` section
 of [`ContentLayout.json`](contentlayout.md), not inside the Content File. Every artifact — each Content
 File, each resource file, and the manifest — is an entry with a `Category` and a `Size`, and a Content
 File's `ArtifactReferences` point at the resource artifacts it needs. Continuing the `a.mp3` example, its
@@ -434,9 +469,9 @@ above:
 
 When [`analyze`](command-analyze.md) imports the layout it preserves this: the artifacts land in
 `content_layout_binary_artifacts` (keyed by `artifact_index`, with `category` and `size`) and the
-content-file → resource-file edges in `content_layout_artifact_references`. Resource files never appear
-in the core `objects`/`serialized_files` tables, so `content_layout_binary_artifacts` is where their
-sizes are recorded. The `content_layout_resource_files_view` walks that edge for you; joined with the
+content-file → resource-file edges in `content_layout_artifact_references`. Resource files are not SerializedFiles, so they never appear
+in the core `objects`/`serialized_files` tables, and `content_layout_binary_artifacts` is where their
+file sizes are recorded. The `content_layout_resource_files_view` walks that edge for you; joined with the
 source-asset table it shows which resource file each asset was built into:
 
 ```sql
@@ -456,7 +491,7 @@ Assets/Video/basic_clip_no_audio_160_100_1_1_50_100_H264.mp4            8375d077
 Assets/Video/clip_audio_eng_stereo_fra_mono_160_100_1_1_25_50_H264.mp4  e3f2a9d0296a3f74d23f9f99be455927.resource  video     34844
 ```
 
-The fourth row is the default sprite texture pulled in from `Resources/unity_builtin_extra` (see the
+The fourth row is the default skybox Cubemap pulled in from `Resources/unity_builtin_extra` (see the
 [granularity rules](#build-layout-granularity)). See [ContentLayout in the Analyze
 Database](contentlayout-database.md) for the full set of `content_layout` tables and views.
 

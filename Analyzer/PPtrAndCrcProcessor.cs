@@ -36,9 +36,10 @@ public class PPtrAndCrcProcessor : IDisposable
         string namespaceName, string assemblyName, long size);
 
     // Invoked for each non-empty StreamingInfo / StreamedResource field: the object's data stored in an
-    // external .resS / .resource file. `path` is as serialized and may be a VFS path, e.g.
-    // "archive:/CAB-<hash>/CAB-<hash>.resS" or "cah:/<hash>".
-    public delegate void StreamDataCallbackDelegate(long objectId, string path, long offset, long size);
+    // external .resS / .resource file. `propertyPath` is the field, e.g. "m_StreamData". `path` is as
+    // serialized and may be a VFS path, e.g. "archive:/CAB-<hash>/CAB-<hash>.resS" or "cah:/<hash>".
+    public delegate void StreamDataCallbackDelegate(long objectId, string propertyPath, string path, long offset,
+        long size);
 
     // Content-addressed stream paths (new ContentDirectory build output) look like
     // "cah:/<hash>". The hash already identifies the content, so the path itself is
@@ -559,7 +560,7 @@ public class PPtrAndCrcProcessor : IDisposable
         if (size <= 0)
             return;
 
-        m_StreamDataCallback(m_ObjectId, path, offset, size);
+        m_StreamDataCallback(m_ObjectId, m_StringBuilder.ToString(), path, offset, size);
 
         // Streams over 2GB are not handled by the CRC.
         AppendStreamCrc(offset, (int)size, path);

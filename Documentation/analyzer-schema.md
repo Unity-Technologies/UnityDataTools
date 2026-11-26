@@ -495,19 +495,21 @@ The tables are populated even with `--skip-references --skip-crc`.
 
 ## stream_data
 
-One row per object with external data. An object with an empty `StreamingInfo` (for example a
-texture whose pixels are stored in the object itself) has no row.
+One row per `StreamingInfo` / `StreamedResource` field that points at data. Current Unity types
+have at most one such field, so this is one row per object with external data. An empty field (for
+example in a texture whose pixels are stored in the object itself) has no row.
 
 | Column | Type | Description |
 |---|---|---|
 | `object` | INTEGER | [`objects.id`](#objects). The object's `size` includes this data. |
+| `property_path` | TEXT | The field, e.g. `m_StreamData` (Texture2D, Mesh, Cubemap), `m_Resource` (AudioClip) or `m_ExternalResources` (VideoClip). |
 | `path` | TEXT | The data file, as recorded in the object. See the table above. |
 | `offset` | INTEGER | Byte offset of the data in the file. |
 | `size` | INTEGER | Bytes of data. |
 
 ## stream_data_view
 
-`stream_data` with the object's `id`, `object_id`, `archive`, `serialized_file`, `type` and `name`
+`stream_data` (without the `object` column) with the object's `id`, `object_id`, `archive`, `serialized_file`, `type` and `name`
 from [`object_view`](#object_view), and `filename`: the last part of `path`, e.g.
 `CAB-<hash>.resS`, or the hash for a Content Directory.
 

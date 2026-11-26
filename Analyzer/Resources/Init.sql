@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS stream_data
     -- An object's data stored outside its SerializedFile, in a .resS or .resource file, as recorded
     -- by its StreamingInfo / StreamedResource field. Populated even with --skip-references and --skip-crc.
     object INTEGER,          -- objects.id; its size includes this data
+    property_path TEXT,      -- the StreamingInfo / StreamedResource field, e.g. m_StreamData
     path TEXT,               -- as serialized, e.g. archive:/CAB-<hash>/CAB-<hash>.resS or cah:/<hash>
     offset INTEGER,          -- byte offset in the file; always 0 for cah:/ paths
     size INTEGER
@@ -176,6 +177,7 @@ SELECT
     o.serialized_file,
     o.type,
     o.name,
+    s.property_path,
     s.path,
     replace(s.path, rtrim(s.path, replace(s.path, '/', '')), '') AS filename,
     s.offset,
